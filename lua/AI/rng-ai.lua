@@ -196,7 +196,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local aiScenarioPlans = self:ImportScenarioArmyPlans(planName)
 
         self.DefaultPlan = true
-        self.AIPlansList = import("/lua/aibrainplans.lua").AIPlansList
+        self.AIPlansList = import("/mods/RNGAI/lua/AI/aibrainplans.lua").AIPlansList
 
         self.RepeatExecution = false
         self.ConstantEval = true
@@ -1415,7 +1415,6 @@ AIBrain = Class(RNGAIBrainClass) {
             DefenseAir = 0,
             DefenseSurface = 0,
             DefenseSub = 0,
-            ACUGunUpgrades = 0,
         }
         self.EnemyIntel.EnemyIMAPThreatCurrent = {
             Air = 0,
@@ -1672,7 +1671,6 @@ AIBrain = Class(RNGAIBrainClass) {
             RNGLOG('Current mass share per player '..self.BrainIntel.MassSharePerPlayer)
             RNGLOG('Current Defense Air Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseAir)
             RNGLOG('Current Defense Sub Threat :'..self.EnemyIntel.EnemyThreatCurrent.DefenseSub)
-            RNGLOG('Current Number of Enemy Gun ACUs :'..self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades)
             if not RNGTableEmpty(self.EnemyIntel.SMD) then
                 RNGLOG('SMD Table')
                 RNGLOG(repr(self.EnemyIntel.SMD))
@@ -2132,7 +2130,7 @@ AIBrain = Class(RNGAIBrainClass) {
         if self.RNGDEBUG then
             RNGLOG('Floating base setup, adding global base template')
         end
-        import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(self, 'FLOATING', 'FloatingBaseTemplate')
+        import('/mods/RNGAI/lua/ai/aiaddbuildertable.lua').AddGlobalBaseTemplate(self, 'FLOATING', 'FloatingBaseTemplate')
     end,
 
     GetGraphArea = function(self, position, baseName, baseLayer)
@@ -3308,7 +3306,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local enemySurfaceAirAngle
                 local enemyAirAngle
                 local enemyNavalAngle
-                local enemyMobileSilo = false
+                local enemyMobileSilo = 0
                 local enemyMobileSiloAngle
                 local zoneThreatTable
                 local unitCat
@@ -3341,10 +3339,12 @@ AIBrain = Class(RNGAIBrainClass) {
                                     if unit.Blueprint.Defense.AirThreatLevel then
                                         airThreat = airThreat + unit.Blueprint.Defense.AirThreatLevel
                                     end
-                                    if unitCat.SILO and not enemyMobileSilo then
-                                        local unitPos = unit:GetPosition()
-                                        enemyMobileSilo = true
-                                        enemyMobileSiloAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
+                                    if unitCat.SILO then
+                                        enemyMobileSilo = enemyMobileSilo + 1
+                                        if not enemyMobileSiloAngle then
+                                            local unitPos = unit:GetPosition()
+                                            enemyMobileSiloAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
+                                        end
                                     end
                                     if landUnits == 1 then
                                         local unitPos = unit:GetPosition()
@@ -3413,7 +3413,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         self.BasePerimeterMonitor[k].RecentLandAngle = enemyLandAngle
                         self.BasePerimeterMonitor[k].RecentLandDistance = enemyLandDistance
                     end
-                    if enemyMobileSilo then
+                    if enemyMobileSilo > 0 then
                         self.BasePerimeterMonitor[k].EnemyMobileSiloDetected = enemyMobileSilo
                         self.BasePerimeterMonitor[k].RecentMobileSiloAngle = enemyMobileSiloAngle
                         --LOG('Recording enemyMobileAngle at base '..tostring(k)..' angle is '..tostring(self.BasePerimeterMonitor[k].RecentMobileSiloAngle))
@@ -3745,7 +3745,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     acuTable[index].Position = acuPos
                     acuTable[index].DistanceToBase = VDist3Sq(acuPos, self.BrainIntel.StartPos)
                     acuTable[index].HP = unit:GetHealth()
-                    if not acuTable[index].Range or acuTable[index].LastSpotted + 30 < currentGameTime then
+                    if not unit['rngdata']['HasGunUpgrade'] and not unit['rngdata']['IsUpgradingGun'] then
+                        if unit:IsUnitState('Enhancing') then
+                            RUtils.ValidateEnhancingUnit(unit)
+                        end
+                    end
+                    if not acuTable[index].Range or acuTable[index].LastSpotted + 15 < currentGameTime then
                         if CDRGunCheck(unit) then
                             acuTable[index].Range = unit.Blueprint.Weapon[1].MaxRadius + 8
                             acuTable[index].Gun = true
@@ -3932,30 +3937,17 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyDefenseSub = enemyDefenseSub + v.Blueprint.Defense.SubThreatLevel
                     end
                     coroutine.yield(1)
-                    local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
-                    for _,v in enemyACU do
-                        if CDRGunCheck(v) then
-                            enemyACUGun = enemyACUGun + 1
-                            gunBool = true
-                        end
-                        if self.CheatEnabled then
-                            acuHealth = v:GetHealth()
-                        end
-                    end
-                    if gunBool then
-                        self.EnemyIntel.ACU[enemyIndex].Gun = true
-                        --RNGLOG('Gun Upgrade Present on army '..enemy.Nickname)
-                    else
-                        self.EnemyIntel.ACU[enemyIndex].Gun = false
-                    end
                     if self.CheatEnabled then
-                        self.EnemyIntel.ACU[enemyIndex].HP = acuHealth
-                        --RNGLOG('Cheat is enabled and acu has '..acuHealth..' Health '..'Brain intel says '..self.EnemyIntel.ACU[enemyIndex].HP)
+                        local enemyACU = GetListOfUnits( enemy, categories.COMMAND, false, false )
+                        if enemyACU[1] then
+                            acuHealth = enemyACU[1]:GetHealth()
+                            self.EnemyIntel.ACU[enemyIndex].HP = acuHealth
+                        end
                     end
                 end
             end
         end
-        self.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades = enemyACUGun
+
         self.EnemyIntel.EnemyThreatCurrent.Air = enemyAirThreat
         self.EnemyIntel.EnemyThreatCurrent.AntiAir = enemyAntiAirThreat
         self.EnemyIntel.EnemyThreatCurrent.AirSurface = enemyAirSurfaceThreat

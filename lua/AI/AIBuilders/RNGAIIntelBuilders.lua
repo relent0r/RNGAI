@@ -92,7 +92,7 @@ BuilderGroup {
                 AdjacencyDistance = 70,
                 BuildClose = false,
                 BuildStructures = {
-                    { Unit = 'T3Radar', Categories = categories.RADAR * categories.TECH3 * categories.STRUCTURE },
+                    { Unit = 'T3Radar', Categories = categories.OMNI * categories.TECH3 * categories.STRUCTURE },
                 },
                 LocationType = 'LocationType',
             }

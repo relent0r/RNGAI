@@ -607,7 +607,7 @@ function AINewExpansionBaseRNG(aiBrain, baseName, position, builder, constructio
 
     -- Setup base
     --SPEW('*AI DEBUG: AINewExpansionBase(): ARMY ' .. aiBrain:GetArmyIndex() .. ': Expanding using - ' .. pick .. ' at location ' .. baseName)
-    import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(aiBrain, baseName, pick)
+    import('/mods/RNGAI/lua/ai/aiaddbuildertable.lua').AddGlobalBaseTemplate(aiBrain, baseName, pick)
 
     -- If air base switch to building an air factory rather than land
     if (string.find(pick, 'Air') or string.find(pick, 'Water')) then

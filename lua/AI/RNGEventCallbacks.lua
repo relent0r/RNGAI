@@ -124,6 +124,9 @@ function UnitEnhancementCreate(unit, enh)
                     unit['rngdata'] = {}
                 end
                 unit['rngdata']['HasGunUpgrade'] = true
+                if unit['rngdata']['IsUpgradingGun'] then
+                    unit['rngdata']['IsUpgradingGun'] = false
+                end
                 --LOG('GunUpgrade is set to true '..tostring(enh))
             end
         elseif unitCats.SUBCOMMANDER then
@@ -212,7 +215,7 @@ function OnTransfered(transferedUnits, toArmy, captured, originBrain)
                                 end
                                 --SPEW('*AI DEBUG: AINewExpansionBase(): validNames for Expansions ' .. repr(validNames))
                                 local pick = validNames[ Random(1, table.getn(validNames)) ]
-                                import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(brain, refName, pick)
+                                import('/mods/RNGAI/lua/ai/aiaddbuildertable.lua').AddGlobalBaseTemplate(brain, refName, pick)
                                 brain.Zones.Land.zones[refZone].lastexpansionattempt = GetGameTimeSeconds()
                                 brain.Zones.Land.zones[refZone].engineerplatoonallocated = nil
                                 if brain.BuilderManagers[refName].FactoryManager then

@@ -73,6 +73,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
+            StartACUThreads(brain, self)
             --LOG('ACU has started')
             local factories = brain:GetCurrentUnits(categories.FACTORY)
             if factories < 1 then
@@ -100,6 +101,10 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local cdr = self.cdr
             local gameTime = GetGameTimeSeconds()
             local maxBaseRange = cdr.MaxBaseRange * cdr.MaxBaseRange
+            local ecoMultiplier = 1
+            if brain.CheatEnabled then 
+                ecoMultiplier = brain.EcoManager.EcoMultiplier
+            end
             if brain.BrainIntel.SuicideModeActive and brain.IntelManager then
                 local suicideTarget = brain.BrainIntel.SuicideModeTarget
                 if suicideTarget and not IsDestroyed(suicideTarget) then
@@ -339,8 +344,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) and GetEconomyIncome(brain, 'ENERGY') > 40 
-            or gameTime > 1500 and GetEconomyIncome(brain, 'ENERGY') > 40 and GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95 then
+            if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) and GetEconomyIncome(brain, 'ENERGY') > (35 * ecoMultiplier)
+            or gameTime > 1500 and GetEconomyIncome(brain, 'ENERGY') > (40 * ecoMultiplier) and GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95 then
                 local inRange = false
                 local highThreat = cdr.CurrentEnemyThreat > 30 and cdr.CurrentFriendlyThreat < 15
                 local enhancementLocation, locationDistance, enhancementZone
@@ -1472,25 +1477,16 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local baseTmplList = RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference)
                         for j, template in baseTmplList do
                             for _, v in buildStructures do
+                                local blueprints = StateUtils.GetBuildableUnitId(aiBrain, eng, v.Categories)
+                                local whatToBuild = blueprints[1]
                                 for l,bType in template do
                                     for m,bString in bType[1] do
-                                        if bString == v then
+                                        if bString == v.Unit then
                                             for n,position in bType do
                                                 if n > 1 then
-                                                    if brain.CustomUnits and brain.CustomUnits[v] then
-                                                        local faction = RUtils.GetEngineerFactionRNG(eng)
-                                                        buildingTmpl = RUtils.GetTemplateReplacementRNG(brain, v, faction, buildingTmpl)
-                                                    end
-                                                    local whatToBuild = brain:DecideWhatToBuild(eng, v, buildingTmpl)
                                                     table.insert(eng.EngineerBuildQueue, {whatToBuild, position, false})
                                                     table.remove(bType,n)
-                                                    return --DoHackyLogic(buildingType, builder)
-                                                else
-                                                    --[[
-                                                    if n > 1 and not brain:CanBuildStructureAt(whatToBuild, BuildToNormalLocation(position)) then
-                                                        RNGLOG('CanBuildStructureAt failed within Ordered Template Build')
-                                                    end]]
-                                                    
+                                                    return
                                                 end
                                             end 
                                             break
@@ -1501,7 +1497,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                     else
                         for _, v in buildStructures do
-                            if v == 'T1Resource' then
+                            if v.Unit == 'T1Resource' then
                                 local maxMarkerDistance = self.BuilderData.Construction.MaxDistance or 256
                                 maxMarkerDistance = maxMarkerDistance * maxMarkerDistance
                                 local zoneMarkers = {}
@@ -1548,7 +1544,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     end
                                 end
                             else
-                                local buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(brain, buildingTmpl, baseTmplFile[templateKey][factionIndex], v, eng, false, nil, nil, true)
+                                local buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(brain, buildingTmpl, baseTmplFile[templateKey][factionIndex], v.Unit, eng, false, nil, nil, true)
                                 if buildLocation and whatToBuild then
                                     table.insert(eng.EngineerBuildQueue, {whatToBuild, buildLocation, borderWarning})
                                 else
@@ -1906,14 +1902,33 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 if supportPlatoon then
+                    local threatened
                     closestPlatoon = supportPlatoon
                     closestAPlatPos = supportPlatoon:GetPlatoonPosition()
                     if closestAPlatPos[1] and cdr.Position[1] then
                         local ax = closestAPlatPos[1] - cdr.Position[1]
                         local az = closestAPlatPos[3] - cdr.Position[3]
                         closestPlatoonDistance = ax * ax + az * az
+                        for _, threatPos in threatLocations do
+                            local tx = closestAPlatPos[1] - cdr.Position[1]
+                            local tz = closestAPlatPos[3] - cdr.Position[3]
+                            local threatLocationDistance = tx * tx + tz * tz
+                            if (threatLocationDistance + 900) < closestPlatoonDistance and threatPos[3] > 30 and RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], closestAPlatPos[1], closestAPlatPos[3], threatPos[1], threatPos[2]) < 0.35 then
+                                --LOG('Support Platoon angle is dangerous '..tostring(RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], closestAPlatPos[1], closestAPlatPos[3], threatPos[1], threatPos[2]))..' threat was '..tostring(threatPos[3]))
+                                threatened = true
+                                break
+                            else
+                                --LOG('Support Platoon angle is not dangerous '..tostring((RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], closestAPlatPos[1], closestAPlatPos[3], threatPos[1], threatPos[2])))..' threat was '..tostring(threatPos[3]))
+                            end
+                        end
+                        if threatened then
+                            closestPlatoonDistance = nil
+                            closestPlatoon = nil
+                            closestAPlatPos = nil
+                        end
                     end
-                else
+                end
+                if not closestPlatoonDistance then
                     local AlliedPlatoons = brain:GetPlatoonsList()
                     for _,aPlat in AlliedPlatoons do
                         if aPlat.PlatoonName == 'LandAssaultBehavior' or aPlat.PlatoonName == 'LandCombatBehavior' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlatoonName == 'ZoneControlBehavior' then 
@@ -1938,9 +1953,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                         local threatened = false
                                         
                                         for _, threatPos in threatLocations do
-                                            if threatPos[3] > 30 and RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], aPlatPos[1], aPlatPos[3], threatPos[1], threatPos[2]) < 0.35 then
+                                            local tx = aPlatPos[1] - cdr.Position[1]
+                                            local tz = aPlatPos[3] - cdr.Position[3]
+                                            local threatLocationDistance = tx * tx + tz * tz
+                                            if (threatLocationDistance + 900) < aPlatDistance and threatPos[3] > 30 and RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], aPlatPos[1], aPlatPos[3], threatPos[1], threatPos[2]) < 0.35 then
+                                                --LOG('Platoon angle is dangerous '..tostring(RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], aPlatPos[1], aPlatPos[3], threatPos[1], threatPos[2])))
                                                 threatened = true
                                                 break
+                                            else
+                                                --LOG('Platoon angle is not dangerous '..tostring((RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], aPlatPos[1], aPlatPos[3], threatPos[1], threatPos[2])))..' threat was '..tostring(threatPos[3]))
                                             end
                                         end
                     
@@ -2200,7 +2221,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             --RNGLOG('Adding CDR to expansion manager')
                             brain.BuilderManagers['ZONE_'..object.id].EngineerManager:AddUnit(cdr, true)
                             --SPEW('*AI DEBUG: AINewExpansionBase(): ARMY ' .. brain:GetArmyIndex() .. ': Expanding using - ' .. pick .. ' at location ' .. baseName)
-                            import('/lua/ai/AIAddBuilderTable.lua').AddGlobalBaseTemplate(brain, 'ZONE_'..object.id, pick)
+                            import('/mods/RNGAI/lua/ai/aiaddbuildertable.lua').AddGlobalBaseTemplate(brain, 'ZONE_'..object.id, pick)
 
                             -- The actual factory building part
                             local baseTmplDefault = import('/lua/BaseTemplates.lua')
@@ -3377,6 +3398,12 @@ AssignToUnitsMachine = function(data, platoon, units)
         -- start the behavior
         ChangeState(platoon, platoon.Start)
     end
+end
+
+---@param data { Behavior: 'AIBehaviorACUSupport' }
+---@param units Unit[]
+StartACUThreads = function(brain, platoon)
+    brain:ForkThread(StateUtils.ZoneUpdate, platoon)
 end
 
 StartDrawThreads = function(brain, platoon)

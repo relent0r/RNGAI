@@ -5467,6 +5467,7 @@ end
 GetHoldingPosition = function(aiBrain, platoon, threatType, maxRadius)
     local holdingPos = false
     local threatLocations = aiBrain:GetThreatsAroundPosition( aiBrain.BuilderManagers['MAIN'].Position, 16, true, threatType )
+    local operatingArea = aiBrain.OperatingAreas['BaseDMZArea'] * aiBrain.OperatingAreas['BaseDMZArea']
     local bestThreat
     local bestThreatPos
     local bestThreatDist
@@ -5486,14 +5487,34 @@ GetHoldingPosition = function(aiBrain, platoon, threatType, maxRadius)
         end
     end
     if bestThreatPos then
-        local distance = VDist3(aiBrain.BuilderManagers['MAIN'].Position, bestThreatPos)
+        local distance = VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, bestThreatPos)
+        local maxRadiusSquared = maxRadius * maxRadius
         local distanceSplit
-        if distance / 2 > maxRadius then
-            distanceSplit = maxRadius
+        if distance / 4 > maxRadiusSquared then
+            distanceSplit = maxRadiusSquared
         else
-            distanceSplit = distance / 2
+            distanceSplit = distance / 4
         end
-        holdingPos = lerpy(aiBrain.BuilderManagers['MAIN'].Position, bestThreatPos, {distance, (distanceSplit)})
+        local closestBaseDist
+        local bestBasePos
+        for baseName, base in aiBrain.BuilderManagers do
+            if base.Position then
+                local baseDist = VDist3Sq(bestThreatPos, base.Position)
+                if (not closestBaseDist or (baseDist < closestBaseDist and baseDist < distance)) and baseDist < operatingArea then
+                    local friendlyAntiAirStructures = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.ANTIAIR, base.Position, 65, 'Ally')
+                    if friendlyAntiAirStructures > 0 then
+                        bestBase = base
+                        bestBasePos = base.Position
+                        closestBaseDist = baseDist
+                    end
+                end
+            end
+        end
+        if bestBasePos and closestBaseDist < distance then
+            holdingPos = bestBasePos
+        else
+            holdingPos = lerpy(aiBrain.BuilderManagers['MAIN'].Position, bestThreatPos, {math.sqrt(distance), (math.sqrt(distanceSplit))})
+        end
         if aiBrain.RNGDEBUG then
             RNGLOG('Holding Position is set to '..repr(holdingPos))
         end
@@ -7929,7 +7950,7 @@ function ValidateFactoryManager(aiBrain, locationType, layer, unit)
             end
             local pick = validNames[ Random(1, table.getn(validNames)) ]
             --LOG('Base pick is '..tostring(pick))
-            import("/lua/ai/aiaddbuildertable.lua").AddGlobalBaseTemplate(aiBrain, locationType, pick)
+            import('/mods/RNGAI/lua/ai/aiaddbuildertable.lua').AddGlobalBaseTemplate(aiBrain, locationType, pick)
             local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
             factoryManager:AddFactory(unit)
         else
@@ -7938,6 +7959,23 @@ function ValidateFactoryManager(aiBrain, locationType, layer, unit)
                 --LOG('friendly base within radius, attempting to add factory to base')
                 factoryManager:AddFactory(unit)
             end
+        end
+    end
+end
+
+-- This function is triggered when an acu is seen as enhancing it will validate if its a gun upgrade
+-- This functionality is designed to mimic a humans ability to see which slot an acu is upgrading via the visual enhancement indicator
+function ValidateEnhancingUnit(unit)
+    if unit.WorkItem then
+        local enhancementBp = unit.WorkItem
+        local isCombatType = enhancementBp.NewRoF or enhancementBp.NewMaxRadius or enhancementBp.NewRateOfFire or enhancementBp.NewRadius 
+            or enhancementBp.NewDamage or enhancementBp.DamageMod or enhancementBp.ZephyrDamageMod
+        if isCombatType and not unit['rngdata']['IsUpgradingGun'] then
+            if not unit['rngdata'] then
+                unit['rngdata'] = {}
+            end
+            unit['rngdata']['IsUpgradingGun'] = true
+            LOG('Unit detected as upgrading gun')
         end
     end
 end

@@ -116,8 +116,14 @@ function CDRBrainThread(cdr)
         local gameTime = GetGameTimeSeconds()
         cdr.Position = cdr:GetPosition()
         aiBrain.ACUSupport.Position = cdr.Position
-        if (not cdr.GunUpgradePresent) and aiBrain.EnemyIntel.EnemyThreatCurrent.ACUGunUpgrades > 0 and gameTime < 1500 then
-            if not CDRGunCheck(cdr) then
+        if not cdr['rngdata']['HasGunUpgrade'] and gameTime < 1500 then
+            local enemyGunPresent = false
+            for k, v in aiBrain.EnemyIntel.ACU do
+                if v['rngdata']['HasGunUpgrade'] or v['rngdata']['IsUpgradingGun'] then
+                    enemyGunPresent = true
+                end
+            end
+            if enemyGunPresent and not CDRGunCheck(cdr) then
                 --RNGLOG('ACU Requires Gun set upgrade flag to true')
                 cdr.GunUpgradeRequired = true
             else
@@ -270,6 +276,7 @@ end
 function CDRThreatAssessmentRNG(cdr)
     coroutine.yield(20)
     local aiBrain = cdr:GetAIBrain()
+    local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(aiBrain)
     local UnitCategories = (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR + categories.NAVAL) - categories.SCOUT )
     while not cdr.Dead do
         if cdr.Active then
@@ -428,7 +435,9 @@ function CDRThreatAssessmentRNG(cdr)
                 --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false enemyUnitThreatInner > friendlyUnitThreatInner')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreatInner'
-            elseif not cdr.SuicideMode and enemyUnitThreat > 45 and enemyUnitThreat * 0.8 > friendlyUnitThreat then
+            elseif not cdr.SuicideMode and enemyUnitThreat > 75 and enemyUnitThreat * 0.8 > friendlyUnitThreat then
+                cdr.Caution = true
+                cdr.CautionReason = 'enemyUnitThreatOuter'
                --RNGLOG('ACU Threat Assessment . Enemy unit threat too high, continueFighting is false')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyUnitThreat'
@@ -625,6 +634,23 @@ function CDRThreatAssessmentRNG(cdr)
                     cdr.MaxBaseRange = math.min(math.max(safetyCutOff, cdr.DefaultRange * cdr.Confidence), 385)
                 else
                     cdr.MaxBaseRange = math.max(35, math.min(180, cdr.DefaultRange * cdr.Confidence))
+                end
+            end
+            if aiBrain.IntelManager then
+                local im = aiBrain.IntelManager
+                local gridX, gridZ = im:GetIntelGrid(cdr.Position)
+                if im.MapIntelGrid[gridX][gridZ].IntelCoverage then
+                    if not cdr['rngdata'] then
+                        cdr['rngdata'] = {}
+                    end
+                    cdr['rngdata']['RadarCoverage'] = true
+                    --LOG('ACU has radar coverage')
+                else
+                    if not cdr['rngdata'] then
+                        cdr['rngdata'] = {}
+                    end
+                    cdr['rngdata']['RadarCoverage'] = false
+                    --LOG('ACU Does not currently have radar coverage')
                 end
             end
             --LOG('Current CDR Max Base Range '..cdr.MaxBaseRange)

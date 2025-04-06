@@ -73,8 +73,8 @@ BuilderGroup {
             Construction = {
                 MaxDistance = 30,
                 BuildStructures = {
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
+                    { Unit = 'T1EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE - categories.HYDROCARBON },
+                    { Unit = 'T1EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE - categories.HYDROCARBON },
                 },
             }
         }
@@ -98,26 +98,6 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Initial ACU Builder Large',
     BuildersType = 'EngineerBuilder',
-    --[[
-    Builder {
-        BuilderName = 'RNGAI CDR Initial Land Standard Large',
-        PlatoonTemplate = 'CommanderInitializeRNG',
-        Priority = 2000,
-        PriorityFunction = function(self, aiBrain)
-			return 0, false
-		end,
-        BuilderConditions = {
-            { IBC, 'NotPreBuilt', {}},
-        },
-        InstantCheck = true,
-        BuilderType = 'Any',
-        BuilderData = {
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIACUBaseTemplate.lua',
-                BaseTemplate = 'ACUBaseTemplate',
-            }
-        }
-    },]]
     Builder {
         BuilderName = 'RNGAI CDR Initial Prebuilt Land Standard Large',
         PlatoonTemplate = 'CommanderStateMachineRNG',
@@ -135,8 +115,8 @@ BuilderGroup {
             Construction = {
                 MaxDistance = 30,
                 BuildStructures = {
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
+                    { Unit = 'T1EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE - categories.HYDROCARBON },
+                    { Unit = 'T1EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE - categories.HYDROCARBON },
                 },
             }
         }
@@ -182,7 +162,7 @@ BuilderGroup {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
@@ -208,7 +188,7 @@ BuilderGroup {
                 BaseTemplate = 'ACUCustomBaseTemplates',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
@@ -241,7 +221,7 @@ BuilderGroup {
                 LocationType = 'LocationType',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1LandFactory'
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
@@ -268,7 +248,7 @@ BuilderGroup {
                 BaseTemplate = 'ACUCustomBaseTemplates',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1LandFactory',
+                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
                 },
             }
         }
@@ -297,7 +277,7 @@ BuilderGroup {
                     categories.ENERGYPRODUCTION * categories.STRUCTURE,
                 },
                 BuildStructures = {
-                    'T1AirFactory',
+                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
                 },
             }
         }
@@ -326,7 +306,7 @@ BuilderGroup {
                     categories.ENERGYPRODUCTION * categories.STRUCTURE,
                 },
                 BuildStructures = {
-                    'T1AirFactory',
+                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
                 },
             }
         }
@@ -352,7 +332,7 @@ BuilderGroup {
                 BaseTemplate = 'ACUCustomBaseTemplates',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1AirFactory',
+                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
                 },
             }
         }
@@ -379,7 +359,7 @@ BuilderGroup {
                 ThreatMax = 20,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
-                    'T1Resource',
+                    { Unit = 'T1Resource', Categories = categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1 },
                 },
             }
         }
@@ -403,7 +383,7 @@ BuilderGroup {
                 BaseTemplate = 'ACUCustomBaseTemplates',
                 AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
                 BuildStructures = {
-                    'T1EnergyProduction',
+                    { Unit = 'T1EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE - categories.HYDROCARBON },
                 },
             }
         }
@@ -430,8 +410,8 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 3,
                 BuildStructures = {
-                    'T1EnergyProduction',
-                    'T1EnergyProduction',
+                    { Unit = 'T1EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE - categories.HYDROCARBON },
+                    { Unit = 'T1EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE - categories.HYDROCARBON },
                 },
             }
         }
@@ -461,7 +441,7 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 10,
                 BuildStructures = {
-                    'T2EnergyProduction',
+                    { Unit = 'T2EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH2 * categories.STRUCTURE - categories.HYDROCARBON },
                 },
             }
         }
@@ -490,7 +470,7 @@ BuilderGroup {
                 maxUnits = 1,
                 maxRadius = 10,
                 BuildStructures = {
-                    'T3EnergyProduction',
+                    { Unit = 'T3EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH3 * categories.STRUCTURE - categories.HYDROCARBON },
                 },
             }
         }
@@ -516,15 +496,15 @@ BuilderGroup {
                 OrderedTemplate = true,
                 NearBasePatrolPoints = false,
                 BuildStructures = {
-                    'T1GroundDefense',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
-                    'Wall',
+                    { Unit = 'T1GroundDefense', Categories = categories.STRUCTURE * categories.DIRECTFIRE * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
+                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 },
                 },
                 LocationType = 'LocationType',
             }
@@ -548,7 +528,7 @@ BuilderGroup {
                 BaseTemplate = 'ACUCustomBaseTemplates',
                 BuildClose = true,
                 BuildStructures = {
-                    'T1AADefense',
+                    { Unit = 'T1AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH1 },
                 },
                 LocationType = 'LocationType',
             }

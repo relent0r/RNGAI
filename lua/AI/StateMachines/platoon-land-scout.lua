@@ -606,7 +606,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                 if IsDestroyed(self) then
                     return
                 end
-                local enemyUnitRange = builderData.RetreatFrom and StateUtils.GetUnitMaxWeaponRange(builderData.RetreatFrom, 'Direct Fire') or 0
+                local enemyUnitRange = builderData.RetreatFrom and StateUtils.GetUnitMaxWeaponRange(builderData.RetreatFrom, 'Direct Fire') or 20
                 local avoidRange = math.max(enemyUnitRange + 5, self['rngdata'].IntelRange - 2)
                 if builderData.RetreatFrom then
                     self.retreatTarget = builderData.RetreatFrom
@@ -839,7 +839,7 @@ LandScoutThreatThread = function(aiBrain, platoon)
                         if not v['rngdata'].MaxWeaponRange then
                             StateUtils.GetUnitMaxWeaponRange(v)
                         end
-                        local enemyUnitRange = v['rngdata'].MaxWeaponRange
+                        local enemyUnitRange = v['rngdata'].MaxWeaponRange or 20
                         unitToRetreat = v
                         if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
                             supportUnit = platoon.BuilderData.SupportUnit
@@ -851,7 +851,7 @@ LandScoutThreatThread = function(aiBrain, platoon)
                             scoutType = platoon.BuilderData.ScoutType
                         end
                         if unitToRetreat then
-                            enemyUnitRange = StateUtils.GetUnitMaxWeaponRange(unitToRetreat)
+                            enemyUnitRange = StateUtils.GetUnitMaxWeaponRange(unitToRetreat) or 20
                         end
                         platoon.BuilderData = {
                             Position = unitToRetreat:GetPosition(),
@@ -901,7 +901,7 @@ LandScoutThreatThread = function(aiBrain, platoon)
                         end
                         local ignoreUnit = false
 
-                        local enemyUnitRange = v['rngdata'].MaxWeaponRange
+                        local enemyUnitRange = v['rngdata'].MaxWeaponRange or 20
                         local oldEnemy = platoon.BuilderData.RetreatFrom
                         if oldEnemy and not IsDestroyed(oldEnemy) then
                             local oldEnemyPos = oldEnemy:GetPosition()

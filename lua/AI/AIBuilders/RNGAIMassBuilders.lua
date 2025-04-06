@@ -35,7 +35,7 @@ BuilderGroup {
                 ThreatMax = 5,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
-                    'T1Resource',
+                    { Unit = 'T1Resource', Categories = categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1 },
                 },
             }
         }
@@ -65,7 +65,7 @@ BuilderGroup {
                 ThreatMax = 0,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
-                    'T1Resource',
+                    { Unit = 'T1Resource', Categories = categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1 },
                 },
             }
         }
@@ -92,7 +92,7 @@ BuilderGroup {
                 ThreatMax = 0,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
-                    'T2Resource',
+                    { Unit = 'T2Resource', Categories = categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH2 },
                 },
             }
         }
@@ -121,7 +121,7 @@ BuilderGroup {
                 ThreatMax = 2,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
-                    'T1Resource',
+                    { Unit = 'T1Resource', Categories = categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1 },
                 },
             }
         }
@@ -154,7 +154,7 @@ BuilderGroup {
                 ThreatMax = 2,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
-                    'T1Resource',
+                    { Unit = 'T1Resource', Categories = categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1 },
                 },
             }
         }
@@ -188,7 +188,7 @@ BuilderGroup {
                 ThreatMax = 4,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
-                    'T1Resource',
+                    { Unit = 'T1Resource', Categories = categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1 },
                 },
             }
         }
@@ -295,7 +295,8 @@ BuilderGroup {
                 ThreatMax = 30,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
-                    'T1Resource',
+                    { Unit = 'T1Resource', Categories = categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1 },
+                    
                 },
             }
         }
@@ -321,7 +322,7 @@ BuilderGroup {
                 ThreatMax = 30,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
-                    'T1Resource',
+                    { Unit = 'T1Resource', Categories = categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1 },
                 },
             }
         }
@@ -352,7 +353,7 @@ BuilderGroup {
                 ThreatMax = 30,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
-                    'T1Resource',
+                    { Unit = 'T1Resource', Categories = categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1 },
                 }
             }
         }
@@ -377,7 +378,7 @@ BuilderGroup {
                 ThreatMax = 30,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
-                    'T1Resource',
+                    { Unit = 'T1Resource', Categories = categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1 },
                 }
             }
         }
@@ -403,7 +404,7 @@ BuilderGroup {
                 ThreatMax = 30,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
-                    'T1Resource',
+                    { Unit = 'T1Resource', Categories = categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1 },
                 }
             }
         }

@@ -211,6 +211,33 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     if threatTable.AirThreat.TotalThreat > 240 and not self.SuicideMode or experimentalHealthPercent < 0.40 and threatTable.AirThreat.TotalThreat > 80 and not self.SuicideMode then
                         local localFriendlyAirThreat = self:CalculatePlatoonThreatAroundPosition('Air', categories.ANTIAIR, experimentalPosition, 35)
                         if localFriendlyAirThreat < self.DefaultAirThreat + 30 then
+                            if self.Bomber then
+                                local bomber = self.ExperimentalUnit
+                                local bombCoolDownTimer = bomber['rngdata'].BombCoolDown or 14
+                                local weaponReady = (not bomber['rngdata'].BombLastReleased) or ((GetGameTimeSeconds() - bomber['rngdata'].BombLastReleased) >= bombCoolDownTimer)
+                                if weaponReady then
+                                    local numUnits = aiBrain:GetNumUnitsAroundPoint( categories.ANTIAIR * (categories.LAND + categories.STRUCTURE + categories.NAVAL), experimentalPosition, 110, 'Enemy' )
+                                    if numUnits > 0 then
+                                        local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.ANTIAIR * (categories.LAND + categories.STRUCTURE + categories.NAVAL), experimentalPosition, 110, 'Enemy' )
+                                        local newTarget
+                                        for _, e in enemyUnits do
+                                            if e and not e.Dead then
+                                                if not newTarget then
+                                                    newTarget = e
+                                                    self.BuilderData = {
+                                                        AttackTarget = newTarget,
+                                                        Position = newTarget:GetPosition(),
+                                                    }
+                                                    LOG('Instead of retreating Experimental Bomber performing attackrun')
+                                                    self:ChangeState(self.AttackRun)
+                                                    return
+                                                end
+                                            end
+                                        end
+
+                                    end
+                                end
+                            end
                             self.BuilderData = {
                                 Retreat = true,
                                 RetreatReason = 'AirThreat'
@@ -223,6 +250,32 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     if threatTable.AirSurfaceThreat.TotalThreat > 240 and not self.SuicideMode or experimentalHealthPercent < 0.40 and threatTable.AirSurfaceThreat.TotalThreat > 80 and not self.SuicideMode then
                         local localFriendlyLandThreat = self:CalculatePlatoonThreatAroundPosition('Surface', (categories.LAND + categories.AMPHIBIOUS) * (categories.DIRECTFIRE + categories.INDIRECTFIRE), experimentalPosition, 35)
                         if localFriendlyLandThreat < self.DefaultSurfaceThreat + 30 then
+                            if self.Bomber then
+                                local bomber = self.ExperimentalUnit
+                                local bombCoolDownTimer = bomber['rngdata'].BombCoolDown or 14
+                                local weaponReady = (not bomber['rngdata'].BombLastReleased) or ((GetGameTimeSeconds() - bomber['rngdata'].BombLastReleased) >= bombCoolDownTimer)
+                                if weaponReady then
+                                    local numUnits = aiBrain:GetNumUnitsAroundPoint( categories.ANTIAIR * (categories.LAND + categories.STRUCTURE + categories.NAVAL), experimentalPosition, 110, 'Enemy' )
+                                    if numUnits > 0 then
+                                        local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.ANTIAIR * (categories.LAND + categories.STRUCTURE + categories.NAVAL), experimentalPosition, 110, 'Enemy' )
+                                        local newTarget
+                                        for _, e in enemyUnits do
+                                            if e and not e.Dead then
+                                                if not newTarget then
+                                                    newTarget = e
+                                                    self.BuilderData = {
+                                                        AttackTarget = newTarget,
+                                                        Position = newTarget:GetPosition(),
+                                                    }
+                                                    self:ChangeState(self.AttackRun)
+                                                    return
+                                                end
+                                            end
+                                        end
+
+                                    end
+                                end
+                            end
                             self.BuilderData = {
                                 Retreat = true,
                                 RetreatReason = 'AirThreat'
@@ -235,6 +288,32 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     if threatTable.DefenseThreat.TotalThreat > 240 and not self.SuicideMode or experimentalHealthPercent < 0.40 and threatTable.DefenseThreat.TotalThreat > 80 and not self.SuicideMode then
                         local localFriendlyLandThreat = self:CalculatePlatoonThreatAroundPosition('Surface', (categories.LAND + categories.AMPHIBIOUS) * (categories.DIRECTFIRE + categories.INDIRECTFIRE), experimentalPosition, 35)
                         if localFriendlyLandThreat < self.DefaultSurfaceThreat + 30 then
+                            if self.Bomber then
+                                local bomber = self.ExperimentalUnit
+                                local bombCoolDownTimer = bomber['rngdata'].BombCoolDown or 14
+                                local weaponReady = (not bomber['rngdata'].BombLastReleased) or ((GetGameTimeSeconds() - bomber['rngdata'].BombLastReleased) >= bombCoolDownTimer)
+                                if weaponReady then
+                                    local numUnits = aiBrain:GetNumUnitsAroundPoint( categories.ANTIAIR * (categories.LAND + categories.STRUCTURE + categories.NAVAL), experimentalPosition, 110, 'Enemy' )
+                                    if numUnits > 0 then
+                                        local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.ANTIAIR * (categories.LAND + categories.STRUCTURE + categories.NAVAL), experimentalPosition, 110, 'Enemy' )
+                                        local newTarget
+                                        for _, e in enemyUnits do
+                                            if e and not e.Dead then
+                                                if not newTarget then
+                                                    newTarget = e
+                                                    self.BuilderData = {
+                                                        AttackTarget = newTarget,
+                                                        Position = newTarget:GetPosition(),
+                                                    }
+                                                    self:ChangeState(self.AttackRun)
+                                                    return
+                                                end
+                                            end
+                                        end
+
+                                    end
+                                end
+                            end
                             self.BuilderData = {
                                 Retreat = true,
                                 RetreatReason = 'AirThreat'
@@ -715,6 +794,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                         StateUtils.IssueNavigationMove(experimental, targetPosition, true)
                         coroutine.yield(30)
                     elseif not attackIssued then
+                        LOG('Issued Attack for experimental bomber')
                         IssueAttack({experimental}, target)
                         attackIssued = true
                     -- in case we don't move, check if we can fire at the target
@@ -840,6 +920,12 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
+            local minimumDistance
+            if self.Bomber then
+                minimumDistance = 10000
+            else
+                minimumDistance = 4225
+            end
             local experimentalPosition = self.ExperimentalUnit:GetPosition()
             local aiBrain = self:GetBrain()
             local distanceToHome = VDist2Sq(experimentalPosition[1], experimentalPosition[3], self.Home[1], self.Home[3])
@@ -857,7 +943,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                         local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],self.Home[1],self.Home[3])
                         if aPlatToHomeDistance < distanceToHome then
                             local platoonValue = aPlatDistance * aPlatDistance / aPlatAirThreat
-                            if not closestPlatoonValue or platoonValue <= closestPlatoonValue then
+                            if not closestPlatoonValue or platoonValue <= closestPlatoonValue and aPlatDistance > minimumDistance then
                                 if NavUtils.CanPathTo(self.MovementLayer, experimentalPosition, aPlatPos) then
                                     closestPlatoon = aPlat
                                     closestPlatoonValue = platoonValue
@@ -877,7 +963,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                         local baseDistance = VDist3Sq(experimentalPosition, base.Position)
                         local homeDistance = VDist3Sq(self.Home, base.Position)
                         if homeDistance < distanceToHome or baseName == 'MAIN' then
-                            if not closestBaseDistance or baseDistance <= closestBaseDistance then
+                            if not closestBaseDistance or baseDistance <= closestBaseDistance and (baseDistance > minimumDistance or baseName == 'MAIN') then
                                 if NavUtils.CanPathTo(self.MovementLayer, experimentalPosition, base.Position) then
                                     closestBase = baseName
                                     closestBaseDistance = baseDistance

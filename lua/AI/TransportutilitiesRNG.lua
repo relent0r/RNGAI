@@ -303,7 +303,7 @@ function GetTransports( platoon, aiBrain)
                 neededTable.Total = neededTable.Total + 1
 
 			else
-				LOG("*AI DEBUG "..aiBrain.Nickname.." "..platoon.BuilderName.." during GetTransports - "..v:GetBlueprint().Description.." has no transportClass value")
+				LOG("*AI DEBUG "..tostring(aiBrain.Nickname).." "..tostring(platoon.BuilderName).." during GetTransports - "..tostring(v:GetBlueprint().Description).." has no transportClass value")
 			end
 		end	
 	end
@@ -950,7 +950,7 @@ function ReturnUnloadedUnitToPool( aiBrain, unit )
 	local attached = true
 	
 	if not unit.Dead then
-		IssueClearCommands(unit)
+		IssueClearCommands({unit})
 		local ident = Random(1,999999)
 		local returnpool = aiBrain:MakePlatoon('ReturnToPool'..tostring(ident), 'none')
 		AssignUnitsToPlatoon( aiBrain, returnpool, {unit}, 'Unassigned', 'None' )
