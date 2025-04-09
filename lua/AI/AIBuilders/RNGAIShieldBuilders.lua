@@ -40,6 +40,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.SHIELD}},
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -71,6 +72,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.SHIELD}},
             { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)}},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -108,6 +110,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.SHIELD}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveUnitRatioVersusCapRNG', { 0.12 / 2, '<', categories.STRUCTURE * categories.DEFENSE * categories.SHIELD } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -142,6 +145,7 @@ BuilderGroup {
             { UCBC, 'HaveUnitRatioAtLocationRNG', { 'LocationType', 1.0, categories.STRUCTURE * categories.SHIELD, '<=',categories.STRUCTURE * categories.TECH3 * (categories.ENERGYPRODUCTION + categories.FACTORY) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 20, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'HaveUnitRatioVersusCapRNG', { 0.12 / 2, '<', categories.STRUCTURE * categories.DEFENSE * categories.SHIELD } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -172,6 +176,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
             { UCBC, 'CheckBaseShieldsRequired', { 'LocationType' }},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -208,6 +213,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.SHIELD}},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3)} },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -239,6 +245,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
             { UCBC, 'CheckBaseShieldsRequired', { 'LocationType' }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.STRUCTURE * categories.SHIELD * (categories.TECH2 + categories.TECH3)} },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {

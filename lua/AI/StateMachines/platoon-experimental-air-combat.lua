@@ -228,7 +228,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                                                         AttackTarget = newTarget,
                                                         Position = newTarget:GetPosition(),
                                                     }
-                                                    LOG('Instead of retreating Experimental Bomber performing attackrun')
+                                                    --LOG('Instead of retreating Experimental Bomber performing attackrun')
                                                     self:ChangeState(self.AttackRun)
                                                     return
                                                 end
@@ -794,7 +794,7 @@ AIExperimentalAirBehavior = Class(AIPlatoonRNG) {
                         StateUtils.IssueNavigationMove(experimental, targetPosition, true)
                         coroutine.yield(30)
                     elseif not attackIssued then
-                        LOG('Issued Attack for experimental bomber')
+                        --LOG('Issued Attack for experimental bomber')
                         IssueAttack({experimental}, target)
                         attackIssued = true
                     -- in case we don't move, check if we can fire at the target

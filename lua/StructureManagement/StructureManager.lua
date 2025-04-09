@@ -277,163 +277,165 @@ StructureManager = Class {
                 TotalT3NAVAL = 0,
             }
             for baseName, manager in self.Brain.BuilderManagers do
-                if manager.FactoryManager.FactoryList and not table.empty(manager.FactoryManager.FactoryList) then
-                    local massToFactoryValues = manager.BaseSettings.MassToFactoryValues
-                    for c, unit in manager.FactoryManager.FactoryList do
-                        local unitCat = unit.Blueprint.CategoriesHash
-                        if not IsDestroyed(unit) then
-                            if unitCat.LAND then
-                                if unitCat.TECH1 then
-                                    RNGINSERT(FactoryData.T1LAND, unit)
-                                    if unit:IsUnitState('Upgrading') then
-                                        FactoryData.T1LANDUpgrading = FactoryData.T1LANDUpgrading + 1
-                                    end
-                                    FactoryData.TotalT1LAND = FactoryData.TotalT1LAND + 1
-                                    FactoryData.T1LANDApproxConsumption = FactoryData.T1LANDApproxConsumption + massToFactoryValues.T1LandValue
-                                elseif unitCat.TECH2 then
-                                    RNGINSERT(FactoryData.T2LAND, unit)
-                                    if not unitCat.SUPPORTFACTORY then
-                                        if not FactoryData.T2LANDHQCount[unit.UnitId] then
-                                            FactoryData.T2LANDHQCount[unit.UnitId] = 0
+                if baseName ~= 'FLOATING' then
+                    if manager.FactoryManager.FactoryList and not table.empty(manager.FactoryManager.FactoryList) then
+                        local massToFactoryValues = manager.BaseSettings.MassToFactoryValues
+                        for c, unit in manager.FactoryManager.FactoryList do
+                            local unitCat = unit.Blueprint.CategoriesHash
+                            if not IsDestroyed(unit) then
+                                if unitCat.LAND then
+                                    if unitCat.TECH1 then
+                                        RNGINSERT(FactoryData.T1LAND, unit)
+                                        if unit:IsUnitState('Upgrading') then
+                                            FactoryData.T1LANDUpgrading = FactoryData.T1LANDUpgrading + 1
                                         end
-                                        FactoryData.T2LANDHQCount[unit.UnitId] = FactoryData.T2LANDHQCount[unit.UnitId] + 1
-                                    end
-                                    if unit:IsUnitState('Upgrading') then
-                                        FactoryData.T2LANDUpgrading = FactoryData.T2LANDUpgrading + 1
-                                    end
-                                    FactoryData.TotalT2LAND = FactoryData.TotalT2LAND + 1
-                                    FactoryData.T2LANDApproxConsumption = FactoryData.T2LANDApproxConsumption + massToFactoryValues.T2LandValue
-                                elseif unitCat.TECH3 then
-                                    RNGINSERT(FactoryData.T3LAND, unit)
-                                    if not unitCat.SUPPORTFACTORY then
-                                        if not FactoryData.T3LANDHQCount[unit.UnitId] then
-                                            FactoryData.T3LANDHQCount[unit.UnitId] = 0
+                                        FactoryData.TotalT1LAND = FactoryData.TotalT1LAND + 1
+                                        FactoryData.T1LANDApproxConsumption = FactoryData.T1LANDApproxConsumption + massToFactoryValues.T1LandValue
+                                    elseif unitCat.TECH2 then
+                                        RNGINSERT(FactoryData.T2LAND, unit)
+                                        if not unitCat.SUPPORTFACTORY then
+                                            if not FactoryData.T2LANDHQCount[unit.UnitId] then
+                                                FactoryData.T2LANDHQCount[unit.UnitId] = 0
+                                            end
+                                            FactoryData.T2LANDHQCount[unit.UnitId] = FactoryData.T2LANDHQCount[unit.UnitId] + 1
                                         end
-                                        FactoryData.T3LANDHQCount[unit.UnitId] = FactoryData.T3LANDHQCount[unit.UnitId] + 1
-                                    end
-                                    FactoryData.TotalT3LAND = FactoryData.TotalT3LAND + 1
-                                    FactoryData.T3LANDApproxConsumption = FactoryData.T3LANDApproxConsumption + massToFactoryValues.T3LandValue
-                                end
-                            elseif unitCat.AIR then
-                                if unitCat.TECH1 then
-                                    RNGINSERT(FactoryData.T1AIR, unit)
-                                    if unit:IsUnitState('Upgrading') then
-                                        FactoryData.T1AIRUpgrading = FactoryData.T1AIRUpgrading + 1
-                                    end
-                                    FactoryData.TotalT1AIR = FactoryData.TotalT1AIR + 1
-                                    FactoryData.T1AIRApproxConsumption = FactoryData.T1AIRApproxConsumption + massToFactoryValues.T1AirValue
-                                elseif unitCat.TECH2 then
-                                    RNGINSERT(FactoryData.T2AIR, unit)
-                                    if not unitCat.SUPPORTFACTORY then
-                                        if not FactoryData.T2AIRHQCount[unit.UnitId] then
-                                            FactoryData.T2AIRHQCount[unit.UnitId] = 0
+                                        if unit:IsUnitState('Upgrading') then
+                                            FactoryData.T2LANDUpgrading = FactoryData.T2LANDUpgrading + 1
                                         end
-                                        FactoryData.T2AIRHQCount[unit.UnitId] = FactoryData.T2AIRHQCount[unit.UnitId] + 1
-                                    end
-                                    if unit:IsUnitState('Upgrading') then
-                                        FactoryData.T2AIRUpgrading = FactoryData.T2AIRUpgrading + 1
-                                    end
-                                    FactoryData.TotalT2AIR = FactoryData.TotalT2AIR + 1
-                                    FactoryData.T2AIRApproxConsumption = FactoryData.T2AIRApproxConsumption + massToFactoryValues.T2AirValue
-                                elseif unitCat.TECH3 then
-                                    RNGINSERT(FactoryData.T3AIR, unit)
-                                    if not unitCat.SUPPORTFACTORY then
-                                        if not FactoryData.T3AIRHQCount[unit.UnitId] then
-                                            FactoryData.T3AIRHQCount[unit.UnitId] = 0
+                                        FactoryData.TotalT2LAND = FactoryData.TotalT2LAND + 1
+                                        FactoryData.T2LANDApproxConsumption = FactoryData.T2LANDApproxConsumption + massToFactoryValues.T2LandValue
+                                    elseif unitCat.TECH3 then
+                                        RNGINSERT(FactoryData.T3LAND, unit)
+                                        if not unitCat.SUPPORTFACTORY then
+                                            if not FactoryData.T3LANDHQCount[unit.UnitId] then
+                                                FactoryData.T3LANDHQCount[unit.UnitId] = 0
+                                            end
+                                            FactoryData.T3LANDHQCount[unit.UnitId] = FactoryData.T3LANDHQCount[unit.UnitId] + 1
                                         end
-                                        FactoryData.T3AIRHQCount[unit.UnitId] = FactoryData.T3AIRHQCount[unit.UnitId] + 1
+                                        FactoryData.TotalT3LAND = FactoryData.TotalT3LAND + 1
+                                        FactoryData.T3LANDApproxConsumption = FactoryData.T3LANDApproxConsumption + massToFactoryValues.T3LandValue
                                     end
-                                    FactoryData.TotalT3AIR = FactoryData.TotalT3AIR + 1
-                                    FactoryData.T3AIRApproxConsumption = FactoryData.T3AIRApproxConsumption + massToFactoryValues.T3AirValue
-                                end
-                            elseif unitCat.NAVAL then
-                                if unitCat.TECH1 then
-                                    RNGINSERT(FactoryData.T1NAVAL, 1, unit)
-                                    if unit:IsUnitState('Upgrading') then
-                                        FactoryData.T1NAVALUpgrading = FactoryData.T1NAVALUpgrading + 1
-                                    end
-                                    FactoryData.TotalT1NAVAL = FactoryData.TotalT1NAVAL + 1
-                                    FactoryData.T1NAVALApproxConsumption = FactoryData.T1NAVALApproxConsumption + massToFactoryValues.T1NavalValue
-                                elseif unitCat.TECH2 then
-                                    RNGINSERT(FactoryData.T2NAVAL, unit)
-                                    if not unitCat.SUPPORTFACTORY then
-                                        if not FactoryData.T2NAVALHQCount[unit.UnitId] then
-                                            FactoryData.T2NAVALHQCount[unit.UnitId] = 0
+                                elseif unitCat.AIR then
+                                    if unitCat.TECH1 then
+                                        RNGINSERT(FactoryData.T1AIR, unit)
+                                        if unit:IsUnitState('Upgrading') then
+                                            FactoryData.T1AIRUpgrading = FactoryData.T1AIRUpgrading + 1
                                         end
-                                        FactoryData.T2NAVALHQCount[unit.UnitId] = FactoryData.T2NAVALHQCount[unit.UnitId] + 1
-                                    end
-                                    if unit:IsUnitState('Upgrading') then
-                                        FactoryData.T2NAVALUpgrading = FactoryData.T2NAVALUpgrading + 1
-                                    end
-                                    FactoryData.TotalT2NAVAL = FactoryData.TotalT2NAVAL + 1
-                                    FactoryData.T2NAVALApproxConsumption = FactoryData.T2NAVALApproxConsumption + massToFactoryValues.T2NavalValue
-                                elseif unitCat.TECH3 then
-                                    RNGINSERT(FactoryData.T3NAVAL, unit)
-                                    if not unitCat.SUPPORTFACTORY then
-                                        if not FactoryData.T3NAVALHQCount[unit.UnitId] then
-                                            FactoryData.T3NAVALHQCount[unit.UnitId] = 0
+                                        FactoryData.TotalT1AIR = FactoryData.TotalT1AIR + 1
+                                        FactoryData.T1AIRApproxConsumption = FactoryData.T1AIRApproxConsumption + massToFactoryValues.T1AirValue
+                                    elseif unitCat.TECH2 then
+                                        RNGINSERT(FactoryData.T2AIR, unit)
+                                        if not unitCat.SUPPORTFACTORY then
+                                            if not FactoryData.T2AIRHQCount[unit.UnitId] then
+                                                FactoryData.T2AIRHQCount[unit.UnitId] = 0
+                                            end
+                                            FactoryData.T2AIRHQCount[unit.UnitId] = FactoryData.T2AIRHQCount[unit.UnitId] + 1
                                         end
-                                        FactoryData.T3NAVALHQCount[unit.UnitId] = FactoryData.T3NAVALHQCount[unit.UnitId] + 1
+                                        if unit:IsUnitState('Upgrading') then
+                                            FactoryData.T2AIRUpgrading = FactoryData.T2AIRUpgrading + 1
+                                        end
+                                        FactoryData.TotalT2AIR = FactoryData.TotalT2AIR + 1
+                                        FactoryData.T2AIRApproxConsumption = FactoryData.T2AIRApproxConsumption + massToFactoryValues.T2AirValue
+                                    elseif unitCat.TECH3 then
+                                        RNGINSERT(FactoryData.T3AIR, unit)
+                                        if not unitCat.SUPPORTFACTORY then
+                                            if not FactoryData.T3AIRHQCount[unit.UnitId] then
+                                                FactoryData.T3AIRHQCount[unit.UnitId] = 0
+                                            end
+                                            FactoryData.T3AIRHQCount[unit.UnitId] = FactoryData.T3AIRHQCount[unit.UnitId] + 1
+                                        end
+                                        FactoryData.TotalT3AIR = FactoryData.TotalT3AIR + 1
+                                        FactoryData.T3AIRApproxConsumption = FactoryData.T3AIRApproxConsumption + massToFactoryValues.T3AirValue
                                     end
-                                    FactoryData.TotalT3NAVAL = FactoryData.TotalT3NAVAL + 1
-                                    FactoryData.T3NAVALApproxConsumption = FactoryData.T3NAVALApproxConsumption + massToFactoryValues.T3NavalValue
+                                elseif unitCat.NAVAL then
+                                    if unitCat.TECH1 then
+                                        RNGINSERT(FactoryData.T1NAVAL, 1, unit)
+                                        if unit:IsUnitState('Upgrading') then
+                                            FactoryData.T1NAVALUpgrading = FactoryData.T1NAVALUpgrading + 1
+                                        end
+                                        FactoryData.TotalT1NAVAL = FactoryData.TotalT1NAVAL + 1
+                                        FactoryData.T1NAVALApproxConsumption = FactoryData.T1NAVALApproxConsumption + massToFactoryValues.T1NavalValue
+                                    elseif unitCat.TECH2 then
+                                        RNGINSERT(FactoryData.T2NAVAL, unit)
+                                        if not unitCat.SUPPORTFACTORY then
+                                            if not FactoryData.T2NAVALHQCount[unit.UnitId] then
+                                                FactoryData.T2NAVALHQCount[unit.UnitId] = 0
+                                            end
+                                            FactoryData.T2NAVALHQCount[unit.UnitId] = FactoryData.T2NAVALHQCount[unit.UnitId] + 1
+                                        end
+                                        if unit:IsUnitState('Upgrading') then
+                                            FactoryData.T2NAVALUpgrading = FactoryData.T2NAVALUpgrading + 1
+                                        end
+                                        FactoryData.TotalT2NAVAL = FactoryData.TotalT2NAVAL + 1
+                                        FactoryData.T2NAVALApproxConsumption = FactoryData.T2NAVALApproxConsumption + massToFactoryValues.T2NavalValue
+                                    elseif unitCat.TECH3 then
+                                        RNGINSERT(FactoryData.T3NAVAL, unit)
+                                        if not unitCat.SUPPORTFACTORY then
+                                            if not FactoryData.T3NAVALHQCount[unit.UnitId] then
+                                                FactoryData.T3NAVALHQCount[unit.UnitId] = 0
+                                            end
+                                            FactoryData.T3NAVALHQCount[unit.UnitId] = FactoryData.T3NAVALHQCount[unit.UnitId] + 1
+                                        end
+                                        FactoryData.TotalT3NAVAL = FactoryData.TotalT3NAVAL + 1
+                                        FactoryData.T3NAVALApproxConsumption = FactoryData.T3NAVALApproxConsumption + massToFactoryValues.T3NavalValue
+                                    end
                                 end
                             end
                         end
                     end
-                end
-                if manager.BaseSettings.MassToFactoryValues then
-                    if baseName == 'MAIN' then
-                        manager.BaseSettings.MassToFactoryValues = {
-                            T1LandValue = 4,
-                            T2LandValue = 10,
-                            T3LandValue = 23,
-                            T1AirValue = 3.5,
-                            T2AirValue = 10,
-                            T3AirValue = 25,
-                            T1NavalValue = 4,
-                            T2NavalValue = 16,
-                            T3NavalValue = 30,
-                        }
-                    elseif self.Brain.BrainIntel.ActiveExpansion and self.Brain.BrainIntel.ActiveExpansion == baseName then
-                        manager.BaseSettings.MassToFactoryValues = {
-                            T1LandValue = 4,
-                            T2LandValue = 10,
-                            T3LandValue = 23,
-                            T1AirValue = 3.5,
-                            T2AirValue = 10,
-                            T3AirValue = 25,
-                            T1NavalValue = 4,
-                            T2NavalValue = 16,
-                            T3NavalValue = 30,
-                        }
-                    elseif manager.Layer == 'Water' then
-                        manager.BaseSettings.MassToFactoryValues = {
-                            T1LandValue = 7,
-                            T2LandValue = 25,
-                            T3LandValue = 45,
-                            T1AirValue = 7,
-                            T2AirValue = 25,
-                            T3AirValue = 45,
-                            T1NavalValue = 5,
-                            T2NavalValue = 24,
-                            T3NavalValue = 45,
-                        }
+                    if manager.BaseSettings.MassToFactoryValues then
+                        if baseName == 'MAIN' then
+                            manager.BaseSettings.MassToFactoryValues = {
+                                T1LandValue = 4,
+                                T2LandValue = 10,
+                                T3LandValue = 23,
+                                T1AirValue = 3.5,
+                                T2AirValue = 10,
+                                T3AirValue = 25,
+                                T1NavalValue = 4,
+                                T2NavalValue = 16,
+                                T3NavalValue = 30,
+                            }
+                        elseif self.Brain.BrainIntel.ActiveExpansion and self.Brain.BrainIntel.ActiveExpansion == baseName then
+                            manager.BaseSettings.MassToFactoryValues = {
+                                T1LandValue = 4,
+                                T2LandValue = 10,
+                                T3LandValue = 23,
+                                T1AirValue = 3.5,
+                                T2AirValue = 10,
+                                T3AirValue = 25,
+                                T1NavalValue = 4,
+                                T2NavalValue = 16,
+                                T3NavalValue = 30,
+                            }
+                        elseif manager.Layer == 'Water' then
+                            manager.BaseSettings.MassToFactoryValues = {
+                                T1LandValue = 7,
+                                T2LandValue = 25,
+                                T3LandValue = 45,
+                                T1AirValue = 7,
+                                T2AirValue = 25,
+                                T3AirValue = 45,
+                                T1NavalValue = 5,
+                                T2NavalValue = 24,
+                                T3NavalValue = 45,
+                            }
+                        else
+                            manager.BaseSettings.MassToFactoryValues = {
+                                T1LandValue = 4.5,
+                                T2LandValue = 14,
+                                T3LandValue = 22.5,
+                                T1AirValue = 4.5,
+                                T2AirValue = 14,
+                                T3AirValue = 22.5,
+                                T1NavalValue = 5,
+                                T2NavalValue = 15,
+                                T3NavalValue = 22.5,
+                            }
+                        end
                     else
-                        manager.BaseSettings.MassToFactoryValues = {
-                            T1LandValue = 4.5,
-                            T2LandValue = 14,
-                            T3LandValue = 22.5,
-                            T1AirValue = 4.5,
-                            T2AirValue = 14,
-                            T3AirValue = 22.5,
-                            T1NavalValue = 5,
-                            T2NavalValue = 15,
-                            T3NavalValue = 22.5,
-                        }
+                        LOG('AI: No MassToFactoryValues table for base '..tostring(baseName)..' are we still waiting for the base to initialize?')
                     end
-                else
-                    LOG('AI: No MassToFactoryValues table for base '..tostring(baseName)..' are we still waiting for the base to initialize?')
                 end
             end
             self.Factories.LAND[1].UpgradingCount = FactoryData.T1LANDUpgrading

@@ -34,6 +34,7 @@ BuilderGroup {
             { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
             { MIBC, 'GreaterThanGameTimeRNG', { 180 } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -58,6 +59,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE}},
             { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.2 }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -82,6 +84,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE }},
             { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.LAND } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.4 }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -106,6 +109,7 @@ BuilderGroup {
             { UCBC, 'StructureBuildDemand', { 'Structure', 'intel', 'Optics'} },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.AEON * categories.OPTICS * categories.STRUCTURE}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.3 }},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -135,6 +139,7 @@ BuilderGroup {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, (categories.RADAR + categories.OMNI) * categories.STRUCTURE, 45}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -163,6 +168,7 @@ BuilderGroup {
             { UCBC, 'GreaterThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 1.0 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80 } },
+            { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
         BuilderData = {

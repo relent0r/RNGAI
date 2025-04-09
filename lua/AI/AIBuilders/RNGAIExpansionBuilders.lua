@@ -106,7 +106,7 @@ BuilderGroup {
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'ZoneAvailableRNG', { 'LocationType' } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -138,7 +138,7 @@ BuilderGroup {
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'ZoneAvailableRNG', { 'LocationType' } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -177,7 +177,7 @@ BuilderGroup {
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
             { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', false, 250, -1000, 100, 1, 'AntiSurface' } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -214,7 +214,7 @@ BuilderGroup {
             { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 3,  categories.FACTORY * categories.STRUCTURE }},
             { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', true, 250, -1000, 100, 1, 'AntiSurface' } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -257,7 +257,7 @@ BuilderGroup {
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
             { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', false, 250, -1000, 100, 1, 'AntiSurface' } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -295,7 +295,7 @@ BuilderGroup {
             { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', true, 650, -1000, 100, 1, 'AntiSurface' } },
             { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 3, categories.FACTORY * categories.STRUCTURE }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {

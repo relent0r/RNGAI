@@ -87,7 +87,7 @@ BuilderGroup {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL, true }},
             { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading', true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T1', 'frigate'} },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
         BuilderData = {
@@ -127,7 +127,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.NAVAL * categories.TECH2 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.20}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
     },
@@ -156,7 +156,7 @@ BuilderGroup {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
             { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'destroyer'} },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
         BuilderData = {
@@ -171,7 +171,7 @@ BuilderGroup {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
             { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'cruiser'} },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
         BuilderData = {
@@ -185,7 +185,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T2', 'cruiser'} },
             { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
         BuilderData = {
@@ -200,7 +200,7 @@ BuilderGroup {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
             { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'subhunter'} },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
         BuilderData = {
@@ -240,7 +240,7 @@ BuilderGroup {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.6}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
     },
@@ -253,7 +253,7 @@ BuilderGroup {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
             { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T3', 'battleship'} },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
         BuilderData = {
@@ -269,7 +269,7 @@ BuilderGroup {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
     },
@@ -280,7 +280,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T3', 'missileship'} },
             { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading', nil, true}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
         BuilderData = {
@@ -294,7 +294,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T3', 'nukesub'} },
             { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading', nil, true}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
         BuilderData = {
@@ -308,7 +308,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T3', 'carrier'} },
             { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading', nil, true}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
         BuilderData = {

@@ -7693,7 +7693,7 @@ UpdateShieldsProtectingUnit = function(aiBrain, finishedUnit)
                         if not finishedUnit['rngdata'].ShieldsInRange then
                             finishedUnit['rngdata'].ShieldsInRange = setmetatable({}, WeakValueTable)
                         end
-                        finishedUnit['rngdata'].ShieldsInRange[shield.EntityId] = v
+                        finishedUnit['rngdata'].ShieldsInRange[v.EntityId] = v
                         v['rngdata']['UnitsDefended'][finishedUnit.EntityId] = finishedUnit
                     end
                 end
@@ -7975,7 +7975,7 @@ function ValidateEnhancingUnit(unit)
                 unit['rngdata'] = {}
             end
             unit['rngdata']['IsUpgradingGun'] = true
-            LOG('Unit detected as upgrading gun')
+            --LOG('Unit detected as upgrading gun')
         end
     end
 end

@@ -82,18 +82,16 @@ function AddBuilderTable(aiBrain, locationType, builderTable, tableName)
                     for _, b in Builders[v].BuilderData.Construction.BuildStructures do
                         if b.Categories then
                             local bluePrints = EntityCategoryGetUnitList(b.Categories)
-                            for _, c in bluePrints do
+                             for _, c in bluePrints do
                                 if not IsRestricted(c, armyIndex) then
                                     allowedUnits = allowedUnits + 1
-                                else
-                                    LOG('restricted unit '..tostring(c)..' builder '..tostring(repr(Builders[v].BuilderName)))
                                 end
                             end
                         end
                     end
-                    LOG('allowedUnits '..tostring(allowedUnits)..' for builder '..tostring(Builders[v].BuilderName))
+                    --LOG('allowedUnits '..tostring(allowedUnits)..' for builder '..tostring(Builders[v].BuilderName))
                     if allowedUnits == 0 then
-                        LOG('Unit is restricted, dont add builder '..tostring(Builders[v].BuilderName))
+                        --LOG('Unit is restricted, dont add builder '..tostring(Builders[v].BuilderName))
                         continue
                     end
                 end

@@ -169,6 +169,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 420 } },
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 2000, -500, 2, 0, 'AntiSurface', 1}},
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER - categories.COMMAND }},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
             
         },
         BuilderType = 'Any',
@@ -210,7 +211,7 @@ BuilderGroup {
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 60 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.0 }},
             { UCBC, 'AdjacencyFabricatorCheckRNG', { 'LocationType', categories.MASSEXTRACTION * categories.TECH3, 60 } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -247,7 +248,7 @@ BuilderGroup {
             { EBC, 'LessThanEconStorageRatioRNG', { 0.10, 2 } },
             -- Don't build it if...
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.MASSFABRICATION } },
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -281,6 +282,7 @@ BuilderGroup {
         InstanceCount = 5,
         BuilderConditions = {
                 { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 2000, -500, 2, 0, 'AntiSurface', 1}},
+                { UCBC, 'UnitCapCheckLess', { .9 } },
             },
         BuilderType = 'Any',
         BuilderData = {
@@ -308,6 +310,7 @@ BuilderGroup {
         InstanceCount = 10,
         BuilderConditions = {
                 { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 2000, -500, 2, 0, 'AntiSurface', 1}},
+                { UCBC, 'UnitCapCheckLess', { .9 } },
             },
         BuilderType = 'Any',
         BuilderData = {
@@ -390,6 +393,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {
                 { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 100, 2000, -500, 2, 0, 'AntiSurface', 1}},
+                { UCBC, 'UnitCapCheckLess', { .9 } },
             },
         BuilderType = 'Any',
         BuilderData = {
@@ -425,7 +429,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.80, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
             { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 150 } },
         },
         BuilderType = 'Any',
@@ -463,7 +467,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
             { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 150 } },
         },
         BuilderType = 'Any',
@@ -501,7 +505,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.MASSEXTRACTION * categories.TECH3}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 80 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
             { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 80 } },
         },
         BuilderType = 'Any',
@@ -538,7 +542,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
             { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 80 } },
         },
         BuilderType = 'Any',
@@ -573,7 +577,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, 'MASSEXTRACTION'}},
             { MABC, 'MarkerLessThanDistance',  { 'Mass', 150, -3, 0, 0}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.50, 0.20}},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
             { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION, 80 } },
         },
         BuilderType = 'Any',
@@ -614,7 +618,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 150 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
             { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 80 } },
         },
         BuilderType = 'Any',
@@ -651,7 +655,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 3, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 500 }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
             { UCBC, 'AdjacencyMassCheckRNG', { 'LocationType', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 80 } },
         },
         BuilderType = 'Any',
@@ -694,7 +698,7 @@ BuilderGroup {
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 4, categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3)}},
             { MABC, 'MassMarkerLessThanDistanceRNG',  { 'BaseDMZArea' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.95, 1.05 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
             { UCBC, 'AdjacencyMassCheckRNG', { 'MAIN', categories.MASSEXTRACTION * (categories.TECH2 + categories.TECH3), 'BaseDMZArea' } },
         },
         BuilderType = 'Any',

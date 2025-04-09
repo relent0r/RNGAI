@@ -33,6 +33,7 @@ BuilderGroup {
             { EBC, 'GreaterThanMassStorageOrEfficiency', { 225, 0.95 }},
             { UCBC, 'ValidateHydroIncome', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.HYDROCARBON) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }}, -- Don't build after 1 T2 Pgens Exist
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -74,6 +75,7 @@ BuilderGroup {
             { EBC, 'NegativeEcoPowerCheckInstant', { 15.0 } }, -- If our energy is trending into negatives
             { UCBC, 'ValidateHydroIncome', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.HYDROCARBON) } },
             { UCBC, 'PowerBuildCapabilityExist', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON, categories.ENGINEER * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -115,6 +117,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.1 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }},
             { UCBC, 'PowerBuildCapabilityExist', { categories.STRUCTURE * categories.ENERGYPRODUCTION *  categories.TECH3 - categories.HYDROCARBON, categories.ENGINEER * categories.TECH3 }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -154,6 +157,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.10}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 3, categories.ENERGYPRODUCTION * categories.TECH2, 1, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 - categories.HYDROCARBON }},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -187,6 +191,7 @@ BuilderGroup {
             { EBC, 'NegativeEcoPowerCheck', { 180.0 } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.1 }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -226,6 +231,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.10}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -266,6 +272,7 @@ BuilderGroup {
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 28.0 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.1 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }}, -- Don't build after 1 T2 Pgens Exist
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -295,6 +302,7 @@ BuilderGroup {
             { UCBC, 'HaveLessThanUnitsWithCategory', { 2, categories.ENERGYPRODUCTION *  categories.TECH3 - categories.HYDROCARBON }},
             { EBC, 'LessThanEnergyTrendCombinedRNG', { 0.0 } },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.TECH2 * categories.ENERGYPRODUCTION - categories.HYDROCARBON }},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -325,6 +333,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = { 
             { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 65, 1, 'AntiSurface'}},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -350,6 +359,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = { 
             { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 120, 1, 'AntiSurface'}},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -374,6 +384,7 @@ BuilderGroup {
         BuilderConditions = { 
             { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 256, 1, 'AntiSurface'}},
             { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.8, 0.1 }},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -401,9 +412,10 @@ BuilderGroup {
         Priority = 1000,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
-            { UCBC, 'UnitCapCheckLess', { .75 } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYSTORAGE }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -424,9 +436,10 @@ BuilderGroup {
         Priority = 850,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 480 } },
-            { UCBC, 'UnitCapCheckLess', { .75 } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.ENERGYSTORAGE }},
             { EBC, 'GreaterThanEconEfficiencyOrAirStrategyRNG', { 0.9, 1.1 }},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -446,10 +459,11 @@ BuilderGroup {
         Priority = 500,
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 960 } },
-            { UCBC, 'UnitCapCheckLess', { .75 } },
+            { UCBC, 'UnitCapCheckLess', { .8 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.3 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.95}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 8, categories.ENERGYSTORAGE }},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
         BuilderData = {

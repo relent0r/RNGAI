@@ -15,21 +15,21 @@ AIPlansList =
 {
     -- EARTH Faction Plans
     {
-        '/mods/RNGAI/lua/ai/aiarchetype-managerloader.lua',
+        '/lua/AI/aiarchetype-managerloader.lua',
     },
 
     -- AEON Faction Plans
     {
-        '/mods/RNGAI/lua/ai/aiarchetype-managerloader.lua',
+        '/lua/AI/aiarchetype-managerloader.lua',
     },
 
     -- CYBRAN Faction Plans
     {
-        '/mods/RNGAI/lua/ai/aiarchetype-managerloader.lua',
+        '/lua/AI/aiarchetype-managerloader.lua',
     },
 
     -- SERAPHIM Faction Plans
     {
-        '/mods/RNGAI/lua/ai/aiarchetype-managerloader.lua',
+        '/lua/AI/aiarchetype-managerloader.lua',
     },
 }

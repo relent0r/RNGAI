@@ -793,7 +793,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     and brain:GetCurrentUnits(categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)) < 1 then
                     self.BuilderData.Construction = {
                             BuildStructures = {
-                                'T1EnergyProduction',
+                                { Unit = 'T1EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE - categories.HYDROCARBON },
                             },
                         }
                     --LOG('ACU : We are going to try and build a pgen')

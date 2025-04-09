@@ -125,6 +125,7 @@ BuilderGroup {
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -156,6 +157,7 @@ BuilderGroup {
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land', false, true } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -185,6 +187,7 @@ BuilderGroup {
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH3 }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -213,6 +216,7 @@ BuilderGroup {
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND * categories.TECH3 }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -242,6 +246,7 @@ BuilderGroup {
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -272,6 +277,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 8, categories.FACTORY * categories.LAND }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -334,6 +340,7 @@ BuilderGroup {
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -363,6 +370,7 @@ BuilderGroup {
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -391,6 +399,7 @@ BuilderGroup {
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -419,6 +428,7 @@ BuilderGroup {
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH3 }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -447,6 +457,7 @@ BuilderGroup {
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND * categories.TECH3 }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -511,6 +522,7 @@ BuilderGroup {
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Air' } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIR * categories.FACTORY }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -542,6 +554,7 @@ BuilderGroup {
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Air' } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIR * categories.FACTORY }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -569,6 +582,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 - categories.SUPPORTFACTORY }},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Air' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -595,6 +609,7 @@ BuilderGroup {
             { UCBC, 'MinimumFactoryCheckRNG', { 'LocationType', 'Air'}},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Air' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -624,6 +639,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 1.1 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.AIR }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -659,6 +675,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIR * categories.FACTORY * categories.TECH1 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH1 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -689,6 +706,7 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Air' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -719,6 +737,7 @@ BuilderGroup {
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Air' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIR * categories.FACTORY }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -745,6 +764,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR *  categories.TECH3 - categories.SUPPORTFACTORY }},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Air' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -771,6 +791,7 @@ BuilderGroup {
             { UCBC, 'MinimumFactoryCheckRNG', { 'LocationType', 'Air'}},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Air' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -801,6 +822,7 @@ BuilderGroup {
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Air' } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIR * categories.FACTORY }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -834,6 +856,7 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Air' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -896,6 +919,7 @@ BuilderGroup {
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY, true }},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Naval' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -923,6 +947,7 @@ BuilderGroup {
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3), true }},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Naval' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -951,6 +976,7 @@ BuilderGroup {
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * categories.TECH3 }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -978,6 +1004,7 @@ BuilderGroup {
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Naval' } },
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH3 - categories.SUPPORTFACTORY } },
             { UCBC, 'LessThanFactoryCountRNG', { 3, categories.FACTORY * categories.NAVAL * categories.TECH3, true }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1006,6 +1033,7 @@ BuilderGroup {
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Naval' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * categories.TECH3 }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1033,6 +1061,7 @@ BuilderGroup {
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3), true } },
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Naval' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -1068,6 +1097,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH1 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * categories.TECH1 }},
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY, true }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1094,6 +1124,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.85 }},
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY, true }},
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -1121,6 +1152,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Naval' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
 
         },
         BuilderType = 'Any',
@@ -1150,6 +1182,7 @@ BuilderGroup {
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.NAVAL * categories.TECH1 }},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Naval' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
 
         },
         BuilderType = 'Any',
@@ -1181,6 +1214,7 @@ BuilderGroup {
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * categories.TECH3 }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1208,6 +1242,7 @@ BuilderGroup {
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Naval' } },
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.STRUCTURE * categories.FACTORY * categories.NAVAL * categories.TECH3 - categories.SUPPORTFACTORY } },
             { UCBC, 'LessThanFactoryCountRNG', { 3, categories.FACTORY * categories.NAVAL * categories.TECH3, true }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1238,6 +1273,7 @@ BuilderGroup {
             -- Have we the eco to build it ?
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 1.0 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIRSTAGINGPLATFORM }},
+            { UCBC, 'UnitCapCheckLess', { .9 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -1268,6 +1304,7 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1297,6 +1334,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1325,6 +1363,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1353,6 +1392,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH3 }},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1381,6 +1421,7 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1409,6 +1450,7 @@ BuilderGroup {
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1438,6 +1480,7 @@ BuilderGroup {
             { MIBC, 'GatewayValidation', {} },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.03, 0.80 } },             -- Ratio from 0 to 1. (1=100%)
+            { UCBC, 'UnitCapCheckLess', { .95 } },
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -1469,6 +1512,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.LAND * categories.TECH1 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1502,6 +1546,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR }},
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.AIR * categories.TECH1 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {
@@ -1531,6 +1576,7 @@ BuilderGroup {
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Air' } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIR * categories.FACTORY * categories.TECH1 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
         BuilderData = {

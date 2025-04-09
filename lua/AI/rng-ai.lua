@@ -148,8 +148,249 @@ AIBrain = Class(RNGAIBrainClass) {
     InitialAIThread = function(self)
         -- delay the AI so it can't reclaim the start area before it's cleared from the ACU landing blast.
         WaitTicks(30)
-        self.EvaluateThread = self:ForkThread(self.EvaluateAIThread)
-        self.ExecuteThread = self:ForkThread(self.ExecuteAIThread)
+        self:ExecuteInitialAIBaseSetup()
+    end,
+
+    ---@param self AIBrain
+    ExecuteInitialAIBaseSetup = function(self)
+        local AIAddBuilderTable = import('/mods/RNGAI/lua/ai/aiaddbuildertable.lua')
+        local base = false
+        local returnVal = 0
+        local aiType = false
+    
+        for k,v in BaseBuilderTemplates do
+            if v.FirstBaseFunction then
+                local baseVal, baseType = v.FirstBaseFunction(self)
+                -- LOG('*DEBUG: testing ' .. k .. ' - Val ' .. baseVal)
+                if baseVal > returnVal then
+                    returnVal = baseVal
+                    base = k
+                    aiType = baseType
+                end
+            end
+        end
+        if base then
+            WaitSeconds(1)
+            if not self.BuilderManagers.MAIN.FactoryManager:HasBuilderList() then
+                self:SetResourceSharing(true)
+                ScenarioInfo.ArmySetup[self.Name].AIBase = base
+                ScenarioInfo.ArmySetup[self.Name].AIPersonality = aiType
+                LOG('*AI DEBUG: ARMY ', tostring(self:GetArmyIndex()), ': Initiating Archetype using ' .. base)
+                AIAddBuilderTable.AddGlobalBaseTemplate(self, 'MAIN', base)
+                self:ForceManagerSort()
+        
+                -- Get units out of pool and assign them to the managers
+                local mainManagers = self.BuilderManagers.MAIN
+                local pool = self:GetPlatoonUniquelyNamed('ArmyPool')
+                for k,v in pool:GetPlatoonUnits() do
+                    if EntityCategoryContains(categories.ENGINEER, v) then
+                        mainManagers.EngineerManager:AddUnit(v)
+                    elseif EntityCategoryContains(categories.FACTORY * categories.STRUCTURE, v) then
+                        mainManagers.FactoryManager:AddFactory(v)
+                    end
+                end
+                self:ForkThread(self.UnitCapWatchThread)
+            end
+            if self.PBM then
+                self:PBMSetEnabled(false)
+            end
+        end
+    end,
+
+    --- Modeled after GPGs LowMass and LowEnergy functions.
+    --- Runs the whole game and kills off units when the AI hits unit cap.
+    ---@param self AIBrain
+    UnitCapWatchThread = function(self)
+        local function GetFromNested(table, paths)
+            local total = 0
+            for _, path in ipairs(paths) do
+                local current = table
+                local validPath = true
+                for _, key in ipairs(path) do
+                    if current[key] == nil then
+                        validPath = false
+                        break
+                    end
+                    current = current[key]
+                end
+                -- If the path is valid, add the final value (or 0 if nil)
+                if validPath then
+                    total = total + (current or 0)
+                else
+                    LOG('*AI DEBUG: Invalid Path passed to GetFromNested '..tostring(repr(path)))
+                    total = total + 0
+                end
+            end
+            return total
+        end
+
+        local cullTable = {
+            Walls = {
+                categories = categories.WALL * categories.STRUCTURE * categories.DEFENSE,
+                compare = false,
+                compareType = 'getunits',
+                cullRatio = 0.3,
+                checkAttached = false
+            },
+            T1LandScouts = {
+                categories = categories.MOBILE * categories.TECH1 * categories.SCOUT * categories.LAND,
+                compare = false,
+                compareType = 'amanager',
+                compareFrom = {{'Land', 'T1', 'scout'}},
+                cullRatio = 0.3,
+                checkAttached = true
+            },
+            T1AirScouts = {
+                categories = categories.MOBILE * categories.TECH1 * categories.SCOUT * categories.AIR,
+                compare = false,
+                compareType = 'amanager',
+                compareFrom = {{'Air', 'T1', 'scout'}},
+                cullRatio = 0.3,
+                checkAttached = true
+            },
+            T1AirAntiAir = {
+                categories = categories.AIR * categories.TECH1 * categories.ANTIAIR * categories.MOBILE,
+                compare = true,
+                compareType = 'amanager',
+                compareFrom = {{'Air', 'T1', 'interceptor'}},
+                compareTo = {{'Air', 'T3', 'asf'}, {'Air', 'T2', 'fighter'}},
+                cullRatio = 0.2,
+                checkAttached = true
+            },
+            T1LandTanks = {
+                categories = categories.MOBILE * categories.TECH1 * categories.LAND * categories.DIRECTFIRE - categories.ANTIAIR,
+                compare = false,
+                compareType = 'amanager',
+                compareFrom = {{'Land', 'T1', 'tank'}},
+                cullRatio = 0.3,
+                checkAttached = true
+            },
+            T1LandArtillery = {
+                categories = categories.MOBILE * categories.TECH1 * categories.LAND * categories.INDIRECTFIRE - categories.ANTIAIR,
+                compare = false,
+                compareType = 'amanager',
+                compareFrom = {{'Land', 'T1', 'arty'}},
+                cullRatio = 0.3,
+                checkAttached = true
+            },
+            T1LandAA = {
+                categories = categories.MOBILE * categories.TECH1 * categories.LAND * categories.ANTIAIR,
+                compare = false,
+                compareType = 'amanager',
+                compareFrom = {{'Land', 'T1', 'aa'}},
+                cullRatio = 0.3,
+                checkAttached = true
+            },
+            T1LandEngineer = {
+                categories = categories.MOBILE * categories.TECH1 * categories.LAND * categories.ENGINEER - categories.COMMAND,
+                compare = true,
+                compareType = 'amanager',
+                compareFrom = {{'Engineer', 'T1', 'engineer'}},
+                compareTo = {{'Engineer', 'T2', 'engineer'},{'Engineer', 'T3', 'engineer'}},
+                cullRatio = 0.3,
+                checkAttached = true,
+                checkEngineer = true
+            },
+        }
+
+        while true do
+            WaitSeconds(30)
+            local brainIndex = self:GetArmyIndex()
+            local currentCount = GetArmyUnitCostTotal(brainIndex)
+            local cap = GetArmyUnitCap(brainIndex)
+            local capRatio = currentCount / cap
+            local maxCullNumber = 30
+            if capRatio > 0.85 then
+                --LOG('We are over our ratio cap')
+                local cullPressure = math.min((capRatio - 0.75) / 0.2, 1)
+                local dynamicRatioThreshold = 2.0 - (capRatio - 0.75) * 9
+                local currentUnits = self.amanager.Current
+                local culledUnitCount = 0
+                for k, cullType in cullTable do
+                    if cullType.compareType == 'amanager' then
+                        if cullType.compare then
+                            local compareFrom = GetFromNested(currentUnits, cullType.compareFrom)
+                            local compareTo = GetFromNested(currentUnits, cullType.compareTo)
+                            if compareTo > 0 and compareFrom > 0 then
+                                local ratio = compareFrom / compareTo
+                                if ratio > dynamicRatioThreshold then
+                                    local toCull = math.min(compareTo, math.ceil(compareTo * ratio * cullType.cullRatio * cullPressure))
+                                    --LOG('Amanager Units type '..tostring(k)..' to cull'..tostring(toCull))
+                                    if toCull > 0 then
+                                        culledUnitCount = culledUnitCount + self:CullUnitsOfCategory(cullType.categories, toCull, cullType.checkAttached, cullType.checkEngineer)
+                                        --LOG('culledUnitCount '..tostring(culledUnitCount))
+                                    end
+                                end
+                            end
+                        else
+                            local units = GetFromNested(currentUnits, cullType.compareFrom)
+                            if units > 0 then
+                                local toCull = math.min(units, math.ceil(units * cullType.cullRatio * cullPressure))
+                                --LOG('Getunits Units type '..tostring(k)..' to cull'..tostring(toCull))
+                                if toCull > 0 then
+                                    culledUnitCount = culledUnitCount + self:CullUnitsOfCategory(cullType.categories, toCull, cullType.checkAttached, cullType.checkEngineer)
+                                    --LOG('culledUnitCount '..tostring(culledUnitCount))
+                                end
+                            end
+                        end
+                    elseif cullType.compareType == 'getunits' then
+                        if cullType.compare then
+                            local compareFrom = self:GetCurrentUnits(cullType.compareFrom)
+                            local compareTo = self:GetCurrentUnits(cullType.compareTo)
+                            if compareTo > 0 and compareFrom > 0 then
+                                local ratio = compareFrom / compareTo
+                                if ratio > dynamicRatioThreshold then
+                                    local toCull = math.min(compareTo, math.ceil(compareTo * ratio * cullType.cullRatio * cullPressure))
+                                    --LOG('Getunits Units type '..tostring(k)..' to cull'..tostring(toCull))
+                                    if toCull > 0 then
+                                        culledUnitCount = culledUnitCount + self:CullUnitsOfCategory(cullType.categories, toCull, cullType.checkAttached, cullType.checkEngineer)
+                                        --LOG('culledUnitCount '..tostring(culledUnitCount))
+                                    end
+                                end
+                            end
+                        else
+                            local units = self:GetCurrentUnits(cullType.categories)
+                            if units > 0 then
+                                local toCull = math.min(units, math.ceil(units * cullType.cullRatio * cullPressure))
+                                --LOG('Getunits Units type '..tostring(k)..' to cull'..tostring(toCull))
+                                if toCull > 0 then
+                                    culledUnitCount = culledUnitCount + self:CullUnitsOfCategory(cullType.categories, toCull, cullType.checkAttached, cullType.checkEngineer)
+                                    --LOG('culledUnitCount '..tostring(culledUnitCount))
+                                end
+                            end
+                        end
+                    end
+                    if culledUnitCount >= maxCullNumber then
+                        break
+                    end
+                end
+                -- Add more hand-tuned rules here, like engineers, scouts, mobile bombs, etc.
+                if culledUnitCount > 0 then
+                    --LOG(string.format("UnitCapWatch culled %d units to reduce unit cap pressure", culledUnitCount))
+                end
+            end
+        end
+    end,
+
+    CullUnitsOfCategory = function(self, category, toCull, checkAttached, checkEngineer)
+        local units = self:GetListOfUnits(category, true)
+        local culledUnitCount = 0
+        for k, v in units do
+            if not v.Dead then
+                if checkAttached and v:IsUnitState('Attached') then
+                    continue
+                end
+                if checkEngineer and not v:IsIdleState() then
+                    continue
+                end
+                culledUnitCount = culledUnitCount + 1
+                v:Kill()
+                if culledUnitCount >= toCull then
+                    return culledUnitCount
+                end
+            end
+        end
+        return culledUnitCount
     end,
 
         ---## Scouting help...
