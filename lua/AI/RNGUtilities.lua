@@ -100,540 +100,6 @@ Valid Threat Options:
     'Weather Definition',
     'Weather Generator',]]
 
-local PropBlacklist = {}
--- This uses a mix of Uveso's reclaim logic and my own
-function ReclaimRNGAIThread(platoon, self, aiBrain)
-    local function MexBuild(platoon, eng, aiBrain)
-        local bool,markers=StateUtils.CanBuildOnMassMexPlatoon(aiBrain, platoon:GetPlatoonPosition(), 25)
-        if bool then
-            IssueClearCommands({eng})
-            local factionIndex = aiBrain:GetFactionIndex()
-            local buildingTmplFile = import('/lua/BuildingTemplates.lua')
-            local buildingTmpl = buildingTmplFile[('BuildingTemplates')][factionIndex]
-            local whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
-            --RNGLOG('Reclaim AI We can build on a mass marker within 30')
-            for _,massMarker in markers do
-                EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 2)
-                EngineerTryRepair(aiBrain, eng, whatToBuild, massMarker.Position)
-                if massMarker.BorderWarning then
-                    IssueBuildMobile({eng}, massMarker.Position, whatToBuild, {})
-                else
-                    aiBrain:BuildStructure(eng, whatToBuild, {massMarker.Position[1], massMarker.Position[3], 0}, false)
-                end
-            end
-            while eng and not eng.Dead and (0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving")) do
-                coroutine.yield(20)
-            end
-        end
-    end
-    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
-    local mapSizeX, mapSizeZ
-
-    if not playableArea then
-        mapSizeX = ScenarioInfo.size[1]
-        mapSizeZ = ScenarioInfo.size[2]
-    else
-        mapSizeX = playableArea[3]
-        mapSizeZ = playableArea[4]
-    end
-
-    --RNGLOG('* AI-RNG: Start Reclaim Function')
-    if aiBrain.StartReclaimTaken then
-        --RNGLOG('StartReclaimTaken set to true')
-        --RNGLOG('Start Reclaim Table has '..RNGGETN(aiBrain.StartReclaimTable)..' items in it')
-    end
-    IssueClearCommands({self})
-    local locationType = platoon.PlatoonData.LocationType
-    local initialRange = 40
-    local createTick = GetGameTick()
-    local reclaimLoop = 0
-    local VDist2 = VDist2
-    local maxReclaimRadius = self.Blueprint.Economy.MaxBuildDistance or 5
-
-    self.BadReclaimables = self.BadReclaimables or {}
-
-    while aiBrain:PlatoonExists(platoon) and self and not self.Dead do
-        local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.8
-        if platoon.PlatoonData.CheckCivUnits then
-            local captureUnit = CheckForCivilianUnitCapture(aiBrain, self, platoon.MovementLayer)
-            if captureUnit then
-                platoon.PlatoonData.StateMachine = 'PreAllocatedTask'
-                platoon.PlatoonData.CaptureUnit = captureUnit
-                platoon.PlatoonData.Task = 'CaptureUnit'
-                platoon.PlatoonData.PreAllocatedTask = true
-                platoon:StateMachineAIRNG(self)
-                return
-            end
-        end
-        coroutine.yield(1)
-        local engPos = self:GetPosition()
-        local minRec = platoon.PlatoonData.MinimumReclaim
-        if not aiBrain.StartReclaimTaken then
-            --self:SetCustomName('StartReclaim Logic Start')
-            --LOG('Reclaim Function - Starting reclaim is false')
-            local tableSize = RNGGETN(aiBrain.StartReclaimTable)
-            --LOG('Start reclaim table size '..tableSize)
-            if tableSize > 0 then
-                local reclaimCount = 0
-                local firstReclaim = false
-                while tableSize > 0 do
-                    coroutine.yield(1)
-                    aiBrain.StartReclaimTaken = true
-                    local closestReclaimDistance
-                    local closestReclaim
-                    local closestReclaimKey
-                    local highestValue = 0
-                    if not firstReclaim then
-                        --LOG('This is first reclaim so we are looking for the highest value')
-                        for k, r in aiBrain.StartReclaimTable do
-                            if r.Reclaim and not IsDestroyed(r.Reclaim) then
-                                local reclaimValue
-                                if needEnergy then
-                                    reclaimValue = r.Reclaim.MaxEnergyReclaim + r.Reclaim.MaxMassReclaim
-                                else
-                                    reclaimValue = r.Reclaim.MaxMassReclaim
-                                end
-                        
-                                local reclaimDistance = VDist3Sq(engPos, r.Reclaim.CachePosition)
-                        
-                                if NavUtils.CanPathTo('Amphibious', engPos, r.Reclaim.CachePosition) then
-                                    if reclaimValue > highestValue or (reclaimValue == highestValue and reclaimDistance < closestDistance) then
-                                        closestReclaim = r.Reclaim
-                                        closestReclaimKey = k
-                                        highestValue = reclaimValue
-                                        closestDistance = reclaimDistance
-                                    end
-                                end
-                            end
-                        end
-                        firstReclaim = true
-                    else
-                        for k, r in aiBrain.StartReclaimTable do
-                            local reclaimDistance
-                            if r.Reclaim and not IsDestroyed(r.Reclaim) then
-                                reclaimDistance = VDist3Sq(engPos, r.Reclaim.CachePosition)
-                                if not closestReclaimDistance or reclaimDistance < closestReclaimDistance and NavUtils.CanPathTo('Amphibious', engPos, r.Reclaim.CachePosition) then
-                                    closestReclaim = r.Reclaim
-                                    closestReclaimDistance = reclaimDistance
-                                    closestReclaimKey = k
-                                end
-                            end
-                        end
-                    end
-                    --LOG('Reclaim selected with a highestValue of '..tostring(highestValue).. ' at a distance of '..tostring(closestReclaimDistance))
-                    if closestReclaim then
-                        --LOG('Closest Reclaim is true we are going to try reclaim it')
-                        reclaimCount = reclaimCount + 1
-                        --LOG('Reclaim Function - Issuing reclaim')
-                        IssueMove({self}, closestReclaim.CachePosition)
-                        coroutine.yield(15)
-                        local reclaimTimeout = 0
-                        local massOverflow = false
-                        while aiBrain:PlatoonExists(platoon) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 40) do
-                            local reclaimDistance = VDist3Sq(engPos, closestReclaim.CachePosition)
-                            if reclaimDistance < maxReclaimRadius then
-                                IssueReclaim({self}, closestReclaim)
-                            end
-                            local brokenPathMovement = false
-                            coroutine.yield(1)
-                            reclaimTimeout = reclaimTimeout + 1
-                            --RNGLOG('Waiting for reclaim to no longer exist')
-                            if self:IsUnitState('Reclaiming') and reclaimTimeout > 0 then
-                                reclaimTimeout = reclaimTimeout - 1
-                            end
-                            brokenPathMovement = PerformEngReclaim(aiBrain, self, maxReclaimRadius)
-                            if brokenPathMovement and closestReclaim and (not IsDestroyed(closestReclaim)) then
-                                IssueMove({self}, closestReclaim.CachePosition)
-                            end
-                            coroutine.yield(15)
-                        end
-                        --RNGLOG('Set key to nil '..closestReclaimKey)
-                        aiBrain.StartReclaimTable[closestReclaimKey] = nil
-                    end
-                    reclaimCount = reclaimCount + 1
-                    if reclaimCount > 15 then
-                        break
-                    end
-                    coroutine.yield(2)
-                    aiBrain.StartReclaimTable = aiBrain:RebuildTable(aiBrain.StartReclaimTable)
-                    tableSize = RNGGETN(aiBrain.StartReclaimTable)
-                end
-                
-                if RNGGETN(aiBrain.StartReclaimTable) == 0 then
-                    --RNGLOG('Start Reclaim Taken set to true')
-                    aiBrain.StartReclaimTaken = true
-                else
-                    --RNGLOG('Start Reclaim table not empty, set StartReclaimTaken to false')
-                    aiBrain.StartReclaimTaken = false
-                end
-            end
-            --self:SetCustomName('StartReclaim logic end')
-        end
-        if platoon.PlatoonData.ReclaimTable then
-           --RNGLOG('We are going to lookup the reclaim table for high reclaim positions')
-            if aiBrain.GridReclaim then
-                local searchType
-                local reclaimGridInstance = aiBrain.GridReclaim
-                local brainGridInstance = aiBrain.GridBrain
-                local deathFunction = function(unit)
-                    if unit.CellAssigned then
-                        -- Brain is assigned on unit create, if issues use eng:GetAIBrain()
-                        local brainGridInstance = unit.Brain.GridBrain
-                        local brainCell = brainGridInstance:ToCellFromGridSpace(unit.CellAssigned[1], unit.CellAssigned[2])
-                        -- confirm engineer is removed from cell during debug
-                        brainGridInstance:RemoveReclaimingEngineer(brainCell, unit)
-                    end
-                end
-        
-                import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, self)
-                if platoon.PlatoonData.Early then
-                    searchType = 'MAIN'
-                end
-
-                local reclaimTargetX, reclaimTargetZ = EngFindReclaimCell(aiBrain, self, platoon.MovementLayer, searchType)
-                if reclaimTargetX and reclaimTargetZ then
-                    local brainCell = brainGridInstance:ToCellFromGridSpace(reclaimTargetX, reclaimTargetZ)
-                    -- Assign engineer to cell
-                    self.CellAssigned = {reclaimTargetX, reclaimTargetZ}
-                    if brainCell then
-                        brainGridInstance:AddReclaimingEngineer(brainCell, self)
-                    end
-                    local validLocation = reclaimGridInstance:ToWorldSpace(reclaimTargetX, reclaimTargetZ)
-
-                    if validLocation then
-                        --LOG('Valid reclaim location found')
-                        --RNGLOG('We have a valid reclaim location')
-                        IssueClearCommands({self})
-                        if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, self, validLocation, true) then
-                        --RNGLOG('We have issued move orders to get to the reclaim location')
-                            if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
-                                return
-                            end
-                            local engStuckCount = 0
-                            local Lastdist
-                            local dist
-                            while not self.Dead and aiBrain:PlatoonExists(platoon) do
-                                coroutine.yield(1)
-                                engPos = self:GetPosition()
-                                dist = VDist3Sq(engPos, validLocation)
-                                if dist < 144 then
-                                    --RNGLOG('We are at the grid square location, dist is '..dist)
-                                    IssueClearCommands({self})
-                                    break
-                                end
-                                if Lastdist ~= dist then
-                                    engStuckCount = 0
-                                    Lastdist = dist
-                                else
-                                    engStuckCount = engStuckCount + 1
-                                    --RNGLOG('* AI-RNG: * EngineerBuildAI: has no moved during move to build position look, adding one, current is '..engStuckCount)
-                                    if engStuckCount > 15 and not self:IsUnitState('Reclaiming') then
-                                        --RNGLOG('* AI-RNG: * EngineerBuildAI: Stuck while moving to build position. Stuck='..engStuckCount)
-                                        break
-                                    end
-                                end
-                                --PerformEngReclaim(aiBrain, self, 25)
-                                if self:IsIdleState() then
-                                    IssueMove({self}, validLocation)
-                                end
-                                if self:IsUnitState("Moving") then
-                                    if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
-                                        local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
-                                        if enemyEngineer then
-                                            local enemyEngPos
-                                            for _, unit in enemyEngineer do
-                                                if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
-                                                    enemyEngPos = unit:GetPosition()
-                                                    local dx = engPos[1] - enemyEngPos[1]
-                                                    local dz = engPos[3] - enemyEngPos[3]
-                                                    local enemyEngPos = dx * dx + dz * dz
-                                                    if enemyEngPos < 100 then
-                                                        IssueStop({self})
-                                                        IssueClearCommands({self})
-                                                        IssueReclaim({self}, enemyEngineer[1])
-                                                        break
-                                                    end
-                                                end
-                                            end
-                                        end
-                                    end
-                                end
-                                coroutine.yield(25)
-                            end
-                            if not self or self.Dead or not aiBrain:PlatoonExists(platoon) then
-                                coroutine.yield(1)
-                                return
-                            end
-                            local reclaimAvailable = true
-                            local maxRetries = 20
-                            local reclaimRetryCount = 0
-                            while reclaimAvailable and not self.Dead do
-                                engPos = self:GetPosition()
-                                -- reclaim grid for a better reclaim position 9 points with 1 being the current engineer position
-                                -- we create a grid of 8 squares around the engineer that it will search after each grid square is reclaim it is removed.
-                                local reclaimGrid = {
-                                    {engPos[1], 0 ,engPos[3]},
-                                    {engPos[1], 0 ,engPos[3] + 15},
-                                    {engPos[1] + 15, 0 ,engPos[3] + 15},
-                                    {engPos[1] + 15, 0, engPos[3]},
-                                    {engPos[1] + 15, 0, engPos[3] - 15},
-                                    {engPos[1], 0, engPos[3] - 15},
-                                    {engPos[1] - 15, 0, engPos[3] - 15},
-                                    {engPos[1] - 15, 0, engPos[3]},
-                                    {engPos[1] - 15, 0, engPos[3] + 15},
-                                    {engPos[1], 0 ,engPos[3] + 25},
-                                    {engPos[1] + 15, 0 ,engPos[3] + 25},
-                                    {engPos[1] + 25, 0 ,engPos[3] + 25},
-                                    {engPos[1] + 25, 0 ,engPos[3] + 15},
-                                    {engPos[1] + 25, 0, engPos[3]},
-                                    {engPos[1] + 25, 0, engPos[3] - 15},
-                                    {engPos[1] + 25, 0, engPos[3] - 25},
-                                    {engPos[1] + 15, 0, engPos[3] - 25},
-                                    {engPos[1], 0, engPos[3] - 25},
-                                    {engPos[1] - 15, 0, engPos[3] - 25},
-                                    {engPos[1] - 25, 0, engPos[3] - 25},
-                                    {engPos[1] - 25, 0, engPos[3] - 15},
-                                    {engPos[1] - 25, 0, engPos[3]},
-                                    {engPos[1] - 25, 0, engPos[3] + 15},
-                                    {engPos[1] - 15, 0, engPos[3] + 25},
-                                    {engPos[1] - 25, 0, engPos[3] + 25},
-                                }
-                                --LOG('EngineerReclaimGrid '..repr(reclaimGrid))
-                                if reclaimGrid and not table.empty( reclaimGrid ) then
-                                    local reclaimCount = 0
-                                    local engineerHasReclaimed = false
-                                    for k, square in reclaimGrid do
-                                        local squarePos = {square[1], GetTerrainHeight(square[1], square[3]), square[3]}
-                                        if NavUtils.CanPathTo('Amphibious', engPos, squarePos) then
-                                            local minX = math.max(square[1] - 8, 0)
-                                            local maxX = math.min(square[1] + 8, mapSizeX)
-                                            local minZ = math.max(square[3] - 8, 0)
-                                            local maxZ = math.min(square[3] + 8, mapSizeZ) -- Assuming square map size
-                                            local rectDef = Rect(minX, minZ, maxX, maxZ)
-                                            local reclaimRect = GetReclaimablesInRect(rectDef)
-                                            local engReclaiming = false
-                                            if reclaimRect then
-                                                for c, b in reclaimRect do
-                                                    if not IsProp(b) or self.BadReclaimables[b] then continue end
-                                                    -- Start Blacklisted Props
-                                                    local blacklisted = false
-                                                    for _, BlackPos in PropBlacklist do
-                                                        if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
-                                                            blacklisted = true
-                                                            break
-                                                        end
-                                                    end
-                                                    if blacklisted then continue end
-                                                    if b.MaxMassReclaim and b.MaxMassReclaim >= 5 then
-                                                        engReclaiming = true
-                                                        engineerHasReclaimed = true
-                                                        reclaimCount = reclaimCount + 1
-                                                        IssueReclaim({self}, b)
-                                                    end
-                                                end
-                                            end
-                                            if engReclaiming then
-                                                coroutine.yield(1)
-                                                local idleCounter = 0
-                                                while not self.Dead and 0<RNGGETN(self:GetCommandQueue()) and aiBrain:PlatoonExists(platoon) do
-                                                    if not self:IsUnitState('Reclaiming') and not self:IsUnitState('Moving') then
-                                                        --RNGLOG('We are not reclaiming or moving in the reclaim loop')
-                                                        --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
-                                                        idleCounter = idleCounter + 1
-                                                        if idleCounter > 10 then
-                                                            --RNGLOG('idleCounter hit, breaking loop')
-                                                            break
-                                                        end
-                                                    end
-                                                    --RNGLOG('We are reclaiming stuff')
-                                                    coroutine.yield(30)
-                                                end
-                                            end
-                                        end
-                                        MexBuild(platoon, self, aiBrain)
-                                        if engineerHasReclaimed then
-                                            break
-                                        end
-                                    end
-                                    if not engineerHasReclaimed then
-                                        reclaimAvailable = false
-                                    end
-                                    --RNGLOG('reclaim grid loop has finished')
-                                    --RNGLOG('Total things that should have be issued reclaim are '..reclaimCount)
-                                else
-                                    reclaimAvailable = false
-                                end
-                                reclaimRetryCount = reclaimRetryCount + 1
-                                if reclaimRetryCount > maxRetries then
-                                    break
-                                end
-                            end
-                        end
-                    end
-                end
-            else
-                --RNGLOG('aiBrain MapReclaimTable does not exist')
-            end
-        end
-        local furtherestReclaim
-        local closestReclaim
-        local closestDistance
-        local furtherestDistance
-        local x1 = engPos[1] - initialRange
-        local x2 = engPos[1] + initialRange
-        local z1 = engPos[3] - initialRange
-        local z2 = engPos[3] + initialRange
-        local rect = Rect(x1, z1, x2, z2)
-        local reclaimRect = {}
-        reclaimRect = GetReclaimablesInRect(rect)
-        if not engPos then
-            coroutine.yield(1)
-            return
-        end
-
-        local reclaim = {}
-        
-        --RNGLOG('* AI-RNG: Going through reclaim table')
-        --self:SetCustomName('Loop through reclaim table')
-        if reclaimRect and not table.empty( reclaimRect ) then
-            for k,v in reclaimRect do
-                if not IsProp(v) or self.BadReclaimables[v] then continue end
-                local rpos = v.CachePosition
-                -- Start Blacklisted Props
-                local blacklisted = false
-                for _, BlackPos in PropBlacklist do
-                    if rpos[1] == BlackPos[1] and rpos[3] == BlackPos[3] then
-                        blacklisted = true
-                        break
-                    end
-                end
-                if blacklisted then continue end
-                -- End Blacklisted Props
-                if not needEnergy or v.MaxEnergyReclaim then
-                    if v.MaxMassReclaim and v.MaxMassReclaim >= minRec then
-                        if not self.BadReclaimables[v] then
-                            local distance = VDist2(engPos[1], engPos[3], v.CachePosition[1], v.CachePosition[3])
-                            if not closestDistance or distance < closestDistance then
-                                closestReclaim = v.CachePosition
-                                closestDistance = distance
-                            end
-                            if not furtherestDistance or distance > furtherestDistance then -- and distance < closestDistance + 20
-                                if NavUtils.CanPathTo(platoon.MovementLayer, engPos, v.CachePosition) then
-                                    furtherestReclaim = v.CachePosition
-                                    furtherestDistance = distance
-                                    if furtherestDistance - closestDistance > 20 then
-                                        break
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        else
-            --self:SetCustomName('No reclaim, increase 100 from '..initialRange)
-            initialRange = initialRange + 100
-            --RNGLOG('* AI-RNG: initialRange is'..initialRange)
-            if initialRange > 300 then
-                --RNGLOG('* AI-RNG: Reclaim range > 300, Disabling Reclaim.')
-                PropBlacklist = {}
-                aiBrain.ReclaimEnabled = false
-                aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
-                coroutine.yield(1)
-                return
-            end
-            coroutine.yield(2)
-            continue
-        end
-        if closestDistance == 10000 then
-            --self:SetCustomName('closestDistance return 10000')
-            initialRange = initialRange + 100
-            --RNGLOG('* AI-RNG: initialRange is'..initialRange)
-            if initialRange > 200 then
-                --RNGLOG('* AI-RNG: Reclaim range > 200, Disabling Reclaim.')
-                PropBlacklist = {}
-                aiBrain.ReclaimEnabled = false
-                aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
-                coroutine.yield(1)
-                return
-            end
-            coroutine.yield(2)
-            continue
-        end
-        if self.Dead then 
-            return
-        end
-        --RNGLOG('* AI-RNG: Closest Distance is : '..closestDistance..'Furtherest Distance is :'..furtherestDistance)
-        -- Clear Commands first
-        IssueClearCommands({self})
-        --RNGLOG('* AI-RNG: Attempting move to closest reclaim')
-        --RNGLOG('* AI-RNG: Closest reclaim is '..repr(closestReclaim))
-        if not closestReclaim and not furtherestReclaim then
-            --LOG('No closestReclaim or furtherestReclaim')
-            --LOG('closestReclaim '..repr(closestReclaim))
-            --LOG('furtherestReclaim '..repr(furtherestReclaim))
-            coroutine.yield(5)
-            return
-        end
-        if self.lastXtarget == closestReclaim[1] and self.lastYtarget == closestReclaim[3] then
-            --self:SetCustomName('blocked reclaim')
-            self.blocked = self.blocked + 1
-            --RNGLOG('* AI-RNG: Reclaim Blocked + 1 :'..self.blocked)
-            if self.blocked > 3 then
-                self.blocked = 0
-                table.insert (PropBlacklist, closestReclaim)
-                --RNGLOG('* AI-RNG: Reclaim Added to blacklist')
-            end
-        else
-            self.blocked = 0
-            self.lastXtarget = closestReclaim[1]
-            self.lastYtarget = closestReclaim[3]
-            StartMoveDestination(self, closestReclaim)
-        end
-
-        --RNGLOG('* AI-RNG: Attempting agressive move to furtherest reclaim')
-        -- Clear Commands first
-        --self:SetCustomName('Aggressive move to reclaim')
-        IssueClearCommands({self})
-        if furtherestReclaim then
-            IssueAggressiveMove({self}, furtherestReclaim)
-        else
-            IssueAggressiveMove({self}, closestReclaim)
-        end
-        local reclaiming = not self:IsIdleState()
-        local max_time = platoon.PlatoonData.ReclaimTime
-        local currentTime = 0
-        local idleCount = 0
-        while reclaiming do
-            --RNGLOG('* AI-RNG: Engineer is reclaiming')
-            coroutine.yield(100)
-            currentTime = currentTime + 10
-            if currentTime > max_time then
-                reclaiming = false
-            end
-            if self:IsIdleState() then
-                idleCount = idleCount + 1
-                if idleCount > 5 then
-                    reclaiming = false
-                end
-            end
-            MexBuild(platoon, self, aiBrain)
-            --self:SetCustomName('reclaim loop end')
-        end
-        --RNGLOG('* AI-RNG: basePosition random location :'..repr(location))
-        IssueClearCommands({self})
-        --self:SetCustomName('moving back to base')
-        reclaimLoop = reclaimLoop + 1
-        if reclaimLoop == 5 then
-            --RNGLOG('* AI-RNG: reclaimLopp = 5 returning')
-            coroutine.yield(1)
-            return
-        end
-        --self:SetCustomName('end of reclaim function')
-        coroutine.yield(5)
-    end
-end
-
 function StartMoveDestination(self,destination)
     local NowPosition = self:GetPosition()
     local x, z, y = unpack(self:GetPosition())
@@ -4429,7 +3895,11 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
             end
         end
         if bestPoint then
-            defensivePoint = bestPoint.Position
+            if aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * (categories.DIRECTFIRE + categories.INDIRECTFIRE), bestPoint.Position, 25, 'Enemy') > 0 then
+                defensivePoint = aiBrain.BuilderManagers[baseLocation].Position
+            else
+                defensivePoint = bestPoint.Position
+            end
         end
     elseif type == 'TML' then
         local bestPoint = false
@@ -6907,7 +6377,7 @@ function GetTMDPosition(aiBrain, eng, locationType)
     local engPos = eng:GetPosition()
     local tmdPos
     local tmdCandidate
-    table.sort(structureTable,function(a,b) return VDist3Sq(engPos,a:GetPosition())<VDist3Sq(engPos,b:GetPosition()) end)
+    table.sort(structureTable,function(a,b) return VDist3Sq(engPos,a.Unit:GetPosition())<VDist3Sq(engPos,b.Unit:GetPosition()) end)
     --LOG('Getting TMD Position')
     --LOG('Structure table requiring TMD has this many '..table.getn(structureTable))
     if not table.empty(structureTable)then
@@ -6917,30 +6387,32 @@ function GetTMDPosition(aiBrain, eng, locationType)
         for k, v in structureTable do
             --LOG('Unit that needs protecting '..v.UnitId)
             --LOG('Entity '..v.EntityId)
-            if not v.Dead then
-                if not v.TMDInRange and v.TMLInRange then
+            if not v.Unit.Dead then
+                if not v.Unit['rngdata'].TMDInRange and v.Unit['rngdata'].TMLInRange then
                     --LOG('No TMD table but tml in range')
                     local tmlCount = 0
-                    for _, c in v.TMLInRange do
+                    for _, c in v.Unit['rngdata'].TMLInRange do
                         if not c.Dead then
                             tmlCount = tmlCount + 1
                         end
                     end
                     tmdRequired = math.ceil(tmlCount / 2)
                     --LOG('We need this many TMD '..tostring(tmdRequired)..' for '..tostring(aiBrain.Nickname))
-                    for c, b in v.TMLInRange do
-                        if not b.Dead then
-                            --LOG('CalculateTMDPositions for unit '..v.UnitId)
-                            local buildPos = CalculateTMDPositions(aiBrain, v, b)
-                            table.insert(buildPositions, {Position = buildPos, Count = tmdRequired})
-                            tmdPosFound = true
-                            break
+                    for _, c in v.Unit['rngdata'].TMLInRange do
+                        if not c.Dead then
+                            --LOG('CalculateTMDPositions for unit '..v.Unit.UnitId)
+                            local buildPos = CalculateTMDPositions(aiBrain, v.Unit, c)
+                            if buildPos then
+                                table.insert(buildPositions, {Position = buildPos, Count = tmdRequired})
+                                tmdPosFound = true
+                                break
+                            end
                         end
                     end
-                elseif v.TMDInRange and v.TMLInRange then
+                elseif v.Unit['rngdata'].TMDInRange and v.Unit['rngdata'].TMLInRange then
                     --LOG('TMD table and tml in range')
                     local tmlCount = 0
-                    for _, c in v.TMLInRange do
+                    for _, c in v.Unit['rngdata'].TMLInRange do
                         if not c.Dead then
                             tmlCount = tmlCount + 1
                         end
@@ -6948,27 +6420,32 @@ function GetTMDPosition(aiBrain, eng, locationType)
                     tmdRequired = math.ceil(tmlCount / 2)
                     --LOG('We need this many TMD '..tostring(tmdRequired)..' for '..tostring(aiBrain.Nickname))
                     local tmdCount = 0
-                    for _, c in v.TMDInRange do
+                    for _, c in v.Unit['rngdata'].TMDInRange do
                         if not c.Dead then
                             tmdCount = tmdCount + 1
                         end
                     end
+                    --LOG('We have this many tmd now '..tostring(tmdCount))
                     if tmdCount < tmdRequired then
-                        for c, b in v.TMLInRange do
+                        for c, b in v.Unit['rngdata'].TMLInRange do
                             if not b.Dead then
-                                local buildPos = CalculateTMDPositions(aiBrain, v, b)
-                                table.insert(buildPositions, {Position = buildPos, Count = tmdRequired})
-                                tmdPosFound = true
-                                break
+                                local buildPos = CalculateTMDPositions(aiBrain, v.Unit, b)
+                                if buildPos then
+                                    table.insert(buildPositions, {Position = buildPos, Count = tmdRequired})
+                                    tmdPosFound = true
+                                    break
+                                end
                             end
                         end
                     end
                 end
             end
             if tmdPosFound then
+                --LOG('tmdPosFound')
                 break
             end
         end
+        --LOG('We have '..table.getn(buildPositions)..' build positions for TMD '..tostring(repr(buildPositions)))
         return buildPositions
     end
 end
@@ -6986,17 +6463,21 @@ function CalculateTMDPositions(aiBrain, structure, tml)
         WARN('AI-RNG : Structure Manager not found in CalculateTMDPositions')
     end
 
-    local unitsToProtect = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE, structurePos, tmdSearchRadius, 'Ally')  -- Adjust the radius as needed
+    local unitsToProtect = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE - categories.WALL, structurePos, tmdSearchRadius, 'Ally')  -- Adjust the radius as needed
     local closestUnitDistance
     local bestTMDPos
+    --LOG('CalculateTMDPositions origin position is '..tostring(repr(structurePos)))
+    --LOG('Trying to calculate TMD position, number of units to protect '..tostring(table.getn(unitsToProtect)))
     
     for _, unit in unitsToProtect do
-        if not smInstance:StructureTMLCheck(unit) then
+        if not smInstance:StructureTMLCheck(unit, tml) then
             local unitPos = unit:GetPosition()
+            --LOG('Unit Pos is '..tostring(repr(unitPos)))
             local tx = unitPos[1] - tmlPos[1]
             local tz = unitPos[3] - tmlPos[3]
             local tmlDistance = tx * tx + tz * tz
             if not closestUnitDistance or tmlDistance < closestUnitDistance then
+                --LOG('Have closestUnitDistance for structure')
                 local testBuildPos = GetPositionTowardsAngle(unitPos, tmlAngle, tmdDistance)
                 --LOG('Checking buildPos of '..repr(testBuildPos))
                 if CanBuildStructureAt(aiBrain, 'ueb4201', testBuildPos) then
@@ -7009,7 +6490,7 @@ function CalculateTMDPositions(aiBrain, structure, tml)
                     --LOG('We are trying to look for another build position for TMD')
                     for ix, offsetX in lookAroundTable do
                         for iz, offsetZ in lookAroundTable do
-                            local lookAroundPos = {testBuildPos[1]+offsetZ, GetSurfaceHeight(testBuildPos[1]+offsetX, testBuildPos[3]+offsetZ), testBuildPos[3]+offsetZ}
+                            local lookAroundPos = {testBuildPos[1]+offsetZ, GetSurfaceHeight(testBuildPos[1]+offsetX, testBuildPos[3]+offsetZ), testBuildPos[3]+offsetX}
                             -- is it lower land... make it our new position to continue searching around
                             if CanBuildStructureAt(aiBrain, 'ueb4201', lookAroundPos) then
                                 closestUnitDistance = tmlDistance
@@ -7021,6 +6502,8 @@ function CalculateTMDPositions(aiBrain, structure, tml)
                     end
                 end
             end
+        else
+            --LOG('StructureTMLCheck returned true')
         end
         if bestTMDPos then
             break
@@ -7978,4 +7461,132 @@ function ValidateEnhancingUnit(unit)
             --LOG('Unit detected as upgrading gun')
         end
     end
+end
+
+-- Tries to find a decent place for a mobile experimental unit.
+function GetMobileLandExperimentalBuildPosition(aiBrain, basePos, radius, engPos)
+    -- Fallback enemy base position
+    local enemyBasePos = aiBrain.EnemyIntel and aiBrain.EnemyIntel.EnemyBasePosition or false
+
+    -- Get team enemy average position or fallback to map center
+    local teamAveragePositions = aiBrain.IntelManager:GetTeamAveragePositions()
+    local teamEnemyAveragePosition = (teamAveragePositions['Enemy'].x and teamAveragePositions['Enemy'].z) and {
+        teamAveragePositions['Enemy'].x,
+        GetSurfaceHeight(teamAveragePositions['Enemy'].x, teamAveragePositions['Enemy'].z),
+        teamAveragePositions['Enemy'].z
+    } or aiBrain.MapCenterPoint
+
+    -- Find own shields around the base
+    local shields = AIUtils.GetOwnUnitsAroundPoint(aiBrain, categories.SHIELD * categories.STRUCTURE, basePos, radius or 60)
+
+    local candidates = {}
+    if not shields or table.empty(shields) == 0 then
+        return GetGenericMobileExperimentalBuildPosition(aiBrain, basePos, radius, engPos)
+    end
+
+    for _, shield in shields do
+        local shieldPos = shield:GetPosition()
+        local bp = shield.Blueprint
+        local shieldSize = (bp.Defense.Shield and bp.Defense.Shield.ShieldSize * 0.35) or 5
+        local range = math.max(shieldSize * 0.5 + 5, 8)
+        local offsets = DrawCirclePoints(8, shieldSize + 6, shieldPos)
+
+        for _, offset in offsets do
+            local distFromBase = VDist3Sq(offset, basePos)
+            if distFromBase < 625 or distFromBase > 2025 then continue end
+
+            local energyNearby = aiBrain:GetNumUnitsAroundPoint(categories.ENERGYPRODUCTION, offset, 8, 'Ally')
+            if energyNearby > 0 then continue end
+
+            -- Check enemy proximity bias
+            local toEnemy = VDist2Sq(shieldPos[1], shieldPos[3], teamEnemyAveragePosition[1], teamEnemyAveragePosition[3])
+            local toOffset = VDist2Sq(offset[1], offset[3], teamEnemyAveragePosition[1], teamEnemyAveragePosition[3])
+            if toOffset < toEnemy then continue end
+
+            -- Score based on proximity to engineer and base
+            local distToEngineer = VDist3Sq(offset, engPos)
+            local distToBase = VDist3Sq(offset, basePos)
+            local score = distToEngineer + (distToBase * 0.5)
+
+            table.insert(candidates, {
+                pos = offset,
+                score = score
+            })
+        end
+    end
+
+    if not table.empty(candidates) then
+        table.sort(candidates, function(a, b)
+            return a.score < b.score
+        end)
+        --LOG('Returning cadidate pos of '..tostring(repr(candidates[1].pos)))
+        return candidates[1].pos
+    end
+
+    -- Fallback if no good spot found
+    --LOG('Fallback to generic position')
+    return GetGenericMobileExperimentalBuildPosition(aiBrain, basePos, radius, engPos)
+end
+
+function GetGenericMobileExperimentalBuildPosition(aiBrain, basePos, enemyPos)
+    local maxDistanceFromBase = 65  -- maximum distance from base to place experimental
+    local searchRadius = 30         -- radius to use for initial circular candidate search
+    local safeMinDistFromEnergy = 8
+
+    local enemyBasePos = aiBrain.EnemyIntel and aiBrain.EnemyIntel.EnemyBasePosition or false
+    local teamAveragePositions = aiBrain.IntelManager:GetTeamAveragePositions()
+    local teamEnemyAveragePosition = (teamAveragePositions['Enemy'].x and teamAveragePositions['Enemy'].z) and {
+        teamAveragePositions['Enemy'].x,
+        GetSurfaceHeight(teamAveragePositions['Enemy'].x, teamAveragePositions['Enemy'].z),
+        teamAveragePositions['Enemy'].z
+    } or aiBrain.MapCenterPoint
+
+    local candidates = DrawCirclePoints(12, searchRadius, basePos)
+
+    for _, pos in candidates do
+        -- Check it's within max allowed distance from base
+        if VDist2(pos[1], pos[3], basePos[1], basePos[3]) > maxDistanceFromBase then
+            continue
+        end
+
+        -- Prefer positions not toward enemy
+        if enemyPos then
+            local baseToEnemy = VDist2Sq(basePos[1], basePos[3], teamEnemyAveragePosition[1], teamEnemyAveragePosition[3])
+            local posToEnemy = VDist2Sq(pos[1], pos[3], teamEnemyAveragePosition[1], teamEnemyAveragePosition[3])
+            if posToEnemy < baseToEnemy then
+                continue
+            end
+        end
+
+        local energyNearby = aiBrain:GetNumUnitsAroundPoint(categories.ENERGYPRODUCTION, pos, safeMinDistFromEnergy, 'Ally')
+        if energyNearby == 0 then
+            --LOG('Return enemy not nearby pos ' .. repr(pos))
+            return pos
+        end
+    end
+
+    -- Fallback: pick a point directly away from enemy, but clamp within max distance
+    if enemyPos then
+        local dx = basePos[1] - enemyPos[1]
+        local dz = basePos[3] - enemyPos[3]
+        local norm = math.sqrt(dx * dx + dz * dz)
+        if norm == 0 then norm = 1 end
+        local clampedOffset = math.min(maxDistanceFromBase, 30)
+        local offset = {
+            basePos[1] + (dx / norm) * clampedOffset,
+            0,
+            basePos[3] + (dz / norm) * clampedOffset,
+        }
+        --LOG('Returning fallback candidate pos (clamped) of ' .. repr(offset))
+        return offset
+    end
+
+    -- Absolute fallback: offset in safe direction, still within bounds
+    local fallback = {
+        basePos[1] + math.min(maxDistanceFromBase, 20),
+        0,
+        basePos[3] + math.min(maxDistanceFromBase, 20),
+    }
+    --LOG('Absolute fallback ' .. repr(fallback))
+    return fallback
 end

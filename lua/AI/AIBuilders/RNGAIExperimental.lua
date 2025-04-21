@@ -63,6 +63,7 @@ BuilderGroup {
                 DesiresAssist = true,
                 BuildClose = true,
                 HighValue = true,
+                ExperimentalBuild = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
                     { Unit = 'T4LandExperimental1', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.LAND - categories.CYBRAN * categories.ARTILLERY - categories.UNSELECTABLE - categories.UNTARGETABLE },
@@ -94,6 +95,7 @@ BuilderGroup {
                 DesiresAssist = true,
                 BuildClose = true,
                 HighValue = true,
+                ExperimentalBuild = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
                     { Unit = 'T4LandExperimental1', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.LAND - categories.CYBRAN * categories.ARTILLERY - categories.UNSELECTABLE - categories.UNTARGETABLE },
@@ -126,6 +128,7 @@ BuilderGroup {
                 DesiresAssist = true,
                 BuildClose = true,
                 HighValue = true,
+                ExperimentalBuild = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
                     { Unit = 'T4LandExperimental1', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.LAND - categories.CYBRAN * categories.ARTILLERY - categories.UNSELECTABLE - categories.UNTARGETABLE },
@@ -157,6 +160,7 @@ BuilderGroup {
                 DesiresAssist = true,
                 BuildClose = true,
                 HighValue = true,
+                ExperimentalBuild = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
                     { Unit = 'T4LandExperimental1', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.LAND - categories.CYBRAN * categories.ARTILLERY - categories.UNSELECTABLE - categories.UNTARGETABLE },
@@ -188,6 +192,7 @@ BuilderGroup {
                 DesiresAssist = true,
                 BuildClose = false,
                 HighValue = true,
+                ExperimentalBuild = true,
                 AdjacencyCategory = categories.STRUCTURE * categories.SHIELD,
                 BuildStructures = {
                     { Unit = 'T4LandExperimental3', Categories = categories.EXPERIMENTAL * categories.MOBILE * categories.LAND * categories.BOT * categories.DIRECTFIRE * categories.SNIPER - categories.CYBRAN * categories.ARTILLERY - categories.UNSELECTABLE - categories.UNTARGETABLE },

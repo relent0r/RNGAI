@@ -742,34 +742,48 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
                 local unitPos = unit:GetPosition()
                 local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
                 --RNGLOG('Satellite Distance of unit to platoon '..VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]))
-                if numShields > 0 and (not retUnit) or numShields > 0 and (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                if numShields == 0 then
+                    if (not retUnit) or (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                        retUnit = unit
+                        distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                        targetShields = 0
+                    end
+                elseif numShields > 0 and (not retUnit) or numShields > 0 and (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
                     local shieldUnits = aiBrain:GetUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
                     local totalShieldHealth = 0
                     for _, sUnit in shieldUnits do
-                        if not sUnit.Dead and sUnit.MyShield then
-                            if sUnit.Blueprint.Defense.ShieldSize and VDist3Sq(unitPos, sUnit:GetPosition()) < sUnit.Blueprint.Defense.ShieldSize and sUnit.MyShield.GetHealth then
-                                totalShieldHealth = totalShieldHealth + sUnit.MyShield:GetHealth()
+                        if not sUnit.Dead and sUnit.MyShield and sUnit.MyShield.GetHealth then
+                            if sUnit.Blueprint.Defense.Shield.ShieldSize then 
+                                local shieldSize = sUnit.Blueprint.Defense.Shield.ShieldSize * 0.5
+                                if VDist3Sq(unitPos, sUnit:GetPosition()) < shieldSize * shieldSize then
+                                    totalShieldHealth = totalShieldHealth + sUnit.MyShield:GetHealth()
+                                end
                             end
                         end
                     end
                     --RNGLOG('Satellite looking for target found shield')
                     --RNGLOG('Satellite max dps '..platoon['rngdata'].MaxPlatoonDPS..' total shield health '..totalShieldHealth)
-                    if totalShieldHealth > 0 then
-                        --RNGLOG('Satellite max dps divided by shield health should be less than 12 '..(platoon['rngdata'].MaxPlatoonDPS/totalShieldHealth))
-                        if (platoon['rngdata'].MaxPlatoonDPS / totalShieldHealth) < 12 then
+                    if totalShieldHealth == 0 then
+                        if (not retUnit) or (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                            retUnit = unit
+                            distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                            targetShields = 0
+                        end
+                    elseif totalShieldHealth > 0 then
+                        if (totalShieldHealth / platoon['rngdata'].MaxPlatoonDPS) < 12 then
+                            --LOG('Max platoon dps '..tostring(platoon['rngdata'].MaxPlatoonDPS))
+                            --LOG('Total Shield Health '..tostring(totalShieldHealth))
+                            --LOG('We can break this shield, platoon dps divided by total is '..tostring(totalShieldHealth / platoon['rngdata'].MaxPlatoonDPS))
                             retUnit = unit
                             distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                             targetShields = numShields
                         end
                     end
-                elseif (not retUnit) or (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
-                    retUnit = unit
-                    distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
-                    targetShields = 0
                 end
             end
         end
         if retUnit and targetShields > 0 then
+            --LOG('We have a retUnit and targetShields is greater than zero')
             local unit
             local platoonUnits = platoon:GetPlatoonUnits()
             for _, w in platoonUnits do
@@ -782,13 +796,15 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
             if closestBlockingShield then
                 return closestBlockingShield, shieldHealth
             end
+            --LOG('Did not return a unit')
         end
         if retUnit then
+            --LOG('We have a retUnit and will return it')
             --RNGLOG('Satellite has target')
             return retUnit
         end
     end
-
+    --LOG('We have no unit to attack')
     return false
 end
 

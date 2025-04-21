@@ -1353,6 +1353,8 @@ function EngineerAssistManagerNeedsEngineers(aiBrain, locationType, tier, minPoo
     if not engineerManager then
         return false
     end
+    --LOG('Calculated Assist Spend '..tostring(aiBrain.EngineerAssistRatio * aiBrain.cmanager.income.r.m))
+    --LOG('Required Build power for engineer manager '..tostring(aiBrain.EngineerAssistManagerBuildPowerRequired)..' current '..tostring(aiBrain.EngineerAssistManagerBuildPower))
     if aiBrain.EconomyOverTimeCurrent.MassIncome > 1.0 and aiBrain.EngineerAssistManagerActive and aiBrain.EngineerAssistManagerBuildPowerRequired > aiBrain.EngineerAssistManagerBuildPower then
         if tier == 1 then
             local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
@@ -1445,12 +1447,14 @@ function ValidateLateGameBuild(aiBrain, locationType)
     local timeStamp = GetGameTimeSeconds()
     local multiplier = aiBrain.EcoManager.EcoMultiplier
     if queuedStructures then
-        for _, v in queuedStructures do
-            for _, c in v do
-                --LOG('Checking queue item '..repr(c))
-                if c.Engineer and not c.Engineer.Dead then
-                    if c.TimeStamp + 30 > timeStamp then
-                        queuedCount = queuedCount + 1
+        for k, v in queuedStructures do
+            if k == 'TECH3' or k == 'EXPERIMENTAL' then
+                for _, c in v do
+                    --LOG('Checking queue item '..repr(c))
+                    if c.Engineer and not c.Engineer.Dead then
+                        if c.TimeStamp + 30 > timeStamp then
+                            queuedCount = queuedCount + 1
+                        end
                     end
                 end
             end
@@ -1464,11 +1468,13 @@ function ValidateLateGameBuild(aiBrain, locationType)
     local unitsBeingBuilt = 0
     local structuresBeingBuilt = aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt
     if structuresBeingBuilt then
-        for _, v in structuresBeingBuilt do
-            for _, c in v do
-                if c and not c.Dead then
-                    if c:GetFractionComplete() < 0.98 then
-                        unitsBeingBuilt = unitsBeingBuilt + 1
+        for k, v in structuresBeingBuilt do
+            if k == 'TECH3' or k == 'EXPERIMENTAL' then
+                for _, c in v do
+                    if c and not c.Dead then
+                        if c:GetFractionComplete() < 0.98 then
+                            unitsBeingBuilt = unitsBeingBuilt + 1
+                        end
                     end
                 end
             end
@@ -1806,6 +1812,7 @@ function DefensivePointShieldRequired(aiBrain, locationType)
 end
 
 function UnitBuildDemand(aiBrain, locationType, type, tier, unit)
+
     if aiBrain.amanager.Demand[type][tier][unit] > aiBrain.amanager.Current[type][tier][unit] then
         return true
     end
@@ -1912,7 +1919,7 @@ function RequireTMDCheckRNG(aiBrain, locationType)
     if locationType ~= 'FLOATING' and locationMobileSiloUnits  > 0 then
         local basePos = aiBrain.BuilderManagers[locationType].Position
         local numUnits = aiBrain:GetNumUnitsAroundPoint( categories.ANTIMISSILE * categories.TECH2, basePos, 65, 'Ally' )
-        if numUnits > 0 and math.ceil(math.max(locationMobileSiloUnits / 2.5, 4)) > numUnits then
+        if math.ceil(math.max(locationMobileSiloUnits / 2.5, 4)) > numUnits then
             return true
         end
     end
@@ -2220,6 +2227,32 @@ function PowerBuildCapabilityExist(aiBrain, powerCategory, engineerCategory)
     local numPowerUnits = aiBrain:GetCurrentUnits(powerCategory)
     local numEngUnits = aiBrain:GetCurrentUnits(engineerCategory)
     return numPowerUnits < 1 or numEngUnits < 1
+end
+
+function RequireEnergyStorage(aiBrain)
+    local maxEnergyCost = 650000
+    local storagePerUnit = 10000
+    local minIncome = 3500
+    local maxIncome = 45000
+    local numEngUnits = aiBrain:GetCurrentUnits(categories.ENERGYSTORAGE)
+    local energyIncome = aiBrain.EconomyOverTimeCurrent.EnergyIncome * 10
+
+    if energyIncome <= minIncome then
+        return false
+    elseif energyIncome >= maxIncome then
+        local desiredUnits = math.ceil(maxEnergyCost * 0.5 / storagePerUnit)
+        if numEngUnits < desiredUnits then
+            return true
+        end
+    else
+        -- Linearly scale between min and max
+        local fraction = (energyIncome - minIncome) / (maxIncome - minIncome)
+        local desiredUnits = math.ceil((maxEnergyCost * 0.5 * fraction) / storagePerUnit)
+        if numEngUnits < desiredUnits then
+            return true
+        end
+    end
+    return false
 end
 
 --[[

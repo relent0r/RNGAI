@@ -31,30 +31,6 @@ Platoon = Class(RNGAIPlatoonClass) {
         coroutine.yield(10)
     end,
     
-    ReclaimAIRNG = function(self)
-        local aiBrain = self:GetBrain()
-        local platoonUnits = GetPlatoonUnits(self)
-        AIAttackUtils.GetMostRestrictiveLayerRNG(self)
-        local eng
-        for k, v in platoonUnits do
-            if not v.Dead and EntityCategoryContains(categories.MOBILE * categories.ENGINEER, v) then
-                eng = v
-                break
-            end
-        end
-        if eng then
-            --RNGLOG('* AI-RNG: Engineer Condition is true')
-            eng.UnitBeingBuilt = eng -- this is important, per uveso (It's a build order fake, i assigned the engineer to itself so it will not produce errors because UnitBeingBuilt must be a unit and can not just be set to true)
-            eng.CustomReclaim = true
-            RUtils.ReclaimRNGAIThread(self,eng,aiBrain)
-            eng.UnitBeingBuilt = nil
-            eng.CustomReclaim = nil
-        end
-        if self.PlatoonDisband then
-            self:PlatoonDisband()
-        end
-    end,
-
     RepairAIRNG = function(self)
         local aiBrain = self:GetBrain()
         if not self.PlatoonData or not self.PlatoonData.LocationType then
@@ -808,7 +784,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                 eng.UnitBeingAssist = nil
                 break
             end
-            if aiBrain.EngineerAssistManagerFocusCategory and not EntityCategoryContains(aiBrain.EngineerAssistManagerFocusCategory, unitToAssist) and aiBrain:IsAnyEngineerBuilding(aiBrain.EngineerAssistManagerFocusCategory) then
+            if aiBrain.EngineerAssistManagerFocusCategory and not EntityCategoryContains(aiBrain.EngineerAssistManagerFocusCategory, unitToAssist) 
+            and aiBrain:IsAnyEngineerBuilding(aiBrain.EngineerAssistManagerFocusCategory) and not unitToAssist.Blueprint.CategoriesHash.ENERGYPRODUCTION then
                 --RNGLOG('Assist Platoon Focus Category has changed, aborting current assist')
                 eng.UnitBeingAssist = nil
                 break
@@ -914,6 +891,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-structure-artillery.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'MexBuild' then
             import("/mods/rngai/lua/ai/statemachines/platoon-engineer-resource.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
+        elseif machineType == 'ReclaimEngineer' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-engineer-reclaim.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'ACUSupport' then
             local aiBrain = self:GetBrain()
             local platoonName = 'ACUSupportPlatoon'

@@ -2,39 +2,197 @@ local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local IntelManager = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
 
+local WeakValueTable = { __mode = 'v' }
+
 function OnCreate(unit)
     if RNGAIGLOBALS.RNGAIPresent then
+        if not unit['rngdata'] then
+            unit['rngdata'] = {}
+        end
         if not RNGAIGLOBALS.ZoneGenerationComplete then
             while not RNGAIGLOBALS.ZoneGenerationComplete do
-                --M28Profiler.FunctionProfiler(sFunctionRef, M28Profiler.refProfilerEnd)
                 coroutine.yield(1)
-                --M28Profiler.FunctionProfiler(sFunctionRef, M28Profiler.refProfilerStart)
             end
             if unit and unit.UnitId and not unit.Dead and unit.GetAIBrain then
                 OnCreate(unit)
             end
         else
             if unit and unit.UnitId and not unit.Dead and unit.GetAIBrain then
-                if EntityCategoryContains(categories.ENGINEER, unit) then
-                    local aiBrain = unit:GetAIBrain()
-                    if aiBrain.RNG then
-                        aiBrain:ForkThread(WaitForManagers, unit)
-                    end
-                end
-                    --[[if EntityCategoryContains(categories.STRUCTURE * categories.FACTORY, unit) then
-                    local aiBrain = unit:GetAIBrain()
-                    if aiBrain.RNG then
-                        LOG('Factory belongs to an RNG brain')
-                        local base = StateUtils.GetClosestBaseManager(aiBrain, unit:GetPosition())
-                        if not aiBrain.BaseManagers[base].FactoryManager then
-                            WaitForManagers(unit, aiBrain.BaseManagers[base].FactoryManager)
-                        elseif aiBrain.BaseManagers[base].FactoryManager then
-                            local fm = aiBrain.BaseManagers[base].FactoryManager
-                            fm:AddFactory(unit)
-                            LOG('Engineer has been added to engineer manager')
+                local aiBrain = unit:GetAIBrain()
+                if aiBrain.RNG then
+                    if unit:GetFractionComplete() == 1 then
+                        --LOG('Completed Unit '..tostring(unit.UnitId))
+                        local unitCats = unit.Blueprint.CategoriesHash
+                        if unitCats.MASSEXTRACTION then
+                            local unitPos = unit:GetPosition()
+                            if VDist3Sq(unitPos, aiBrain.BuilderManagers['MAIN'].Position) < 6400 then
+                                unit.MAINBASE = true
+                            end
+                            unit.Water=GetTerrainHeight(unitPos[1], unitPos[3]) < GetSurfaceHeight(unitPos[1], unitPos[3])
+                            if unitCats.TECH2 or unitCats.TECH3 then
+                                if not table.empty(aiBrain.EnemyIntel.TML) then
+                                    --LOG('There are TMLs registered')
+                                    for _, v in aiBrain.EnemyIntel.TML do
+                                        aiBrain.StructureManager.UnitTMLCheck(unit, v)
+                                    end
+                                end
+                                local tmdUnits = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.ANTIMISSILE, unitPos, 40, 'Ally')
+                                --LOG('Number TMD around Upgraded Extractor '..table.getn(tmdUnits))
+                                if not table.empty(tmdUnits) then
+                                    for _, v in tmdUnits do
+                                        local defenseRadius = v.Blueprint.Weapon[1].MaxRadius - 2
+                                        if VDist3Sq(unitPos, v:GetPosition()) < defenseRadius * defenseRadius then
+                                            if not unit['rngdata'].TMDInRange then
+                                                unit['rngdata'].TMDInRange = setmetatable({}, WeakValueTable)
+                                            end
+                                            --LOG('Found TMD that is protecting this unit, add to TMDInRange table')
+                                            unit['rngdata'].TMDInRange[v.EntityId] = v
+                                        end
+                                    end
+                                end
+                                if unit:IsPaused() then
+                                    unit:SetPaused(false)
+                                end
+                            end
+                        elseif unitCats.STRUCTURE and (unitCats.RADAR or unitCats.OMNI or unitCats.SONAR) then
+                            --LOG('Intel unit create, tried assign')
+                            if aiBrain.IntelManager then
+                                ForkThread(aiBrain.IntelManager.AssignIntelUnit,aiBrain.IntelManager, unit)
+                            end
+                        elseif unitCats.STRUCTURE and unitCats.TECH2 and unitCats.ANTIMISSILE then
+                            --LOG('Callback for TMD fired')
+                            local deathFunction = function(unit)
+                                if unit['rngdata'].UnitsDefended then
+                                    for _, v in pairs(unit['rngdata'].UnitsDefended) do
+                                        if v and not v.Dead then
+                                            if v['rngdata'].TMDInRange then
+                                                if v['rngdata'].TMDInRange[unit.EntityId] then
+                                                    v['rngdata'].TMDInRange[unit.EntityId] = nil
+                                                    --LOG('TMD has been destroyed, removed from '..v.UnitId)
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                            import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, unit)
+                            unit['rngdata'].UnitsDefended = setmetatable({}, WeakValueTable)
+                            --LOG('TMD Built, looking for units to defend')
+                            local defenseRadius = unit.Blueprint.Weapon[1].MaxRadius - 2
+                            local units = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, unit:GetPosition(), defenseRadius, 'Ally')
+                            --LOG('Number of units around TMD '..table.getn(units))
+                            if not table.empty(units) then
+                                for _, v in units do
+                                    if not v['rngdata'] then
+                                        v['rngdata'] = {}
+                                    end
+                                    if not v['rngdata'].TMDInRange then
+                                        v['rngdata'].TMDInRange = setmetatable({}, WeakValueTable)
+                                    end
+                                    v['rngdata'].TMDInRange[unit.EntityId] = unit
+                                    table.insert(unit['rngdata'].UnitsDefended, v)
+                                    --LOG('TMD is defending the current unit '..tostring(v.UnitId))
+                                    --LOG('Entity '..tostring(v.EntityId))
+                                end
+                            end
+                            if aiBrain.IntelManager then
+                                local tmdPosition = unit:GetPosition()
+                                ForkThread(aiBrain.IntelManager.FlushExistingStructureRequest, aiBrain.IntelManager, tmdPosition, 15, 'TMD')
+                            end
                         end
                     end
-                end]]
+                end
+            end
+        end
+    end
+end
+
+function OnStopBeingBuilt(self, unit, builder, layer)
+    if RNGAIGLOBALS.RNGAIPresent then
+        if not unit['rngdata'] then
+            unit['rngdata'] = {}
+        end
+        if unit and unit.UnitId and not unit.Dead and unit.GetAIBrain then
+            local aiBrain = unit:GetAIBrain()
+            if aiBrain.RNG then
+                local unitCats = unit.Blueprint.CategoriesHash
+                if unitCats.MASSEXTRACTION then
+                    local unitPos = unit:GetPosition()
+                    if VDist3Sq(unitPos, aiBrain.BuilderManagers['MAIN'].Position) < 6400 then
+                        unit.MAINBASE = true
+                    end
+                    unit.Water=GetTerrainHeight(unitPos[1], unitPos[3]) < GetSurfaceHeight(unitPos[1], unitPos[3])
+                    if unitCats.TECH2 or unitCats.TECH3 then
+                        if not table.empty(aiBrain.EnemyIntel.TML) then
+                            --LOG('There are TMLs registered')
+                            for _, v in aiBrain.EnemyIntel.TML do
+                                aiBrain.StructureManager.UnitTMLCheck(unit, v)
+                            end
+                        end
+                        local tmdUnits = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.ANTIMISSILE, unitPos, 40, 'Ally')
+                        --LOG('Number TMD around Upgraded Extractor '..table.getn(tmdUnits))
+                        if not table.empty(tmdUnits) then
+                            for _, v in tmdUnits do
+                                local defenseRadius = v.Blueprint.Weapon[1].MaxRadius - 2
+                                if VDist3Sq(unitPos, v:GetPosition()) < defenseRadius * defenseRadius then
+                                    if not unit['rngdata'].TMDInRange then
+                                        unit['rngdata'].TMDInRange = setmetatable({}, WeakValueTable)
+                                    end
+                                   --'Found TMD that is protecting this unit, add to TMDInRange table')
+                                    unit['rngdata'].TMDInRange[v.EntityId] = v
+                                end
+                            end
+                        end
+                        if unit:IsPaused() then
+                            unit:SetPaused(false)
+                        end
+                    end
+                elseif unitCats.STRUCTURE and (unitCats.RADAR or unitCats.OMNI or unitCats.SONAR) then
+                    --LOG('Intel unit create, tried assign')
+                    if aiBrain.IntelManager then
+                        ForkThread(aiBrain.IntelManager.AssignIntelUnit,aiBrain.IntelManager, unit)
+                    end
+                elseif unitCats.STRUCTURE and unitCats.TECH2 and unitCats.ANTIMISSILE then
+                    --LOG('Callback for TMD fired')
+                    local deathFunction = function(unit)
+                        if unit['rngdata'].UnitsDefended then
+                            for _, v in pairs(unit['rngdata'].UnitsDefended) do
+                                if v and not v.Dead then
+                                    if v['rngdata'].TMDInRange then
+                                        if v['rngdata'].TMDInRange[unit.EntityId] then
+                                            v['rngdata'].TMDInRange[unit.EntityId] = nil
+                                            --LOG('TMD has been destroyed, removed from '..v.UnitId)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, unit)
+                    unit['rngdata'].UnitsDefended = setmetatable({}, WeakValueTable)
+                    --LOG('TMD Built, looking for units to defend')
+                    local defenseRadius = unit.Blueprint.Weapon[1].MaxRadius - 2
+                    local units = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, unit:GetPosition(), defenseRadius, 'Ally')
+                    --LOG('Number of units around TMD '..table.getn(units))
+                    if not table.empty(units) then
+                        for _, v in units do
+                            if not v['rngdata'] then
+                                v['rngdata'] = {}
+                            end
+                            if not v['rngdata'].TMDInRange then
+                                v['rngdata'].TMDInRange = setmetatable({}, WeakValueTable)
+                            end
+                            v['rngdata'].TMDInRange[unit.EntityId] = unit
+                            table.insert(unit['rngdata'].UnitsDefended, v)
+                            --LOG('TMD is defending the current unit '..tostring(v.UnitId))
+                            --LOG('Entity '..tostring(v.EntityId))
+                        end
+                    end
+                    if aiBrain.IntelManager then
+                        local tmdPosition = unit:GetPosition()
+                        ForkThread(aiBrain.IntelManager.FlushExistingStructureRequest, aiBrain.IntelManager, tmdPosition, 15, 'TMD')
+                    end
+                end
             end
         end
     end
@@ -46,13 +204,11 @@ function WaitForManagers(aiBrain, unit, manager)
     local manager = aiBrain.BuilderManagers[base].EngineerManager
     local timeout = 0
     while not manager do
-        --M28Profiler.FunctionProfiler(sFunctionRef, M28Profiler.refProfilerEnd)
         coroutine.yield(20)
         timeout = timeout + 1
         if timeout > 10 then
             return
         end
-        --M28Profiler.FunctionProfiler(sFunctionRef, M28Profiler.refProfilerStart)
     end
     local m = manager
     if EntityCategoryContains(categories.ENGINEER, unit) then

@@ -261,9 +261,9 @@ function StartReclaimGreaterThan(aiBrain, value)
 end
 
 function ReclaimPlatoonsActive(aiBrain, numPlatoon)
-    --RNGLOG('Number of reclaim platoons '..aiBrain:GetNumPlatoonsTemplateNamed('RNGAI T1EngineerReclaimer'))
+    --RNGLOG('Number of reclaim platoons '..aiBrain:GetNumPlatoonsTemplateNamed('EngineerReclaimStateT1RNG'))
     if aiBrain.ReclaimEnabled then
-        if GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 and aiBrain:GetNumPlatoonsTemplateNamed('RNGAI T1EngineerReclaimer') < numPlatoon then
+        if GetEconomyStoredRatio(aiBrain, 'MASS') < 0.10 and aiBrain:GetNumPlatoonsTemplateNamed('EngineerReclaimStateT1RNG') < numPlatoon then
             --RNGLOG('Less than 5 reclaim platoons')
             return true
         end

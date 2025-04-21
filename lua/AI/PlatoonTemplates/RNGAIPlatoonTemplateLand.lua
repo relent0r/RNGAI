@@ -36,38 +36,6 @@ PlatoonTemplate {
 }
 
 PlatoonTemplate {
-    Name = 'RNGAI T1EngineerReclaimer',
-    Plan = 'ReclaimAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * categories.TECH1 - categories.COMMAND, 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
-    Name = 'RNGAI T2EngineerReclaimer',
-    Plan = 'ReclaimAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * categories.TECH2, 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
-    Name = 'RNGAI T3EngineerReclaimer',
-    Plan = 'ReclaimAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * categories.TECH3 - categories.SUBCOMMANDER, 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
-    Name = 'RNGAI T12EngineerReclaimer',
-    Plan = 'ReclaimAIRNG',
-    GlobalSquads = {
-        { categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, 1, 1, 'support', 'None' }
-    },
-}
-
-PlatoonTemplate {
     Name = 'LandCombatStateMachineRNG',
     Plan = 'StateMachineAIRNG',
     GlobalSquads = {

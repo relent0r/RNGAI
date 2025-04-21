@@ -39,7 +39,8 @@ EngineerManager = Class(BuilderManager) {
         self.LocationType = self.LocationType or lType
 
         self.ConsumptionUnits = {
-            Engineers = { Category = categories.ENGINEER, Units = {}, UnitsList = {}, Count = 0, },
+            Engineers = { Category = categories.ENGINEER - categories.ENGINEERSTATION, Units = {}, UnitsList = {}, Count = 0, },
+            EngineerStations = { Category = categories.ENGINEERSTATION, Units = {}, UnitsList = {}, Count = 0, },
             Fabricators = { Category = categories.MASSFABRICATION * categories.STRUCTURE, Units = {}, UnitsList = {}, Count = 0, },
             EnergyProduction = { Category = categories.ENERGYPRODUCTION * categories.STRUCTURE, Units = {}, UnitsList = {}, Count = 0, },
             Shields = { Category = categories.SHIELD * categories.STRUCTURE, Units = {}, UnitsList = {}, Count = 0, },
@@ -57,6 +58,7 @@ EngineerManager = Class(BuilderManager) {
             EXPERIMENTAL = setmetatable({}, WeakValueTable),
             SUBCOMMANDER = setmetatable({}, WeakValueTable),
             COMMAND = setmetatable({}, WeakValueTable),
+            DEFENSE = setmetatable({}, WeakValueTable),
         }
         self.StructuresBeingBuilt = setmetatable({}, WeakValueTable)
         self.StructuresBeingBuilt = {
@@ -66,6 +68,7 @@ EngineerManager = Class(BuilderManager) {
             EXPERIMENTAL = setmetatable({}, WeakValueTable),
             SUBCOMMANDER = setmetatable({}, WeakValueTable),
             COMMAND = setmetatable({}, WeakValueTable),
+            DEFENSE = setmetatable({}, WeakValueTable),
         }
         self:AddBuilderType('Any')
     end,
@@ -296,6 +299,7 @@ EngineerManager = Class(BuilderManager) {
     UnitConstructionFinished = function(self, unit, finishedUnit)
         local aiBrain = self.Brain
         local armyIndex = aiBrain:GetArmyIndex()
+        local dontAssignEngineerTask = true
         if finishedUnit:GetAIBrain():GetArmyIndex() == armyIndex and finishedUnit:GetFractionComplete() == 1 then
             if not finishedUnit['rngdata'] then
                 finishedUnit['rngdata'] = {}
@@ -320,40 +324,7 @@ EngineerManager = Class(BuilderManager) {
                 end
                 aiBrain.BuilderManagers[self.LocationType].FactoryManager:AddFactory(finishedUnit)
             end
-            if EntityCategoryContains(categories.ANTIMISSILE * categories.STRUCTURE * categories.TECH2, finishedUnit) then
-                local deathFunction = function(unit)
-                    if unit.UnitsDefended then
-                        for _, v in pairs(unit.UnitsDefended) do
-                            if v and not v.Dead then
-                                if v.TMDInRange then
-                                    if v.TMDInRange[unit.EntityId] then
-                                        v.TMDInRange[unit.EntityId] = nil
-                                        --LOG('TMD has been destroyed, removed from '..v.UnitId)
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-                import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, finishedUnit)
-                finishedUnit.UnitsDefended = {}
-                --LOG('TMD Built, looking for units to defend')
-                local defenseRadius = finishedUnit.Blueprint.Weapon[1].MaxRadius - 2
-                local units = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE, finishedUnit:GetPosition(), defenseRadius, 'Ally')
-                --LOG('Number of units around TMD '..table.getn(units))
-                if not table.empty(units) then
-                    for _, v in units do
-                        if not v.TMDInRange then
-                            v.TMDInRange = setmetatable({}, WeakValueTable)
-                        end
-                        v.TMDInRange[finishedUnit.EntityId] = finishedUnit
-                        table.insert(finishedUnit.UnitsDefended, v)
-                        --LOG('TMD is defending the current unit '..v.UnitId)
-                        --LOG('Entity '..v.EntityId)
-                        --LOG('TMD Table '..repr(v.TMDInRange))
-                    end
-                end
-            elseif EntityCategoryContains(categories.SHIELD * categories.STRUCTURE, finishedUnit) then
+            if EntityCategoryContains(categories.SHIELD * categories.STRUCTURE, finishedUnit) then
                 RUtils.UpdateUnitsProtectedByShield(aiBrain, finishedUnit)
             elseif EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.EXPERIMENTAL), finishedUnit) then
                 RUtils.UpdateShieldsProtectingUnit(aiBrain, finishedUnit)
@@ -387,6 +358,7 @@ EngineerManager = Class(BuilderManager) {
             elseif EntityCategoryContains(categories.AIRSTAGINGPLATFORM * categories.STRUCTURE, finishedUnit) then
                 self.Brain.BrainIntel.AirStagingRequired = false
             end
+
             local unitStats = self.Brain.IntelManager.UnitStats
             local unitValue = finishedUnit.Blueprint.Economy.BuildCostMass or 0
             if unitStats then
@@ -395,7 +367,10 @@ EngineerManager = Class(BuilderManager) {
                     unitStats['ExperimentalLand'].Built.Mass = unitStats['ExperimentalLand'].Built.Mass + unitValue
                 end
             end
-            self:AddUnit(finishedUnit)
+            if EntityCategoryContains(categories.ENGINEER - categories.ENGINEERSTATION, finishedUnit) then
+                dontAssignEngineerTask = false
+            end
+            self:AddUnit(finishedUnit, dontAssignEngineerTask)
         end
     end,
 
@@ -556,12 +531,12 @@ EngineerManager = Class(BuilderManager) {
 
                     if EntityCategoryContains(categories.ENGINEER - categories.STATIONASSISTPOD, unit) then
                         local unitConstructionFinished = function(unit, finishedUnit)
-                                -- Call function on builder manager; let it handle the finish of work
-                                local aiBrain = unit:GetAIBrain()
-                                local engManager = aiBrain.BuilderManagers[unit.BuilderManagerData.LocationType].EngineerManager
-                                if engManager then
-                                    engManager:UnitConstructionFinished(unit, finishedUnit)
-                                end
+                            -- Call function on builder manager; let it handle the finish of work
+                            local aiBrain = unit:GetAIBrain()
+                            local engManager = aiBrain.BuilderManagers[unit.BuilderManagerData.LocationType].EngineerManager
+                            if engManager then
+                                engManager:UnitConstructionFinished(unit, finishedUnit)
+                            end
                         end
 
                         local unitConstructionStarted = function(unit, startedUnit)
@@ -573,15 +548,11 @@ EngineerManager = Class(BuilderManager) {
                         end
                         import('/lua/ScenarioTriggers.lua').CreateUnitBuiltTrigger(unitConstructionFinished, unit, categories.ALLUNITS)
                         import('/lua/ScenarioTriggers.lua').CreateStartBuildTrigger(unitConstructionStarted, unit, categories.ALLUNITS)
-
                     end
                 end
 
                 if not dontAssign then
                     self:ForkEngineerTask(unit)
-                end
-                if EntityCategoryContains(categories.STRUCTURE * (categories.SONAR + categories.RADAR + categories.OMNI), unit) then
-                    IntelManagerRNG.GetIntelManager(self.Brain):AssignIntelUnit(unit)
                 end
                 return
             end
@@ -664,6 +635,12 @@ EngineerManager = Class(BuilderManager) {
             self.AssigningTask = true
         end
 
+        if self:GetLocationBasedBuilder(unit) then
+            --LOG('We have a location based builder, stop assignment')
+            self.AssigningTask = false
+            return
+        end
+
         local builder = self:GetHighestBuilder('Any', {unit})
         --LOG('HighestBuilder is '..repr(builder))
 
@@ -742,6 +719,90 @@ EngineerManager = Class(BuilderManager) {
         self:DelayAssign(unit, 50)
     end,
 
+    GetLocationBasedBuilder = function(self, unit)
+        if unit and not unit.Dead then
+            local aiBrain = self.Brain
+            local engPos = unit:GetPosition()
+            local unitCats = unit.Blueprint.CategoriesHash
+            local brainIndex = aiBrain:GetArmyIndex()
+            local currentCount = GetArmyUnitCostTotal(brainIndex)
+            local cap = GetArmyUnitCap(brainIndex)
+            local capRatio = currentCount / cap
+            local layer = aiBrain.BuilderManagers[self.LocationType].Layer
+            if capRatio > 0.90 then
+                return
+            end
+            if (aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime <= 0.75 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime <= 0.75) then
+                --RNGLOG('GreaterThanEconEfficiencyOverTime passed True')
+                local EnergyEfficiency = math.min(aiBrain:GetEconomyIncome('ENERGY') / aiBrain:GetEconomyRequested('ENERGY'), 2)
+                local MassEfficiency = math.min(aiBrain:GetEconomyIncome('MASS') / aiBrain:GetEconomyRequested('MASS'), 2)
+                if (MassEfficiency <= 0.75 and EnergyEfficiency <= 0.75) then
+                    return
+                end
+            end
+
+            if layer ~= 'Water' and self.LocationType == 'FLOATING' then
+                local radarRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 75, 'RADAR')
+                if radarRequestPos then
+                    --LOG('Radar Request found')
+                    -- Fork a lightweight radar builder platoon
+                    local locationPlatoon = aiBrain:MakePlatoon('RadarPlatoon', 'StateMachineAIRNG')
+                    aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
+                    unit.PlatoonHandle = locationPlatoon
+                    locationPlatoon.PlanName = 'StateMachineAIRNG'
+                    import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'RadarBuild', Position = radarRequestPos, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
+                    return true
+                end
+            end
+            if layer ~= 'Water' and (unitCats.TECH2 or unitCats.TECH3) then
+                if aiBrain.StructureManager and aiBrain.StructureManager.TMDRequired then
+                    for _, v in aiBrain.StructureManager.StructuresRequiringTMD do
+                        if v.Unit and not v.Unit.Dead then
+                            local structurePos = v.Unit:GetPosition()
+                            local rx = engPos[1] - structurePos[1]
+                            local rz = engPos[3] - structurePos[3]
+                            local tmpDistance = rx * rx + rz * rz
+                            if tmpDistance < 14400 and not aiBrain.IntelManager:IsExistingStructureRequestPresent(structurePos, 15, 'TMD') then
+                                aiBrain.IntelManager:RequestStructureNearPosition(structurePos, 15, 'TMD')
+                                --LOG('Request to build structure defense TMD')
+                                local tmdRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 120, 'TMD')
+                                if tmdRequestPos then
+                                    --LOG('Starting state machine for TMD build, locationType is '..tostring(self.LocationType))
+                                    local locationPlatoon = aiBrain:MakePlatoon('TMDPlatoon', 'StateMachineAIRNG')
+                                    aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
+                                    unit.PlatoonHandle = locationPlatoon
+                                    locationPlatoon.PlanName = 'StateMachineAIRNG'
+                                    import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'TMDBuild', Position = structurePos, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
+                                    return true
+                                end
+                            end
+                        end
+                    end
+                end
+                local locationMobileSiloUnits = aiBrain.BasePerimeterMonitor[self.LocationType].EnemyMobileSiloDetected
+                if locationMobileSiloUnits  > 0 then
+                    --LOG('Request to build MML defense TMD')
+                    local basePos = aiBrain.BuilderManagers[self.LocationType].Position
+                    local numUnits = aiBrain:GetNumUnitsAroundPoint( categories.ANTIMISSILE * categories.TECH2, basePos, 65, 'Ally' )
+                    if math.ceil(math.max(locationMobileSiloUnits / 2.5, 4)) > numUnits then
+                        if not aiBrain.IntelManager:IsExistingStructureRequestPresent(basePos, 65, 'TMD') then
+                            aiBrain.IntelManager:RequestStructureNearPosition(basePos, 65, 'TMD')
+                            local tmdRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 120, 'TMD')
+                            if tmdRequestPos then
+                                local locationPlatoon = aiBrain:MakePlatoon('TMDPlatoon', 'StateMachineAIRNG')
+                                aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
+                                unit.PlatoonHandle = locationPlatoon
+                                locationPlatoon.PlanName = 'StateMachineAIRNG'
+                                import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'TMDBuild', Position = basePos, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
+                                return true
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end,
+
     ---@param self EngineerManager
     ---@param unit Unit
     RemoveUnit = function(self, unit)
@@ -757,9 +818,6 @@ EngineerManager = Class(BuilderManager) {
                         break
                     end
                 end
-            end
-            if EntityCategoryContains(categories.STRUCTURE * (categories.SONAR + categories.RADAR + categories.OMNI), unit) then
-                IntelManagerRNG.GetIntelManager(self.Brain):UnassignIntelUnit(unit)
             end
             if found then
                 break

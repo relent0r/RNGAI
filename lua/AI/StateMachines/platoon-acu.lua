@@ -99,6 +99,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             -- reset state
             local brain = self:GetBrain()
             local cdr = self.cdr
+            local im = IntelManagerRNG.GetIntelManager(brain)
             local gameTime = GetGameTimeSeconds()
             local maxBaseRange = cdr.MaxBaseRange * cdr.MaxBaseRange
             local ecoMultiplier = 1
@@ -406,7 +407,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if not enemyAcuClose and brain.BrainIntel.LandPhase < 2 and cdr.CurrentEnemyInnerCircle < 20 then
-                        local im = IntelManagerRNG.GetIntelManager(brain)
                         self:LogDebug(string.format('We want to try and expand '))
                         local expansionCount = 0
                         for k, manager in brain.BuilderManagers do
@@ -539,6 +539,23 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
             local numUnits = GetNumUnitsAroundPoint(brain, categories.LAND + categories.MASSEXTRACTION + (categories.STRUCTURE * categories.DIRECTFIRE) - categories.SCOUT, targetSearchPosition, targetSearchRange, 'Enemy')
             if numUnits > 0 then
+                if not cdr['rngdata']['RadarCoverage'] then
+                    local currentLayer = cdr:GetCurrentLayer()
+                    if currentLayer ~= 'Seabed' then
+                        --LOG('We dont have any radar coverage where we are')
+                        local radarInRange = im:FindIntelInRings(cdr.Position, 70)
+                        if not radarInRange then
+                            --LOG('No radar in range, check if already a request exists ')
+                            local radarRequestExists = im:IsExistingStructureRequestPresent(cdr.Position, 70, 'RADAR')
+                            if not radarRequestExists then
+                                --LOG('No existing requests, create one')
+                                im:RequestStructureNearPosition(cdr.Position, 70, 'RADAR')
+                            else
+                                --LOG('There is already a request in the table around this position')
+                            end
+                        end
+                    end
+                end
                 self:LogDebug(string.format('numUnits > 1 '..tostring(numUnits)..'enemy threat is '..tostring(cdr.CurrentEnemyThreat)..' friendly threat is '..tostring(cdr.CurrentFriendlyThreat)))
                 self:LogDebug(string.format(' friendly inner circle '..tostring(cdr.CurrentFriendlyInnerCircle)..' enemy inner circle '..tostring(cdr.CurrentEnemyInnerCircle)))
                 local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets

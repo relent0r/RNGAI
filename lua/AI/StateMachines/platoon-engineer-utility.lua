@@ -327,6 +327,78 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         -- stop the platoon from endless assisting
                         self:ExitStateMachine()
                     end
+                elseif data.Task == 'RadarBuild' then
+                    --LOG('Engineer Received Radar Build')
+                    local radarPosition = data.Position
+                    if radarPosition then
+                        --LOG('We have a position')
+                        local rx = engPos[1] - radarPosition[1]
+                        local rz = engPos[3] - radarPosition[3]
+                        local radarPosDistance = rx * rx + rz * rz
+                        --LOG('Pos distance is '..tostring(radarPosDistance))
+                        self.BuilderData = {
+                            RadarBuild = true,
+                            Construction = {
+                                BuildClose = true,
+                                BuildStructures = {
+                                    { Unit = 'T1Radar', Categories = categories.RADAR * categories.TECH1 * categories.STRUCTURE },
+                                },
+                            },
+                            Position = radarPosition,
+                            ResetTaskData = true
+                        }
+                        if radarPosDistance < 400 then
+                            --LOG('Position is less than 20 units')
+                            --LOG('Set Task Data')
+                            self:ChangeState(self.SetTaskData)
+                            return
+                        else
+                           --LOG('Position is greater than 20')
+                            self:ChangeState(self.NavigateToTaskLocation)
+                            return
+                        end
+                    end
+                elseif data.Task == 'TMDBuild' then
+                    --LOG('Engineer Received TMD Build')
+                    local tmdPosition = data.Position
+                    if tmdPosition then
+                        --LOG('We have a position')
+                        local rx = engPos[1] - tmdPosition[1]
+                        local rz = engPos[3] - tmdPosition[3]
+                        local tmdPosDistance = rx * rx + rz * rz
+                        --LOG('Pos distance is '..tostring(tmdPosDistance))
+                        local pointTier
+                        if self.LocationType == 'MAIN' then
+                            pointTier = 2
+                        else
+                            pointTier = 1
+                        end
+                        self.BuilderData = {
+                            Construction = {
+                                TMDBuild = true,
+                                BuildClose = true,
+                                NearDefensivePoints = true,
+                                LocationType = self.LocationType,
+                                Type = 'TMD',
+                                Tier = pointTier,
+                                BuildStructures = {
+                                    { Unit = 'T2MissileDefense', Categories = categories.STRUCTURE * categories.ANTIMISSILE * categories.DEFENSE * categories.TECH2 },
+                                },
+                            },
+                            Position = tmdPosition,
+                            ResetTaskData = true
+                        }
+                        if tmdPosDistance < 400 then
+                            --LOG('Position is less than 20 units')
+                            --LOG('Set Task Data')
+                            self:ChangeState(self.SetTaskData)
+                            return
+                        else
+                            --LOG('Position is greater than 20')
+                            self:ChangeState(self.NavigateToTaskLocation)
+                            return
+                        end
+                    end
                 end
             else
                 -- I've made this change state to keep the decision logic clean.
@@ -612,6 +684,11 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
                 coroutine.yield(10)
                 --self:LogDebug(string.format('Set to constructing state'))
+                if builderData.ResetTaskData then
+                    --LOG('Engineer is going to try and set task data as it will not be set')
+                    self:ChangeState(self.SetTaskData)
+                    return
+                end
                 self:ChangeState(self.Constructing)
                 return
             end
@@ -647,6 +724,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             StateUtils.SetupStateBuildAICallbacksRNG(eng)
             if cons.NearDefensivePoints then
                 if cons.Type == 'TMD' then
+                    --LOG('Request to build TMD')
                     if aiBrain.BasePerimeterMonitor[cons.LocationType].EnemyMobileSiloDetected > 0 then
                         --LOG('Trying to get Defensive point for TMD due to mobile silo')
                         reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, 'Silo')
@@ -660,7 +738,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 break
                             end
                         end
-                        --LOG('tmdPositions '..tostring(repr(tmdPositions)))
+                        --LOG('reference for TMD position '..tostring(repr(reference)))
                     end
                 else
                     reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, cons.Type)
@@ -669,7 +747,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
                     RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
                 else
-                    --self:LogDebug(string.format('Engineer unable to find reference for defensive point build'))
+                    --LOG('No reference for TMD position ')
                 end
             elseif cons.AdjacencyPriority then
                 relative = true
@@ -1045,6 +1123,20 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 local basePosition = aiBrain.BuilderManagers[self.LocationType].Position
                 local unitType = cons.BuildStructures[1].Unit
                 local reference = RUtils.GetArtilleryCounterPosition(aiBrain, baseTmpl, unitType, basePosition)
+                buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
+                RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
+            elseif cons.ExperimentalBuild then
+                --LOG('Request to build experimental')
+                local basePos = aiBrain.BuilderManagers[cons.LocationType].Position or aiBrain.BuilderManagers['MAIN'].Position
+                local engPos = eng:GetPosition()
+                relative = true
+                reference = RUtils.GetMobileLandExperimentalBuildPosition(aiBrain, basePos, 60, engPos)
+                if not reference then
+                    --LOG('No reference for experimental build position')
+                    coroutine.yield(20)
+                    self:ExitStateMachine()
+                    return
+                end
                 buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
                 RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
             else

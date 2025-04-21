@@ -157,6 +157,7 @@ StructureManager = Class {
         self.ShieldCoverage = {}
         self.TMDRequired = false
         self.StructuresRequiringTMD = {}
+        self.ExtractorUpgradeQueue = {}
     end,
 
     Run = function(self)
@@ -1354,11 +1355,11 @@ StructureManager = Class {
                     for _, v in tmdUnits do
                         local defenseRadius = v.Blueprint.Weapon[1].MaxRadius - 2
                         if VDist3Sq(upgradedFactory:GetPosition(), v:GetPosition()) < defenseRadius * defenseRadius then
-                            if not upgradedFactory.TMDInRange then
-                                upgradedFactory.TMDInRange = setmetatable({}, WeakValueTable)
+                            if not upgradedFactory['rngdata'].TMDInRange then
+                                upgradedFactory['rngdata'].TMDInRange = setmetatable({}, WeakValueTable)
                             end
                             --LOG('Found TMD that is protecting this unit, add to TMDInRange table')
-                            upgradedFactory.TMDInRange[v.EntityId] = v
+                            upgradedFactory['rngdata'].TMDInRange[v.EntityId] = v
                         end
                     end
                 end
@@ -1541,27 +1542,42 @@ StructureManager = Class {
                     --LOG('We could update an extractor because we have alot of mass storage')
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                     coroutine.yield(30)
+            elseif extractorsDetail.TECH1 > 0 and extractorsDetail.TECH1Upgrading < 8 and extractorsDetail.TECH2Upgrading > 0 and upgradeTrigger and totalSpend < upgradeSpend 
+                and energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.PlayerRole.SpamPlayer then
+                --LOG('Upgrading the minimum number t1 ')
+                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
+                 coroutine.yield(30)
             end
             coroutine.yield(30)
         end
     end,
 
-    StructureTMLCheck = function(self, structure)
+    StructureTMLCheck = function(self, structure, optionalUnit)
         local defended = true
         local TMLInRange = 0
         local TMDCount = 0
-        if structure.TMLInRange and not table.empty(structure.TMLInRange) then
-            for k, v in pairs(structure.TMLInRange) do
+        if not structure['rngdata'] then
+            structure['rngdata'] = {}
+        end
+        local structureData = structure['rngdata']
+        if not structureData['TMLInRange'] then
+            structureData['TMLInRange'] = setmetatable({}, WeakValueTable)
+        end
+        if not structureData['TMDInRange'] then
+            structureData['TMDInRange'] = setmetatable({}, WeakValueTable)
+        end
+        if structureData.TMLInRange and not table.empty(structureData.TMLInRange) then
+            for k, v in pairs(structureData.TMLInRange) do
                 if not self.Brain.EnemyIntel.TML[k] or self.Brain.EnemyIntel.TML[k].object.Dead then
-                    structure.TMLInRange[k] = nil
+                    structureData.TMLInRange[k] = nil
                     continue
                 end   
                 TMLInRange = TMLInRange + 1 
             end
-            if not structure.TMDInRange then
+            if not structureData.TMDInRange then
                 defended = false
             else
-                for _, c in structure.TMDInRange do
+                for _, c in structureData.TMDInRange do
                     if not c.Dead then
                         TMDCount = TMDCount + 1
                     end
@@ -1570,6 +1586,35 @@ StructureManager = Class {
                     --LOG('More TML than TMD, TML count is '..tostring(TMLInRange)..' TMD Count '..tostring(TMDCount))
                     defended = false
                 end
+            end
+            --LOG('TMLInRange '..tostring(TMLInRange)..' TMDCount '..tostring(TMDCount))
+        elseif optionalUnit then
+            local tmlTable = self.Brain.EnemyIntel.TML
+            if tmlTable[optionalUnit.EntityId] and tmlTable[optionalUnit.EntityId].object and not tmlTable[optionalUnit.EntityId].object.Dead then
+                local tmlPos = tmlTable[optionalUnit.EntityId].object:GetPosition()
+                local structurePos = structure:GetPosition()
+                if tmlPos[1] and structurePos[1] then
+                    local dx = tmlPos[1] - structurePos[1]
+                    local dz = tmlPos[3] - structurePos[3]
+                    local distance = dx * dx + dz * dz
+                    local tmlRange = tmlTable[optionalUnit.EntityId].object.Blueprint.Weapon[1].MaxRadius or 256
+                    if distance <= tmlRange * tmlRange then
+                        TMLInRange = TMLInRange + 1
+                        structureData.TMLInRange[optionalUnit.EntityId] = optionalUnit
+                    end
+                    for _, c in structureData.TMDInRange do
+                        if not c.Dead then
+                            TMDCount = TMDCount + 1
+                        end
+                    end
+                    if TMLInRange > TMDCount then
+                        --LOG('More TML than TMD, TML count is '..tostring(TMLInRange)..' TMD Count '..tostring(TMDCount))
+                        defended = false
+                    end
+                end
+                --LOG('TMLInRange '..tostring(TMLInRange)..' TMDCount '..tostring(TMDCount))
+            else
+                --LOG('tmlTable did not return anything for its object')
             end
         end
         return defended
@@ -1587,216 +1632,162 @@ StructureManager = Class {
         end
         return defended
     end,
-    
+
     ValidateExtractorUpgradeRNG = function(self, aiBrain, extractorTable, allTiers)
-        --LOG('ValidateExtractorUpgrade Stuff')
-        local UnitPos
-        local DistanceToBase
-        local LowestDistanceToBase
-        local lowestUnit = false
-        local base = aiBrain.BuilderManagers['MAIN']
-        local BasePosition = aiBrain.BuilderManagers['MAIN'].Position
-        if extractorTable then
-            --LOG('extractorTable present in upgrade validation')                
-            if not allTiers then
-                for _, c in extractorTable.TECH1 do
-                    if c and not c.Dead then
-                        if c.InitialDelayCompleted then
-                            UnitPos = c:GetPosition()
-                            DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                            if not c.InitialPosCompleted then
-                                for _, v in base.CoreResources do
-                                    local pos = v.Position or v.position
-                                    if UnitPos[1] == pos[1] and UnitPos[3] == pos[3] then
-                                        c.MAINBASE = true
-                                        break
-                                    end
-                                end
-                                c.InitialPosCompleted = true
-                            end
-                            if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
-                                LowestDistanceToBase = DistanceToBase
-                                lowestUnit = c
-                                --LOG('T1 lowestUnit added alltiers false')
-                            end
+        local bestZone, bestExtractor, lowestDist
+        local basePosition = aiBrain.BuilderManagers['MAIN'].Position
+        
+        local zoneExtractors = {}
+
+        for tier, extractors in extractorTable do
+            if allTiers or tier == "TECH1" then
+                for _, c in extractors do
+                    if c and not c.Dead and c.InitialDelayCompleted then
+                        local zoneID = c.zoneid
+                        if zoneID then
+                            zoneExtractors[zoneID] = zoneExtractors[zoneID] or {}
+                            table.insert(zoneExtractors[zoneID], c)
                         end
                     end
                 end
-            else
-                for _, c in extractorTable.TECH1 do
-                    if c and not c.Dead then
-                        if c.InitialDelayCompleted then
-                            UnitPos = c:GetPosition()
-                            DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                            if not c.InitialPosCompleted then
-                                for _, v in base.CoreResources do
-                                    local pos = v.Position or v.position
-                                    if UnitPos[1] == pos[1] and UnitPos[3] == pos[3] then
-                                        c.MAINBASE = true
-                                        break
-                                    end
-                                end
-                                c.InitialPosCompleted = true
-                            end
-                            if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
-                                LowestDistanceToBase = DistanceToBase
-                                lowestUnit = c
-                                --LOG('T1 lowestUnit added alltiers true')
-                            end
-                        end
-                    end
-                end
-                for _, c in extractorTable.TECH2 do
-                    if c and not c.Dead then
-                        if c.InitialDelayCompleted then
-                            UnitPos = c:GetPosition()
-                            DistanceToBase = VDist2Sq(BasePosition[1] or 0, BasePosition[3] or 0, UnitPos[1] or 0, UnitPos[3] or 0)
-                            if not c.InitialPosCompleted then
-                                for _, v in base.CoreResources do
-                                    local pos = v.Position or v.position
-                                    if UnitPos[1] == pos[1] and UnitPos[3] == pos[3] then
-                                        c.MAINBASE = true
-                                        break
-                                    end
-                                end
-                                c.InitialPosCompleted = true
-                            end
-                            if not LowestDistanceToBase or DistanceToBase < LowestDistanceToBase then
-                                LowestDistanceToBase = DistanceToBase
-                                lowestUnit = c
-                                --LOG('T2 lowestUnit added alltiers true')
-                            end
-                        end
-                    end
-                end
-            end
-            if lowestUnit then
-                lowestUnit.CentralBrainExtractorUpgrade = true
-                lowestUnit.DistanceToBase = LowestDistanceToBase
-                if not aiBrain.CentralBrainExtractorUnitUpgradeClosest then
-                    aiBrain.CentralBrainExtractorUnitUpgradeClosest = lowestUnit
-                end
-                --RNGLOG('Closest Extractor')
-                self:ForkThread(self.UpgradeExtractorRNG, aiBrain, lowestUnit, LowestDistanceToBase)
-            else
-                --RNGLOG('There is no lowestUnit')
             end
         end
-    end,
     
-    UpgradeExtractorRNG = function(self, aiBrain, extractorUnit, distanceToBase)
-        --LOG('Upgrading Extractor from central brain thread')
+        -- Evaluate zones
+        for zoneID, extractors in zoneExtractors do
+            local zoneGroup = (extractors[1].Water and aiBrain.Zones.Water) or aiBrain.Zones.Land
+            local zone = zoneGroup.zones[zoneID]
+
+            if zone then -- Adjust this threshold
+                local zoneDist = VDist2Sq(basePosition[1], basePosition[3], zone.pos[1], zone.pos[3])
+                for _, c in extractors do
+                    -- Select the best extractor in the zone based on proximity to zone center
+                    if not bestExtractor or zoneDist < lowestDist then
+                        bestExtractor = c
+                        bestZone = zoneID
+                        lowestDist = zoneDist
+                    end
+                end
+            end
+        end
+    
+        -- Upgrade the selected extractor if one was found
+        if bestExtractor then
+            local extractorPos = bestExtractor:GetPosition()
+            local distanceToBase = VDist2Sq(basePosition[1], basePosition[3], extractorPos[1],extractorPos[3])
+            bestExtractor.DistanceToBase = distanceToBase
+            if not aiBrain.ExtractorUpgradeThread then
+                --LOG('Starting Upgrade queue thread')
+                aiBrain.ExtractorUpgradeThread = self:ForkThread(self.UpgradeManagementThread, aiBrain)
+            end
+            aiBrain.CentralBrainExtractorUnitUpgradeClosest = bestExtractor
+            -- Trigger the upgrade process
+            self:ForkThread(self.AddExtractorToUpgradeQueue, aiBrain, bestExtractor, distanceToBase)
+            --LOG('Added Extractor')
+        else
+            --LOG('No valid extractor found for upgrade.')
+        end
+    end,
+
+    AddExtractorToUpgradeQueue = function(self, aiBrain, extractorUnit, distanceToBase)
         local upgradeID = extractorUnit.Blueprint.General.UpgradesTo or false
         if upgradeID then
             IssueUpgrade({extractorUnit}, upgradeID)
-            coroutine.yield(2)
-            local fractionComplete
-            local upgradeTimeStamp = GetGameTimeSeconds()
-            local bypassEcoManager = false
-            local extractorUpgradeTimeoutReached = false
-            local upgradedExtractor = extractorUnit.UnitBeingBuilt
-            if not upgradedExtractor.Dead then
-                fractionComplete = upgradedExtractor:GetFractionComplete()
-            end
-            while extractorUnit and not extractorUnit.Dead and fractionComplete < 1 do
-                --LOG('Unit is '..fractionComplete..' fraction complete')
-                local upgradeSpend = aiBrain.cmanager.income.r.m*aiBrain.EconomyUpgradeSpend
-                if not aiBrain.CentralBrainExtractorUnitUpgradeClosest or aiBrain.CentralBrainExtractorUnitUpgradeClosest.Dead then
-                    aiBrain.CentralBrainExtractorUnitUpgradeClosest = extractorUnit
-                    aiBrain.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase = distanceToBase
-                elseif aiBrain.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase > distanceToBase then
-                    aiBrain.CentralBrainExtractorUnitUpgradeClosest = extractorUnit
-                    aiBrain.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase = distanceToBase
-                elseif not aiBrain.CentralBrainExtractorUnitUpgradeClosest2nd or aiBrain.CentralBrainExtractorUnitUpgradeClosest2nd.Dead then
-                    aiBrain.CentralBrainExtractorUnitUpgradeClosest2nd = extractorUnit
-                    aiBrain.CentralBrainExtractorUnitUpgradeClosest2nd.DistanceToBase = distanceToBase
-                elseif aiBrain.CentralBrainExtractorUnitUpgradeClosest2nd.DistanceToBase > distanceToBase then
-                    aiBrain.CentralBrainExtractorUnitUpgradeClosest2nd = extractorUnit
-                    aiBrain.CentralBrainExtractorUnitUpgradeClosest2nd.DistanceToBase = distanceToBase
-                end
-                if aiBrain.BrainIntel.SelfThreat.ExtractorCount > aiBrain.BrainIntel.MassSharePerPlayer and aiBrain.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase then
-                    bypassEcoManager = true
-                end
-                if not bypassEcoManager and fractionComplete < 0.65 then
-                    if GetEconomyStored(aiBrain, 'ENERGY') < 200 or ((GetEconomyTrend(aiBrain, 'MASS') <= 0.0 
-                        and GetEconomyStored(aiBrain, 'MASS') <= 150) and (aiBrain.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase ~= distanceToBase 
-                        or upgradeSpend > aiBrain.EcoManager.TotalMexSpend)) then
-                        if not extractorUnit.Dead and not extractorUnit:IsPaused() then
-                            extractorUnit:SetPaused(true)
-                            coroutine.yield(10)
-                        end
-                    else
-                        if not extractorUnit.Dead and extractorUnit:IsPaused() then
-                            if aiBrain.EcoManager.ExtractorsUpgrading.TECH1 > 1 or aiBrain.EcoManager.ExtractorsUpgrading.TECH2 > 0 then
-                                if aiBrain.CentralBrainExtractorUnitUpgradeClosest and not aiBrain.CentralBrainExtractorUnitUpgradeClosest.Dead 
-                                and aiBrain.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase then
-                                    extractorUnit:SetPaused(false)
-                                    coroutine.yield(30)
-                                elseif aiBrain.EcoManager.ExtractorsUpgrading.TECH2 > 0 and EntityCategoryContains(categories.TECH1, extractorUnit) then
-                                    extractorUnit:SetPaused(false)
-                                    if extractorUpgradeTimeoutReached then
-                                        coroutine.yield(30)
-                                    end
-                                    coroutine.yield(30)
-                                elseif GetEconomyStored(aiBrain, 'MASS') > 250 then
-                                    extractorUnit:SetPaused(false)
-                                    coroutine.yield(30)
-                                end
-                            elseif not extractorUnit.Dead then
-                                extractorUnit:SetPaused(false)
-                                coroutine.yield(20)
-                            end
-                        end
-                    end
-                end
-                coroutine.yield(30)
-                if upgradedExtractor and not upgradedExtractor.Dead then
-                    fractionComplete = upgradedExtractor:GetFractionComplete()
-                end
-                if not extractorUpgradeTimeoutReached then
-                    if GetGameTimeSeconds() - upgradeTimeStamp > aiBrain.EcoManager.EcoMassUpgradeTimeout and GetEconomyStored( aiBrain, 'ENERGY') > 500 then
-                        extractorUpgradeTimeoutReached = true
-                        if not extractorUnit.Dead and extractorUnit:IsPaused() then
-                            extractorUnit:SetPaused(false)
-                        end
-                    end
-                end
-                if fractionComplete < 1 and extractorUpgradeTimeoutReached 
-                and (aiBrain.CentralBrainExtractorUnitUpgradeClosest.DistanceToBase == distanceToBase or aiBrain.CentralBrainExtractorUnitUpgradeClosest2nd.DistanceToBase == distanceToBase or extractorUnit.MAINBASE) then
-                    bypassEcoManager = true
-                    if not extractorUnit.Dead and extractorUnit:IsPaused() then
-                        extractorUnit:SetPaused(false)
-                    end
-                end
-            end
-            if upgradedExtractor and not upgradedExtractor.Dead then
-                if VDist3Sq(upgradedExtractor:GetPosition(), aiBrain.BuilderManagers['MAIN'].Position) < 6400 then
-                    upgradedExtractor.MAINBASE = true
-                end
-                if not table.empty(aiBrain.EnemyIntel.TML) then
-                    for _, v in aiBrain.EnemyIntel.TML do
-                        self.UnitTMLCheck(upgradedExtractor, v)
-                    end
-                end
-                local tmdUnits = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.ANTIMISSILE, upgradedExtractor:GetPosition(), 40, 'Ally')
-                --LOG('Number TMD around Upgraded Extractor '..table.getn(tmdUnits))
-                if not table.empty(tmdUnits) then
-                    for _, v in tmdUnits do
-                        local defenseRadius = v.Blueprint.Weapon[1].MaxRadius - 2
-                        if VDist3Sq(upgradedExtractor:GetPosition(), v:GetPosition()) < defenseRadius * defenseRadius then
-                            if not upgradedExtractor.TMDInRange then
-                                upgradedExtractor.TMDInRange = setmetatable({}, WeakValueTable)
-                            end
-                            --LOG('Found TMD that is protecting this unit, add to TMDInRange table')
-                            upgradedExtractor.TMDInRange[v.EntityId] = v
-                        end
-                    end
-                end
-            end
-        else
-            WARN('No upgrade id provided to upgradeextractorrng')
+            table.insert(self.ExtractorUpgradeQueue, {
+                ExtractorUnit = extractorUnit,
+                TimeAdded = GetGameTimeSeconds(),
+                DistanceToMain = distanceToBase,
+                ZoneID = extractorUnit.zoneid,
+                BypassEcoManager = false
+            })
         end
-        coroutine.yield(80)
+    end,
+
+    UpgradeManagementThread = function(self, aiBrain)
+        while true do
+            coroutine.yield(20)
+            local upgradeManagementQueue = self.ExtractorUpgradeQueue
+            local t1Consumption = aiBrain.EcoManager.ExtractorValues.TECH1.ConsumptionValue
+            local t2Consumption = aiBrain.EcoManager.ExtractorValues.TECH2.ConsumptionValue
+            local upgradeSpend = aiBrain.cmanager.income.r.m * aiBrain.EconomyUpgradeSpend
+            local currentConsumption = 0
+            local currentTime = GetGameTimeSeconds()
+            -- Check if there are extractors in the queue
+            if not table.empty(upgradeManagementQueue) then
+                local currentTableSize = 0
+                -- Sort the queue if necessary based on priority (e.g., distance to base, zone, etc.)
+                table.sort(upgradeManagementQueue, function(a, b)
+                    return a.DistanceToMain < b.DistanceToMain -- Prioritize closer extractors, for example
+                end)
+                --LOG('Upgrade queue sorted')
+                local massStored = GetEconomyStored(aiBrain, 'MASS')
+                local massTrend = GetEconomyTrend(aiBrain, 'MASS')
+                local energyStored = GetEconomyStored(aiBrain, 'ENERGY')
+                -- Loop through all extractors in the queue
+                for i, extractorInfo in ipairs(upgradeManagementQueue) do
+                    currentTableSize = currentTableSize + 1
+                    --LOG('Loop through extractor '..i)
+                    local extractorUnit = extractorInfo.ExtractorUnit
+                    local upgradedExtractor = extractorUnit.UnitBeingBuilt
+                    if extractorUnit and not extractorUnit.Dead and upgradedExtractor and not upgradedExtractor.Dead then
+                        local fractionComplete = upgradedExtractor:GetFractionComplete()
+                        local unitCats = extractorUnit.Blueprint.CategoriesHash
+
+                        if fractionComplete < 1 then
+                            --LOG('fractionComplete is less than 1')
+                            if unitCats.TECH1 then
+                                currentConsumption = currentConsumption + t1Consumption
+                            else
+                                currentConsumption = currentConsumption + t2Consumption
+                            end
+                            --LOG('Current consumption is '..tostring(currentConsumption))
+                            --LOG('Available spend '..tostring(upgradeSpend))
+                            -- Check if economy supports continuing upgrades
+                            if not extractorInfo.bypassEcoManager and fractionComplete < 0.65 then
+                                --LOG('Performing economy management on extractor')
+                                if energyStored < 200 or (massTrend <= 0.0 and massStored <= 150 and currentConsumption > upgradeSpend and i~= 1) then
+                                    if not extractorUnit.Dead and not extractorUnit:IsPaused() then
+                                        extractorUnit:SetPaused(true)
+                                        --LOG('Pause Extractor')
+                                    end
+                                else
+                                    if not extractorUnit.Dead and extractorUnit:IsPaused() then
+                                        if aiBrain.EcoManager.ExtractorsUpgrading.TECH1 > 1 or aiBrain.EcoManager.ExtractorsUpgrading.TECH2 > 0 then
+                                            if currentConsumption < upgradeSpend then
+                                                extractorUnit:SetPaused(false)
+                                            elseif aiBrain.EcoManager.ExtractorsUpgrading.TECH2 > 0 and unitCats.TECH1 then
+                                                extractorUnit:SetPaused(false)
+                                            elseif massStored > 250 then
+                                                extractorUnit:SetPaused(false)
+                                            end
+                                        elseif not extractorUnit.Dead then
+                                            extractorUnit:SetPaused(false)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+
+                        -- Check upgrade timeout logic
+                        if not extractorInfo.BypassEcoManager and currentTime - extractorInfo.TimeAdded > aiBrain.EcoManager.EcoMassUpgradeTimeout and energyStored > 500 then
+                            --LOG('Bypassing eco manager for extractor')
+                            extractorInfo.BypassEcoManager = true
+                            if not extractorUnit.Dead and extractorUnit:IsPaused() then
+                                extractorUnit:SetPaused(false)
+                            end
+                        end
+                        -- If upgrade is complete, remove from the queue
+                        if fractionComplete >= 1 then
+                            table.remove(upgradeManagementQueue, i)
+                        end
+                    elseif extractorUnit.Dead or upgradedExtractor.Dead then
+                        table.remove(upgradeManagementQueue, i)
+                    end
+                end
+                --LOG('Table size at end is '..tostring(currentTableSize))
+            end
+    
+        end
     end,
 
     ExtractorInitialDelay = function(self, aiBrain, unit)
@@ -1902,7 +1893,7 @@ StructureManager = Class {
             for _, v in structures do
                 local isTMDDefended = self:StructureTMLCheck(v)
                 if not isTMDDefended then
-                    RNGINSERT(tmdRequired, v)
+                    RNGINSERT(tmdRequired, {Unit = v, Assigned = false, AssignedEngineer = nil})
                 end
                 local isShieldDefended = self:StructureShieldCheck(v)
                 if not isShieldDefended then
@@ -1930,7 +1921,7 @@ StructureManager = Class {
     ValidateTML = function(self, aiBrain, tml)
         if not tml.validated then
             --LOG('ValidateTML unit has not been validated')
-            local extractors = aiBrain:GetListOfUnits(categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL - categories.TECH1, false, false)
+            local extractors = aiBrain:GetListOfUnits((categories.STRUCTURE * categories.FACTORY) + (categories.STRUCTURE * categories.MASSEXTRACTION - categories.TECH1 - categories.EXPERIMENTAL) , false, false)
             for _, b in extractors do
                 self.UnitTMLCheck(b, tml)
             end
@@ -1942,10 +1933,10 @@ StructureManager = Class {
         --LOG('Distance to TML is '..VDist3Sq(unit:GetPosition(), tml.position)..' cutoff is '..(tml.range * tml.range))
         if not unit.Dead and VDist3Sq(unit:GetPosition(), tml.position) < tml.range * tml.range then
             --LOG('ValidateTML there is a unit that is in range')
-            if not unit.TMLInRange then
-                unit.TMLInRange = {}
+            if not unit['rngdata'].TMLInRange then
+                unit['rngdata'].TMLInRange = {}
             end
-            unit.TMLInRange[tml.object.EntityId] = tml.object
+            unit['rngdata'].TMLInRange[tml.object.EntityId] = tml.object
         end
     end,
 }

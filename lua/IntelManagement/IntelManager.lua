@@ -64,6 +64,11 @@ IntelManager = Class {
             IntelCoverage = 0,
             MustScoutArea = false,
         }
+        self.RadarRequests = {}
+        self.StructureRequests = {
+            RADAR = {},
+            TMD = {},
+        }
         self.MapMaximumValues = {
             MaximumResourceValue = 0,
             MaxumumGraphValue = 0
@@ -1366,14 +1371,14 @@ IntelManager = Class {
 
     AssignIntelUnit = function(self, unit)
         local aiBrain = self.Brain
-        local intelRadius = unit.Blueprint.Intel.RadarRadius * unit.Blueprint.Intel.RadarRadius
+        local intelRadius = unit.Blueprint.Intel.RadarRadius
         local radarPosition = unit:GetPosition()
         if unit.Blueprint.CategoriesHash.RADAR then
-            --RNGLOG('Zone set for radar that has been built '..unit.UnitId)
+            --LOG('Zone set for radar that has been built '..unit.UnitId)
             unit.zoneid = MAP:GetZoneID(radarPosition,aiBrain.Zones.Land.index)
             if unit.zoneid then
                 local zone = aiBrain.Zones.Land.zones[unit.zoneid]
-                if VDist3Sq(radarPosition, zone.pos) < intelRadius then
+                if VDist3Sq(radarPosition, zone.pos) < intelRadius * intelRadius then
                     if not zone.intelassignment.RadarUnits then
                         zone.intelassignment.RadarUnits = {}
                     end
@@ -1386,6 +1391,7 @@ IntelManager = Class {
             local gridSearch = math.floor(unit.Blueprint.Intel.RadarRadius / MapIntelGridSize)
             --RNGLOG('GridSearch for IntelCoverage is '..gridSearch)
             self:InfectGridPosition(radarPosition, gridSearch, 'Radar', 'IntelCoverage', true, unit)
+            self:FlushExistingStructureRequest(radarPosition, math.ceil(intelRadius * 0.7), 'RADAR')
         end
     end,
 
@@ -1393,7 +1399,7 @@ IntelManager = Class {
         local aiBrain = self.Brain
         local radarPosition = unit:GetPosition()
         if unit.Blueprint.CategoriesHash.RADAR then
-            --RNGLOG('Unassigning Radar Unit')
+            --LOG('Unassigning Radar Unit '..tostring(unit.UnitId))
             if unit.zoneid then
                 local zone = aiBrain.Zones.Land.zones[unit.zoneid]
                 if zone.intelassignment.RadarUnits then
@@ -2693,13 +2699,17 @@ IntelManager = Class {
             --LOG('experimentalArtilleryCount '..experimentalArtilleryCount)
             --LOG('experimentalNukeCount '..experimentalNukeCount)
         elseif productiontype == 'IntelStructure' then
-            if data.Tier == 'T3' and data.Structure == 'optics' then
-                if aiBrain.smanager.Current.Structure['intel']['T3']['Optics'] < 1 and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 1000 and aiBrain:GetEconomyIncome('ENERGY') > 1000 
-                and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime > 500 and aiBrain:GetEconomyTrend('ENERGY') > 500 then
-                    aiBrain.smanager.Demand.Structure.intel.Optics = 1
-                else
-                    aiBrain.smanager.Demand.Structure.intel.Optics = 0
+            if not aiBrain.CDRUnit['rngdata']['RadarCoverage'] then
+                local cdrPos = aiBrain.CDRUnit.Position
+                if cdrPos then
+                    local gridX, gridZ = self:GetIntelGrid(aiBrain.CDRUnit.Position)
                 end
+            end
+            if aiBrain.smanager.Current.Structure['intel']['T3']['Optics'] < 1 and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 1000 and aiBrain:GetEconomyIncome('ENERGY') > 1000 
+            and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime > 500 and aiBrain:GetEconomyTrend('ENERGY') > 500 then
+                aiBrain.smanager.Demand.Structure.intel.Optics = 1
+            else
+                aiBrain.smanager.Demand.Structure.intel.Optics = 0
             end
         elseif productiontype == 'LandIndirectFire' then
             local threatDillutionRatio = 15
@@ -3014,6 +3024,203 @@ IntelManager = Class {
             end
         end
     end,
+
+    FindIntelInRings = function(self, position, radarRange)
+        local gridX, gridZ = self:GetIntelGrid(position)
+        local cells = self.MapIntelGrid
+    
+        local cell = cells[gridX] and cells[gridX][gridZ]
+        if not cell or not cell.Size then
+            return "error"
+        end
+    
+        local cellSizeX = cell.Size.sx
+        local cellSizeZ = cell.Size.sz
+    
+        -- Determine how many cells the radar range spans, round up to fully cover the area
+        local rangeInCellsX = math.ceil(radarRange / cellSizeX)
+        local rangeInCellsZ = math.ceil(radarRange / cellSizeZ)
+    
+        -- Search surrounding cells for any radar coverage
+        for dx = -rangeInCellsX, rangeInCellsX do
+            local column = cells[gridX + dx]
+            if column then
+                for dz = -rangeInCellsZ, rangeInCellsZ do
+                    local neighborCell = column[gridZ + dz]
+                    if neighborCell and neighborCell.IntelCoverage then
+                        return neighborCell
+                    end
+                end
+            end
+        end
+    
+        -- No coverage found, can return nil or fallback cell
+        return nil
+    end,
+
+    AssignEngineerToStructureRequestNearPosition = function(self, eng, position, radius, structureType)
+        local radiusSq = radius * radius
+        --LOG('Checking for an existing requests, current request count '..tostring(table.getn(self.RadarRequests)))
+        if self.StructureRequests[structureType] then
+            for _, v in self.StructureRequests[structureType] do
+                if not v.Assigned then
+                    local dx = position[1] - v.Position[1]
+                    local dz = position[3] - v.Position[3]
+                    local distSq = dx*dx + dz*dz
+                    if distSq < radiusSq then
+                        if not self:IsAssignedStructureRequestPresent(v.Position, radius, structureType) then
+                            v.Assigned = true
+                            v.AssignedTime = GetGameTimeSeconds()
+                            v.AssignedEngineer = eng  -- or unit ID
+                            return v.Position
+                        end
+                    end
+                end
+            end
+        else
+            WARN('AI-RNG: Invalid structure type passed to AssignEngineerToStructureRequestNearPosition, passed value was '..tostring(structureType))
+        end
+    end,
+
+    IsExistingStructureRequestPresent = function(self, pos, radius, structureType)
+        local rSq = radius * radius
+        --LOG('IsExistingStructureRequestPresent, source position is '..tostring(repr(pos)))
+        local currentGameTime = GetGameTimeSeconds()
+        local requestTable = self.StructureRequests[structureType]
+        if not requestTable then
+            WARN('AI-RNG: Invalid structure type passed to IsExistingStructureRequestPresent, passed value was '..tostring(structureType))
+            return false
+        end
+        local buildKeyMap = {
+            RADAR = 'RadarBuild',
+            TMD = 'TMDBuild',
+        }
+        
+        for i = table.getn(requestTable), 1, -1 do
+            local data = requestTable[i]
+            local ap = data.Position
+            local dx = pos[1] - ap[1]
+            local dz = pos[3] - ap[3]
+            local distSq = dx * dx + dz * dz
+            if distSq < rSq then
+                invalidAssignment = false
+                if data.Assigned then
+                    local key = buildKeyMap[structureType]
+                    local buildData = data.AssignedEngineer.PlatoonHandle.BuilderData
+                    if not (buildData and buildData.Construction and buildData.Construction[key]) then
+                        invalidAssignment = true
+                    end
+                    if not data.AssignedTime or data.AssignedTime + 120 < currentGameTime then
+                        --LOG('Request was stale, time was '..tostring(data.AssignedTime)..' current time is '..tostring(currentGameTime))
+                        invalidAssignment = true
+                    end
+                end
+                if invalidAssignment then
+                    --LOG('Removing invalid assignment')
+                    table.remove(requestTable, i)
+                else
+                    return true
+                end
+            end
+        end
+        return false
+    end,
+
+    IsAssignedStructureRequestPresent = function(self, pos, radius, structureType)
+        local rSq = radius * radius
+        --LOG('IsExistingStructureRequestPresent, source position is '..tostring(repr(pos)))
+        if self.StructureRequests[structureType] then
+            for _, data in self.StructureRequests[structureType] do
+                if data.Assigned then
+                    local ap = data.Position
+                    local dx = pos[1] - ap[1]
+                    local dz = pos[3] - ap[3]
+                    if dx*dx + dz*dz < rSq then
+                        return true
+                    end
+                end
+            end
+        else
+            WARN('AI-RNG: Invalid structure type passed to IsAssignedStructureRequestPresent, passed value was '..tostring(structureType))
+        end
+        return false
+    end,
+
+    RemoveFailedStructureRequest = function(self, unit, structureType)
+        local keysToRemove = {}
+        if self.StructureRequests[structureType] then
+            for k, data in self.StructureRequests[structureType] do
+                if data.Assigned and data.AssignedEngineer.EntityId == unit.EntityId then
+                    table.insert(keysToRemove, k)
+                end
+            end
+        else
+            WARN('AI-RNG: Invalid structure type passed to IsAssignedStructureRequestPresent, passed value was '..tostring(structureType))
+        end
+        if not table.empty(keysToRemove) then
+            for _, v in keysToRemove do
+                --LOG('Removing request key on failed build '..tostring(v))
+                self.StructureRequests[structureType][v] = nil
+            end
+            self.StructureRequests[structureType] = self:RebuildTable(self.StructureRequests[structureType])
+            return true
+        end
+        return false
+    end,
+
+    FlushExistingStructureRequest = function(self, pos, radius, structureType)
+        local rSq = radius * radius
+        --LOG('FlushExistingStructureRequest, source position is '..tostring(repr(pos))..'radius is '..tostring(rSq))
+        local keysToRemove = {}
+        if self.StructureRequests[structureType] then
+            for k, data in self.StructureRequests[structureType] do
+                local ap = data.Position
+                local dx = pos[1] - ap[1]
+                local dz = pos[3] - ap[3]
+                --LOG('Request distance is '..tostring(dx*dx + dz*dz))
+                if dx*dx + dz*dz < rSq then
+                    --LOG('We need to remove the following key '..tostring(k))
+                    table.insert(keysToRemove, k)
+                end
+                if data.Assigned and data.AssignedEngineer and not data.AssignedEngineer.Dead then
+                    if data.AssignedEngineer.AIPlatoonReference.ExitStateMachine then
+                        --LOG('Aborting existing engineer')
+                        data.AssignedEngineer.AIPlatoonReference:ExitStateMachine()
+                    end
+                end
+            end
+        else
+            WARN('AI-RNG: Invalid structure type passed to FlushExistingStructureRequest, passed value was '..tostring(structureType))
+        end
+        if not table.empty(keysToRemove) then
+            for _, v in keysToRemove do
+                --LOG('Removing request key '..tostring(v))
+                self.StructureRequests[structureType][v] = nil
+            end
+            self.StructureRequests[structureType] = self:RebuildTable(self.StructureRequests[structureType])
+            return true
+        end
+        return false
+    end,
+
+    RequestStructureNearPosition = function(self, position, radius, structureType)
+        local gridX, gridZ = self:GetIntelGrid(position)
+        if gridZ and gridZ then
+            if self.StructureRequests[structureType] then
+                table.insert(self.StructureRequests[structureType], {
+                    Position = position,
+                    GridX = gridX,
+                    GridZ = gridZ,
+                    Assigned = false,
+                    AssignedTime = nil,
+                    AssignedEngineer = nil,
+                    RequestedTime = GetGameTimeSeconds(),
+                })
+            else
+                WARN('AI-RNG: Invalid structure type passed to RequestStructureNearPosition, passed value was '..tostring(structureType))
+            end
+        end
+    end,
 }
 
 function CreateIntelManager(brain)
@@ -3174,6 +3381,12 @@ function ProcessSourceOnDeath(targetBrain, targetUnit, sourceUnit, damageType)
                     targetBrain.EnemyIntel.TML[sourceUnit.EntityId] = {object = sourceUnit, position=tmlPos, validated=false, range=sourceUnit.Blueprint.Weapon[1].MaxRadius }
                     local sm = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua').GetStructureManager(targetBrain)
                     ForkThread(sm.ValidateTML, sm, targetBrain, targetBrain.EnemyIntel.TML[sourceUnit.EntityId])
+                end
+            end
+            if targetCat.RADAR or targetCat.OMNI or targetCat.SONAR then
+                --LOG('Intel unit died, tried unassign')
+                if targetBrain.IntelManager then
+                    ForkThread(targetBrain.IntelManager.UnassignIntelUnit, targetBrain.IntelManager, targetUnit)
                 end
             end
         elseif targetCat.NAVAL then
@@ -3966,14 +4179,14 @@ TacticalThreatAnalysisRNG = function(aiBrain)
             if not v.object.Dead then 
                 if not v.validated then
                     --LOG('EnemyIntelTML unit has not been validated')
-                    local extractors = GetListOfUnits(aiBrain, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL - categories.TECH1, false, false)
+                    local extractors = GetListOfUnits(aiBrain, (categories.STRUCTURE * categories.FACTORY) + (categories.STRUCTURE * categories.MASSEXTRACTION - categories.TECH1) - categories.EXPERIMENTAL , false, false)
                     for c, b in extractors do
                         if VDist3Sq(b:GetPosition(), v.position) < (v.range * v.range) + 100 then
                             --LOG('EnemyIntelTML there is an extractor that is in range')
-                            if not b.TMLInRange then
-                                b.TMLInRange = setmetatable({}, WeakValueTable)
+                            if not b['rngdata'].TMLInRange then
+                                b['rngdata'].TMLInRange = setmetatable({}, WeakValueTable)
                             end
-                            b.TMLInRange[v.object.EntityId] = v.object
+                            b['rngdata'].TMLInRange[v.object.EntityId] = v.object
                             --LOG('EnemyIntelTML added TML unit '..repr(b.TMLInRange))
                         end
                     end
@@ -4183,6 +4396,7 @@ LastKnownThread = function(aiBrain)
                                             aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=v.Blueprint.Weapon[1].MaxRadius }
                                             ForkThread(sm.ValidateTML, sm, aiBrain, aiBrain.EnemyIntel.TML[id])
                                             aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
+                                            LOG('We added a TML to the enemy intel table')
                                         end
                                     elseif unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
                                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='smd'

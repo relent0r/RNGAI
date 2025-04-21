@@ -56,6 +56,17 @@ RNGLandResourceSet = Class(ZoneSet){
         local function AssimilateZones(zoneList, zoneCount)
 
             local startLocations, startLocationCount = import("/lua/sim/markerutilities.lua").GetMarkersByType('Start Location')
+            --LOG('Start location Count '..tostring(startLocationCount))
+            if startLocationCount == 0 then
+                --LOG('No Start Locations Found on map, perhaps we are in a coop map')
+                for k, marker in Scenario.MasterChain._MASTERCHAIN_.Markers do
+                    if marker.type == 'Blank Marker' and string.find(k, 'Player') then
+                        table.insert(startLocations, {position = marker.position, Position=marker.position})
+                        startLocationCount = startLocationCount + 1
+                    end
+                end
+            end
+            --LOG('Start location Count after coop check '..tostring(startLocationCount))
             local mapSize = math.max(ScenarioInfo.size[1], ScenarioInfo.size[2])
             local threshold = 30 + 0.02 * mapSize
         
@@ -114,7 +125,7 @@ RNGLandResourceSet = Class(ZoneSet){
                 zoneList[k] = nil
             end
             for _, v in startLocations do
-                zoneList[head] = {pos=v.Position, component=MAP:GetComponent(v.Position,self.layer), weight=table.getn(v.resourcemarkers), startpositionclose=true, enemystructurethreat=0, enemylandthreat=0, enemyantisurfacethreat=0, enemyantiairthreat=0, friendlyantisurfacethreat=0, friendlylandantiairthreat=0, friendlydirectfireantisurfacethreat=0, friendlyindirectantisurfacethreat=0,resourcevalue=table.getn(v.resourcemarkers), resourcemarkers=v.resourcemarkers, zonealert=false, control=1, enemystartdata = { }, allystartdata = { },  bestarmy = false, teamvalue = 1, friendlyantiairallocatedthreat=0, label = 0, BuilderManager = {}, lastexpansionattempt = 0, engineerplatoonallocated = false, intelassignment = {}}
+                zoneList[head] = {pos=v.position, component=MAP:GetComponent(v.position,self.layer), weight=table.getn(v.resourcemarkers), startpositionclose=true, enemystructurethreat=0, enemylandthreat=0, enemyantisurfacethreat=0, enemyantiairthreat=0, friendlyantisurfacethreat=0, friendlylandantiairthreat=0, friendlydirectfireantisurfacethreat=0, friendlyindirectantisurfacethreat=0,resourcevalue=table.getn(v.resourcemarkers), resourcemarkers=v.resourcemarkers, zonealert=false, control=1, enemystartdata = { }, allystartdata = { },  bestarmy = false, teamvalue = 1, friendlyantiairallocatedthreat=0, label = 0, BuilderManager = {}, lastexpansionattempt = 0, engineerplatoonallocated = false, intelassignment = {}}
                 head = head + 1
             end
         

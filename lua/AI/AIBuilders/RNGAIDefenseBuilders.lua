@@ -350,37 +350,6 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T2 Defence Reactive TMD',
-        PlatoonTemplate = 'EngineerStateT23RNG',
-        Priority = 915,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { UCBC, 'RequireTMDCheckRNG', { 'LocationType' }},
-            --{ UCBC, 'LastKnownUnitDetection', { 'LocationType', 'tml'}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8}},
-            { UCBC, 'UnitCapCheckLess', { .85 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            StateMachine = 'EngineerBuilder',
-            JobType = 'BuildStructure',
-            NumAssistees = 5,
-            Construction = {
-                NearDefensivePoints = true,
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
-                BaseTemplate = 'BaseTemplates',
-                EmergencyBuild = true,
-                BuildClose = true,
-                NoPause = true,
-                Type = 'TMD',
-                BuildStructures = {
-                    { Unit = 'T2MissileDefense', Categories = categories.STRUCTURE * categories.ANTIMISSILE * categories.DEFENSE * categories.TECH2 },
-                },
-                LocationType = 'LocationType',
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T2TMLEngineer',
         PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 825,
@@ -770,38 +739,6 @@ BuilderGroup {
                 NearDefensivePoints = false,
                 BuildStructures = {
                     { Unit = 'T2StrategicMissile', Categories = categories.STRUCTURE * categories.STRATEGIC * categories.TACTICALMISSILEPLATFORM * categories.TECH2 }
-                },
-                LocationType = 'LocationType',
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNGAI T2 Defence Reactive TMD Expansion',
-        PlatoonTemplate = 'EngineerStateT23RNG',
-        Priority = 915,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { UCBC, 'RequireTMDCheckRNG', { 'LocationType' }},
-            --{ UCBC, 'LastKnownUnitDetection', { 'LocationType', 'tml'}},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 0.8}},
-            { UCBC, 'UnitCapCheckLess', { .85 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            StateMachine = 'EngineerBuilder',
-            JobType = 'BuildStructure',
-            NumAssistees = 5,
-            Construction = {
-                NearDefensivePoints = true,
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
-                BaseTemplate = 'BaseTemplates',
-                EmergencyBuild = true,
-                BuildClose = true,
-                NoPause = true,
-                Type = 'TMD',
-                Tier = 1,
-                BuildStructures = {
-                    { Unit = 'T2MissileDefense', Categories = categories.STRUCTURE * categories.ANTIMISSILE * categories.DEFENSE * categories.TECH2 },
                 },
                 LocationType = 'LocationType',
             }

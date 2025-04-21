@@ -797,7 +797,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                 local distanceLimit = 25
                 if closestShield and not IsDestroyed(closestShield) and not closestShield.DepletedByDamage then
                     local protectionRadius = GetShieldRadiusAboveGroundSquaredRNG(closestShield)
-                    distanceLimit = protectionRadius - 5
+                    distanceLimit = protectionRadius * 0.5 - 25
                 end
                 if VDist3Sq(experimentalPosition, defensivePosition) > distanceLimit then
                     if not table.empty(experimental:GetCommandQueue()) then
@@ -873,7 +873,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         local baseDistance = VDist3Sq(experimentalPosition, base.Position)
                         local homeDistance = VDist3Sq(self.Home, base.Position)
                         if homeDistance < distanceToHome or baseName == 'MAIN' then
-                            if not closestBaseDistance or baseDistance <= closestBaseDistance then
+                            if not closestBaseDistance or (baseDistance <= closestBaseDistance and (baseName ~= 'MAIN' and not StateUtils.RetreatPositionUnderArtilleryThreat(base.Position, self.EnemyThreatTable) or baseName == 'MAIN')) then
                                 if NavUtils.CanPathTo(self.MovementLayer, experimentalPosition, base.Position) then
                                     closestBase = baseName
                                     closestBaseDistance = baseDistance
@@ -900,6 +900,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             RetreatReason = retreatReason,
                             RetreatUnit = retreatTarget,
                             Position = aiBrain.BuilderManagers[closestBase].Position,
+                            CutOff = 625
                         }
                         self:ChangeState(self.Navigating)
                         return
@@ -909,6 +910,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             RetreatReason = retreatReason,
                             RetreatUnit = retreatTarget,
                             Position = aiBrain.BuilderManagers[closestBase].Position,
+                            CutOff = 625
                         }
                         self:ChangeState(self.Navigating)
                         return
@@ -939,6 +941,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         RetreatReason = retreatReason,
                         RetreatUnit = retreatTarget,
                         Position = aiBrain.BuilderManagers[closestBase].Position,
+                        CutOff = 625
                     }
                     self:ChangeState(self.Navigating)
                     return
@@ -948,6 +951,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         RetreatReason = retreatReason,
                         RetreatUnit = retreatTarget,
                         Position = aiBrain.BuilderManagers[closestBase].Position,
+                        CutOff = 625
                     }
                     self:ChangeState(self.Navigating)
                     return

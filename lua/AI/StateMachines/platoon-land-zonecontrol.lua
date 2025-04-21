@@ -203,6 +203,44 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
+            if self.PlatoonStrengthNone then
+                local targetPlatoon, targetPlatoonPos = StateUtils.GetClosestPlatoonRNG(self, false, 'LandMergeStateMachine', 62500)
+                --LOG('Platoon Strength none')
+                if targetPlatoon then
+                    --LOG('Have platoon to retreat to')
+                    self.BuilderData = {
+                        SupportPlatoon = targetPlatoon,
+                        Position = targetPlatoonPos,
+                        CutOff = 400
+                    }
+                    self.dest = self.BuilderData.Position
+                    local ax = self.Pos[1] - targetPlatoonPos[1]
+                    local az = self.Pos[3] - targetPlatoonPos[3]
+                    if ax * ax + az * az < 3600 then
+                        coroutine.yield(5)
+                        --LOG('Lerping to support platoon')
+                        self:ChangeState(self.SupportUnit)
+                        return
+                    else
+                        --LOG('Navigating to support platoon')
+                        coroutine.yield(5)
+                        self:ChangeState(self.Navigating)
+                        return
+                    end
+                else
+                    local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
+                    if closestBase then
+                        self.BuilderData = {
+                            Position = targetPlatoonPos,
+                            CutOff = 400
+                        }
+                        LOG('Navigating to closest base')
+                        coroutine.yield(5)
+                        self:ChangeState(self.Navigating)
+                        return
+                    end
+                end
+            end
             local target
             if StateUtils.SimpleTarget(self,aiBrain) then
                 if rangedAttack then
@@ -300,6 +338,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     self:LogDebug(string.format('Looked for zone at the current label'))
                 end
                 if targetZone then
+                    self:LogDebug(string.format('TargetZone is '..tostring(targetZone)..' our home zone is '..tostring(aiBrain.BuilderManagers[self.LocationType].Zone)))
                     if self.LocationType and aiBrain.BuilderManagers[self.LocationType].Zone then
                         if targetZone == aiBrain.BuilderManagers[self.LocationType].Zone then
                             self:LogDebug(string.format('Zone detected was our starting base, go to loiter mode'))
@@ -1078,7 +1117,66 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         end
     },
 
+    SupportUnit = State {
 
+        StateName = 'SupportUnit',
+        StateColor = 'FFC400',
+
+        --- The platoon searches for a target
+        ---@param self AIPlatoonLandCombatBehavior
+        Main = function(self)
+            if IsDestroyed(self) then
+                return
+            end
+            local aiBrain = self:GetBrain()
+            local platoonUnits = GetPlatoonUnits(self)
+            IssueClearCommands(platoonUnits)
+            --LOG('Scout support unit')
+            local builderData = self.BuilderData
+            local supportPos
+            while not IsDestroyed(self) do
+                coroutine.yield(1)
+                self:LogDebug(string.format('AssistPlatoon'))
+                if IsDestroyed(builderData.SupportPlatoon) then
+                    self.BuilderData = {}
+                    coroutine.yield(10)
+                    self:LogDebug(string.format('AssistPlatoon is destroyed, DecideWhatToDo'))
+                    self:ChangeState(self.DecideWhatToDo)
+                end
+                self:LogDebug(string.format('AssistPlatoon is alive, getting position'))
+                supportPos = builderData.SupportPlatoon:GetPlatoonPosition()
+                --RNGLOG('Move to support platoon position')
+                if not supportPos then
+                    self:LogDebug(string.format('No Support Pos, decidewhattodo'))
+                    coroutine.yield(20)
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
+                local platoonPos = self:GetPlatoonPosition()
+                self:LogDebug(string.format('Current distance to support post '..tostring(VDist3Sq(supportPos, platoonPos))))
+                if VDist3Sq(supportPos, platoonPos) > 100 then
+                    local movePos = RUtils.AvoidLocation(supportPos, platoonPos, 2)
+                    for _, v in platoonUnits do
+                        if v and not v.dead then
+                            StateUtils.IssueNavigationMove(v, movePos)
+                        end
+                    end
+                else
+                    --LOG('Current distance to support platoon '..tostring(VDist3Sq(supportPos, platoonPos)))
+                    --LOG('Support platoon plan '..tostring(builderData.SupportPlatoon.MergeType))
+                    --LOG('Low strength platoon is merging with another')
+                    local merged = StateUtils.MergeIntoTargetPlatoonRNG(self, builderData.SupportPlatoon)
+                    if merged then
+                        return
+                    end
+                end
+                coroutine.yield(20)
+            end
+            coroutine.yield(20)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
 }
 
 ---@param data { Behavior: 'AIBehavior' }
@@ -1157,6 +1255,7 @@ ThreatThread = function(aiBrain, platoon)
         end
         local currentPlatoonCount = 0
         local combatUnits = 0
+        local supportUnits = 0
         local platoonUnits = platoon:GetPlatoonUnits()
         for _, unit in platoonUnits do
             local unitCats = unit.Blueprint.CategoriesHash
@@ -1164,13 +1263,19 @@ ThreatThread = function(aiBrain, platoon)
             if (unitCats.DIRECTFIRE or unitCats.INDIRECTFIRE) and not unitCats.SCOUT then
                 combatUnits = combatUnits + 1
             end
+            if unitCats.SHIELD or unitCats.STEALTHFIELD then
+                supportUnits = supportUnits + 1
+            end
         end
-        if combatUnits < 1 then
-            --LOG('The platoon has no combat units')
-            --LOG('Total platoon count is '..tostring(currentPlatoonCount))
+        if supportUnits > 0 and combatUnits < 1 then
+            platoon.PlatoonStrengthNone = true
+        else
+            platoon.PlatoonStrengthNone = false
         end
-        if currentPlatoonCount < 5 then
+        if currentPlatoonCount < 3 then
             platoon.PlatoonStrengthLow = true
+        else
+            platoon.PlatoonStrengthLow = false
         end
         if currentPlatoonCount > platoon.PlatoonLimit then
             platoon.PlatoonFull = true

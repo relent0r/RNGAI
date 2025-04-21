@@ -296,7 +296,7 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride, checkLayer
         dest=KiteDist(pos,tpos,platoon['rngdata'].MaxDirectFireRange-math.random(1,3)-mod,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif unit['rngdata'].Role=='Scout' then
-        dest=KiteDist(pos,tpos,(platoon['rngdata'].MaxPlatoonWeaponRange-2),0)
+        dest=KiteDist(pos,tpos,(platoon['rngdata'].MaxPlatoonWeaponRange-3),0)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif maxPlatoonRangeOverride then
         dest=KiteDist(pos,tpos,platoon['rngdata'].MaxPlatoonWeaponRange,healthmod)
@@ -777,7 +777,7 @@ GetClosestPlatoonRNG = function(platoon, platoonName, mergeType, distanceLimit, 
         if mergeType and aPlat.MergeType ~= mergeType then
             continue
         end
-        if  platoonName and aPlat.PlatoonName ~= platoonName then
+        if platoonName and aPlat.PlatoonName ~= platoonName then
             continue
         end
         if aPlat == platoon then
@@ -864,6 +864,31 @@ ZoneUpdate = function(aiBrain, platoon)
         platoon.Label = NavUtils.GetLabel(platoon.MovementLayer, platPos)
         WaitTicks(30)
     end
+end
+
+MergeIntoTargetPlatoonRNG = function(self, targetPlatoon)
+    if IsDestroyed(self) then
+        return
+    end
+    local aiBrain = self:GetBrain()
+    if not aiBrain then
+        return
+    end
+    local platUnits = GetPlatoonUnits(self)
+    local validUnits = {}
+    local bValidUnits = false
+    for _,u in platUnits do
+        if not u.Dead and not u:IsUnitState('Attached') then
+            RNGINSERT(validUnits, u)
+            bValidUnits = true
+        end
+    end
+    if bValidUnits then
+        --LOG('Merging into target platoon '..tostring(table.getn(validUnits))..' many units')
+        aiBrain:AssignUnitsToPlatoon(targetPlatoon, validUnits, 'Guard', 'none')
+        return true
+    end
+    return false
 end
 
 MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNumber, ignoreBase, mergeInto)
@@ -1003,6 +1028,7 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
         AIAttackUtils.GetMostRestrictiveLayerRNG(platoon)
     end
     local unitTable = {
+        MaxUnitRange = 0,
         TotalSuroundingThreat = 0,
         ClosestUnitDistance = 0,
         AirSurfaceThreat = {
@@ -1089,6 +1115,10 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                 end
             elseif unitCats.STRUCTURE and (unitCats.DIRECTFIRE or unitCats.INDIRECTFIRE) then
                 if unitCats.ARTILLERY and unitCats.TECH2 then
+                    local unitRange = GetUnitMaxWeaponRange(unit)
+                    if unitRange > unitTable.MaxUnitRange then
+                        unitTable.MaxUnitRange = unitRange
+                    end
                     if unitThreat == 0 and unit.Blueprint.Weapon then
                         for _, weapon in unit.Blueprint.Weapon do
                             if weapon.RangeCategory == 'UWRC_IndirectFire' or string.find(weapon.WeaponCategory or 'nope', 'Artillery') then
@@ -1112,6 +1142,9 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                 end
             elseif unitCats.NAVAL and (unitCats.DIRECTFIRE or unitCats.INDIRECTFIRE) then
                 local unitRange = GetUnitMaxWeaponRange(unit)
+                if unitRange > unitTable.MaxUnitRange then
+                    unitTable.MaxUnitRange = unitRange
+                end
                 if unitRange > 35 or distance < 1225 then
                     unitTable.NavalUnitThreat.TotalThreat = unitTable.NavalUnitThreat.TotalThreat + unitThreat
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
@@ -1573,6 +1606,9 @@ BuildAIFailedRNG = function(unit, params)
         unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.PerformBuildTask)
     elseif not unit.PlatoonHandle.HighValueDiscard then
         if not unit.PerformingBuildTask then
+            if unit.PlatoonHandle.BuilderData.Construction.Type == 'TMD' then
+                --LOG('Engineer Triggered BuildAIFailed')
+            end
             unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
         else
             unit.PerformingBuildTask = false
@@ -1943,7 +1979,11 @@ function AIExecuteBuildStructureRNG(aiBrain, builder, buildingType, whatToBuild,
         relativeTo = {startPosX, 0, startPosZ}
     end
     local location = false
-    location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
+    if buildingType == 'EnergyStorage' then
+        location = aiBrain:FindPlaceToBuild('T1LandFactory', whatToBuild, baseTemplate, relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
+    else
+        location = aiBrain:FindPlaceToBuild(buildingType, whatToBuild, baseTemplate, relative, closeToBuilder, nil, relativeTo[1], relativeTo[3])
+    end
     -- if it's a reference, look around with offsets
     if not location and reference then
         for num,offsetCheck in RandomIter({1,2,3,4,5,6,7,8}) do
@@ -2572,5 +2612,22 @@ function GetAirRetreatLocation(aiBrain, unit)
         return bestRetreatZone.pos
     end
 
+    return false
+end
+
+function RetreatPositionUnderArtilleryThreat(retreatPosition, threatData)
+    local artilleryData = threatData.ArtilleryThreat.Units
+    for _, artillery in artilleryData do
+        if artillery.Object and not artillery.Object.Dead then
+            local artilleryPos = artillery.Object:GetPosition()
+            local artilleryRange = GetUnitMaxWeaponRange(artillery.Object)
+            local dx = retreatPosition[1] - artilleryPos[1]
+            local dz = retreatPosition[3] - artilleryPos[3]
+            local distSq = dx * dx + dz * dz
+            if distSq < (artilleryRange * artilleryRange) then
+                return true -- This retreat spot is in range of artillery
+            end
+        end
+    end
     return false
 end

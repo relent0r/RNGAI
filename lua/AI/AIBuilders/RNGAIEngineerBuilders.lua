@@ -58,7 +58,7 @@ local ReclaimBasedFactoryPriority = function(self, aiBrain, builderManager)
         --RNGLOG('Priority Function More than 500 reclaim')
         return 740
     end
-    if aiBrain:GetNumPlatoonsTemplateNamed('RNGAI T1EngineerReclaimer') < 7 then
+    if aiBrain:GetNumPlatoonsTemplateNamed('EngineerReclaimStateT1RNG') < 7 then
         return 756
     end
     return 0
@@ -452,7 +452,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim Naval', -- Try to get that early reclaim
-        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
+        PlatoonTemplate = 'EngineerReclaimStateT1RNG',
         Priority = 950,
         InstanceCount = 2,
         BuilderConditions = {
@@ -463,6 +463,7 @@ BuilderGroup {
                 
             },
         BuilderData = {
+            StateMachine = 'ReclaimEngineer',
             JobType = 'Reclaim',
             Early = true,
             ReclaimTable = true,
@@ -864,9 +865,9 @@ BuilderGroup {
         Priority = 1050,
         InstanceCount = 1,
         BuilderConditions = {
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.AIR * categories.FACTORY }},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.AIR}},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.AIR * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH1 * categories.AIR * categories.FACTORY }},
+                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.AIR}},
+                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.AIR * categories.FACTORY - categories.SUPPORTFACTORY }},
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
             },
         BuilderData = {
@@ -886,9 +887,9 @@ BuilderGroup {
         Priority = 1040,
         InstanceCount = 1,
         BuilderConditions = {
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH2 * categories.AIR * categories.FACTORY * categories.SUPPORTFACTORY }},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH3 * categories.SUPPORTFACTORY * categories.AIR }},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.AIR * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH2 * categories.AIR * categories.FACTORY * categories.SUPPORTFACTORY }},
+                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.TECH3 * categories.AIR }},
+                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.AIR * categories.FACTORY - categories.SUPPORTFACTORY }},
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
             },
         BuilderData = {
@@ -913,8 +914,8 @@ BuilderGroup {
         Priority = 1050,
         InstanceCount = 1,
         BuilderConditions = {
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH1 * categories.NAVAL * categories.FACTORY }},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.SUPPORTFACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3 )}},
+                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH1 * categories.NAVAL * categories.FACTORY }},
+                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.SUPPORTFACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3 )}},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.NAVAL * categories.FACTORY * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
             },
@@ -935,8 +936,8 @@ BuilderGroup {
         Priority = 1040,
         InstanceCount = 1,
         BuilderConditions = {
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 1, categories.TECH2 * categories.NAVAL * categories.FACTORY * categories.SUPPORTFACTORY }},
-                { UCBC, 'UnitsGreaterAtLocation', { 'LocationType', 0, categories.TECH3 * categories.SUPPORTFACTORY * categories.NAVAL }},
+                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.TECH2 * categories.NAVAL * categories.FACTORY * categories.SUPPORTFACTORY }},
+                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.SUPPORTFACTORY * categories.NAVAL }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.TECH3 * categories.NAVAL * categories.FACTORY - categories.SUPPORTFACTORY }},
                 { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
             },
@@ -1040,7 +1041,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1 Minimum', -- Try to get that early reclaim
-        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
+        PlatoonTemplate = 'EngineerReclaimStateT1RNG',
         PriorityFunction = StartingReclaimPresent,
         Priority = 950,
         InstanceCount = 3,
@@ -1051,6 +1052,7 @@ BuilderGroup {
                 
             },
         BuilderData = {
+            StateMachine = 'ReclaimEngineer',
             JobType = 'Reclaim',
             Early = true,
             ReclaimTable = true,
@@ -1062,7 +1064,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1',
-        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
+        PlatoonTemplate = 'EngineerReclaimStateT1RNG',
         PriorityFunction = ReclaimMinFactoryPriority,
         DelayEqualBuildPlattons = {'EngineerReclaim', 1},
         Priority = 0,
@@ -1073,6 +1075,7 @@ BuilderGroup {
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
         BuilderData = {
+            StateMachine = 'ReclaimEngineer',
             JobType = 'Reclaim',
             LocationType = 'LocationType',
             ReclaimTable = true,
@@ -1083,7 +1086,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1 Excess',
-        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
+        PlatoonTemplate = 'EngineerReclaimStateT1RNG',
         DelayEqualBuildPlattons = {'EngineerReclaim', 1},
         Priority = 700,
         InstanceCount = 15,
@@ -1094,6 +1097,7 @@ BuilderGroup {
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
         BuilderData = {
+            StateMachine = 'ReclaimEngineer',
             JobType = 'Reclaim',
             ReclaimTable = true,
             LocationType = 'LocationType',
@@ -1104,7 +1108,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T2 Excess',
-        PlatoonTemplate = 'RNGAI T2EngineerReclaimer',
+        PlatoonTemplate = 'EngineerReclaimStateT2RNG',
         DelayEqualBuildPlattons = {'EngineerReclaim', 1},
         Priority = 100,
         InstanceCount = 1,
@@ -1114,6 +1118,7 @@ BuilderGroup {
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
         BuilderData = {
+            StateMachine = 'ReclaimEngineer',
             JobType = 'Reclaim',
             ReclaimTable = true,
             LocationType = 'LocationType',
@@ -1183,7 +1188,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1 Floating',
-        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
+        PlatoonTemplate = 'EngineerReclaimStateT1RNG',
         Priority = 900,
         InstanceCount = 14,
         BuilderConditions = {
@@ -1191,6 +1196,7 @@ BuilderGroup {
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
         BuilderData = {
+            StateMachine = 'ReclaimEngineer',
             JobType = 'Reclaim',
             ReclaimTable = true,
             LocationType = 'LocationType',
@@ -1207,7 +1213,7 @@ BuilderGroup {
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1 Excess Expansion',
-        PlatoonTemplate = 'RNGAI T1EngineerReclaimer',
+        PlatoonTemplate = 'EngineerReclaimStateT1RNG',
         Priority = 900,
         InstanceCount = 16,
         BuilderConditions = {
@@ -1216,6 +1222,7 @@ BuilderGroup {
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },
         BuilderData = {
+            StateMachine = 'ReclaimEngineer',
             JobType = 'Reclaim',
             ReclaimTable = true,
             LocationType = 'LocationType',

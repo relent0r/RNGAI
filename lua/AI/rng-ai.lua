@@ -2,6 +2,7 @@
 local AIDefaultPlansList = import("/lua/aibrainplans.lua").AIPlansList
 local AIUtils = import("/lua/ai/aiutilities.lua")
 local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
+local RNGEventCallbacks = import('/mods/RNGAI/lua/AI/RNGEventCallbacks.lua')   
 local RNGChat = import("/mods/RNGAI/lua/AI/RNGChat.lua")
 
 local Utilities = import("/lua/utilities.lua")
@@ -769,6 +770,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EconomyTicksMonitor = 80
         self.EconomyCurrentTick = 1
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
+        self.ExtractorUpgradeThread = false
         self.EconomyOverTimeCurrent = {}
         self.ACUData = {}
         --self.EconomyOverTimeThread = self:ForkThread(self.EconomyOverTimeRNG)
@@ -2440,6 +2442,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     zone = MAP:GetZoneID(position,self.Zones.Naval.index)
                 else
                     zone = MAP:GetZoneID(position,self.Zones.Land.index)
+                    --LOG('Requested land zone for base, zone returned was '..tostring(zone))
                 end
             end
             if not zone then
@@ -4526,6 +4529,15 @@ AIBrain = Class(RNGAIBrainClass) {
                                 end
                             end
                         end
+                        for _, v in self.EnemyIntel.Experimental do
+                            if v.object and not v.object.Dead then
+                                local unitCats = v.object.Blueprint.CategoriesHash
+                                if unitCats.MOBILE and unitCats.LAND and not RUtils.ShieldProtectingTargetRNG(self, v.object, nil) then
+                                    potentialTarget = v.object
+                                    potentialTargetValue = 5000
+                                end
+                            end
+                        end
                     end
                 end
             end
@@ -4800,13 +4812,15 @@ AIBrain = Class(RNGAIBrainClass) {
                     coroutine.yield(50)
                     continue
                 end
-                local massStateCaution = self:EcoManagerMassStateCheck()
+                local massStateCaution, deficit = self:EcoManagerMassStateCheck()
                 local unitTypePaused = false
                 
                 if massStateCaution then
+                    --LOG('Mass Deficit at start is '..tostring(deficit))
                     --RNGLOG('massStateCaution State Caution is true')
                     local massCycle = 0
                     local unitTypePaused = {}
+                    local resourcesSaved = 0
                     while massStateCaution do
                         local massPriorityTable = {}
                         local priorityNum = 0
@@ -4872,7 +4886,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                             --RNGLOG('Engineer added to unitTypePaused')
                             local Engineers = GetListOfUnits(self, ( categories.ENGINEER + categories.SUBCOMMANDER ) - categories.STATIONASSISTPOD - categories.COMMAND, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause', 'MASS')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause', 'MASS')
                         elseif priorityUnit == 'STATIONPODS' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -4884,7 +4898,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, StationPods, 'pause', 'MASS')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, StationPods, 'pause', 'MASS')
                         elseif priorityUnit == 'AIR_TECH1' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -4896,7 +4910,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local AirFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.AIR) * categories.TECH1, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'MASS')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'AIR_TECH2' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -4908,7 +4922,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local AirFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.AIR) * categories.TECH2, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'MASS')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'AIR_TECH3' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -4920,7 +4934,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local AirFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.AIR) * categories.TECH3, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'MASS')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'LAND_TECH1' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -4932,7 +4946,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * categories.TECH1, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'MASS')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'LAND_TECH2' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -4944,7 +4958,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * categories.TECH2, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'MASS')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'LAND_TECH3' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -4956,7 +4970,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * categories.TECH3, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'MASS')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'NAVAL_TECH1' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -4968,7 +4982,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local NavalFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.NAVAL) * categories.TECH1, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'MASS')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'NAVAL_TECH2' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -4980,7 +4994,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local NavalFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.NAVAL) * categories.TECH2, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'MASS')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'NAVAL_TECH3' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -4992,7 +5006,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local NavalFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.NAVAL) * categories.TECH3, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'MASS')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'MASS')
                         elseif priorityUnit == 'MASSEXTRACTION' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5005,7 +5019,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                             local Extractors = GetListOfUnits(self, categories.STRUCTURE * categories.MASSEXTRACTION - categories.EXPERIMENTAL, false, false)
                             --RNGLOG('Number of mass extractors'..RNGGETN(Extractors))
-                            self:EcoSelectorManagerRNG(priorityUnit, Extractors, 'pause', 'MASS')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, Extractors, 'pause', 'MASS')
                         elseif priorityUnit == 'NUKE' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5017,7 +5031,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'MASS')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'MASS')
                         elseif priorityUnit == 'TML' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5029,10 +5043,17 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, TMLs, 'pause', 'MASS')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, TMLs, 'pause', 'MASS')
                         end
-                        coroutine.yield(15)
                         massStateCaution = self:EcoManagerMassStateCheck()
+                        deficit = math.max(deficit - resourcesSaved, 0)
+                        --LOG('Mass Resources saved on this loop '..tostring(resourcesSaved))
+                        --LOG('Mass Deficit during loop is now '..tostring(deficit))
+                        if resourcesSaved >= deficit then
+                            coroutine.yield(15)
+                            massStateCaution = self:EcoManagerMassStateCheck()
+                            --LOG('We should be out of our mass stall, checked again and powerStateCaution is '..tostring(massStateCaution))
+                        end
                         if massStateCaution then
                             --RNGLOG('Power State Caution still true after first pass')
                             if massCycle > 8 then
@@ -5100,14 +5121,16 @@ AIBrain = Class(RNGAIBrainClass) {
 
     EcoManagerMassStateCheck = function(self)
         if GetEconomyTrend(self, 'MASS') <= 0.0 and GetEconomyStored(self, 'MASS') <= 150 then
-            return true
+            local deficit =  GetEconomyRequested(self,'MASS') - GetEconomyIncome(self,'MASS')
+            return true, deficit
         end
         return false
     end,
 
     EcoManagerPowerStateCheck = function(self)
         if (GetEconomyTrend(self, 'ENERGY') <= 0.0 and GetEconomyStoredRatio(self, 'ENERGY') <= 0.2) or ((self.CDRUnit.Caution or self.BrainIntel.SuicideModeActive) and (GetEconomyStored(self, 'ENERGY') <= 3500 or GetCurrentUnits(self, categories.STRUCTURE * categories.ENERGYSTORAGE) > 0 and GetEconomyStored(self, 'ENERGY') <= 7000)) then
-            return true
+            local deficit = GetEconomyRequested(self,'ENERGY') - GetEconomyIncome(self,'ENERGY')
+            return true, deficit
         end
         return false
     end,
@@ -5120,17 +5143,20 @@ AIBrain = Class(RNGAIBrainClass) {
                     coroutine.yield(50)
                     continue
                 end
-                local powerStateCaution = self:EcoManagerPowerStateCheck()
+                local powerStateCaution, deficit = self:EcoManagerPowerStateCheck()
                 local unitTypePaused = false
                 
                 if powerStateCaution then
                     --RNGLOG('Power State Caution is true')
+                    --LOG('Power Deficit at start is '..tostring(deficit))
                     self.EngineerAssistManagerFocusPower = true
                     local powerCycle = 0
                     local unitTypePaused = {}
+                    local resourcesSaved = 0
                     while powerStateCaution do
                         local priorityNum = 0
                         local priorityUnit = false
+                        local runningDeficit = 0
                         powerCycle = powerCycle + 1
                         for k, v in self.EcoManager.PowerPriorityTable do
                             local priorityUnitAlreadySet = false
@@ -5161,7 +5187,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                             --RNGLOG('Engineer added to unitTypePaused')
                             local Engineers = GetListOfUnits(self, ( categories.ENGINEER + categories.SUBCOMMANDER ) - categories.STATIONASSISTPOD - categories.COMMAND , false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, Engineers, 'pause', 'ENERGY')
                         elseif priorityUnit == 'STATIONPODS' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5173,7 +5199,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local StationPods = GetListOfUnits(self, categories.STATIONASSISTPOD, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, StationPods, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, StationPods, 'pause', 'ENERGY')
                         elseif priorityUnit == 'AIR_TECH1' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5185,7 +5211,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH1, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'AIR_TECH2' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5197,7 +5223,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH2, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'AIR_TECH3' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5209,7 +5235,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local AirFactories = GetListOfUnits(self, categories.STRUCTURE * categories.FACTORY * categories.AIR * categories.TECH3, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, AirFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'LAND_TECH1' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5221,7 +5247,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * categories.TECH1, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'LAND_TECH2' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5233,7 +5259,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * categories.TECH2, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'LAND_TECH3' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5245,7 +5271,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local LandFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.LAND) * categories.TECH3, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, LandFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'NAVAL_TECH1' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5257,7 +5283,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local NavalFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.NAVAL) * categories.TECH1, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'NAVAL_TECH2' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5269,7 +5295,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local NavalFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.NAVAL) * categories.TECH2, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'NAVAL_TECH3' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5281,7 +5307,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local NavalFactories = GetListOfUnits(self, (categories.STRUCTURE * categories.FACTORY * categories.NAVAL) * categories.TECH3, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, NavalFactories, 'pause', 'ENERGY')
                         elseif priorityUnit == 'SHIELD' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5293,7 +5319,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local Shields = GetListOfUnits(self, categories.STRUCTURE * categories.SHIELD - categories.EXPERIMENTAL, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, Shields, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, Shields, 'pause', 'ENERGY')
                         elseif priorityUnit == 'TML' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5305,7 +5331,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, TMLs, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, TMLs, 'pause', 'ENERGY')
                         elseif priorityUnit == 'RADAR' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5317,7 +5343,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local Radars = GetListOfUnits(self, categories.STRUCTURE * (categories.RADAR + categories.SONAR), false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, Radars, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, Radars, 'pause', 'ENERGY')
                         elseif priorityUnit == 'MASSFABRICATION' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5329,7 +5355,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local MassFabricators = GetListOfUnits(self, categories.STRUCTURE * categories.MASSFABRICATION, false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, MassFabricators, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, MassFabricators, 'pause', 'ENERGY')
                         elseif priorityUnit == 'NUKE' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5341,10 +5367,18 @@ AIBrain = Class(RNGAIBrainClass) {
                                 RNGINSERT(unitTypePaused, priorityUnit)
                             end
                             local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
-                            self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'ENERGY')
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'ENERGY')
                         end
-                        coroutine.yield(15)
+                        coroutine.yield(5)
                         powerStateCaution = self:EcoManagerPowerStateCheck()
+                        deficit = math.max(deficit - resourcesSaved, 0)
+                        --LOG('Energy Resources saved on this loop '..tostring(resourcesSaved))
+                        --LOG('Energy Deficit during loop is now '..tostring(deficit))
+                        if resourcesSaved >= deficit then
+                            coroutine.yield(15)
+                            powerStateCaution = self:EcoManagerPowerStateCheck()
+                            --LOG('We should be out of our power stall, checked again and powerStateCaution is '..tostring(powerStateCaution))
+                        end
                         if powerStateCaution then
                             --RNGLOG('Power State Caution still true after first pass')
                             if powerCycle > 11 then
@@ -5352,10 +5386,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 coroutine.yield(100)
                                 powerCycle = 0
                             end
-                        else
-                            --RNGLOG('Power State Caution is now false')
                         end
-                        coroutine.yield(5)
                         --RNGLOG('unitTypePaused table is :'..repr(unitTypePaused))
                     end
                     for k, v in unitTypePaused do
@@ -5399,7 +5430,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             local MassFabricators = GetListOfUnits(self, categories.STRUCTURE * categories.MASSFABRICATION, false, false)
                             self:EcoSelectorManagerRNG(v, MassFabricators, 'unpause', 'ENERGY')
                         elseif v == 'RADAR' then
-                            local Radars = GetListOfUnits(self, categories.STRUCTURE * (categories.RADAR + categories.SONAR), false, false)
+                            local Radars = GetListOfUnits(self, categories.STRUCTURE * (categories.RADAR + categories.SONAR + categories.OMNI), false, false)
                             self:EcoSelectorManagerRNG(v, Radars, 'unpause', 'ENERGY')
                         elseif v == 'NUKE' then
                             local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
@@ -5466,6 +5497,11 @@ AIBrain = Class(RNGAIBrainClass) {
                                     --RNGLOG('Shield being built, energy consumption will be '..ALLBPS[v.UnitBeingBuilt].Economy.MaintenanceConsumptionPerSecondEnergy)
                                     potentialPowerConsumption = potentialPowerConsumption + ALLBPS[v.UnitBeingBuilt.UnitId].Economy.MaintenanceConsumptionPerSecondEnergy
                                 end
+                                continue
+                            end
+                            if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.FACTORY and beingBuiltUnitCats.AIR and beingBuiltUnitCats.TECH3 and v.UnitBeingBuilt:GetFractionComplete() < 0.8 then
+                                --RNGLOG('EcoPowerPreemptive : Shield being built')
+                                potentialPowerConsumption = potentialPowerConsumption + (1000 * multiplier)
                                 continue
                             end
                             if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.FACTORY and v.UnitBeingBuilt:GetFractionComplete() < 0.8 then
@@ -5911,10 +5947,11 @@ AIBrain = Class(RNGAIBrainClass) {
     EcoSelectorManagerRNG = function(self, priorityUnit, units, action, type)
         --RNGLOG('Eco selector manager for '..priorityUnit..' is '..action..' Type is '..type)
         local engineerCats
+        local totalResourceSaved = 0
         if self.BrainIntel.MapOwnership > 50 then
-            engineerCats = categories.STRUCTURE * (categories.ENERGYPRODUCTION + categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS)
+            engineerCats = categories.STRUCTURE * (categories.ENERGYPRODUCTION + categories.TACTICALMISSILEPLATFORM + (categories.TECH3 * categories.ANTIMISSILE) + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS)
         else
-            engineerCats = categories.STRUCTURE * (categories.ENERGYPRODUCTION + categories.TACTICALMISSILEPLATFORM + categories.ANTIMISSILE + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS)
+            engineerCats = categories.STRUCTURE * (categories.ENERGYPRODUCTION + categories.TACTICALMISSILEPLATFORM + (categories.TECH3 * categories.ANTIMISSILE) + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS)
         end
         
         for k, v in units do
@@ -5932,14 +5969,29 @@ AIBrain = Class(RNGAIBrainClass) {
                     if type == 'MASS' and EntityCategoryContains( engineerCats , v.UnitBeingBuilt) then
                         if EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingBuilt) then
                             if self:GetEconomyTrend('MASS') <= 0 and self:GetEconomyStored('MASS') == 0 and self:GetEconomyTrend('ENERGY') > 2 then
+                                if type == 'MASS' then
+                                    totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                                elseif type == 'ENERGY' then
+                                    totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                                end
                                 v:SetPaused(true)
                             end
                         else
+                            if type == 'MASS' then
+                                totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                            elseif type == 'ENERGY' then
+                                totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                            end
                             v:SetPaused(true)
                         end
                         continue
                     elseif type == 'ENERGY' and EntityCategoryContains( engineerCats , v.UnitBeingBuilt) then
                         if not EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingBuilt) then
+                            if type == 'MASS' then
+                                totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                            elseif type == 'ENERGY' then
+                                totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                            end
                             v:SetPaused(true)
                         end
                         continue
@@ -5949,14 +6001,29 @@ AIBrain = Class(RNGAIBrainClass) {
                     if v:IsPaused() then continue end
                     if type == 'ENERGY' and not EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingAssist) then
                         --RNGLOG('Pausing Engineer')
+                        if type == 'MASS' then
+                            totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                        elseif type == 'ENERGY' then
+                            totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                        end
                         v:SetPaused(true)
                         continue
                     elseif type == 'MASS' then
                         if EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingAssist) then
                             if self:GetEconomyTrend('MASS') <= 0 and self:GetEconomyStored('MASS') == 0 and self:GetEconomyTrend('ENERGY') > 2 then
+                                if type == 'MASS' then
+                                    totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                                elseif type == 'ENERGY' then
+                                    totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                                end
                                 v:SetPaused(true)
                             end
                         else
+                            if type == 'MASS' then
+                                totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                            elseif type == 'ENERGY' then
+                                totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                            end
                             v:SetPaused(true)
                         end
                         continue
@@ -5974,6 +6041,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
                     --RNGLOG('pausing STATIONPODS')
+                    if type == 'MASS' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                    elseif type == 'ENERGY' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                    end
                     v:SetPaused(true)
                     continue
                 elseif priorityUnit == 'AIR_TECH1' then
@@ -5993,6 +6065,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     --if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
                     --RNGLOG('pausing AIR')
+                    if type == 'MASS' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                    elseif type == 'ENERGY' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                    end
                     v:SetPaused(true)
                     continue
                 elseif priorityUnit == 'AIR_TECH2' then
@@ -6012,6 +6089,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     --if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
                     --RNGLOG('pausing AIR')
+                    if type == 'MASS' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                    elseif type == 'ENERGY' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                    end
                     v:SetPaused(true)
                     continue
                 elseif priorityUnit == 'AIR_TECH3' then
@@ -6031,6 +6113,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     --if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
                     --RNGLOG('pausing AIR')
+                    if type == 'MASS' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                    elseif type == 'ENERGY' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                    end
                     v:SetPaused(true)
                     continue
                 elseif priorityUnit == 'NAVAL_TECH1' then
@@ -6049,6 +6136,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
                     --RNGLOG('pausing NAVAL')
+                    if type == 'MASS' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                    elseif type == 'ENERGY' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                    end
                     v:SetPaused(true)
                     continue
                 elseif priorityUnit == 'NAVAL_TECH2' then
@@ -6067,6 +6159,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
                     --RNGLOG('pausing NAVAL')
+                    if type == 'MASS' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                    elseif type == 'ENERGY' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                    end
                     v:SetPaused(true)
                     continue
                 elseif priorityUnit == 'NAVAL_TECH3' then
@@ -6085,6 +6182,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
                     --RNGLOG('pausing NAVAL')
+                    if type == 'MASS' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                    elseif type == 'ENERGY' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                    end
                     v:SetPaused(true)
                     continue
                 elseif priorityUnit == 'LAND_TECH1' then
@@ -6103,6 +6205,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     if RNGGETN(units) <= 2 then continue end
                     if v:IsPaused() then continue end
                     --RNGLOG('pausing LAND')
+                    if type == 'MASS' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                    elseif type == 'ENERGY' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                    end
                     v:SetPaused(true)
                     continue
                 elseif priorityUnit == 'LAND_TECH2' then
@@ -6121,6 +6228,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     if RNGGETN(units) <= 2 then continue end
                     if v:IsPaused() then continue end
                     --RNGLOG('pausing LAND')
+                    if type == 'MASS' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                    elseif type == 'ENERGY' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                    end
                     v:SetPaused(true)
                     continue
                 elseif priorityUnit == 'LAND_TECH3' then
@@ -6139,6 +6251,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     if RNGGETN(units) <= 2 then continue end
                     if v:IsPaused() then continue end
                     --RNGLOG('pausing LAND')
+                    if type == 'MASS' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                    elseif type == 'ENERGY' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                    end
                     v:SetPaused(true)
                     continue
                 elseif priorityUnit == 'MASSFABRICATION' then
@@ -6151,6 +6268,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     
                     if not v.MaintenanceConsumption then continue end
+                    if type == 'MASS' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                    elseif type == 'ENERGY' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                    end
                     v:SetPaused(true)
                 elseif priorityUnit == 'RADAR' then
                     --RNGLOG('Priority Unit Is MASSFABRICATION or SHIELD')
@@ -6164,6 +6286,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     
                     if not v.MaintenanceConsumption then continue end
                     --RNGLOG('pausing MASSFABRICATION or SHIELD '..v.UnitId)
+                    if type == 'MASS' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                    elseif type == 'ENERGY' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                    end
                     v:SetPaused(true)
                     v:OnScriptBitSet(3)
                 elseif priorityUnit == 'SHIELD' then
@@ -6187,6 +6314,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if v:IsPaused() then continue end
                     --RNGLOG('pausing Nuke')
+                    if type == 'MASS' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                    elseif type == 'ENERGY' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                    end
                     v:SetPaused(true)
                     continue
                 elseif priorityUnit == 'TML' then
@@ -6202,6 +6334,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if v:IsPaused() then continue end
                     --RNGLOG('pausing TML')
+                    if type == 'MASS' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                    elseif type == 'ENERGY' then
+                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                    end
                     v:SetPaused(true)
                     continue
                 elseif priorityUnit == 'MASSEXTRACTION' and action == 'unpause' then
@@ -6209,8 +6346,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     v:SetPaused( false )
                     --RNGLOG('Unpausing Extractor')
                     continue
-                end
-                if priorityUnit == 'MASSEXTRACTION' and action == 'pause' then
+                elseif priorityUnit == 'MASSEXTRACTION' and action == 'pause' then
                     local upgradingBuilding = {}
                     local upgradingBuildingNum = 0
                     --RNGLOG('Mass Extractor pause action, gathering upgrading extractors')
@@ -6236,6 +6372,11 @@ AIBrain = Class(RNGAIBrainClass) {
                         --RNGLOG('pausing all but one upgrading extractor')
                         --RNGLOG('UpgradingTableSize is '..upgradingTableSize)
                         for i=1, (upgradingTableSize - 1) do
+                            if type == 'MASS' then
+                                totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(upgradingBuilding[i])
+                            elseif type == 'ENERGY' then
+                                totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(upgradingBuilding[i])
+                            end
                             upgradingBuilding[i]:SetPaused( true )
                             --UpgradingBuilding:SetCustomName('Upgrading paused')
                             --RNGLOG('Upgrading paused')
@@ -6244,6 +6385,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
+        return totalResourceSaved
     end,
 
     EnemyChokePointTestRNG = function(self)
@@ -6377,6 +6519,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     }
                 end
                 self.EngineerAssistManagerBuildPowerRequired = minAssistPower
+                --LOG('Setting T3AirRush build power required')
                 if self.EngineerAssistManagerBuildPower < minAssistPower then
                     self.EngineerAssistManagerActive = true
                 end
@@ -6482,9 +6625,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('EngineerAssistManagerFocusHighValue is true')
                     self.EngineerAssistManagerBuildPowerRequired = math.ceil(math.max((150 * multiplier), minAssistPower))
                 elseif massStorage > 150 and energyStorage > 150 and self.EngineerAssistManagerBuildPower < math.max(minAssistPower, 5) and not self.EngineerAssistManagerFocusHighValue and not self.EcoManager.CoreMassPush then
-                    if self.EngineerAssistManagerBuildPower <= 30 and self.EngineerAssistManagerBuildPowerRequired <= 26 then
-                        self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
-                    end
+                    self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
                     --RNGLOG('EngineerAssistManager is Active due to storage and builder power being less than minAssistPower')
                     self.EngineerAssistManagerActive = true
                 elseif self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.8 and self.EngineerAssistManagerBuildPower <= 0 and self.EngineerAssistManagerBuildPowerRequired < 6 then
@@ -6632,8 +6773,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             --LOG('unit has no zone')
                             local mexPos = GetPosition(unit)
                             if RUtils.PositionOnWater(mexPos[1], mexPos[3]) then
-                                -- tbd define water based zones
-                                unit.zoneid = 'water'
+                                unit.zoneid = MAP:GetZoneID(mexPos,self.Zones.Naval.index)
                             else
                                 unit.zoneid = MAP:GetZoneID(mexPos,self.Zones.Land.index)
                                 unit.teamvalue = self.Zones.Land.zones[unit.zoneid].teamvalue or 1
@@ -7690,6 +7830,17 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('Excess Allocation at the end of loop was '..tostring(excessAllocation))
             LOG('Current Bias '..tostring(repr(currentBias)))
             ]]
+        end
+    end,
+
+    -- These are all callbacks
+    ---@param self BaseAIBrain
+    ---@param unit Unit
+    ---@param builder Unit
+    ---@param layer Layer
+    OnUnitStopBeingBuilt = function(self, unit, builder, layer)
+        if unit.GetFractionComplete and unit:GetFractionComplete() == 1 then
+            ForkThread(RNGEventCallbacks.OnStopBeingBuilt, self, unit, builder, layer) 
         end
     end,
     

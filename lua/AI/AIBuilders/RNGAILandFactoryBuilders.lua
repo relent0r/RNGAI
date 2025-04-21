@@ -389,7 +389,6 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T3', 'mml'} },
             { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
-            { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'mml', nil, true} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Land',

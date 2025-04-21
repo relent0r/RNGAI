@@ -680,7 +680,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                 local distanceLimit = 25
                 if closestShield and not IsDestroyed(closestShield) and not closestShield.DepletedByDamage then
                     local protectionRadius = GetShieldRadiusAboveGroundSquaredRNG(closestShield)
-                    distanceLimit = protectionRadius - 5
+                    distanceLimit = protectionRadius * 0.5 - 25
                 end
                 if VDist3Sq(experimentalPosition, defensivePosition) > distanceLimit then
                     if not table.empty(experimental:GetCommandQueue()) then
@@ -710,6 +710,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
             end
             local retreatReason = self.BuilderData.RetreatReason
             local retreatTarget = self.BuilderData.AttackTarget or false
+            local threatTable = self.EnemyThreatTable
             --[[
             if retreatReason then
                 if retreatReason == 'AirThreat' then
@@ -728,21 +729,23 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
             local closestPlatoonDistance
             local closestAPlatPos
             local AlliedPlatoons = aiBrain:GetPlatoonsList()
-            for _,aPlat in AlliedPlatoons do
-                if not aPlat.Dead and not table.equal(aPlat, self) then
-                    local aPlatSurfaceThreat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
-                    if aPlatSurfaceThreat > self.EnemyThreatTable.TotalSuroundingThreat / 2 then
-                        local aPlatPos = aPlat:GetPlatoonPosition()
-                        local aPlatDistance = VDist2Sq(experimentalPosition[1],experimentalPosition[3],aPlatPos[1],aPlatPos[3])
-                        local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],self.Home[1],self.Home[3])
-                        if aPlatToHomeDistance < distanceToHome then
-                            local platoonValue = aPlatDistance * aPlatDistance / aPlatSurfaceThreat
-                            if not closestPlatoonValue or platoonValue <= closestPlatoonValue then
-                                if NavUtils.CanPathTo(self.MovementLayer, experimentalPosition, aPlatPos) then
-                                    closestPlatoon = aPlat
-                                    closestPlatoonValue = platoonValue
-                                    closestPlatoonDistance = aPlatDistance
-                                    closestAPlatPos = aPlatPos
+            if not self.ExperimentalUnit.ShieldCaution then
+                for _,aPlat in AlliedPlatoons do
+                    if not aPlat.Dead and not table.equal(aPlat, self) then
+                        local aPlatSurfaceThreat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
+                        if aPlatSurfaceThreat > threatTable.TotalSuroundingThreat / 2 then
+                            local aPlatPos = aPlat:GetPlatoonPosition()
+                            local aPlatDistance = VDist2Sq(experimentalPosition[1],experimentalPosition[3],aPlatPos[1],aPlatPos[3])
+                            local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],self.Home[1],self.Home[3])
+                            if aPlatToHomeDistance < distanceToHome then
+                                local platoonValue = aPlatDistance * aPlatDistance / aPlatSurfaceThreat
+                                if not closestPlatoonValue or platoonValue <= closestPlatoonValue then
+                                    if NavUtils.CanPathTo(self.MovementLayer, experimentalPosition, aPlatPos) and not StateUtils.RetreatPositionUnderArtilleryThreat(aPlatPos, threatTable) then
+                                        closestPlatoon = aPlat
+                                        closestPlatoonValue = platoonValue
+                                        closestPlatoonDistance = aPlatDistance
+                                        closestAPlatPos = aPlatPos
+                                    end
                                 end
                             end
                         end
@@ -757,7 +760,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         local baseDistance = VDist3Sq(experimentalPosition, base.Position)
                         local homeDistance = VDist3Sq(self.Home, base.Position)
                         if homeDistance < distanceToHome or baseName == 'MAIN' then
-                            if not closestBaseDistance or baseDistance <= closestBaseDistance then
+                            if not closestBaseDistance or (baseDistance <= closestBaseDistance and (baseName ~= 'MAIN' and not StateUtils.RetreatPositionUnderArtilleryThreat(base.Position, threatTable) or baseName == 'MAIN')) then
                                 if NavUtils.CanPathTo(self.MovementLayer, experimentalPosition, base.Position) then
                                     closestBase = baseName
                                     closestBaseDistance = baseDistance
@@ -769,6 +772,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
             end
             if closestBase and closestPlatoon then
                 if closestBaseDistance < closestPlatoonDistance then
+                    --LOG('Fatboy retreating, closest base distance is '..tostring(closestBaseDistance))
                     if closestBaseDistance < 2025 then
                         self.BuilderData = {
                             Retreat = true,
@@ -784,6 +788,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                             RetreatReason = retreatReason,
                             RetreatUnit = retreatTarget,
                             Position = aiBrain.BuilderManagers[closestBase].Position,
+                            CutOff = 1225
                         }
                         self:ChangeState(self.Navigating)
                         return
@@ -793,21 +798,28 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                             RetreatReason = retreatReason,
                             RetreatUnit = retreatTarget,
                             Position = aiBrain.BuilderManagers[closestBase].Position,
+                            CutOff = 1225
                         }
                         self:ChangeState(self.Navigating)
                         return
                     end
                 elseif closestAPlatPos then
+                    --LOG('Fatboy retreating to platoon '..tostring(closestPlatoonDistance))
+                    if closestPlatoonDistance < 625 then
+                        coroutine.yield(25)
+                    end
                     self.BuilderData = {
                         Retreat = true,
                         RetreatReason = retreatReason,
                         RetreatUnit = retreatTarget,
                         Position = closestAPlatPos,
+                        CutOff = 625
                     }
                     self:ChangeState(self.Navigating)
                     return
                 end
             elseif closestBase then
+                --LOG('Fatboy retreating, closest base distance is '..tostring(closestBaseDistance))
                 if closestBaseDistance < 2025 then
                     self.BuilderData = {
                         Retreat = true,
@@ -823,6 +835,7 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         RetreatReason = retreatReason,
                         RetreatUnit = retreatTarget,
                         Position = aiBrain.BuilderManagers[closestBase].Position,
+                        CutOff = 1225
                     }
                     self:ChangeState(self.Navigating)
                     return
@@ -832,16 +845,22 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
                         RetreatReason = retreatReason,
                         RetreatUnit = retreatTarget,
                         Position = aiBrain.BuilderManagers[closestBase].Position,
+                        CutOff = 1225
                     }
                     self:ChangeState(self.Navigating)
                     return
                 end
             elseif closestPlatoon and closestAPlatPos then
+                --LOG('Fatboy retreating to platoon '..tostring(closestPlatoonDistance))
+                if closestPlatoonDistance < 625 then
+                    coroutine.yield(25)
+                end
                 self.BuilderData = {
                     Retreat = true,
                     RetreatReason = retreatReason,
                     RetreatUnit = retreatTarget,
                     Position = closestAPlatPos,
+                    CutOff = 625
                 }
                 self:ChangeState(self.Navigating)
                 return
