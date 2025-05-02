@@ -771,7 +771,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                 self.blocked = self.blocked + 1
                 if self.blocked > 3 then
                     self.blocked = 0
-                    table.insert (PropBlacklist, closestReclaim)
+                    table.insert (RNGAIGLOBALS.PropBlacklist, closestReclaim)
                 end
             else
                 self.blocked = 0

@@ -693,7 +693,7 @@ IntelManager = Class {
                         local ex = enemyPosition[1] - v.pos[1]
                         local ez = enemyPosition[3] - v.pos[3]
                         local enemyDist = ex * ex + ez * ez
-                        if enemyDist < zoneDist or RUtils.GetAngleRNG(originPosition[1], originPosition[3], v.pos[1], v.pos[3], enemyPosition[1], enemyPosition[3]) < 0.4 or (not controlRequired and enemyDist < 400) then
+                        if enemyDist < (zoneDist + 25) or RUtils.GetAngleRNG(originPosition[1], originPosition[3], v.pos[1], v.pos[3], enemyPosition[1], enemyPosition[3]) < 0.4 or (not controlRequired and enemyDist < 625) then
                             continue
                         end
                     end
@@ -1361,7 +1361,7 @@ IntelManager = Class {
             if not v.zoneid and self.ZonesInitialized then
                 if RUtils.PositionOnWater(v.position[1], v.position[3]) then
                     -- tbd define water based zones
-                    v.zoneid = water
+                    v.zoneid = MAP:GetZoneID(v.position,self.Zones.Naval.index)
                 else
                     v.zoneid = MAP:GetZoneID(v.position,self.Zones.Land.index)
                 end
@@ -3170,16 +3170,13 @@ IntelManager = Class {
 
     FlushExistingStructureRequest = function(self, pos, radius, structureType)
         local rSq = radius * radius
-        --LOG('FlushExistingStructureRequest, source position is '..tostring(repr(pos))..'radius is '..tostring(rSq))
         local keysToRemove = {}
         if self.StructureRequests[structureType] then
             for k, data in self.StructureRequests[structureType] do
                 local ap = data.Position
                 local dx = pos[1] - ap[1]
                 local dz = pos[3] - ap[3]
-                --LOG('Request distance is '..tostring(dx*dx + dz*dz))
                 if dx*dx + dz*dz < rSq then
-                    --LOG('We need to remove the following key '..tostring(k))
                     table.insert(keysToRemove, k)
                 end
                 if data.Assigned and data.AssignedEngineer and not data.AssignedEngineer.Dead then
@@ -3194,7 +3191,6 @@ IntelManager = Class {
         end
         if not table.empty(keysToRemove) then
             for _, v in keysToRemove do
-                --LOG('Removing request key '..tostring(v))
                 self.StructureRequests[structureType][v] = nil
             end
             self.StructureRequests[structureType] = self:RebuildTable(self.StructureRequests[structureType])
@@ -4310,7 +4306,9 @@ LastKnownThread = function(aiBrain)
                             if not v.zoneid and aiBrain.ZonesInitialized then
                                 if RUtils.PositionOnWater(unitPosition[1], unitPosition[3]) then
                                     -- tbd define water based zones
+                                    LOG('One of our mexes is in water')
                                     v.zoneid = MAP:GetZoneID(unitPosition,aiBrain.Zones.Naval.index)
+                                    LOG('Zoneid of mex is '..tostring(v.zoneid))
                                 else
                                     v.zoneid = MAP:GetZoneID(unitPosition,aiBrain.Zones.Land.index)
                                 end
@@ -4396,7 +4394,6 @@ LastKnownThread = function(aiBrain)
                                             aiBrain.EnemyIntel.TML[id] = {object = v, position=unitPosition, validated=false, range=v.Blueprint.Weapon[1].MaxRadius }
                                             ForkThread(sm.ValidateTML, sm, aiBrain, aiBrain.EnemyIntel.TML[id])
                                             aiBrain.BasePerimeterMonitor['MAIN'].RecentTMLAngle = angle
-                                            LOG('We added a TML to the enemy intel table')
                                         end
                                     elseif unitCat.TECH3 and unitCat.ANTIMISSILE and unitCat.SILO then
                                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='smd'

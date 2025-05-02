@@ -51,8 +51,10 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.CurrentEnemyThreat = 0
     cdr.CurrentEnemyDefenseThreat = 0
     cdr.CurrentEnemyAirThreat = 0
+    cdr.CurrentEnemyAirInnerThreat = 0
     cdr.CurrentFriendlyThreat = 0
     cdr.CurrentFriendlyAntiAirThreat = 0
+    cdr.CurrentFriendlyAntiAirInnerThreat = 0
     cdr.CurrentEnemyInnerCircle = 0
     cdr.CurrentFriendlyInnerCircle = 0
     cdr.Phase = 1
@@ -289,8 +291,10 @@ function CDRThreatAssessmentRNG(cdr)
             local enemyUnitThreat = 0
             local enemyUnitThreatInner = 0
             local enemyAirThreat = 0
+            local enemyAirInnerThreat = 0
             local enemyDefenseThreat = 0
             local friendAntiAirThreat = 0
+            local friendAntiAirInnerThreat = 0
             local friendlyUnitThreat = 0
             local friendlyUnitThreatInner = 0
             for k,v in friendlyUnits do
@@ -305,7 +309,7 @@ function CDRThreatAssessmentRNG(cdr)
                             friendlyUnitThreatInner = friendlyUnitThreatInner + v:EnhancementThreatReturn()
                         else
                             if v.Blueprint.CategoriesHash.ANTIAIR then
-                                friendAntiAirThreat = friendAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
+                                friendAntiAirInnerThreat = friendAntiAirInnerThreat + v.Blueprint.Defense.AirThreatLevel
                             end
                             friendlyUnitThreatInner = friendlyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel
                         end
@@ -360,7 +364,7 @@ function CDRThreatAssessmentRNG(cdr)
                             end
                         else
                             if v.Blueprint.CategoriesHash.AIR then
-                                enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.SurfaceThreatLevel
+                                enemyAirInnerThreat = enemyAirInnerThreat + v.Blueprint.Defense.SurfaceThreatLevel
                             end
                             enemyUnitThreatInner = enemyUnitThreatInner + v.Blueprint.Defense.SurfaceThreatLevel
                         end
@@ -411,7 +415,9 @@ function CDRThreatAssessmentRNG(cdr)
             cdr.CurrentEnemyInnerCircle = enemyUnitThreatInner
             cdr.CurrentFriendlyInnerCircle = friendlyUnitThreatInner
             cdr.CurrentEnemyAirThreat = enemyAirThreat
+            cdr.CurrentEnemyAirInnerThreat = enemyAirInnerThreat
             cdr.CurrentFriendlyAntiAirThreat = friendAntiAirThreat
+            cdr.CurrentFriendlyAntiAirInnerThreat = friendAntiAirInnerThreat
             --LOG('Current Enemy Inner Threat '..cdr.CurrentEnemyInnerCircle)
             --LOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
             --LOG('Current Friendly Inner Threat '..cdr.CurrentFriendlyInnerCircle)

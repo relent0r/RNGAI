@@ -1016,7 +1016,7 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNu
     return bMergedPlatoons
 end
 
-function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, ignoreNotCompleted)
+function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, ignoreNotCompleted, experimentalRange)
     if not position then
         position = platoon:GetPlatoonPosition()
     end
@@ -1029,6 +1029,7 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
     end
     local unitTable = {
         MaxUnitRange = 0,
+        InRangeThreat = 0,
         TotalSuroundingThreat = 0,
         ClosestUnitDistance = 0,
         AirSurfaceThreat = {
@@ -1098,6 +1099,11 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                 RNGINSERT(unitTable.AirSurfaceThreat.Units, {Object = unit, Distance = distance})
             elseif (unitCats.LAND or unitCats.AMPHIBIOUS or unitCats.HOVER) and (unitCats.DIRECTFIRE or unitCats.INDIRECTFIRE) and not unitCats.SCOUT then
                 local unitRange = GetUnitMaxWeaponRange(unit)
+                if experimentalRange then
+                    if unitRange < experimentalRange then
+                        unitTable.InRangeThreat = unitTable.InRangeThreat + unitThreat
+                    end
+                end
                 if unitRange > 35 then
                     if unitCats.INDIRECTFIRE and not unitCats.SNIPER then
                         unitThreat = unitThreat * 0.3
@@ -1125,6 +1131,11 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                                 local unitDps = RUtils.CalculatedDPSRNG(weapon)
                                 unitThreat = (unitDps * 0.3)
                             end
+                        end
+                    end
+                    if experimentalRange then
+                        if unitRange < experimentalRange then
+                            unitTable.InRangeThreat = unitTable.InRangeThreat + unitThreat
                         end
                     end
                     unitTable.ArtilleryThreat.TotalThreat = unitTable.ArtilleryThreat.TotalThreat + unitThreat

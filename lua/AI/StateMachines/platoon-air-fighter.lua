@@ -94,10 +94,10 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 return
             end
             if not target then
-                if aiBrain.CDRUnit.Active and (aiBrain.BrainIntel.SelfThreat.AirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.Air or aiBrain.CDRUnit.CurrentEnemyAirThreat > 0) then
+                if aiBrain.CDRUnit.Active and (aiBrain.BrainIntel.SelfThreat.AirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.Air or (aiBrain.CDRUnit.CurrentEnemyAirThreat + aiBrain.CDRUnit.CurrentEnemyAirInnerThreat) > 0) then
                     if platPos and aiBrain.CDRUnit.Position then
                         local acuDistance = VDist2(platPos[1], platPos[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3])
-                        if acuDistance > self.MaxRadius or aiBrain.CDRUnit.CurrentEnemyAirThreat > 0 then
+                        if acuDistance > self.MaxRadius or (aiBrain.CDRUnit.CurrentEnemyAirThreat + aiBrain.CDRUnit.CurrentEnemyAirInnerThreat) > 0 then
                             --RNGLOG('ACU is active and further than our max distance, lets increase it to cover him better')
                             target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 80, {categories.AIR * (categories.BOMBER + categories.GROUNDATTACK + categories.ANTINAVY)}, false)
                             if target then

@@ -201,7 +201,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 return
             end
             ----self:LogDebug(string.format('Current ACU enemy air threat is '..cdr.CurrentEnemyAirThreat))
-            if brain.IntelManager.StrategyFlags.EnemyAirSnipeThreat or (cdr.CurrentEnemyAirThreat > 25 and cdr.CurrentFriendlyAntiAirThreat < 20) then
+            if brain.IntelManager.StrategyFlags.EnemyAirSnipeThreat or ((cdr.CurrentEnemyAirThreat + cdr.CurrentEnemyAirInnerThreat) > 25 and cdr.CurrentFriendlyAntiAirInnerThreat < 20) then
                 if brain.BrainIntel.SelfThreat.AntiAirNow < brain.EnemyIntel.EnemyThreatCurrent.AntiAir then
                     cdr.EnemyAirPresent = true
                     if not cdr.AtHoldPosition then
@@ -406,7 +406,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    if not enemyAcuClose and brain.BrainIntel.LandPhase < 2 and cdr.CurrentEnemyInnerCircle < 20 then
+                    if not enemyAcuClose and brain.BrainIntel.LandPhase < 2 and cdr.CurrentEnemyInnerCircle < 20 and not self.BuilderData.DefendExpansion then
                         self:LogDebug(string.format('We want to try and expand '))
                         local expansionCount = 0
                         for k, manager in brain.BuilderManagers do

@@ -1637,16 +1637,20 @@ StructureManager = Class {
         local bestZone, bestExtractor, lowestDist
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position
         
-        local zoneExtractors = {}
+        local zoneExtractors = {
+            Land = {},
+            Naval = {},
+        }
 
         for tier, extractors in extractorTable do
             if allTiers or tier == "TECH1" then
                 for _, c in extractors do
                     if c and not c.Dead and c.InitialDelayCompleted then
                         local zoneID = c.zoneid
-                        if zoneID then
-                            zoneExtractors[zoneID] = zoneExtractors[zoneID] or {}
-                            table.insert(zoneExtractors[zoneID], c)
+                        local layer = c.Water and 'Naval' or 'Land'
+                        if zoneID and layer then
+                            zoneExtractors[layer][zoneID] = zoneExtractors[layer][zoneID] or {}
+                            table.insert(zoneExtractors[layer][zoneID], c)
                         end
                     end
                 end
@@ -1654,18 +1658,18 @@ StructureManager = Class {
         end
     
         -- Evaluate zones
-        for zoneID, extractors in zoneExtractors do
-            local zoneGroup = (extractors[1].Water and aiBrain.Zones.Water) or aiBrain.Zones.Land
-            local zone = zoneGroup.zones[zoneID]
-
-            if zone then -- Adjust this threshold
-                local zoneDist = VDist2Sq(basePosition[1], basePosition[3], zone.pos[1], zone.pos[3])
-                for _, c in extractors do
-                    -- Select the best extractor in the zone based on proximity to zone center
-                    if not bestExtractor or zoneDist < lowestDist then
-                        bestExtractor = c
-                        bestZone = zoneID
-                        lowestDist = zoneDist
+        for layer, zones in zoneExtractors do
+            local zoneGroup = aiBrain.Zones[layer]
+            for zoneID, extractors in zones do
+                local zone = zoneGroup.zones[zoneID]
+                if zone then
+                    local zoneDist = VDist2Sq(basePosition[1], basePosition[3], zone.pos[1], zone.pos[3])
+                    for _, c in extractors do
+                        if not bestExtractor or zoneDist < lowestDist then
+                            bestExtractor = c
+                            bestZone = zoneID
+                            lowestDist = zoneDist
+                        end
                     end
                 end
             end

@@ -97,7 +97,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 return
             end
             local platPos = self:GetPlatoonPosition()
-            if aiBrain.CDRUnit.CurrentEnemyAirThreat > aiBrain.CDRUnit.CurrentFriendlyAntiAirThreat then
+            --LOG('Acu enemy air threat '..tostring(aiBrain.CDRUnit.CurrentEnemyAirThreat)..' acu friendly antiair threat '..tostring(aiBrain.CDRUnit.CurrentFriendlyAntiAirInnerThreat))
+            if (aiBrain.CDRUnit.CurrentEnemyAirThreat + aiBrain.CDRUnit.CurrentEnemyAirInnerThreat) > aiBrain.CDRUnit.CurrentFriendlyAntiAirInnerThreat then
                 local cdrPos = aiBrain.CDRUnit.Position
                 local rx = platPos[1] - cdrPos[1]
                 local rz = platPos[3] - cdrPos[3]
@@ -115,7 +116,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.Navigating)
                         return
                     else
-                        self.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.AIR - categories.INSIGNIFICANTUNIT, platPos, self.MaxRadius, 'Enemy')
+                        self.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.AIR - categories.INSIGNIFICANTUNIT, cdrPos, self.MaxRadius, 'Enemy')
                         --self:LogDebug(string.format('DecideWhatToDo number of candidates acu protection')..table.getn(self.targetcandidates))
                         if not table.empty(self.targetcandidates) then
                             --self:LogDebug(string.format('DecideWhatToDo found simple target'))

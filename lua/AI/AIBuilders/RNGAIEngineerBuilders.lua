@@ -91,9 +91,9 @@ local MinimumAntiAirThreat = function(self, aiBrain, builderManager, builderData
 
 end
 
-local AggressiveExpansion = function(self, aiBrain, builderManager)
+local ActiveExpansion = function(self, aiBrain, builderManager)
     --RNGLOG('LocationType is '..builderManager.LocationType)
-    if aiBrain.BrainIntel.AggressiveExpansion == builderManager.LocationType then
+    if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
         --RNGLOG('Active Expansion is set'..builderManager.LocationType)
         --RNGLOG('Active Expansion builders are set to 900')
         return 950
@@ -481,7 +481,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Aggression Count',
         PlatoonTemplate = 'T1BuildEngineer',
-        PriorityFunction = AggressiveExpansion,
+        PriorityFunction = ActiveExpansion,
         Priority = 0,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},

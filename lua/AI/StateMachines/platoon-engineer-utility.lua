@@ -1011,6 +1011,45 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
+                    if engineerManager.ConsumptionUnits.Experimental and not table.empty(engineerManager.ConsumptionUnits.Experimental) then
+                        for _, v in engineerManager.ConsumptionUnits.Experimental.UnitsList do
+                            if v and not v.Dead then
+                                if not v['rngdata'] then
+                                    v['rngdata'] = {}
+                                end
+                                if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace > 0 then
+                                    --LOG('There is no shield space')
+                                    local count = 0
+                                    for _, s in v['rngdata'].ShieldsInRange do
+                                        if not s.Dead then
+                                            count = count + 1
+                                        end
+                                    end
+                                    --LOG('ShieldCount in range of unit '..tostring(count))
+                                    continue
+                                end
+                                local unitCats = v.Blueprint.CategoriesHash
+                                if unitCats.EXPERIMENTAL then
+                                    if not v['rngdata'].ShieldsInRange then
+                                        v['rngdata'].ShieldsInRange = {}
+                                    end
+                                    local shieldCount = 0
+                                    for _, s in v['rngdata'].ShieldsInRange do
+                                        if not s.Dead then
+                                            shieldCount = shieldCount + 1
+                                        end
+                                    end
+                                    --LOG('Shield count is '..tostring(shieldCount))
+                                    if shieldCount < 4 then
+                                        --LOG('Found strategic unit that is not shielded')
+                                        table.insert(structureTable, v)
+                                    else
+                                        --LOG('Already 4 shields protecting unit ')
+                                    end
+                                end
+                            end
+                        end
+                    end
                     if engineerManager.ConsumptionUnits.AntiNuke and not table.empty(engineerManager.ConsumptionUnits.AntiNuke) then
                         for _, v in engineerManager.ConsumptionUnits.AntiNuke.UnitsList do
                             if v and not v.Dead then

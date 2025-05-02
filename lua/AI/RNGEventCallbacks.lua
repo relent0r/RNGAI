@@ -97,7 +97,7 @@ function OnCreate(unit)
                             end
                             if aiBrain.IntelManager then
                                 local tmdPosition = unit:GetPosition()
-                                ForkThread(aiBrain.IntelManager.FlushExistingStructureRequest, aiBrain.IntelManager, tmdPosition, 15, 'TMD')
+                                ForkThread(aiBrain.IntelManager.FlushExistingStructureRequest, aiBrain.IntelManager, tmdPosition, defenseRadius, 'TMD')
                             end
                         end
                     end
@@ -190,7 +190,7 @@ function OnStopBeingBuilt(self, unit, builder, layer)
                     end
                     if aiBrain.IntelManager then
                         local tmdPosition = unit:GetPosition()
-                        ForkThread(aiBrain.IntelManager.FlushExistingStructureRequest, aiBrain.IntelManager, tmdPosition, 15, 'TMD')
+                        ForkThread(aiBrain.IntelManager.FlushExistingStructureRequest, aiBrain.IntelManager, tmdPosition, defenseRadius, 'TMD')
                     end
                 end
             end

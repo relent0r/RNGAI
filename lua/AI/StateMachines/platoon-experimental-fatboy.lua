@@ -524,8 +524,8 @@ AIExperimentalFatBoyBehavior = Class(AIPlatoonRNG) {
             local experimental = self.ExperimentalUnit
             local target = self.BuilderData.AttackTarget
             local maxPlatoonRange = self['rngdata'].MaxPlatoonWeaponRange
-            local threatTable = self.EnemyThreatTable
             while experimental and not IsDestroyed(experimental) do
+                local threatTable = self.EnemyThreatTable
                 if (experimental.ShieldCaution or threatTable.ArtilleryThreat.TotalThreat > 0) and not experimental.HoldPosition then
                     if experimental.ShieldCaution then
                         --LOG('Shield is under caution, decidewhattodo')

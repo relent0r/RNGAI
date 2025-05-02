@@ -49,6 +49,7 @@ EngineerManager = Class(BuilderManager) {
             MobileIntel = { Category = categories.MOBILE - categories.ENGINEER - categories.SHIELD, Units = {}, UnitsList = {}, Count = 0, },
             AntiNuke = { Category = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, Units = {}, UnitsList = {}, Count = 0, },
             Strategic = { Category = categories.STRUCTURE * categories.STRATEGIC * categories.TECH3, Units = {}, UnitsList = {}, Count = 0, },
+            Experimental = { Category = categories.STRUCTURE * categories.EXPERIMENTAL, Units = {}, UnitsList = {}, Count = 0, },
         }
         self.QueuedStructures = setmetatable({}, WeakValueTable)
         self.QueuedStructures = {

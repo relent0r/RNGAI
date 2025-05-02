@@ -55,20 +55,6 @@ local ActiveExpansion = function(self, aiBrain, builderManager)
     end
 end
 
-local AggressiveExpansion = function(self, aiBrain, builderManager)
-    --RNGLOG('LocationType is '..builderManager.LocationType)
-    if aiBrain.BrainIntel.AggressiveExpansion == builderManager.LocationType then
-        --RNGLOG('Active Expansion is set'..builderManager.LocationType)
-        --RNGLOG('Active Expansion builders are set to 900')
-        return 950
-    else
-        --RNGLOG('Disable Air Intie Pool Builder')
-        --RNGLOG('My Air Threat '..myAirThreat..'Enemy Air Threat '..enemyAirThreat)
-        return 0
-    end
-end
-
-
 local NavalAdjust = function(self, aiBrain, builderManager)
     if aiBrain.MapWaterRatio > 0.60 then
         --RNGLOG('NavalExpansionAdjust return 200')
@@ -1333,36 +1319,7 @@ BuilderGroup {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
-            { UCBC, 'UnitCapCheckLess', { .95 } },
-         },
-        BuilderType = 'Any',
-        BuilderData = {
-            StateMachine = 'EngineerBuilder',
-            JobType = 'BuildStructure',
-            DesiresAssist = true,
-            Construction = {
-                LocationType = 'LocationType',
-                BuildClose = true,
-                BuildStructures = {
-                    { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNG Factory Builder Land T1 Expansion Aggressive',
-        PlatoonTemplate = 'EngineerStateT123RNG',
-        PriorityFunction = AggressiveExpansion,
-        Priority = 0,
-        DelayEqualBuildPlattons = {'Factories', 3},
-        BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND'} },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
-            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
-            --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
+            { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land', false, true } },
             { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
@@ -1387,11 +1344,12 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND'} },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { EBC, 'GreaterThanMassStorageOrEfficiency', { 150, 0.9 }},
+            { EBC, 'GreaterThanEnergyEfficiencyOverTimeRNG', { 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH3 }},
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
+            { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land', false, true } },
             { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',
@@ -1417,10 +1375,11 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND'} },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 1.0 }},
+            { EBC, 'GreaterThanMassStorageOrEfficiency', { 150, 0.9 }},
+            { EBC, 'GreaterThanEnergyEfficiencyOverTimeRNG', { 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land' } },
+            { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Land', false, true } },
             { UCBC, 'UnitCapCheckLess', { .95 } },
          },
         BuilderType = 'Any',

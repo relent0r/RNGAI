@@ -2715,9 +2715,11 @@ end
 
 GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface, includeSub, includeAir, includeStructure)
     if pos and allyRadius and enemyRadius then
-        local brainThreats = {allyTotal=0,enemyTotal=0,allySurface=0,allyACU=0, allyACUUnits = {},enemySurface=0,allyStructure=0,enemyStructure=0, enemyStructureUnits={},allyAir=0,enemyAir=0,allySub=0,enemySub=0,enemyrange=0,allyrange=0}
+        local brainThreats = {allyTotal=0,enemyTotal=0,allySurface=0,allyACU=0, allyACUUnits = {},enemySurface=0,allyStructure=0,enemyStructure=0, enemyStructureUnits={},allyAir=0,enemyAir=0,allySub=0,enemySub=0,enemyrange=0,allyrange=0, enemyscoutrange=0,allyscoutrange=0}
         local enemyMaxRadius = 0
+        local enemyScoutMaxRadius = 0
         local allyMaxRadius = 0
+        local allyScoutMaxRadius = 0
         local enemyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,enemyRadius,'Enemy')
         local enemyUnitCount = 0
         for _,v in enemyunits do
@@ -2733,14 +2735,20 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
                     brainThreats.enemySurface = brainThreats.enemySurface + commanderThreat
                     brainThreats.enemyTotal = brainThreats.enemyTotal + commanderThreat
                 else
-                    if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil and not bp.CategoriesHash.STRUCTURE then
+                    if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil and bp.Defense.SurfaceThreatLevel > 0 and not bp.CategoriesHash.STRUCTURE then
                         brainThreats.enemySurface = brainThreats.enemySurface + bp.Defense.SurfaceThreatLevel*mult
                         brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.SurfaceThreatLevel*mult
-                        if bp.Weapon[1].MaxRadius > enemyMaxRadius then
-                            enemyMaxRadius = bp.Weapon[1].MaxRadius
+                        if bp.CategoriesHash.SCOUT then
+                            if bp.Weapon[1].MaxRadius > enemyScoutMaxRadius then
+                                enemyScoutMaxRadius = bp.Weapon[1].MaxRadius
+                            end
+                        else
+                            if bp.Weapon[1].MaxRadius > enemyMaxRadius then
+                                enemyMaxRadius = bp.Weapon[1].MaxRadius
+                            end
                         end
                     end
-                    if includeStructure and bp.Defense.SurfaceThreatLevel ~= nil and bp.CategoriesHash.STRUCTURE then
+                    if includeStructure and bp.Defense.SurfaceThreatLevel ~= nil and bp.Defense.SurfaceThreatLevel > 0 and bp.CategoriesHash.STRUCTURE then
                         if bp.CategoriesHash.TACTICALMISSILEPLATFORM then
                             mult=0.1
                         else
@@ -2757,14 +2765,14 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
                             brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.SurfaceThreatLevel*mult
                         end
                     end
-                    if includeSub and bp.Defense.SubThreatLevel ~= nil then
+                    if includeSub and bp.Defense.SubThreatLevel ~= nil and bp.Defense.SubThreatLevel > 0 then
                         brainThreats.enemySub = brainThreats.enemySub + bp.Defense.SubThreatLevel*mult
                         brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.SubThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > enemyMaxRadius then
                             enemyMaxRadius = bp.Weapon[1].MaxRadius
                         end
                     end
-                    if includeAir and bp.Defense.AirThreatLevel ~= nil then
+                    if includeAir and bp.Defense.AirThreatLevel ~= nil and bp.Defense.AirThreatLevel > 0 then
                         brainThreats.enemyAir = brainThreats.enemyAir + bp.Defense.AirThreatLevel*mult
                         brainThreats.enemyTotal = brainThreats.enemyTotal + bp.Defense.AirThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > enemyMaxRadius then
@@ -2775,6 +2783,7 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
             end
         end
         brainThreats.enemyrange = enemyMaxRadius
+        brainThreats.enemyscoutrange = enemyScoutMaxRadius
 
         local allyunits=GetUnitsAroundPoint(aiBrain, categories.DIRECTFIRE+categories.INDIRECTFIRE,pos,allyRadius,'Ally')
         for _,v in allyunits do
@@ -2791,24 +2800,30 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
                     brainThreats.allyTotal = brainThreats.allyTotal + commanderThreat
                     RNGINSERT(brainThreats.allyACUUnits, v)
                 else
-                    if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil and not bp.CategoriesHash.STRUCTURE then
+                    if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil and not bp.CategoriesHash.STRUCTURE and bp.Defense.SurfaceThreatLevel > 0 then
                         brainThreats.allySurface = brainThreats.allySurface + bp.Defense.SurfaceThreatLevel*mult
                         brainThreats.allyTotal = brainThreats.allyTotal + bp.Defense.SurfaceThreatLevel*mult
-                        if bp.Weapon[1].MaxRadius > allyMaxRadius then
-                            allyMaxRadius = bp.Weapon[1].MaxRadius
+                        if bp.CategoriesHash.SCOUT then
+                            if bp.Weapon[1].MaxRadius > allyScoutMaxRadius then
+                                allyScoutMaxRadius = bp.Weapon[1].MaxRadius
+                            end
+                        else
+                            if bp.Weapon[1].MaxRadius > allyMaxRadius then
+                                allyMaxRadius = bp.Weapon[1].MaxRadius
+                            end
                         end
                     end
-                    if includeStructure and bp.CategoriesHash.STRUCTURE and bp.Defense.SurfaceThreatLevel ~= nil then
+                    if includeStructure and bp.CategoriesHash.STRUCTURE and bp.Defense.SurfaceThreatLevel ~= nil and bp.Defense.SurfaceThreatLevel > 0 then
                         brainThreats.allyStructure = brainThreats.allyStructure + bp.Defense.SurfaceThreatLevel
                     end
-                    if includeSub and bp.Defense.SubThreatLevel ~= nil then
+                    if includeSub and bp.Defense.SubThreatLevel ~= nil and bp.Defense.SubThreatLevel > 0 then
                         brainThreats.allySub = brainThreats.allySub + bp.Defense.SubThreatLevel*mult
                         brainThreats.allyTotal = brainThreats.allyTotal + bp.Defense.SubThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > allyMaxRadius then
                             allyMaxRadius = bp.Weapon[1].MaxRadius
                         end
                     end
-                    if includeAir and bp.Defense.AirThreatLevel ~= nil then
+                    if includeAir and bp.Defense.AirThreatLevel ~= nil and bp.Defense.AirThreatLevel > 0 then
                         brainThreats.allyAir = brainThreats.allyAir + bp.Defense.AirThreatLevel*mult
                         brainThreats.allyTotal = brainThreats.allyTotal + bp.Defense.AirThreatLevel*mult
                         if bp.Weapon[1].MaxRadius > allyMaxRadius then
@@ -2819,6 +2834,7 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
             end
         end
         brainThreats.allyrange = allyMaxRadius
+        brainThreats.allyscoutrange = allyScoutMaxRadius
         return brainThreats
     end
 end

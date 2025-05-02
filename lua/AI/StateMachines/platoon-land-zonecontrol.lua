@@ -389,6 +389,154 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    DefenseLoiter = State {
+
+        StateName = 'DefenseLoiter',
+        StateColor = 'ffffff',
+
+        --- The platoon will stay out of range of a group of enemy units but not retreat
+        ---@param self AIPlatoonLandAssaultBehavior
+        Main = function(self)
+            local function GetRolePosition(unit, platoonCenter, fallbackPos, destPos, platoonNum, units)
+                local weaponRange = unit['rngdata'].MaxWeaponRange or 30
+                local offset = math.sqrt(platoonNum)
+                local role = unit['rngdata'].Role or 'Default'
+            
+                if role == 'Scout' then
+                    return platoonCenter
+                elseif role == 'Sniper' then
+                    return RUtils.lerpy(platoonCenter, destPos or fallbackPos, {VDist3(destPos or fallbackPos, platoonCenter), weaponRange / 7 + offset})
+                elseif role == 'Support' then
+                    return RUtils.lerpy(platoonCenter, destPos or fallbackPos, {VDist3(destPos or fallbackPos, platoonCenter), weaponRange / 5 + offset})
+                elseif role == 'Shield' then
+                    local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, unit, unitPos, target)
+                    if not shieldPos then
+                        local closestTargetDist = VDist3(platoonCenter, targetPos)
+                        local standoff = closestTargetDist - (unit['rngdata'].MaxDirectFireRange or weaponRange) + 4
+                        shieldPos = RUtils.lerpy(unit:GetPosition(), targetPos, {closestTargetDist, standoff})
+                    end
+                    return shieldPos
+                else
+                    return RUtils.lerpy(platoonCenter, destPos or fallbackPos, {VDist3(destPos or fallbackPos, platoonCenter), weaponRange / 4 + offset})
+                end
+            end
+            local aiBrain = self:GetBrain()
+            local builderData = self.BuilderData
+            local lastKnownEnemyPosition = builderData.Position
+            local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE + categories.MOBILE - categories.INSIGNIFICANTUNIT, self.Pos, 125, 'Enemy')
+            local threatVector = {0, 0, 0}
+            local enemyCount = 0
+            for _, enemy in enemyUnits do
+                if enemy and not enemy.Dead then
+                    local enemyPos = enemy:GetPosition()
+                    local enemyRange = StateUtils.GetUnitMaxWeaponRange(enemy, false, false) or 10
+                    local dx = self.Pos[1] - enemyPos[1]
+                    local dz = self.Pos[3] - enemyPos[3]
+                    local distSq = dx * dx + dz * dz
+                    local rangeBuffer = enemyRange + 25
+                    local rangeBufferSq = rangeBuffer * rangeBuffer
+            
+                    if distSq < rangeBufferSq then
+                        -- Repulsion scale is stronger the closer you are
+                        local scale = 1 - math.min(1, distSq / rangeBufferSq)
+                        
+                        -- Normalize the direction vector (dx, dz) to avoid extreme offsets
+                        local mag = math.sqrt(dx * dx + dz * dz)
+                        if mag > 0 then
+                            dx = dx / mag
+                            dz = dz / mag
+                        end
+                        
+                        -- Apply the scaled threat direction to the threat vector
+                        threatVector[1] = threatVector[1] + dx * scale
+                        threatVector[3] = threatVector[3] + dz * scale
+                        enemyCount = enemyCount + 1
+                    end
+                end
+            end
+            --LOG('Threat vector provided '..tostring(repr(threatVector)))
+            --LOG('Enemy Count '..tostring(enemyCount))
+            if enemyCount > 0 then
+                local counter = 0
+                local offsetDist = 20
+                local vx, vz = threatVector[1], threatVector[3]
+                local magSq = vx * vx + vz * vz
+                if magSq > 1 then
+                    local invMag = 1 / math.sqrt(magSq)
+                    vx = vx * invMag
+                    vz = vz * invMag
+                end
+            
+                local bestPlatoonPos = {
+                    self.Pos[1] + vx * offsetDist,
+                    self.Pos[2],
+                    self.Pos[3] + vz * offsetDist,
+                }
+                --LOG('Best plat pos '..tostring(repr(bestPlatoonPos)))
+                --LOG('Distance from pos to enemy is '..tostring(VDist3(bestPlatoonPos,lastKnownEnemyPosition)))
+                if bestPlatoonPos and NavUtils.CanPathTo(self.MovementLayer, self.Pos, bestPlatoonPos) then
+                    self.LoiterPos = bestPlatoonPos
+                    --LOG('We can path to this position ')
+                    while counter < 10 do
+                        --LOG('Performing loop to move to position , counter '..tostring(counter))
+                        counter = counter + 1
+                        local spread = 0
+                        local snum = 0
+                        local platoonUnits = self:GetPlatoonUnits()
+                        local platoonNum = table.getn(platoonUnits)
+                        for _, v in platoonUnits do
+                            if v and not v.Dead then
+                                local unitPos = v:GetPosition()
+                                local role = v['rngdata'].Role or 'Default'
+                        
+                                -- Too far? (e.g., stuck or idle units)
+                                if VDist2Sq(unitPos[1], unitPos[3], self.Pos[1], self.Pos[3]) > self['rngdata'].MaxPlatoonWeaponRange*self['rngdata'].MaxPlatoonWeaponRange+900 + 900 then
+                                    local vec = {v:GetVelocity()}
+                                    if VDist3Sq({0, 0, 0}, vec) < 1 then
+                                        IssueClearCommands({v})
+                                        IssueMove({v}, self.Home)
+                                        aiBrain:AssignUnitsToPlatoon('ArmyPool', {v}, 'Unassigned', 'NoFormation')
+                                        continue
+                                    end
+                                end
+                        
+                                local roleMovePos = GetRolePosition(v, self.Pos, self.Home, bestPlatoonPos, platoonNum, platoonUnits)
+                                if VDist3Sq(unitPos, roleMovePos) > 9 then
+                                    StateUtils.IssueNavigationMove(v, roleMovePos)
+                                end
+                        
+                                -- Optional: track spread factor if needed
+                                spread = spread + VDist3Sq(unitPos, self.Pos) / (v['rngdata'].MaxWeaponRange^2)
+                                snum = snum + 1
+                            end
+                        end
+                        --execute a spread position
+                        coroutine.yield(45) -- 4.5 seconds
+                        local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius * 0.7, self.EnemyRadius, true, false, true, true) -- we need to get the threat again so we can                     if (threat.enemyStructure > 0 or threat.enemySurface > 0) and threat.enemyrange > self['rngdata'].MaxPlatoonWeaponRange and (threat.allySurface + platoonTotalSurfaceThreat) < (threat.enemyStructure + threat.enemySurface * 1.3) then
+                        --LOG('Threat details after loiter loop at platoon pos')
+                        --LOG('threat.enemyStructure '..tostring(threat.enemyStructure))
+                        --LOG('threat.enemySurface '..tostring(threat.enemySurface))
+                        --LOG('threat.allySurface '..tostring(threat.allySurface))
+                        --LOG('threat.enemyrange '..tostring(threat.enemyrange))
+                        --LOG('MaxPlatoonWeaponRange '..tostring(self['rngdata'].MaxPlatoonWeaponRange))
+                    end
+                end
+                self.LoiterPos = nil
+            end
+            self.BuilderData = {}
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+
+        Visualize = function(self)
+            local position = self:GetPlatoonPosition()
+            local target = self.LoiterPos
+            if position and target then
+                DrawLinePop(position, target, self.StateColor)
+            end
+        end
+    },
+
     Loiter = State {
 
         StateName = 'Loiter',

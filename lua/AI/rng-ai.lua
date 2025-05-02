@@ -2524,7 +2524,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if not v.zoneid and self.ZonesInitialized then
                 if RUtils.PositionOnWater(v.position[1], v.position[3]) then
                     -- tbd define water based zones
-                    v.zoneid = 'water'
+                    v.zoneid = MAP:GetZoneID(v.position,self.Zones.Naval.index)
                 else
                     v.zoneid = MAP:GetZoneID(v.position,self.Zones.Land.index)
                 end
@@ -4240,7 +4240,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             local mexPos = GetPosition(v)
                             if RUtils.PositionOnWater(mexPos[1], mexPos[3]) then
                                 -- tbd define water based zones
-                                v.zoneid = 'water'
+                                v.zoneid = MAP:GetZoneID(v.position,self.Zones.Naval.index)
                             else
                                 v.zoneid = MAP:GetZoneID(mexPos,self.Zones.Land.index)
                                 --LOG('Unit zone is '..unit.zoneid)
@@ -6625,7 +6625,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('EngineerAssistManagerFocusHighValue is true')
                     self.EngineerAssistManagerBuildPowerRequired = math.ceil(math.max((150 * multiplier), minAssistPower))
                 elseif massStorage > 150 and energyStorage > 150 and self.EngineerAssistManagerBuildPower < math.max(minAssistPower, 5) and not self.EngineerAssistManagerFocusHighValue and not self.EcoManager.CoreMassPush then
-                    self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
+                    if self.EngineerAssistManagerBuildPowerRequired < math.max(minAssistPower, 5) then
+                        self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
+                    end
                     --RNGLOG('EngineerAssistManager is Active due to storage and builder power being less than minAssistPower')
                     self.EngineerAssistManagerActive = true
                 elseif self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.8 and self.EngineerAssistManagerBuildPower <= 0 and self.EngineerAssistManagerBuildPowerRequired < 6 then
