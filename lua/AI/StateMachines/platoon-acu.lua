@@ -351,7 +351,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 local highThreat = cdr.CurrentEnemyThreat > 30 and cdr.CurrentFriendlyThreat < 15
                 local enhancementLocation, locationDistance, enhancementZone
                 local movementCutOff = 225
-                if self.BuilderData.ZoneRetreat and VDist3Sq(cdr.Position, self.BuilderData.Position) <= self.BuilderData.CutOff and cdr.CurrentEnemyThreat < 15 then
+                if self.BuilderData.ZoneRetreat and VDist3Sq(cdr.Position, self.BuilderData.Position) <= self.BuilderData.CutOff and cdr.CurrentEnemyThreat < 30 then
                     self:LogDebug(string.format('ACU close to position for enhancement and threat is '..cdr.CurrentEnemyThreat))
                     self:ChangeState(self.EnhancementBuild)
                     return
@@ -513,7 +513,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            if brain.EnemyIntel.LandPhase > 2 then
+            if brain.EnemyIntel.LandPhase > 2.5 then
                 if brain.GridPresence:GetInferredStatus(cdr.Position) == 'Hostile' then
                     --LOG('We are in hostile territory and should be retreating')
                     if cdr.CurrentEnemyThreat > 10 and cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat then
@@ -560,9 +560,13 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 self:LogDebug(string.format(' friendly inner circle '..tostring(cdr.CurrentFriendlyInnerCircle)..' enemy inner circle '..tostring(cdr.CurrentEnemyInnerCircle)))
                 local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets
                 cdr.Combat = true
-                local acuDistanceToBase = VDist3Sq(cdr.Position, cdr.CDRHome)
-                if (not cdr.SuicideMode and acuDistanceToBase > maxBaseRange and (not cdr:IsUnitState('Building'))) and not self.BuilderData.DefendExpansion or (cdr.PositionStatus == 'Hostile' and cdr.Caution) then
-                    self:LogDebug(string.format('OverCharge running but ACU is beyond its MaxBaseRange property or in caution and enemy territory'))
+                if (not cdr.SuicideMode and cdr.DistanceToHome > maxBaseRange and (not cdr:IsUnitState('Building'))) and not self.BuilderData.DefendExpansion or (cdr.PositionStatus == 'Hostile' and cdr.Caution) then
+                    self:LogDebug(string.format('OverCharge running but ACU is beyond its MaxBaseRange '..tostring(cdr.MaxBaseRange)..' property or in caution and enemy territory'))
+                    --LOG('Current cdr confidence is '..tostring(cdr.Confidence))
+                    --LOG('Max base range '..tostring(cdr.MaxBaseRange))
+                    --LOG('Current distance to home '..tostring(cdr.DistanceToHome))
+                    --LOG('CDR Position status '..tostring(cdr.PositionStatus))
+                    --LOG('CDR Caution Status '..tostring(cdr.Caution))
                     if not cdr.Caution then
                         ----self:LogDebug(string.format('Not in caution, check if base closer than 6400'))
                         local closestBaseDistance
@@ -606,7 +610,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     else
-                        --LOG('cdr retreating due to beyond max range and not building '..(maxBaseRange)..' current distance '..acuDistanceToBase)
+                        --LOG('cdr retreating due to beyond max range and not building '..(maxBaseRange)..' current distance '..cdr.DistanceToHome)
                         --LOG('Wipe BuilderData in numUnits > 1')
                         self.BuilderData = {}
                         self:LogDebug(string.format('We are in caution, retreat threat is  '..cdr.CurrentEnemyThreat))
@@ -734,20 +738,20 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             ACUTarget    = acuTarget,
                         }
                     end
-                    if acuDistanceToBase < 6400 then
+                    if cdr.DistanceToHome < 6400 then
                         local targetPos = target:GetPosition()
                         local zx = cdr.Position[1] - targetPos[1]
                         local zz = cdr.Position[3] - targetPos[3]
                         local targetDistance = zx * zx + zz * zz
                         local unitRange = StateUtils.GetUnitMaxWeaponRange(target, 'Direct Fire') or 0
                         local riskRange = unitRange * unitRange + 400
-                        if acuDistanceToBase > 225 and highThreatCount and highThreatCount > 130 and unitRange > cdr.WeaponRange then
+                        if cdr.DistanceToHome > 225 and highThreatCount and highThreatCount > 130 and unitRange > cdr.WeaponRange then
                             --LOG('ACU is more than 15 from base, we are going to retreat from a high range unit')
                             self:LogDebug(string.format('High unit threat at target and it outranges the acu, target was '..tostring(target.UnitId)))
                             self:LogDebug(string.format('Its range is '..tostring(unitRange)..' our range is '..tostring(cdr.WeaponRange)))
                             self:ChangeState(self.Retreating)
                             return
-                        elseif targetDistance < riskRange and acuDistanceToBase < 225 and highThreatCount and highThreatCount > 130 and unitRange > cdr.WeaponRange and target:GetHealth() > 6000 then
+                        elseif targetDistance < riskRange and cdr.DistanceToHome < 225 and highThreatCount and highThreatCount > 130 and unitRange > cdr.WeaponRange and target:GetHealth() > 6000 then
                             --LOG('Unit is less than its risk range, acu is going to try and lerp away from it')
                             local movePos = RUtils.lerpy(cdr.Position, target:GetPosition(), {riskRange, riskRange + 15})
                             --LOG('Move pos is '..tostring(movePos[1])..':'..tostring(movePos[3]))
@@ -825,7 +829,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 self:LogDebug(string.format('We are at base and want to perform an engineering task'))
                 self:ChangeState(self.EngineerTask)
                 return
-            elseif not cdr.SuicideMode and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 and cdr.Phase > 2 then
+            elseif not cdr.SuicideMode and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 and cdr.Phase > 2 and brain:GetCurrentUnits(categories.TECH3 * categories.STRUCTURE * categories.FACTORY) > 0 then
                 self:LogDebug(string.format('Phase 3 and we are not close to base, retreating back'))
                 self:ChangeState(self.Retreating)
                 return
@@ -1887,7 +1891,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Navigating)
                 return
             end
-            if distanceToHome > (cdr.MaxBaseRange * cdr.MaxBaseRange) or cdr.Phase > 2 or brain.EnemyIntel.LandPhase > 2 then
+            if distanceToHome > (cdr.MaxBaseRange * cdr.MaxBaseRange) or cdr.Phase > 2 or brain.EnemyIntel.LandPhase > 2.5 then
                 baseRetreat = true
             end
             local threatLocations = brain:GetThreatsAroundPosition(cdr.Position, 16, true, 'AntiSurface')
@@ -2007,7 +2011,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             --RNGLOG('No platoon found, trying for base')
             local closestBase
             local closestBaseDistance
-            if cdr.Phase > 2 or brain.EnemyIntel.LandPhase > 2 then
+            if cdr.Phase > 2 or brain.EnemyIntel.LandPhase > 2.5 then
                 closestBase = 'MAIN'
             end
             if not closestBase and brain.BuilderManagers then

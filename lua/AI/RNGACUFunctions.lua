@@ -132,7 +132,7 @@ function CDRBrainThread(cdr)
                 cdr.GunUpgradeRequired = false
             end
         end
-        if aiBrain.EnemyIntel.LandPhase == 2 then
+        if aiBrain.EnemyIntel.LandPhase == 2 or aiBrain.EnemyIntel.LandPhase == 1.5 then
             cdr.Phase = 2
             if (not cdr.GunUpgradePresent) then
                 if not CDRGunCheck(cdr) then
@@ -146,7 +146,7 @@ function CDRBrainThread(cdr)
                 end
             end
         end
-        if cdr.Phase < 3 and (aiBrain.EnemyIntel.LandPhase == 3 or aiBrain.EnemyIntel.AirPhase == 3 or aiBrain.BrainIntel.LandPhase == 3 or aiBrain.BrainIntel.AirPhase == 3) then
+        if cdr.Phase < 3 and (aiBrain.EnemyIntel.LandPhase > 2.5 or aiBrain.EnemyIntel.AirPhase > 2.5 or aiBrain.BrainIntel.NavalPhase > 2.5) then
             --RNGLOG('Enemy is phase 3')
             cdr.Phase = 3
         end
@@ -177,7 +177,7 @@ function CDRBrainThread(cdr)
         if cdr.Active then
             if cdr.DistanceToHome > 900 and cdr.CurrentEnemyThreat > 0 then
                 if cdr.Confidence < 3.5 and (not cdr.SupportPlatoon or IsDestroyed(cdr.SupportPlatoon) and (gameTime - 15) > lastPlatoonCall) then
-                                        --LOG('Calling platoon, last call was '..tostring(lastPlatoonCall)..' game time is '..tostring(gameTime))
+                    --LOG('Calling platoon, last call was '..tostring(lastPlatoonCall)..' game time is '..tostring(gameTime))
                     --RNGLOG('CDR Support Platoon doesnt exist and I need it, calling platoon')
                     --RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
                     cdr.PlatoonHandle:LogDebug(string.format('ACU confidence low, CDRCallPlatoon'))
@@ -622,7 +622,7 @@ function CDRThreatAssessmentRNG(cdr)
             -- Example call
             calculateConfidence(aiBrain, cdr, friendlyUnitThreatInner, friendlyUnitThreat, enemyUnitThreatInner, (enemyUnitThreat + enemyAirThreat), cdr.DistanceToHome, enemyThreatRatio, weights)
 
-            --LOG('Current cdr confidence is '..tostring(cdr.Confidence))
+            
 
             if aiBrain.RNGEXP then
                 cdr.MaxBaseRange = 80
@@ -639,9 +639,12 @@ function CDRThreatAssessmentRNG(cdr)
                     end
                     cdr.MaxBaseRange = math.min(math.max(safetyCutOff, cdr.DefaultRange * cdr.Confidence), 385)
                 else
-                    cdr.MaxBaseRange = math.max(35, math.min(180, cdr.DefaultRange * cdr.Confidence))
+                    cdr.MaxBaseRange = math.max(35, math.min(256, cdr.DefaultRange * cdr.Confidence))
                 end
             end
+            --LOG('Current cdr confidence is '..tostring(cdr.Confidence))
+            --LOG('Max base range '..tostring(cdr.MaxBaseRange))
+            --LOG('Current distance to home '..tostring(cdr.DistanceToHome))
             if aiBrain.IntelManager then
                 local im = aiBrain.IntelManager
                 local gridX, gridZ = im:GetIntelGrid(cdr.Position)

@@ -753,6 +753,25 @@ IntelManager = Class {
     end,
 
     SelectZoneRNG = function(self, aiBrain, platoon, type, requireSameLabel)
+        local function GetAdjacencyThreatBonus(zone, zoneLayerSet, statusValueTable)
+            local bonus = 1
+            if zone.edges then
+                for _, adjId in zone.edges do
+                    local neighbor = zoneLayerSet[adjId.zone]
+                    if neighbor then
+                        local neighborStatus = aiBrain.GridPresence:GetInferredStatus(neighbor.pos)
+                        local statusVal = statusValueTable[neighborStatus] or 1
+                        if neighborStatus ~= 'Allied' then
+                            bonus = bonus + (0.25 * statusVal) -- scalable bonus based on how bad the neighbor is
+                        end
+                        if neighbor.enemystructurethreat > 0 or neighbor.enemylandthreat > 0 then
+                            bonus = bonus + 0.5 -- threat-based escalation
+                        end
+                    end
+                end
+            end
+            return bonus
+        end
         -- Tricky subject. Distance + threat + percentage of zones owned. If own a high value position do we pay more attention to the edges of that zone? 
         --A multiplier to adjacent edges if you would. We know how many and of what tier extractors we have in a zone. Actually getting an engineer to expand by zone would be interesting.
        --RNGLOG('RNGAI : Zone Selection Query Received for '..platoon.BuilderName)
@@ -910,6 +929,12 @@ IntelManager = Class {
                 elseif type == 'control' then
                     local compare = 0
                    --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
+                   local statusValueTable = {
+                    Allied = 0.75,        -- Lower urgency unless threatened
+                    Hostile = 2.0,        -- High urgency
+                    Contested = 1.5,      -- Medium-high urgency
+                    Unoccupied = 1.0      -- Moderate interest for expansion
+                   }
                     for k, v in zoneSet do
                         if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
                             if requireSameLabel and platoonLabel and v.label > 0 and platoonLabel ~= v.label then
@@ -932,10 +957,7 @@ IntelManager = Class {
                             if enemyModifier < 0 then
                                 enemyModifier = 0.5
                             end
-                            local controlValue = 1
-                            if status =='Allied' then
-                                controlValue = 0.25
-                            end
+                            local controlValue = statusValueTable[status] or 1
                             local resourceValue = v.resourcevalue or 1
                             if v.startpositionclose then
                                 startPos = 0.7
@@ -945,15 +967,18 @@ IntelManager = Class {
                                     enemyDanger = 0.4
                                 end
                             end
-                        --[[ if aiBrain.RNGDEBUG then
-                                if distanceModifier and resourceValue and controlValue and enemyModifier then
-                                    RNGLOG('distanceModifier '..distanceModifier)
-                                    RNGLOG('resourceValue '..resourceValue)
-                                    RNGLOG('controlValue '..controlValue)
-                                    RNGLOG('enemyModifier '..enemyModifier)
-                                end
-                            end]]
-                            compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger * v.teamvalue
+                            local adjacencyBonus = GetAdjacencyThreatBonus(v, zoneSet, statusValueTable)
+
+                            --LOG('distanceModifier '..tostring(distanceModifier))
+                            --LOG('resourceValue '..tostring(resourceValue))
+                            --LOG('controlValue '..tostring(controlValue))
+                            --LOG('enemyModifier '..tostring(enemyModifier))
+                            --LOG('startPos '..tostring(startPos))
+                            --LOG('v.teamvalue '..tostring(v.teamvalue))
+                            --LOG('adjacencyBonus '..tostring(adjacencyBonus))
+                            --LOG('position '..tostring(v.pos[1])..':'..tostring(v.pos[3]))
+
+                            compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * startPos * enemyDanger * v.teamvalue * adjacencyBonus
                             if aiBrain.RNGDEBUG and compare then
                                 --RNGLOG('Compare variable '..compare)
                             end
@@ -961,7 +986,7 @@ IntelManager = Class {
                                 if not selection or compare > selection then
                                     selection = compare
                                     zoneSelection = v.id
-                                --RNGLOG('Zone Control Query Select priority '..selection)
+                                    --LOG('Zone Control Query Select priority '..tostring(selection))
                                 end
                             end
                         end
@@ -990,13 +1015,11 @@ IntelManager = Class {
                                     if enemyModifier < 0 then
                                         enemyModifier = 0
                                     end
-                                    local controlValue = 1
-                                    if status == 'Allied' then
-                                        controlValue = 0.1
-                                    end
+                                    local controlValue = statusValueTable[status] or 1
                                     local resourceValue = v.resourcevalue or 1
+                                    local adjacencyBonus = GetAdjacencyThreatBonus(v, zoneSet, statusValueTable)
                                 --RNGLOG('Current platoon zone '..platoon.Zone..' Distance Calculation '..( 20000 / distanceModifier )..' Resource Value '..resourceValue..' Control Value '..controlValue..' position '..repr(v.pos)..' Enemy Modifier is '..enemyModifier)
-                                    compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * v.teamvalue
+                                    compare = ( 20000 / distanceModifier ) * resourceValue * controlValue * enemyModifier * v.teamvalue * adjacencyBonus
                                 --RNGLOG('Compare variable '..compare)
                                     if compare > 0 then
                                         if not selection or compare > selection then
@@ -3176,7 +3199,8 @@ IntelManager = Class {
                 local ap = data.Position
                 local dx = pos[1] - ap[1]
                 local dz = pos[3] - ap[3]
-                if dx*dx + dz*dz < rSq then
+                local distance = dx*dx + dz*dz
+                if distance < rSq then
                     table.insert(keysToRemove, k)
                 end
                 if data.Assigned and data.AssignedEngineer and not data.AssignedEngineer.Dead then
@@ -3887,6 +3911,29 @@ end
     info:   },
 ]]
 
+GetFactoryPhase = function(unitCats, unitObject)
+    if unitCats.TECH3 then 
+        return 3 
+    end
+    local isUpgrading = unitObject:IsUnitState('Upgrading')
+
+    if unitCats.TECH2 then 
+        if isUpgrading then
+            return 2.5
+        else
+            return 2 
+        end
+    end
+    if unitCats.TECH1 then
+        if isUpgrading then 
+            return 1.5
+        else
+            return 1
+        end
+    end
+    return 1
+end
+
 
 TacticalThreatAnalysisRNG = function(aiBrain)
 
@@ -4199,30 +4246,24 @@ TacticalThreatAnalysisRNG = function(aiBrain)
     end
 
     if not RNGTableEmpty(factoryUnits) then
+        local landPhase = 1
+        local airPhase = 1
+        local navalPhase = 1
         for k, unit in factoryUnits do
-            local isUpgradng = unit.Object:IsUnitState('Upgrading')
-            if aiBrain.EnemyIntel.AirPhase < 2 and unit.Object.Blueprint.CategoriesHash.AIR and 
-            (unit.Object.Blueprint.CategoriesHash.TECH2 or unit.Object.Blueprint.CategoriesHash.TECH1 and isUpgradng) then
-                aiBrain.EnemyIntel.AirPhase = 2
-            elseif aiBrain.EnemyIntel.AirPhase < 3 and unit.Object.Blueprint.CategoriesHash.AIR and 
-            (unit.Object.Blueprint.CategoriesHash.TECH3 or unit.Object.Blueprint.CategoriesHash.TECH2 and isUpgradng) then
-                aiBrain.EnemyIntel.AirPhase = 3
+            local unitCats = unit.Object.Blueprint.CategoriesHash
+            if unitCats.AIR then
+                airPhase = math.max(airPhase, GetFactoryPhase(unitCats, unit.Object))
             end
-            if aiBrain.EnemyIntel.LandPhase < 2 and unit.Object.Blueprint.CategoriesHash.LAND and 
-            (unit.Object.Blueprint.CategoriesHash.TECH2 or unit.Object.Blueprint.CategoriesHash.TECH1 and isUpgradng) then
-                aiBrain.EnemyIntel.LandPhase = 2
-            elseif aiBrain.EnemyIntel.LandPhase < 3 and unit.Object.Blueprint.CategoriesHash.LAND and 
-            (unit.Object.Blueprint.CategoriesHash.TECH3 or unit.Object.Blueprint.CategoriesHash.TECH2 and isUpgradng) then
-                aiBrain.EnemyIntel.LandPhase = 3
+            if unitCats.LAND then
+                landPhase = math.max(landPhase, GetFactoryPhase(unitCats, unit.Object))
             end
-            if aiBrain.EnemyIntel.NavalPhase < 2 and unit.Object.Blueprint.CategoriesHash.NAVAL and 
-            (unit.Object.Blueprint.CategoriesHash.TECH2 or unit.Object.Blueprint.CategoriesHash.TECH1 and isUpgradng) then
-                aiBrain.EnemyIntel.NavalPhase = 2
-            elseif aiBrain.EnemyIntel.NavalPhase < 3 and unit.Object.Blueprint.CategoriesHash.NAVAL and 
-            (unit.Object.Blueprint.CategoriesHash.TECH3 or unit.Object.Blueprint.CategoriesHash.TECH2 and isUpgradng) then
-                aiBrain.EnemyIntel.NavalPhase = 3
+            if unitCats.NAVAL then
+                navalPhase = math.max(navalPhase, GetFactoryPhase(unitCats, unit.Object))
             end
         end
+        aiBrain.EnemyIntel.AirPhase = math.max(aiBrain.EnemyIntel.AirPhase, airPhase)
+        aiBrain.EnemyIntel.LandPhase = math.max(aiBrain.EnemyIntel.LandPhase, landPhase)
+        aiBrain.EnemyIntel.NavalPhase = math.max(aiBrain.EnemyIntel.NavalPhase, navalPhase)
     end
     if aiBrain.EnemyIntel.AirPhase > 1 and aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface > 75 then
         --LOG('Enemy Air Snipe Threat high')
@@ -4306,9 +4347,7 @@ LastKnownThread = function(aiBrain)
                             if not v.zoneid and aiBrain.ZonesInitialized then
                                 if RUtils.PositionOnWater(unitPosition[1], unitPosition[3]) then
                                     -- tbd define water based zones
-                                    LOG('One of our mexes is in water')
                                     v.zoneid = MAP:GetZoneID(unitPosition,aiBrain.Zones.Naval.index)
-                                    LOG('Zoneid of mex is '..tostring(v.zoneid))
                                 else
                                     v.zoneid = MAP:GetZoneID(unitPosition,aiBrain.Zones.Land.index)
                                 end

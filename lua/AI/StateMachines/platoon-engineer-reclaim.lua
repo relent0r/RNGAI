@@ -807,6 +807,9 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                 end
                 MexBuild(eng, aiBrain)
             end
+            if IsDestroyed(self) then
+                return
+            end
             IssueClearCommands({eng})
             self.GenericReclaimLoop = self.GenericReclaimLoop + 1
             if self.GenericReclaimLoop == 5 then
@@ -863,8 +866,13 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                 if bUsedTransports then
                     --self:LogDebug(string.format('Used a transport'))
                     coroutine.yield(10)
-                    self:ChangeState(self.Constructing)
-                    return
+                    if eng.EngineerBuildQueue and table.getn(eng.EngineerBuildQueue) > 0 then
+                        self:ChangeState(self.Constructing)
+                        return
+                    else
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
                 elseif VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 512 * 512 then
                     -- If over 512 and no transports dont try and walk!
                     self:LogDebug(string.format('No transport available and distance is greater than 512, decide what to do'))
@@ -1076,13 +1084,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                     return
                 end
                 coroutine.yield(10)
-                --self:LogDebug(string.format('Set to constructing state'))
-                if builderData.ResetTaskData then
-                    --LOG('Engineer is going to try and set task data as it will not be set')
-                    self:ChangeState(self.SetTaskData)
-                    return
-                end
-                self:ChangeState(self.Constructing)
+                self:ChangeState(self.DecideWhatToDo)
                 return
             end
         end,
@@ -1158,6 +1160,93 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
         end,
     },
 
+    Constructing = State {
+
+        StateName = 'Constructing',
+
+        --- Check for reclaim or assist or expansion specific things based on distance from base.
+        ---@param self AIPlatoonEngineerBehavior
+        Main = function(self)
+            local eng = self.eng
+            local aiBrain = self:GetBrain()
+            --self:LogDebug(string.format('Current build queue length '..tostring(table.getn(eng.EngineerBuildQueue))))
+            if self.UsedTransports then
+                if eng.EngineerBuildQueue and RNGGETN(eng:GetCommandQueue()) == 0 and table.getn(eng.EngineerBuildQueue) > 0 then
+                    for k, v in eng.EngineerBuildQueue do
+                        if eng.EngineerBuildQueue[k][5] then
+                            IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
+                        else
+                            aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                        end
+                    end
+                end
+                self.UsedTransports = false
+            end
+            --LOG('Engineer build queue length is '..table.getn(eng.EngineerBuildQueue))
+            while not IsDestroyed(eng) and (0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving")) do
+                coroutine.yield(1)
+                --RNGLOG('MexBuildAI waiting for mex build completion')
+                local platPos = self:GetPlatoonPosition()
+                if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
+                    if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, platPos, 30, 'Enemy') > 0 then
+                        local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.MOBILE, platPos, 30, 'Enemy')
+                        if enemyUnits then
+                            local enemyUnitPos
+                            for _, unit in enemyUnits do
+                                enemyUnitPos = unit:GetPosition()
+                                if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, unit) then
+                                    if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                                        if VDist3Sq(platPos, enemyUnitPos) < 156 then
+                                            IssueClearCommands({eng})
+                                            IssueReclaim({eng}, unit)
+                                            coroutine.yield(60)
+                                            self:ChangeState(self.DecideWhatToDo)
+                                            return
+                                        end
+                                    end
+                                elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, unit) then
+                                    --RNGLOG('MexBuild found enemy unit, try avoid it')
+                                    if VDist3Sq(platPos, enemyUnitPos) < 156 and unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                                        --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
+                                        IssueClearCommands({eng})
+                                        IssueReclaim({eng}, unit)
+                                        coroutine.yield(60)
+                                        coroutine.yield(10)
+                                        self:ChangeState(self.DecideWhatToDo)
+                                        return
+                                    else
+                                        IssueClearCommands({eng})
+                                        IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, platPos, 50))
+                                        coroutine.yield(60)
+                                        coroutine.yield(10)
+                                        self:ChangeState(self.DecideWhatToDo)
+                                        return
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                coroutine.yield(20)
+            end
+            coroutine.yield(10)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
+    CompleteBuild = State {
+
+        StateName = 'CompleteBuild',
+
+        --- Check for reclaim or assist or expansion specific things based on distance from base.
+        ---@param self AIPlatoonEngineerBehavior
+        Main = function(self)
+            coroutine.yield(10)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
 
 }
 

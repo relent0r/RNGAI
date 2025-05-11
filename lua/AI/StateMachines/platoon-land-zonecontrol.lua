@@ -234,7 +234,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             Position = targetPlatoonPos,
                             CutOff = 400
                         }
-                        LOG('Navigating to closest base')
                         coroutine.yield(5)
                         self:ChangeState(self.Navigating)
                         return

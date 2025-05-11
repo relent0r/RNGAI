@@ -1938,6 +1938,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 self:ExitStateMachine()
+                return
             end
             if eng:IsIdleState() then
                 coroutine.yield(2)

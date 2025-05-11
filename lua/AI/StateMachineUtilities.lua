@@ -299,7 +299,7 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride, checkLayer
         dest=KiteDist(pos,tpos,(platoon['rngdata'].MaxPlatoonWeaponRange-3),0)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif maxPlatoonRangeOverride then
-        dest=KiteDist(pos,tpos,platoon['rngdata'].MaxPlatoonWeaponRange,healthmod)
+        dest=KiteDist(pos,tpos,platoon['rngdata'].MaxPlatoonWeaponRange,0)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif checkLayer then
         if unit['rngdata'].CategoryAntiNavyRange and (layer == 'Seabed' or layer == 'Sub')then
@@ -1576,9 +1576,6 @@ BuildAIDoneRNG = function(unit, params)
     if unit.CustomReclaim then return end
     if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
         table.remove(unit.EngineerBuildQueue, 1)
-    end
-    if unit.UnitBeingBuilt then
-        --LOG('Unit being built was Done'..tostring(unit.UnitBeingBuilt.UnitId))
     end
     if unit.UnitBeingBuilt then
         local locationType = unit.PlatoonHandle.PlatoonData.Construction.LocationType
