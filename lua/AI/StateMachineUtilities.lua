@@ -946,6 +946,9 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNu
         if aPlat == self then
             continue
         end
+        if aPlat.PlatoonName == 'ACUSupportBehavior' then
+            continue
+        end
         if aPlat.ExcludeFromMerge then
             continue
         end
@@ -2314,7 +2317,7 @@ function CheckDefenseClusters(aiBrain, position, platoonMaxWeaponRange, movement
     end
 end
 
-function GetBestPlatoonShieldPos(platoonUnits, shieldUnit, shieldPos, target)
+function GetBestPlatoonShieldPos(platoonUnits, shieldUnit, shieldPos, target, predefinedTargetPos)
     local bestPosition = nil
     local maxCoveredUnits = 0
     local shieldRadius = (shieldUnit.Blueprint.Defense.Shield.ShieldSize - 1 or 0) / 2
@@ -2325,7 +2328,7 @@ function GetBestPlatoonShieldPos(platoonUnits, shieldUnit, shieldPos, target)
     if shieldOffline then
         -- Logic for when the shield is offline
         local furthestDistanceSq = 0
-        local targetPos = target:GetPosition()
+        local targetPos = predefinedTargetPos or target:GetPosition()
         local targetWeaponRange = target['rngdata'].MaxWeaponRange or 0
 
         -- Iterate over platoon units to find the furthest ally unit from the enemy position

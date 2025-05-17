@@ -780,22 +780,25 @@ EngineerManager = Class(BuilderManager) {
                         end
                     end
                 end
-                local locationMobileSiloUnits = aiBrain.BasePerimeterMonitor[self.LocationType].EnemyMobileSiloDetected
-                if locationMobileSiloUnits  > 0 then
-                    --LOG('Request to build MML defense TMD')
-                    local basePos = aiBrain.BuilderManagers[self.LocationType].Position
-                    local numUnits = aiBrain:GetNumUnitsAroundPoint( categories.ANTIMISSILE * categories.TECH2, basePos, 65, 'Ally' )
-                    if math.ceil(math.max(locationMobileSiloUnits / 2.5, 4)) > numUnits then
-                        if not aiBrain.IntelManager:IsExistingStructureRequestPresent(basePos, 65, 'TMD') then
-                            aiBrain.IntelManager:RequestStructureNearPosition(basePos, 65, 'TMD')
-                            local tmdRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 120, 'TMD')
-                            if tmdRequestPos then
-                                local locationPlatoon = aiBrain:MakePlatoon('TMDPlatoon', 'StateMachineAIRNG')
-                                aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
-                                unit.PlatoonHandle = locationPlatoon
-                                locationPlatoon.PlanName = 'StateMachineAIRNG'
-                                import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'TMDBuild', Position = basePos, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
-                                return true
+                local baseZone = aiBrain.BuilderManagers[self.LocationType].Zone
+                if baseZone then
+                    local locationMobileSiloUnits = aiBrain.Zones.Land.zones[baseZone].enemySilos
+                    if locationMobileSiloUnits and locationMobileSiloUnits  > 0 then
+                        --LOG('Request to build MML defense TMD')
+                        local basePos = aiBrain.BuilderManagers[self.LocationType].Position
+                        local numUnits = aiBrain:GetNumUnitsAroundPoint( categories.ANTIMISSILE * categories.TECH2, basePos, 65, 'Ally' )
+                        if math.ceil(math.max(locationMobileSiloUnits / 2.5, 4)) > numUnits then
+                            if not aiBrain.IntelManager:IsExistingStructureRequestPresent(basePos, 65, 'TMD') then
+                                aiBrain.IntelManager:RequestStructureNearPosition(basePos, 65, 'TMD')
+                                local tmdRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 120, 'TMD')
+                                if tmdRequestPos then
+                                    local locationPlatoon = aiBrain:MakePlatoon('TMDPlatoon', 'StateMachineAIRNG')
+                                    aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
+                                    unit.PlatoonHandle = locationPlatoon
+                                    locationPlatoon.PlanName = 'StateMachineAIRNG'
+                                    import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'TMDBuild', Position = basePos, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
+                                    return true
+                                end
                             end
                         end
                     end

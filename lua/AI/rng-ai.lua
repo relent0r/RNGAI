@@ -3550,8 +3550,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 local enemySurfaceAirAngle
                 local enemyAirAngle
                 local enemyNavalAngle
-                local enemyMobileSilo = 0
-                local enemyMobileSiloAngle
                 local zoneThreatTable
                 local unitCat
                 local unitWeaponMaxRange = 20
@@ -3582,13 +3580,6 @@ AIBrain = Class(RNGAIBrainClass) {
                                     end
                                     if unit.Blueprint.Defense.AirThreatLevel then
                                         airThreat = airThreat + unit.Blueprint.Defense.AirThreatLevel
-                                    end
-                                    if unitCat.SILO then
-                                        enemyMobileSilo = enemyMobileSilo + 1
-                                        if not enemyMobileSiloAngle then
-                                            local unitPos = unit:GetPosition()
-                                            enemyMobileSiloAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
-                                        end
                                     end
                                     if landUnits == 1 then
                                         local unitPos = unit:GetPosition()
@@ -3629,11 +3620,6 @@ AIBrain = Class(RNGAIBrainClass) {
                                         local unitPos = unit:GetPosition()
                                         enemyNavalAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
                                     end
-                                    if unitCat.SILO and not enemyMobileSilo then
-                                        local unitPos = unit:GetPosition()
-                                        enemyMobileSilo = true
-                                        enemyMobileSiloAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
-                                    end
                                     continue
                                 end
                             elseif unitCat.STRUCTURE then
@@ -3656,13 +3642,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     if enemyLandAngle then
                         self.BasePerimeterMonitor[k].RecentLandAngle = enemyLandAngle
                         self.BasePerimeterMonitor[k].RecentLandDistance = enemyLandDistance
-                    end
-                    if enemyMobileSilo > 0 then
-                        self.BasePerimeterMonitor[k].EnemyMobileSiloDetected = enemyMobileSilo
-                        self.BasePerimeterMonitor[k].RecentMobileSiloAngle = enemyMobileSiloAngle
-                        --LOG('Recording enemyMobileAngle at base '..tostring(k)..' angle is '..tostring(self.BasePerimeterMonitor[k].RecentMobileSiloAngle))
-                    else
-                        self.BasePerimeterMonitor[k].EnemyMobileSiloDetected = false
                     end
                     self.BasePerimeterMonitor[k].AirUnits = airUnits
                     if enemySurfaceAirAngle then
@@ -4760,7 +4739,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                             end
                                         end
                                     elseif platoonType == 'SATELLITE' and platoonDPS then
-                                        if RUtils.HaveUnitVisual(self, v.Unit, true) and not RUtils.ShieldProtectingTargetRNG(self, v.Unit, nil) then
+                                        if RUtils.HaveUnitVisual(self, v.object, true) and not RUtils.ShieldProtectingTargetRNG(self, v.object, nil) then
                                             closestMex = v.object
                                             targetSelected = true
                                             break

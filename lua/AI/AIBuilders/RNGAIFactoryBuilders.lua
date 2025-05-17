@@ -1006,35 +1006,6 @@ BuilderGroup {
     },
 
     Builder {
-        BuilderName = 'RNG Factory Builder Sea T2 High Pri Naval',
-        PlatoonTemplate = 'EngineerStateT23RNG',
-        Priority = 0,
-        PriorityFunction = NavalAdjust,
-        DelayEqualBuildPlattons = {'Factories', 3},
-        BuilderConditions = {
-            { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.05 }},
-            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
-            --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Naval' } },
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * categories.TECH3 }},
-            { UCBC, 'UnitCapCheckLess', { .95 } },
-         },
-        BuilderType = 'Any',
-        BuilderData = {
-            StateMachine = 'EngineerBuilder',
-            JobType = 'BuildStructure',
-            Construction = {
-                LocationType = 'LocationType',
-                BuildStructures = {
-                    { Unit = 'T2SupportSeaFactory', Categories = categories.FACTORY * categories.NAVAL * categories.TECH2 * categories.SUPPORTFACTORY },
-                },
-            }
-        }
-    },
-    
-    Builder {
         BuilderName = 'RNG Factory Builder Sea T1 Marker',
         PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 700,

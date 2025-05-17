@@ -530,7 +530,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                 snipeAttempt = true
                             end
                             targetPosition = target:GetPosition()
-                            local enemyUnitThreat = GetThreatAroundTarget(self, aiBrain, targetPosition)
+                            local enemyUnitThreat = StateUtils.GetThreatAroundTarget(self, aiBrain, targetPosition)
                             --RNGLOG('EnemyUnitThreat '..enemyUnitThreat)
                             --RNGLOG('CurrentPlatoonThreat '..self.CurrentPlatoonThreat)
                             if enemyUnitThreat > self.CurrentPlatoonThreat then

@@ -1915,12 +1915,15 @@ function RequireTMDCheckRNG(aiBrain, locationType)
     if smInstance.TMDRequired then
         return true
     end
-    local locationMobileSiloUnits = aiBrain.BasePerimeterMonitor[locationType].EnemyMobileSiloDetected
-    if locationType ~= 'FLOATING' and locationMobileSiloUnits  > 0 then
-        local basePos = aiBrain.BuilderManagers[locationType].Position
-        local numUnits = aiBrain:GetNumUnitsAroundPoint( categories.ANTIMISSILE * categories.TECH2, basePos, 65, 'Ally' )
-        if math.ceil(math.max(locationMobileSiloUnits / 2.5, 4)) > numUnits then
-            return true
+    local baseZone = aiBrain.BuilderManagers[locationType].Zone
+    if baseZone then
+        local locationMobileSiloUnits = aiBrain.Zones.Land.zones[baseZone].enemySilos
+        if locationType ~= 'FLOATING' and locationMobileSiloUnits  > 0 then
+            local basePos = aiBrain.BuilderManagers[locationType].Position
+            local numUnits = aiBrain:GetNumUnitsAroundPoint( categories.ANTIMISSILE * categories.TECH2, basePos, 65, 'Ally' )
+            if math.ceil(math.max(locationMobileSiloUnits / 2.5, 4)) > numUnits then
+                return true
+            end
         end
     end
     return false

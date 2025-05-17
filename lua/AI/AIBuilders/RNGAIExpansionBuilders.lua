@@ -119,7 +119,7 @@ BuilderGroup {
                 ExpansionBase = true,
                 ZoneExpansion = true,
                 NearMarkerType = 'Zone Expansion',
-                ExpansionRadius = 120, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
+                ExpansionRadius = 90, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
                 LocationRadius = 1000,
                 LocationType = 'LocationType',
                 BuildStructures = {                    
@@ -151,7 +151,7 @@ BuilderGroup {
                 ExpansionBase = true,
                 ZoneExpansion = true,
                 NearMarkerType = 'Zone Expansion',
-                ExpansionRadius = 120, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
+                ExpansionRadius = 90, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
                 LocationRadius = 1000,
                 LocationType = 'LocationType',
                 BuildStructures = {                    

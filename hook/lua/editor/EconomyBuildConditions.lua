@@ -582,13 +582,6 @@ function FactorySpendRatioRNG(aiBrain,uType,upgradeType, noStorageCheck, demandB
             end
         end
     end
-    --[[
-    if uType == 'Land' then
-        LOG('Land factory spend is returning false so not enough funding')
-        LOG('Current spend ration is '..tostring(currentFactorySpend / ( aiBrain.cmanager.income.r.m - mexSpend ) < aiBrain.ProductionRatios[uType]))
-        LOG('Ratio without mex spend is  '..tostring(currentFactorySpend / ( aiBrain.cmanager.income.r.m ) < aiBrain.ProductionRatios[uType]))
-        LOG('Production ratio is '..tostring(aiBrain.ProductionRatios[uType]))
-    end]]
     return false
 end
 

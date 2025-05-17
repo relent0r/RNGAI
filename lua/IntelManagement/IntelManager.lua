@@ -2,6 +2,7 @@ local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local MarkerUtils = import("/lua/sim/MarkerUtilities.lua")
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
@@ -1447,7 +1448,7 @@ IntelManager = Class {
         coroutine.yield(300)
         local aiBrain = self.Brain
         while aiBrain.Status ~= "Defeat" do
-            coroutine.yield(45)
+            coroutine.yield(35)
             self:ForkThread(self.AdaptiveProductionThread, 'AirAntiSurface',{ MaxThreat = 20})
             coroutine.yield(1)
             self:ForkThread(self.AdaptiveProductionThread, 'DefensiveAntiSurface')
@@ -1467,6 +1468,8 @@ IntelManager = Class {
             self:ForkThread(self.AdaptiveProductionThread, 'NavalAntiSurface')
             coroutine.yield(1)
             self:ForkThread(self.AdaptiveProductionThread, 'EngineerBuildPower')
+            coroutine.yield(1)
+            self:ForkThread(self.AdaptiveProductionThread, 'TacticalMissileDefense')
         end
     end,
 
@@ -3045,6 +3048,42 @@ IntelManager = Class {
                     aiBrain.amanager.Demand.Bases['MAIN'].Engineer.T3.sacueng = 0
                 end
             end
+        elseif productiontype == 'TacticalMissileDefense' then
+            local silos = {}
+            for i=self.MapIntelGridXMin, self.MapIntelGridXMax do
+                for k=self.MapIntelGridZMin, self.MapIntelGridZMax do
+                    if not RNGTableEmpty(self.MapIntelGrid[i][k].EnemyUnits) then
+                        for k, v in self.MapIntelGrid[i][k].EnemyUnits do
+                            if v.type == 'silo' and v.object and not v.object.Dead then
+                                local unitMissileRange = StateUtils.GetUnitMaxWeaponRange(v.object)
+                                local rangeTrigger = math.max(120, unitMissileRange)
+                                table.insert(silos, {unitPos = v.object:GetPosition(), range = rangeTrigger})
+                            end
+                        end
+                    end
+                end
+            end
+            local landZones = aiBrain.Zones.Land.zones
+            for _, zone in landZones do
+                local enemySilos = 0
+                local enemySiloAngle
+                for _, s in silos do
+                    local unitRange = (s.range * s.range) + 900
+                    local sx = s.unitPos[1] - zone.pos[1]
+                    local sz = s.unitPos[3] - zone.pos[3]
+                    local posDist = sx * sx + sz * sz
+                    if posDist < unitRange then
+                        enemySilos = enemySilos + 1
+                        if not enemySiloAngle then
+                            enemySiloAngle = RUtils.GetAngleToPosition(zone.pos, s.unitPos)
+                        end
+                    end
+                end
+                zone.enemySilos = enemySilos
+                if enemySiloAngle then
+                    zone.enemySiloAngle = enemySiloAngle
+                end
+            end
         end
     end,
 
@@ -4353,7 +4392,7 @@ LastKnownThread = function(aiBrain)
                                 end
                             end
                             if not enemyMexes[v.zoneid] then
-                                enemyMexes[v.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
+                                enemyMexes[v.zoneid] = {T1 = 0, T2 = 0, T3 = 0}
                             end
                             if unitCat.TECH1 then
                                 enemyMexes[v.zoneid].T1 = enemyMexes[v.zoneid].T1 + 1
@@ -4369,8 +4408,7 @@ LastKnownThread = function(aiBrain)
                                 if unitCat.MOBILE then
                                     if unitCat.COMMAND then
                                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='acu'
-                                    end
-                                    if unitCat.LAND then
+                                    elseif unitCat.LAND then
                                         if unitCat.ENGINEER and not unitCat.COMMAND then
                                             if v.Army and v.Blueprint.Economy.BuildRate then
                                                 local buildPower = v.Blueprint.Economy.BuildRate
@@ -4390,8 +4428,10 @@ LastKnownThread = function(aiBrain)
                                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='aa'
                                         elseif unitCat.DIRECTFIRE then
                                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tank'
-                                        elseif unitCat.INDIRECTFIRE then
+                                        elseif unitCat.INDIRECTFIRE and unitCat.ARTILLERY then
                                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='arty'
+                                        elseif unitCat.INDIRECTFIRE and unitCat.SILO then
+                                            im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='silo'
                                         end
                                     elseif unitCat.AIR then
                                         if unitCat.EXPERIMENTAL then

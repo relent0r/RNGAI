@@ -490,19 +490,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                         totalTech3BuilderRate = totalTech3BuilderRate + (bp.Economy.BuildRate * buildMultiplier)
                         table.insert(tech3Engineers, eng)
                     end
-                    --[[
-                    if eng:IsIdleState() then
-                        LOG('Engineer in assist manager is idle id '..tostring(eng.UnitId))
-                        if eng.UnitBeingAssist then
-                            LOG('Eng has unit being assist, id is '..tostring(eng.UnitBeingAssist.UnitId))
-                            if not IsDestroyed(eng.UnitBeingAssist) then
-                                LOG('Eng has unit being assist, completion is '..tostring(eng.UnitBeingAssist:GetFractionComplete()))
-                            end
-                            if eng.AIPlatoonReference then
-                                LOG('This is a state machine engineer')
-                            end
-                        end
-                    end]]
                     totalBuildRate = totalBuildRate + (bp.Economy.BuildRate * buildMultiplier)
                     eng.Active = true
                     platoonCount = platoonCount + 1
@@ -578,14 +565,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                     --LOG('We have Completed Removing Engineers to allow space for T3, build power is '..tostring(aiBrain.EngineerAssistManagerBuildPower))
                 end
             end
-            --[[
-            if debugIdleEng then
-                LOG('Current Priority types')
-                for k, assistData in aiBrain.EngineerAssistManagerPriorityTable do
-                    LOG(tostring(assistData.debug))
-                end
-            end
-            ]]
 
             aiBrain.EngineerAssistManagerEngineerCount = platoonCount
             if aiBrain.EngineerAssistManagerBuildPower <= 0 then

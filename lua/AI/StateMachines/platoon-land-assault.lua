@@ -280,10 +280,11 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
         --- The platoon will stay out of range of a group of enemy units but not retreat
         ---@param self AIPlatoonLandAssaultBehavior
         Main = function(self)
-            local function GetRolePosition(unit, platoonCenter, fallbackPos, destPos, platoonNum, units)
+            local function GetRolePosition(unit, platoonCenter, fallbackPos, destPos, platoonNum, units, lastKnownEnemyPosition)
                 local weaponRange = unit['rngdata'].MaxWeaponRange or 30
                 local offset = math.sqrt(platoonNum)
                 local role = unit['rngdata'].Role or 'Default'
+                local unitPos = unit:GetPosition()
             
                 if role == 'Scout' then
                     return platoonCenter
@@ -292,11 +293,11 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 elseif role == 'Support' then
                     return RUtils.lerpy(platoonCenter, destPos or fallbackPos, {VDist3(destPos or fallbackPos, platoonCenter), weaponRange / 5 + offset})
                 elseif role == 'Shield' then
-                    local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, unit, unitPos, target)
+                    local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, unit, unitPos, nil, lastKnownEnemyPosition)
                     if not shieldPos then
                         local closestTargetDist = VDist3(platoonCenter, targetPos)
                         local standoff = closestTargetDist - (unit['rngdata'].MaxDirectFireRange or weaponRange) + 4
-                        shieldPos = RUtils.lerpy(unit:GetPosition(), targetPos, {closestTargetDist, standoff})
+                        shieldPos = RUtils.lerpy(unitPos, targetPos, {closestTargetDist, standoff})
                     end
                     return shieldPos
                 else
@@ -383,7 +384,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                                     end
                                 end
                         
-                                local roleMovePos = GetRolePosition(v, self.Pos, self.Home, bestPlatoonPos, platoonNum, platoonUnits)
+                                local roleMovePos = GetRolePosition(v, self.Pos, self.Home, bestPlatoonPos, platoonNum, platoonUnits, lastKnownEnemyPosition)
                                 if VDist3Sq(unitPos, roleMovePos) > 9 then
                                     StateUtils.IssueNavigationMove(v, roleMovePos)
                                 end

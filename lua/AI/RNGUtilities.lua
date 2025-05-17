@@ -3,7 +3,7 @@ local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local MarkerUtils = import("/lua/sim/MarkerUtilities.lua")
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
---local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local Utils = import('/lua/utilities.lua')
@@ -3895,10 +3895,11 @@ GetDefensivePointRNG = function(aiBrain, baseLocation, pointTier, type)
         local bestPoint = false
         local bestIndex = false
         if not RNGTableEmpty(aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier]) then
-            if aiBrain.BasePerimeterMonitor[baseLocation].RecentMobileSiloAngle then
-                --LOG('MobileSilo recent angle '..tostring(aiBrain.BasePerimeterMonitor[baseLocation].RecentMobileSiloAngle))
+            local baseZone = aiBrain.BuilderManagers[baseLocation].Zone
+            if baseZone and aiBrain.Zones.Land.zones[baseZone].enemySiloAngle then
+                --LOG('MobileSilo recent angle '..tostring(aiBrain.Zones.Land.zones[baseZone].enemySiloAngle))
                 --LOG('Point Tier '..tostring(pointTier))
-                local pointCheck = aiBrain.BasePerimeterMonitor[baseLocation].RecentMobileSiloAngle
+                local pointCheck = aiBrain.Zones.Land.zones[baseZone].enemySiloAngle
                 for _, v in aiBrain.BuilderManagers[baseLocation].DefensivePoints[pointTier] do
                     local pointAngle = GetAngleToPosition(basePosition, v.Position)
                     if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
@@ -6394,7 +6395,7 @@ function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
     end
 end
 
-function GetTMDPosition(aiBrain, eng, locationType)
+function GetTMDPosition(aiBrain, eng)
     local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
     local smInstance = StructureManagerRNG.GetStructureManager(aiBrain)
     local structureTable = table.copy(smInstance.StructuresRequiringTMD)
@@ -6412,52 +6413,88 @@ function GetTMDPosition(aiBrain, eng, locationType)
             --LOG('Unit that needs protecting '..v.UnitId)
             --LOG('Entity '..v.EntityId)
             if not v.Unit.Dead then
-                if not v.Unit['rngdata'].TMDInRange and v.Unit['rngdata'].TMLInRange then
+                if not v.Unit['rngdata'].TMDInRange then
                     --LOG('No TMD table but tml in range')
-                    local tmlCount = 0
-                    for _, c in v.Unit['rngdata'].TMLInRange do
-                        if not c.Dead then
-                            tmlCount = tmlCount + 1
+                    local siloCount = 0
+                    if v.Unit['rngdata'].TMLInRange then
+                        for _, c in v.Unit['rngdata'].TMLInRange do
+                            if not c.Dead then
+                                siloCount = siloCount + 1
+                            end
                         end
-                    end
-                    tmdRequired = math.ceil(tmlCount / 2)
-                    --LOG('We need this many TMD '..tostring(tmdRequired)..' for '..tostring(aiBrain.Nickname))
-                    for _, c in v.Unit['rngdata'].TMLInRange do
-                        if not c.Dead then
-                            --LOG('CalculateTMDPositions for unit '..v.Unit.UnitId)
-                            local buildPos = CalculateTMDPositions(aiBrain, v.Unit, c)
-                            if buildPos then
-                                table.insert(buildPositions, {Position = buildPos, Count = tmdRequired})
-                                tmdPosFound = true
-                                break
+                        tmdRequired = math.ceil(siloCount / 2)
+                        --LOG('We need this many TMD '..tostring(tmdRequired)..' for '..tostring(aiBrain.Nickname))
+                        for _, c in v.Unit['rngdata'].TMLInRange do
+                            if not c.Dead then
+                                --LOG('CalculateTMDPositionFromTML for unit '..v.Unit.UnitId)
+                                local buildPos = CalculateTMDPositionFromTML(aiBrain, v.Unit, c)
+                                if buildPos then
+                                    table.insert(buildPositions, {Position = buildPos, Count = tmdRequired})
+                                    tmdPosFound = true
+                                    break
+                                end
                             end
                         end
                     end
-                elseif v.Unit['rngdata'].TMDInRange and v.Unit['rngdata'].TMLInRange then
-                    --LOG('TMD table and tml in range')
-                    local tmlCount = 0
-                    for _, c in v.Unit['rngdata'].TMLInRange do
-                        if not c.Dead then
-                            tmlCount = tmlCount + 1
+                    if not tmdPosFound then
+                        local zoneId = MAP:GetZoneID(v.Unit:GetPosition(), aiBrain.Zones.Land.index)
+                        local currentZoneSiloCount = aiBrain.Zones.Land.zones[zoneId].enemySilos
+                        local currentZoneSiloAngle = aiBrain.Zones.Land.zones[zoneId].enemySiloAngle
+                        if currentZoneSiloCount and currentZoneSiloCount > 0 then
+                            siloCount = siloCount + currentZoneSiloCount
+                            tmdRequired = math.ceil(siloCount / 2)
+                            if tmdCount < tmdRequired then
+                                local buildPos = CalculateTMDPosition(aiBrain, v.Unit, currentZoneSiloAngle)
+                                if buildPos then
+                                    table.insert(buildPositions, {Position = buildPos, Count = tmdRequired})
+                                    tmdPosFound = true
+                                end
+                            end
                         end
                     end
-                    tmdRequired = math.ceil(tmlCount / 2)
-                    --LOG('We need this many TMD '..tostring(tmdRequired)..' for '..tostring(aiBrain.Nickname))
+                elseif v.Unit['rngdata'].TMDInRange then
+                    --LOG('TMD table and tml in range')
+                    local siloCount = 0
                     local tmdCount = 0
                     for _, c in v.Unit['rngdata'].TMDInRange do
                         if not c.Dead then
                             tmdCount = tmdCount + 1
                         end
                     end
-                    --LOG('We have this many tmd now '..tostring(tmdCount))
-                    if tmdCount < tmdRequired then
-                        for c, b in v.Unit['rngdata'].TMLInRange do
-                            if not b.Dead then
-                                local buildPos = CalculateTMDPositions(aiBrain, v.Unit, b)
+                    if v.Unit['rngdata'].TMLInRange then
+                        for _, c in v.Unit['rngdata'].TMLInRange do
+                            if not c.Dead then
+                                siloCount = siloCount + 1
+                            end
+                        end
+                        tmdRequired = math.ceil(siloCount / 2)
+                        --LOG('We need this many TMD '..tostring(tmdRequired)..' for '..tostring(aiBrain.Nickname))
+                        --LOG('We have this many tmd now '..tostring(tmdCount))
+                        if tmdCount < tmdRequired then
+                            for c, b in v.Unit['rngdata'].TMLInRange do
+                                if not b.Dead then
+                                    local buildPos = CalculateTMDPositionFromTML(aiBrain, v.Unit, b)
+                                    if buildPos then
+                                        table.insert(buildPositions, {Position = buildPos, Count = tmdRequired})
+                                        tmdPosFound = true
+                                        break
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    if not tmdPosFound then
+                        local zoneId = MAP:GetZoneID(v.Unit:GetPosition(), aiBrain.Zones.Land.index)
+                        local currentZoneSiloCount = aiBrain.Zones.Land.zones[zoneId].enemySilos
+                        local currentZoneSiloAngle = aiBrain.Zones.Land.zones[zoneId].enemySiloAngle
+                        if currentZoneSiloCount and currentZoneSiloCount > 0 then
+                            siloCount = siloCount + currentZoneSiloCount
+                            tmdRequired = math.ceil(siloCount / 2)
+                            if tmdCount < tmdRequired then
+                                local buildPos = CalculateTMDPosition(aiBrain, v.Unit, currentZoneSiloAngle)
                                 if buildPos then
                                     table.insert(buildPositions, {Position = buildPos, Count = tmdRequired})
                                     tmdPosFound = true
-                                    break
                                 end
                             end
                         end
@@ -6474,67 +6511,120 @@ function GetTMDPosition(aiBrain, eng, locationType)
     end
 end
 
-function CalculateTMDPositions(aiBrain, structure, tml)
-    --LOG('CalculateTMDPositions for unit'..structure.UnitId)
+function CalculateTMDPositionFromTML(aiBrain, structure, tml)
     local structurePos = structure:GetPosition()
     local tmlPos = tml:GetPosition()
     local tmlAngle = GetAngleToPosition(structurePos, tmlPos)
     local smInstance = aiBrain.StructureManager
-    local tmdDistance = 10 -- Adjust this value based on your game's scale
+    local tmdDistance = 10
     local tmdSearchRadius = 15
-    --LOG('Calculating build position , structurePos is '..repr(structurePos))
+
     if not smInstance then
-        WARN('AI-RNG : Structure Manager not found in CalculateTMDPositions')
+        WARN('AI-RNG : Structure Manager not found in CalculateTMDPositionFromTML')
+        return nil
     end
 
-    local unitsToProtect = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE - categories.WALL, structurePos, tmdSearchRadius, 'Ally')  -- Adjust the radius as needed
+    local unitsToProtect = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE - categories.WALL, structurePos, tmdSearchRadius, 'Ally')
     local closestUnitDistance
     local bestTMDPos
-    --LOG('CalculateTMDPositions origin position is '..tostring(repr(structurePos)))
-    --LOG('Trying to calculate TMD position, number of units to protect '..tostring(table.getn(unitsToProtect)))
-    
+
     for _, unit in unitsToProtect do
-        if not smInstance:StructureTMLCheck(unit, tml) then
+        if not smInstance:StructureSiloCheck(unit, tml) then
             local unitPos = unit:GetPosition()
-            --LOG('Unit Pos is '..tostring(repr(unitPos)))
             local tx = unitPos[1] - tmlPos[1]
             local tz = unitPos[3] - tmlPos[3]
             local tmlDistance = tx * tx + tz * tz
+
             if not closestUnitDistance or tmlDistance < closestUnitDistance then
-                --LOG('Have closestUnitDistance for structure')
-                local testBuildPos = GetPositionTowardsAngle(unitPos, tmlAngle, tmdDistance)
-                --LOG('Checking buildPos of '..repr(testBuildPos))
+                -- Add random angle offset ±15 degrees
+                local angleOffset = (math.random() * 30) - 15
+                local adjustedAngle = tmlAngle + angleOffset
+
+                -- Randomize tmdDistance a bit to spread TMDs
+                local adjustedDistance = tmdDistance + math.random(-2, 4)
+
+                local testBuildPos = GetPositionTowardsAngle(unitPos, adjustedAngle, adjustedDistance)
+
                 if CanBuildStructureAt(aiBrain, 'ueb4201', testBuildPos) then
-                    --LOG('We can build there')
                     closestUnitDistance = tmlDistance
                     bestTMDPos = testBuildPos
                 else
-                    -- if we can't build a structure there we will look around a little bit
+                    -- Try nearby positions
                     local lookAroundTable = {1,-1,2,-2,3,-3,4,-4}
-                    --LOG('We are trying to look for another build position for TMD')
-                    for ix, offsetX in lookAroundTable do
-                        for iz, offsetZ in lookAroundTable do
-                            local lookAroundPos = {testBuildPos[1]+offsetZ, GetSurfaceHeight(testBuildPos[1]+offsetX, testBuildPos[3]+offsetZ), testBuildPos[3]+offsetX}
-                            -- is it lower land... make it our new position to continue searching around
-                            if CanBuildStructureAt(aiBrain, 'ueb4201', lookAroundPos) then
+                    for _, offsetX in lookAroundTable do
+                        for _, offsetZ in lookAroundTable do
+                            local altPos = {
+                                testBuildPos[1] + offsetX,
+                                GetSurfaceHeight(testBuildPos[1] + offsetX, testBuildPos[3] + offsetZ),
+                                testBuildPos[3] + offsetZ
+                            }
+                            if CanBuildStructureAt(aiBrain, 'ueb4201', altPos) then
                                 closestUnitDistance = tmlDistance
-                                bestTMDPos = testBuildPos
-                                --LOG('We found an alternative build position for TMD')
+                                bestTMDPos = altPos
                                 break
                             end
                         end
                     end
                 end
             end
-        else
-            --LOG('StructureTMLCheck returned true')
         end
+
         if bestTMDPos then
             break
         end
     end
-    --LOG('Returning best build pos of '..repr(bestTMDPos))
+
     return bestTMDPos
+end
+
+local function IsFarEnoughFromExistingTMD(aiBrain, pos, minDistance)
+    local existingTMDs = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.TECH2 * categories.ANTIMISSILE, pos, 30, 'Ally')
+    for _, tmd in existingTMDs do
+        local tmdPos = tmd:GetPosition()
+        if VDist2Sq(pos[1], pos[3], tmdPos[1], tmdPos[3]) < minDistance * minDistance then
+            return false
+        end
+    end
+    return true
+end
+
+function CalculateTMDPosition(aiBrain, structure, siloAngle)
+    local structurePos = structure:GetPosition()
+    local smInstance = aiBrain.StructureManager
+    local baseRadius = 8           -- minimum distance from protected unit
+    local maxRadius = 18           -- maximum search distance
+    local stepRadius = 2           -- how much to increment outwards
+    local angularSpread = math.pi / 3 -- 60 degrees total spread
+    local angleStep = math.pi / 12    -- 15 degree steps
+    local minTMDSpacing = 4      -- minimum distance from other TMDs
+
+    if not smInstance then
+        WARN('AI-RNG : Structure Manager not found in CalculateTMDPosition')
+        return nil
+    end
+
+    local unitsToProtect = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE - categories.WALL, structurePos, 15, 'Ally')
+
+    for _, unit in unitsToProtect do
+        if not smInstance:StructureSiloCheck(unit) then
+            local unitPos = unit:GetPosition()
+
+            for radius = baseRadius, maxRadius, stepRadius do
+                for angleOffset = -angularSpread / 2, angularSpread / 2, angleStep do
+                    local angle = siloAngle + angleOffset
+                    local x = unitPos[1] + radius * math.cos(angle)
+                    local z = unitPos[3] + radius * math.sin(angle)
+                    local y = GetSurfaceHeight(x, z)
+                    local testPos = {x, y, z}
+
+                    if CanBuildStructureAt(aiBrain, 'ueb4201', testPos) and IsFarEnoughFromExistingTMD(aiBrain, testPos, minTMDSpacing) then
+                        return testPos
+                    end
+                end
+            end
+        end
+    end
+    return nil
 end
 
 ---@param self FactoryBuilderManager

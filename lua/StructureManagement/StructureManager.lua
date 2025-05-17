@@ -1,5 +1,6 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
@@ -1552,10 +1553,12 @@ StructureManager = Class {
         end
     end,
 
-    StructureTMLCheck = function(self, structure, optionalUnit)
+    StructureSiloCheck = function(self, structure, optionalUnit)
         local defended = true
         local TMLInRange = 0
         local TMDCount = 0
+        local structurePos = structure:GetPosition()
+        local structureZones = self.Brain.Zones.Land
         if not structure['rngdata'] then
             structure['rngdata'] = {}
         end
@@ -1565,6 +1568,25 @@ StructureManager = Class {
         end
         if not structureData['TMDInRange'] then
             structureData['TMDInRange'] = setmetatable({}, WeakValueTable)
+        end
+        if structure and not optionalUnit then
+            local zoneId = MAP:GetZoneID(structurePos, structureZones.index)
+            local currentZone = structureZones.zones[zoneId]
+            if currentZone.enemySilos and currentZone.enemySilos > 0 then
+                if not structureData.TMDInRange then
+                    defended = false
+                else
+                    for _, c in structureData.TMDInRange do
+                        if not c.Dead then
+                            TMDCount = TMDCount + 1
+                        end
+                    end
+                    if (math.ceil(currentZone.enemySilos / 2)) > TMDCount then
+                        --LOG('More TML than TMD, TML count is '..tostring(TMLInRange)..' TMD Count '..tostring(TMDCount))
+                        defended = false
+                    end
+                end
+            end
         end
         if structureData.TMLInRange and not table.empty(structureData.TMLInRange) then
             for k, v in pairs(structureData.TMLInRange) do
@@ -1592,7 +1614,6 @@ StructureManager = Class {
             local tmlTable = self.Brain.EnemyIntel.TML
             if tmlTable[optionalUnit.EntityId] and tmlTable[optionalUnit.EntityId].object and not tmlTable[optionalUnit.EntityId].object.Dead then
                 local tmlPos = tmlTable[optionalUnit.EntityId].object:GetPosition()
-                local structurePos = structure:GetPosition()
                 if tmlPos[1] and structurePos[1] then
                     local dx = tmlPos[1] - structurePos[1]
                     local dz = tmlPos[3] - structurePos[3]
@@ -1895,7 +1916,7 @@ StructureManager = Class {
             local tmdRequired = {}
             local shieldRequired = {}
             for _, v in structures do
-                local isTMDDefended = self:StructureTMLCheck(v)
+                local isTMDDefended = self:StructureSiloCheck(v)
                 if not isTMDDefended then
                     RNGINSERT(tmdRequired, {Unit = v, Assigned = false, AssignedEngineer = nil})
                 end
@@ -1903,6 +1924,7 @@ StructureManager = Class {
                 if not isShieldDefended then
                     RNGINSERT(shieldRequired, v)
                 end
+                coroutine.yield(1)
             end
             if not table.empty(tmdRequired) then
                 --LOG('Set TMD Required on structure manager for ai '..tostring(self.Brain.Nickname))

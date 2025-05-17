@@ -121,12 +121,11 @@ function CDRBrainThread(cdr)
         if not cdr['rngdata']['HasGunUpgrade'] and gameTime < 1500 then
             local enemyGunPresent = false
             for k, v in aiBrain.EnemyIntel.ACU do
-                if v['rngdata']['HasGunUpgrade'] or v['rngdata']['IsUpgradingGun'] then
+                if v.Unit['rngdata']['HasGunUpgrade'] or v.Unit['rngdata']['IsUpgradingGun'] then
                     enemyGunPresent = true
                 end
             end
             if enemyGunPresent and not CDRGunCheck(cdr) then
-                --RNGLOG('ACU Requires Gun set upgrade flag to true')
                 cdr.GunUpgradeRequired = true
             else
                 cdr.GunUpgradeRequired = false

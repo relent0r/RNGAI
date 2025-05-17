@@ -1208,11 +1208,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.AssistEngineers)
                         return
                     elseif builderData.Construction then
-                        --LOG('ACU is trying to run structure builder '..tostring(builder.BuilderName))
-                        --LOG('Item '..tostring(builderData.Construction.BuildStructures[1]))
-                        --if not builderData.Construction.BuildStructures[1] then
-                        --    LOG('This thing is what? '..tostring(builderData.Task))
-                        --end
                         self.BuilderData = builderData
                         self:ChangeState(self.StructureBuild)
                         return

@@ -770,7 +770,7 @@ BuilderGroup {
         InstanceCount = 3,
         BuilderConditions = {  
                 { MIBC, 'LessThanGameTime', { 210 } },
-                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.SCOUT } },
+                { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL - categories.SCOUT } },
             },
         BuilderType = 'Any',
         BuilderData = {
