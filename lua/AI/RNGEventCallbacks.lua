@@ -314,6 +314,9 @@ function MissileCallbackRNG(unit, targetPos, impactPos)
         if impactX == targetPosX and impactZ == targetPosZ then
             return false, "We hit the same terrain pos as the target, likely it died after the missile fired"
         end
+        if targetPosX ~= targetPosX or targetPosZ ~= targetPosZ then
+            return false, "targetPos contains NaN, skipping blacklist"
+        end
         unit.TargetBlackList[targetPosX] = {}
         unit.TargetBlackList[targetPosX][targetPosZ] = true
         return true, "target position added to tml blacklist"

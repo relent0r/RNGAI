@@ -4531,6 +4531,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
+        local shieldedUnits = {}
         
 
         if not potentialTarget then
@@ -4548,7 +4549,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Land Threat Around unit is '..v.Land)
                     --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
                     --RNGLOG('Unit ID is '..v.Object.UnitId)
-                    if v.Value > potentialTargetValue and v.Object and (not v.Object.Dead) and (not v.Shielded) then
+                    local shielded = false
+                    if RUtils.ShieldProtectingTargetRNG(self, v.Object, nil) then
+                        table.insert(shieldedUnits, v)
+                        shielded = true
+                    end
+
+                    if v.Value > potentialTargetValue and v.Object and (not v.Object.Dead) and not shielded then
                         if threatType and platoonThreat then
                             if threatType == 'AntiAir' then
                                 if v.Air > platoonThreat then
@@ -4588,7 +4595,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Land Threat Around unit is '..v.Land)
                     --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
                     --RNGLOG('Unit ID is '..v.Object.UnitId)
-                    if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
+                    local shielded = false
+                    if RUtils.ShieldProtectingTargetRNG(self, v.Object, nil) then
+                        table.insert(shieldedUnits, v)
+                        shielded = true
+                    end
+                    if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and not shielded then
                         if threatType and platoonThreat then
                             if threatType == 'AntiAir' then
                                 if v.Air > platoonThreat then
@@ -4629,8 +4641,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Land Threat Around unit is '..v.Land)
                     --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
                     --RNGLOG('Unit ID is '..v.Object.UnitId)
+                    local shielded = false
+                    if RUtils.ShieldProtectingTargetRNG(self, v.Object, nil) then
+                        table.insert(shieldedUnits, v)
+                        shielded = true
+                    end
                     
-                    if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
+                    if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and not shielded then
                         local unitCats = v.Object.Blueprint.CategoriesHash
                         if unitCats.TECH2 or unitCats.TECH3 then
                             if threatType and platoonThreat then
@@ -4674,7 +4691,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Land Threat Around unit is '..v.Land)
                     --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
                     --RNGLOG('Unit ID is '..v.Object.UnitId)
-                    if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and (not v.Shielded) then
+                    local shielded = false
+                    if RUtils.ShieldProtectingTargetRNG(self, v.Object, nil) then
+                        table.insert(shieldedUnits, v)
+                        shielded = true
+                    end
+                    if v.Value > potentialTargetValue and v.Object and not v.Object.Dead and not shielded then
                         if threatType and platoonThreat then
                             if threatType == 'AntiAir' then
                                 if v.Air > platoonThreat then
@@ -4775,6 +4797,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             return potentialTarget
         else
+            --do things with shieldedUnits here to try and get another target but it will require measuring shield numbers and health vs platoon dps
             if self.RNGDEBUG then
                 RNGLOG('Director no target after director search')
             end

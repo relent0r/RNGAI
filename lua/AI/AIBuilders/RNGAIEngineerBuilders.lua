@@ -574,7 +574,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 800, -- low factory priority
         BuilderConditions = {
-            { MIBC, 'ExpansionIsActive', {} },
+            { MIBC, 'ExpansionIsActive', {'LocationType'} },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9} },
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.ENGINEER * categories.TECH2 } },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
@@ -1243,7 +1243,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 600 } },
-            { MIBC, 'ExpansionIsActive', {} },
+            { MIBC, 'ExpansionIsActive', {'LocationType'} },
             { UCBC, 'PoolGreaterAtLocation', {'MAIN', 7, categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND }},
             { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 2,  categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND } },
         },
@@ -1260,7 +1260,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 600 } },
-            { MIBC, 'ExpansionIsActive', {} },
+            { MIBC, 'ExpansionIsActive', {'LocationType'} },
             { UCBC, 'PoolGreaterAtLocation', {'MAIN', 5, categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND }},
             { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 1,  categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND } },
         },
@@ -1277,7 +1277,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 600 } },
-            { MIBC, 'ExpansionIsActive', {} },
+            { MIBC, 'ExpansionIsActive', {'LocationType'} },
             { UCBC, 'PoolGreaterAtLocation', {'MAIN', 5, categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
             { UCBC, 'EngineerManagerUnitsAtActiveExpansionRNG', { '<', 1,  categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND } },
         },
@@ -1299,7 +1299,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 600 } },
-            { MIBC, 'ExpansionIsActive', {} },
+            { MIBC, 'ExpansionIsActive', {'LocationType'} },
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.MOBILE * categories.ENGINEER * categories.TECH1 - categories.STATIONASSISTPOD - categories.COMMAND }},
         },
         BuilderData = {
@@ -1315,7 +1315,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 600 } },
-            { MIBC, 'ExpansionIsActive', {} },
+            { MIBC, 'ExpansionIsActive', {'LocationType'} },
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.MOBILE * categories.ENGINEER * categories.TECH2 - categories.STATIONASSISTPOD - categories.COMMAND }},
         },
         BuilderData = {
@@ -1331,7 +1331,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { UCBC, 'GreaterThanGameTimeSecondsRNG', { 600 } },
-            { MIBC, 'ExpansionIsActive', {} },
+            { MIBC, 'ExpansionIsActive', {'LocationType'} },
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.MOBILE * categories.ENGINEER * categories.TECH3 - categories.STATIONASSISTPOD - categories.COMMAND }},
         },
         BuilderData = {

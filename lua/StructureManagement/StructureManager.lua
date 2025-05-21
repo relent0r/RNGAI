@@ -1,6 +1,7 @@
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyRequested = moho.aibrain_methods.GetEconomyRequested
@@ -204,7 +205,49 @@ StructureManager = Class {
         -- This means we won't capture factories that are potentially given in fullshare
         -- So I might need to manage that somewhere else
         -- Or maybe we should just use getlistofunits instead but then we won't know which base they are in.. tbd
+        local function GetFactoryPhase(brainName, factoryTable)
+            local highestHQ = 1
+            local upgradingTier = nil
+            for tier = 3, 1, -1 do
+                local tierData = factoryTable[tier]
+                if tierData then
+                    -- HQ check (only meaningful for T2 and T3)
+                    if tier >= 2 and tierData.HQCount then
+                        for id, count in tierData.HQCount do
+                            if count > 0 and tier > highestHQ then
+                                highestHQ = tier
+                            end
+                        end
+                    end
+                    -- Upgrading check
+                    if tierData.UpgradingCount and tierData.UpgradingCount > 0 then
+                        upgradingTier = tier
+                    end
+                end
+            end
+            --LOG('Final highestHQ = ' .. highestHQ .. ', upgradingTier = ' .. tostring(upgradingTier))
+            if upgradingTier and upgradingTier >= highestHQ then
+                local phase = upgradingTier + 0.5
+                --LOG('Returning phase ' .. phase .. ' due to upgrade in progress')
+                return phase
+            end
+            --LOG('Returning phase ' .. highestHQ)
+            return highestHQ
+        end
         coroutine.yield(Random(5,20))
+        local myArmy = ScenarioInfo.ArmySetup[self.Brain.Name]
+        if myArmy.Team and myArmy.Team > 1 then
+            self.Team = myArmy.Team
+            if not RNGAIGLOBALS.HighestTeamAirPhase[myArmy.Team] then
+                RNGAIGLOBALS.HighestTeamAirPhase[myArmy.Team] = 1
+            end
+            if not RNGAIGLOBALS.HighestTeamLandPhase[myArmy.Team] then
+                RNGAIGLOBALS.HighestTeamLandPhase[myArmy.Team] = 1
+            end
+            if not RNGAIGLOBALS.HighestTeamNavalPhase[myArmy.Team] then
+                RNGAIGLOBALS.HighestTeamNavalPhase[myArmy.Team] = 1
+            end
+        end
         while true do
             -- Create a table rather than a million locals
             local FactoryData = {
@@ -471,6 +514,17 @@ StructureManager = Class {
             if self.Brain.BrainIntel.PlayerStrategy.T3AirRush and FactoryData.TotalT3AIR > 0 then
                 self.Brain.BrainIntel.PlayerStrategy.T3AirRush = false
             end
+            if myArmy.Team and myArmy.Team > 1 then
+                local airPhase = GetFactoryPhase(self.Brain.Nickname, self.Factories.AIR)
+                local landPhase = GetFactoryPhase(self.Brain.Nickname, self.Factories.LAND)
+                local navalPhase = GetFactoryPhase(self.Brain.Nickname, self.Factories.NAVAL)
+                local currentAir = RNGAIGLOBALS.HighestTeamAirPhase[myArmy.Team] or 1
+                local currentLand = RNGAIGLOBALS.HighestTeamLandPhase[myArmy.Team] or 1
+                local currentNaval = RNGAIGLOBALS.HighestTeamNavalPhase[myArmy.Team] or 1
+                RNGAIGLOBALS.HighestTeamAirPhase[myArmy.Team] = math.max(currentAir, airPhase)
+                RNGAIGLOBALS.HighestTeamLandPhase[myArmy.Team] = math.max(currentLand, landPhase)
+                RNGAIGLOBALS.HighestTeamNavalPhase[myArmy.Team] = math.max(currentNaval, navalPhase)
+            end
             --LOG('Structure Manager')
             --LOG('Number of upgrading T1 Land '..self.Factories.LAND[1].UpgradingCount)
             --LOG('Number of upgrading T2 Land '..self.Factories.LAND[2].UpgradingCount)
@@ -656,6 +710,7 @@ StructureManager = Class {
         local energyEfficiencyOverTime = aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime
         local disableForT3AirRushStrategy = aiBrain.BrainIntel.PlayerStrategy.T3AirRush
         --RNGLOG('Actual Mex Income '..actualMexIncome)
+        --LOG('Highest Team phase is '..tostring(RNGAIGLOBALS.HighestTeamAirPhase[self.Team]))
 
         local t2LandPass = false
         if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 and not disableForT3AirRushStrategy then
@@ -714,16 +769,16 @@ StructureManager = Class {
                 end
             end
         end
-        local airRush = (aiBrain.amanager.Demand.Air.T2.torpedo > 0 or aiBrain.RNGEXP or aiBrain.BrainIntel.PlayerRole.AirPlayer or (factionIndex == 2 and actualMexIncome > (25 * multiplier)))
-        if airRush and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
-            --LOG('Air Player first factory upgrade checking if massEfficiencyOverTime '..tostring(massEfficiencyOverTime)..' energyEfficiencyOverTime '..tostring(energyEfficiencyOverTime))
+        local t2AirRush = (aiBrain.amanager.Demand.Air.T2.torpedo > 0 or aiBrain.RNGEXP or aiBrain.BrainIntel.PlayerRole.AirPlayer or (factionIndex == 2 and actualMexIncome > (25 * multiplier)) or ((self.Team and RNGAIGLOBALS.HighestTeamAirPhase[self.Team] < 1.5 or not self.Team and aiBrain.BrainIntel.AirPhase < 1.5) and aiBrain.EnemyIntel.AirPhase > 1))
+        if t2AirRush and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
+            --LOG('Air Player T2 factory upgrade checking if massEfficiencyOverTime '..tostring(massEfficiencyOverTime)..' energyEfficiencyOverTime '..tostring(energyEfficiencyOverTime))
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
-                if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 32.0 and massEfficiencyOverTime >= 0.8 and (airRush and energyEfficiencyOverTime >= 0.85 or energyEfficiencyOverTime >= 1.05) then
+                if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 32.0 and massEfficiencyOverTime >= 0.8 and (t2AirRush and energyEfficiencyOverTime >= 0.85 or energyEfficiencyOverTime >= 1.05) then
                     --LOG('Factory Upgrade efficiency over time check passed for air upgrade')
                     local EnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
                     --LOG('Air Player first factory upgrade checking if massEfficiency '..tostring(MassEfficiency)..' energyEfficiency '..tostring(EnergyEfficiency))
-                    if MassEfficiency >= 0.8 and (airRush and EnergyEfficiency >= 0.85 or EnergyEfficiency >= 1.05)  then
+                    if MassEfficiency >= 0.8 and (t2AirRush and EnergyEfficiency >= 0.85 or EnergyEfficiency >= 1.05)  then
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
@@ -860,16 +915,18 @@ StructureManager = Class {
                 end
             end
         end
-        if not t3AirPass and (aiBrain.RNGEXP or aiBrain.BrainIntel.PlayerRole.AirPlayer) and totalAirT3HQCount < 1 and totalAirT2HQCount > 0 and self.Factories.AIR[2].UpgradingCount < 1 and self.Factories.AIR[2].Total > 0 then
+        local t3AirRush = aiBrain.BrainIntel.PlayerRole.AirPlayer or ((self.Team and RNGAIGLOBALS.HighestTeamAirPhase[self.Team] < 2.5 or not self.Team and aiBrain.BrainIntel.AirPhase < 2.5) and aiBrain.EnemyIntel.AirPhase > 2)
+        if not t3AirPass and t3AirRush and totalAirT3HQCount < 1 and totalAirT2HQCount > 0 and self.Factories.AIR[2].UpgradingCount < 1 and self.Factories.AIR[2].Total > 0 then
+            --LOG('Air Player T3 factory upgrade checking if massEfficiencyOverTime '..tostring(massEfficiencyOverTime)..' energyEfficiencyOverTime '..tostring(energyEfficiencyOverTime))
             if aiBrain.EconomyOverTimeCurrent.MassIncome > (2.5 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 100.0 then
                 --RNGLOG('Factory Upgrade Income Over time check passed')
                 if GetEconomyIncome(aiBrain,'MASS') >= (2.5 * multiplier) and GetEconomyIncome(aiBrain,'ENERGY') >= 100.0 then
                     --RNGLOG('Factory Upgrade Income check passed')
-                    if massEfficiencyOverTime >= 1.0 and energyEfficiencyOverTime >= 1.0 then
+                    if massEfficiencyOverTime >= 0.9 and energyEfficiencyOverTime >= 0.9 then
                         --RNGLOG('Factory Upgrade efficiency over time check passed')
                         local EnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
-                        if MassEfficiency >= 1.0 and EnergyEfficiency >= 1.00 then
+                        if MassEfficiency >= 0.9 and EnergyEfficiency >= 0.9 then
                             --RNGLOG('Factory Upgrade efficiency check passed, get closest factory')
                             local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH2', true)
                             if factoryToUpgrade and not factoryToUpgrade.Dead then

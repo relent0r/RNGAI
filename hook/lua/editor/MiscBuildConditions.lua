@@ -216,9 +216,9 @@ function AirAttackModeCheck(aiBrain)
     return false
 end
 
-function ExpansionIsActive(aiBrain)
+function ExpansionIsActive(aiBrain, locationType)
     local activeExpansion = aiBrain.BrainIntel.ActiveExpansion
-    if activeExpansion then
+    if activeExpansion and activeExpansion == locationType then
         return true
     end
     return false

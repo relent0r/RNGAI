@@ -754,7 +754,7 @@ IntelManager = Class {
     end,
 
     SelectZoneRNG = function(self, aiBrain, platoon, type, requireSameLabel)
-        local function GetAdjacencyThreatBonus(zone, zoneLayerSet, statusValueTable)
+        local function GetAdjacencyThreatBonus(zone, zoneLayerSet, statusValueTable, threatType)
             local bonus = 1
             if zone.edges then
                 for _, adjId in zone.edges do
@@ -762,11 +762,22 @@ IntelManager = Class {
                     if neighbor then
                         local neighborStatus = aiBrain.GridPresence:GetInferredStatus(neighbor.pos)
                         local statusVal = statusValueTable[neighborStatus] or 1
+        
                         if neighborStatus ~= 'Allied' then
-                            bonus = bonus + (0.25 * statusVal) -- scalable bonus based on how bad the neighbor is
+                            bonus = bonus + (0.25 * statusVal)
                         end
-                        if neighbor.enemystructurethreat > 0 or neighbor.enemylandthreat > 0 then
-                            bonus = bonus + 0.5 -- threat-based escalation
+        
+                        local threat = 0
+                        if threatType == 'Air' then
+                            threat = neighbor.enemyairthreat
+                        elseif threatType == 'Surface' then
+                            threat = neighbor.enemyantisurfacethreat + neighbor.enemystructurethreat
+                        else
+                            threat = math.max(neighbor.enemyairthreat, neighbor.enemyantisurfacethreat)
+                        end
+        
+                        if threat > 0 then
+                            bonus = bonus + 0.5
                         end
                     end
                 end
@@ -813,6 +824,12 @@ IntelManager = Class {
                     coroutine.yield(20)
                     return false
                 end
+                local statusValueTable = {
+                    Allied = 0.75,        -- Lower urgency unless threatened
+                    Hostile = 2.0,        -- High urgency
+                    Contested = 1.5,      -- Medium-high urgency
+                    Unoccupied = 1.0      -- Moderate interest for expansion
+                   }
 
                 if type == 'raid' then
                     --RNGLOG('RNGAI : Zone Raid Selection Query Processing')
@@ -930,12 +947,6 @@ IntelManager = Class {
                 elseif type == 'control' then
                     local compare = 0
                    --RNGLOG('RNGAI : Zone Control Selection Query Processing First Pass')
-                   local statusValueTable = {
-                    Allied = 0.75,        -- Lower urgency unless threatened
-                    Hostile = 2.0,        -- High urgency
-                    Contested = 1.5,      -- Medium-high urgency
-                    Unoccupied = 1.0      -- Moderate interest for expansion
-                   }
                     for k, v in zoneSet do
                         if v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
                             if requireSameLabel and platoonLabel and v.label > 0 and platoonLabel ~= v.label then
@@ -968,7 +979,7 @@ IntelManager = Class {
                                     enemyDanger = 0.4
                                 end
                             end
-                            local adjacencyBonus = GetAdjacencyThreatBonus(v, zoneSet, statusValueTable)
+                            local adjacencyBonus = GetAdjacencyThreatBonus(v, zoneSet, statusValueTable, 'Surface')
 
                             --LOG('distanceModifier '..tostring(distanceModifier))
                             --LOG('resourceValue '..tostring(resourceValue))
@@ -1054,6 +1065,7 @@ IntelManager = Class {
                         friendlylandantiairthreat = 0.05,
                         startPos = 0.3,
                         control = 0.3,
+                        alliedAntiAirDeficit = 0.3,
                     }
                     local originPos
                     local maxTeamValue = 2
@@ -1099,19 +1111,30 @@ IntelManager = Class {
                             local startPos = 1
                             local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
                             local controlValue = 1
-                            if status == 'Hostile' and v.friendlyantisurfacethreat == 0 then continue end
-                            if status == 'Contested' or status == 'Unoccupied' then
-                                controlValue = 1.5
+                            local statusBonus = 0
+                            if status == 'Allied' then
+                                statusBonus = 1.2
+                            elseif status == 'Contested' or status == 'Unoccupied' then
+                                statusBonus = 1.5
+                            elseif status == 'Hostile' then
+                                if v.friendlyantisurfacethreat == 0 then
+                                    continue  -- skip entirely
+                                else
+                                    statusBonus = 0.7  -- minor interest if we have support
+                                end
                             end
                             if v.startpositionclose then
                                 startPos = 1.5
                             end
+                            local adjacencyBonus = GetAdjacencyThreatBonus(v, zoneSet, statusValueTable, 'Air')
                             local normalizedTeamValue = v.teamvalue / maxTeamValue
                             local normalizedResourceValue = v.resourcevalue / maxResourceValue
                             local normalizedEnemyAntiSurfaceThreatValue = v.enemyantisurfacethreat / maxEnemyAntiSurfaceThreat
                             local normalizedEnemyAirThreatValue = v.enemyairthreat / maxEnemyAirThreat
                             local normalizedFriendAntiSurfaceThreatValue = v.friendlyantisurfacethreat / maxFriendlyAntiSurfaceThreat
                             local normalizedFriendAirThreatValue = v.friendlylandantiairthreat / maxFriendlyAirThreat
+                            local alliedAntiAirDeficit = 0
+                            alliedAntiAirDeficit = math.max(normalizedFriendAntiSurfaceThreatValue - normalizedFriendAirThreatValue, 0)
                             local normalizedStartPosValue = startPos
                             local normalizedControlValue = controlValue
                             local priorityScore = (
@@ -1122,11 +1145,14 @@ IntelManager = Class {
                                 normalizedControlValue * weightageValues['control'] +
                                 normalizedEnemyAirThreatValue * weightageValues['enemyAir'] +
                                 normalizedFriendAntiSurfaceThreatValue * weightageValues['friendlyantisurfacethreat'] -
-                                normalizedFriendAirThreatValue * weightageValues['friendlylandantiairthreat']
+                                normalizedFriendAirThreatValue * weightageValues['friendlylandantiairthreat'] +
+                                statusBonus +
+                                alliedAntiAirDeficit * weightageValues['alliedAntiAirDeficit'] +
+                                adjacencyBonus
                             )
-                            --LOG('Priority Score '..tostring(priorityScore))
-                            --LOG('Current antiair allocated '..tostring(v.friendlyantiairallocatedthreat))
-                            --LOG('Maximum Allowed '..tostring(math.max(v.enemyairthreat * 2, enemyThreatRatio)))
+                            --LOG('AntiAir Defense Priority Score '..tostring(priorityScore))
+                            --LOG('AntiAir Defense Current antiair allocated '..tostring(v.friendlyantiairallocatedthreat))
+                            --LOG('AntiAir Defense Maximum Allowed '..tostring(math.max(v.enemyairthreat * 2, enemyThreatRatio)))
                             if not selection or priorityScore > selection then
                                 selection = priorityScore
                                 zoneSelection = v.id
@@ -1649,6 +1675,7 @@ IntelManager = Class {
         if not RNGAIGLOBALS.PlayerRoles[myArmy.Team] then
             RNGAIGLOBALS.PlayerRoles[myArmy.Team] = {}
         end
+        LOG('MyArmy team is '..tostring(myArmy.Team))
         if aiBrain.BrainIntel.AllyCount > 2 and aiBrain.EnemyIntel.EnemyCount > 0 then
             local closestIndex
             local closestDistance
@@ -4055,7 +4082,6 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                     Value = unit.Blueprint.Defense.EconomyThreatLevel * 2, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
-                                    Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                     IMAP = v, 
                                     Air = z['AntiAir'] or 0, 
                                     Land = z['Land'] or 0,
@@ -4070,7 +4096,6 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                     Value = unit.Blueprint.Defense.EconomyThreatLevel, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
-                                    Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                     IMAP = v, 
                                     Air = z['AntiAir'] or 0, 
                                     Land = z['Land'] or 0,
@@ -4083,7 +4108,6 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                     Value = unit.Blueprint.Defense.EconomyThreatLevel, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
-                                    Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                     IMAP = v, 
                                     Air = z['AntiAir'] or 0, 
                                     Land = z['Land'] or 0,
@@ -4096,7 +4120,6 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                     Value = unit.Blueprint.Defense.EconomyThreatLevel, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
-                                    Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                     IMAP = v, 
                                     Air = z['AntiAir'] or 0, 
                                     Land = z['Land'] or 0,
@@ -4109,7 +4132,6 @@ TacticalThreatAnalysisRNG = function(aiBrain)
                                     Value = unit.Blueprint.Defense.EconomyThreatLevel, 
                                     HP = unit:GetHealth(), 
                                     Object = unit, 
-                                    Shielded = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, shieldsAtLocation), 
                                     IMAP = v, 
                                     Air = z['AntiAir'] or 0, 
                                     Land = z['Land'] or 0,

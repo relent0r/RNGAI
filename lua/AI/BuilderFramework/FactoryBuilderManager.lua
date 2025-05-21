@@ -508,7 +508,7 @@ FactoryBuilderManager = Class(BuilderManager) {
                 end
             else
                 local template = self:GetFactoryTemplate(builder:GetPlatoonTemplate(), factory)
-                -- LOG('*AI DEBUG: ARMY ', repr(self.Brain:GetArmyIndex()),': Factory Builder Manager Building - ',repr(builder.BuilderName))
+                --LOG('*AI DEBUG: ARMY ', repr(self.Brain:GetArmyIndex()),': Factory Builder Manager Building - ',repr(builder.BuilderName))
                 self.Brain:BuildPlatoon(template, {factory}, 1)
             end
         else

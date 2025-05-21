@@ -4271,12 +4271,14 @@ RemoveDefenseUnit = function(aiBrain, locationType, killedUnit)
     --LOG('Unit ID is '..killedUnit.UnitId)
     local unitPos = killedUnit:GetPosition()
     if killedUnit.Blueprint.CategoriesHash.TECH1 then
-        for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
-            if v then
-                local distance = VDist3Sq(v.Position, unitPos)
-                if not closestPoint or distance < closestDistance then
-                    closestPoint = k
-                    closestDistance = distance
+        if aiBrain.BuilderManagers[locationType].DefensivePoints[1] then
+            for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
+                if v then
+                    local distance = VDist3Sq(v.Position, unitPos)
+                    if not closestPoint or distance < closestDistance then
+                        closestPoint = k
+                        closestDistance = distance
+                    end
                 end
             end
         end
@@ -4301,12 +4303,14 @@ RemoveDefenseUnit = function(aiBrain, locationType, killedUnit)
     elseif killedUnit.Blueprint.CategoriesHash.TECH2 then
         if killedUnit.Blueprint.CategoriesHash.ANTIMISSILE then
             --RNGLOG('TMD defensive unit to defensepoint table')
-            for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
-                if v then
-                    local distance = VDist3Sq(v.Position, unitPos)
-                    if not closestPoint or closestDistance > distance then
-                        closestPoint = k
-                        closestDistance = distance
+            if aiBrain.BuilderManagers[locationType].DefensivePoints[1] then
+                for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[1] do
+                    if v then
+                        local distance = VDist3Sq(v.Position, unitPos)
+                        if not closestPoint or closestDistance > distance then
+                            closestPoint = k
+                            closestDistance = distance
+                        end
                     end
                 end
             end

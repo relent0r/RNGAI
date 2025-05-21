@@ -661,13 +661,15 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         if allyScouts > 2 then
                             if builderData.OriginLocation then
                                 local originPos = builderData.OriginLocation
-                                self:LogDebug('Origin Location Found, angle is '..tostring(RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3])))
-                                if RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3]) > 0.35 then
-                                    local pointAngle = RUtils.GetAngleToPosition(platPos, originPos)
-                                    self:LogDebug('pointAngle is '..tostring(pointAngle))
-                                    local movePos = RUtils.MoveInDirection(platPos, pointAngle, 20, true, false)
-                                    StateUtils.IssueNavigationMove(scout, movePos)
-                                    coroutine.yield(30)
+                                if originPos[1] then
+                                    --self:LogDebug('Origin Location Found, angle is '..tostring(RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3])))
+                                    if RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3]) > 0.35 then
+                                        local pointAngle = RUtils.GetAngleToPosition(platPos, originPos)
+                                        self:LogDebug('pointAngle is '..tostring(pointAngle))
+                                        local movePos = RUtils.MoveInDirection(platPos, pointAngle, 20, true, false)
+                                        StateUtils.IssueNavigationMove(scout, movePos)
+                                        coroutine.yield(30)
+                                    end
                                 end
                             end
                             self:LogDebug(string.format('We have multiple ally scouts here, reset'))
@@ -697,40 +699,46 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     end
                     if builderData.SupportUnit and not builderData.SupportUnit.Dead then
                         local originPos = builderData.SupportUnit:GetPosition()
-                        self:LogDebug('SupportUnit Location Found, angle is '..tostring(RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3])))
-                        if RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3]) > 0.35 then
-                            local pointAngle = RUtils.GetAngleToPosition(platPos, originPos)
-                            self:LogDebug('pointAngle is '..tostring(pointAngle))
-                            local movePos = RUtils.MoveInDirection(platPos, pointAngle, 20, true, false)
-                            self:LogDebug('movePosition for support unit is '..tostring(movePos[1])..':'..tostring(movePos[3]))
-                            StateUtils.IssueNavigationMove(scout, movePos)
-                            coroutine.yield(30)
+                        if originPos[1] then
+                            --self:LogDebug('SupportUnit Location Found, angle is '..tostring(RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3])))
+                            if RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3]) > 0.35 then
+                                local pointAngle = RUtils.GetAngleToPosition(platPos, originPos)
+                                self:LogDebug('pointAngle is '..tostring(pointAngle))
+                                local movePos = RUtils.MoveInDirection(platPos, pointAngle, 20, true, false)
+                                self:LogDebug('movePosition for support unit is '..tostring(movePos[1])..':'..tostring(movePos[3]))
+                                StateUtils.IssueNavigationMove(scout, movePos)
+                                coroutine.yield(30)
+                            end
                         end
                     end
                     if builderData.SupportPlatoon and not IsDestroyed(builderData.SupportPlatoon) then
                         local originPos = builderData.SupportPlatoon:GetPlatoonPosition()
                         self:LogDebug('platPos Location '..tostring(platPos[1])..':'..tostring(platPos[3]))
                         self:LogDebug('SupportPlatoon Location '..tostring(originPos[1])..':'..tostring(originPos[3]))
-                        self:LogDebug('SupportPlatoon Location Found, angle is '..tostring(RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3])))
-                        if RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3]) > 0.35 then
-                            local pointAngle = RUtils.GetAngleToPosition(platPos, originPos)
-                            self:LogDebug('pointAngle is '..tostring(pointAngle))
-                            local movePos = RUtils.MoveInDirection(platPos, pointAngle, 20, true, false)
-                            self:LogDebug('movePosition for support platoon is '..tostring(movePos[1])..':'..tostring(movePos[3]))
-                            StateUtils.IssueNavigationMove(scout, movePos)
-                            coroutine.yield(20)
+                        if originPos[1] then
+                            --self:LogDebug('SupportPlatoon Location Found, angle is '..tostring(RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3])))
+                            if RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3]) > 0.35 then
+                                local pointAngle = RUtils.GetAngleToPosition(platPos, originPos)
+                                self:LogDebug('pointAngle is '..tostring(pointAngle))
+                                local movePos = RUtils.MoveInDirection(platPos, pointAngle, 20, true, false)
+                                self:LogDebug('movePosition for support platoon is '..tostring(movePos[1])..':'..tostring(movePos[3]))
+                                StateUtils.IssueNavigationMove(scout, movePos)
+                                coroutine.yield(20)
+                            end
                         end
                     end
                     if builderData.OriginLocation then
                         local originPos = builderData.OriginLocation
-                        self:LogDebug('Origin Location Found, angle is '..tostring(RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3])))
-                        if RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3]) > 0.35 then
-                            local pointAngle = RUtils.GetAngleToPosition(platPos, originPos)
-                            self:LogDebug('pointAngle is '..tostring(pointAngle))
-                            local movePos = RUtils.MoveInDirection(platPos, pointAngle, 20, true, false)
-                            self:LogDebug('movePosition for origin location is '..tostring(movePos[1])..':'..tostring(movePos[3]))
-                            StateUtils.IssueNavigationMove(scout, movePos)
-                            coroutine.yield(30)
+                        if originPos[1] then
+                            --self:LogDebug('Origin Location Found, angle is '..tostring(RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3])))
+                            if RUtils.GetAngleRNG(platPos[1], platPos[3], originPos[1], originPos[3], enemyPos[1], enemyPos[3]) > 0.35 then
+                                local pointAngle = RUtils.GetAngleToPosition(platPos, originPos)
+                                self:LogDebug('pointAngle is '..tostring(pointAngle))
+                                local movePos = RUtils.MoveInDirection(platPos, pointAngle, 20, true, false)
+                                self:LogDebug('movePosition for origin location is '..tostring(movePos[1])..':'..tostring(movePos[3]))
+                                StateUtils.IssueNavigationMove(scout, movePos)
+                                coroutine.yield(30)
+                            end
                         end
                     end
                     coroutine.yield(15)
