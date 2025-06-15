@@ -294,16 +294,33 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             --LOG('ACUSupport trying to use transport')
             local aiBrain = self:GetBrain()
             local builderData = self.BuilderData
+            local currentZoneID = builderData.TargetZone
+            local currentZone
             if not builderData.Position then
                 WARN('No position passed to ZoneControlDefense')
                 self:ChangeState(self.DecideWhatToDo)
                 return false
             end
-            if aiBrain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint then
+            local inWater = RUtils.PositionOnWater(self.Pos[1], self.Pos[3])
+            if not currentZoneID then
+                if inWater then
+                    currentZoneID = MAP:GetZoneID(self.Pos,aiBrain.Zones.Naval.index)
+                else
+                    currentZoneID = MAP:GetZoneID(self.Pos,aiBrain.Zones.Land.index)
+                end
+            end
+            if inWater then
+                currentZone = aiBrain.Zones.Naval.zones[currentZoneID]
+            else
+                currentZone = aiBrain.Zones.Land.zones[currentZoneID]
+            end
+
+                
+            if currentZone then
                 --LOG('Zone Control is moving to factory manager rally point')
                 local platUnits = self:GetPlatoonUnits()
                 for _, v in platUnits do
-                    StateUtils.IssueNavigationMove(v, aiBrain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint)
+                    StateUtils.IssueNavigationMove(v, currentZone.pos)
                 end
                 coroutine.yield(25)
             end
@@ -311,6 +328,10 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             while counter < 10 do
                 counter = counter + 1
                 coroutine.yield(20)
+                local adjacentThreatCheck = StateUtils.SearchHighestThreatFromZone(aiBrain, self.Pos,'air')
+                if adjacentThreatCheck then
+                    break
+                end
             end
             self.BuilderData = {}
             self:ChangeState(self.DecideWhatToDo)
