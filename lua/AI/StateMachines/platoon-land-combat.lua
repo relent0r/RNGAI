@@ -106,7 +106,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, true, true)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, true, true, 400)
             local enemyACU, enemyACUDistance = StateUtils.GetClosestEnemyACU(aiBrain, self.Pos)
             --self:LogDebug(string.format('DecideWhatToDo Danger Check, EnemySurface is '..threat.enemySurface..' ally surface is '..threat.allySurface))
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
@@ -149,6 +149,12 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
+                end
+                if threat.allySurface > threat.enemySurface and threat.allyRadiusThreat > 0 and threat.enemySurface > threat.allyRadiusThreat then
+                    self:LogDebug(string.format('DecideWhatToDo enemy threat is greater than our short radius threat but we have more actual threat'))
+                    self.retreat=true
+                    self:ChangeState(self.Retreating)
+                    return
                 end
                 self.retreat=false
             end

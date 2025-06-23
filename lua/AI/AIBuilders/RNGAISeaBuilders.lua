@@ -85,7 +85,7 @@ BuilderGroup {
         Priority = 747,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL, true }},
-            { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading', true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Naval', 'NavalUpgrading', true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T1', 'frigate'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -154,7 +154,7 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
-            { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'destroyer'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -169,7 +169,7 @@ BuilderGroup {
         Priority = 749,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
-            { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'cruiser'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -184,7 +184,7 @@ BuilderGroup {
         Priority = 789,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T2', 'cruiser'} },
-            { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Naval','NavalUpgrading',  true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
@@ -198,7 +198,7 @@ BuilderGroup {
         Priority = 748,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
-            { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'subhunter'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -251,7 +251,7 @@ BuilderGroup {
         Priority = 751,
         BuilderConditions = {
             { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
-            { EBC, 'FactorySpendRatioRNG', {'Naval','NavalUpgrading',  true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T3', 'battleship'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -279,7 +279,7 @@ BuilderGroup {
         Priority = 792,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T3', 'missileship'} },
-            { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Naval', 'NavalUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
@@ -293,7 +293,7 @@ BuilderGroup {
         Priority = 791,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T3', 'nukesub'} },
-            { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Naval', 'NavalUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',
@@ -307,7 +307,7 @@ BuilderGroup {
         Priority = 791,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Naval', 'T3', 'carrier'} },
-            { EBC, 'FactorySpendRatioRNG', {'Naval', 'NavalUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Naval', 'NavalUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Sea',

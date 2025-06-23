@@ -295,9 +295,9 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 elseif role == 'Shield' then
                     local shieldPos = StateUtils.GetBestPlatoonShieldPos(units, unit, unitPos, nil, lastKnownEnemyPosition)
                     if not shieldPos then
-                        local closestTargetDist = VDist3(platoonCenter, targetPos)
+                        local closestTargetDist = VDist3(platoonCenter, lastKnownEnemyPosition)
                         local standoff = closestTargetDist - (unit['rngdata'].MaxDirectFireRange or weaponRange) + 4
-                        shieldPos = RUtils.lerpy(unitPos, targetPos, {closestTargetDist, standoff})
+                        shieldPos = RUtils.lerpy(unitPos, lastKnownEnemyPosition, {closestTargetDist, standoff})
                     end
                     return shieldPos
                 else

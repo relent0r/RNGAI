@@ -173,7 +173,7 @@ end
 function GreaterThanAlliedThreatInZone(aiBrain, locationType, threat)
     if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive and aiBrain.BasePerimeterMonitor[locationType] then
         if aiBrain.BasePerimeterMonitor[locationType].LandUnits > 1 then
-            local zoneId = aiBrain.BuilderManagers[locationType].Zone
+            local zoneId = aiBrain.BuilderManagers[locationType].ZoneID
             if aiBrain.Zones.Land.zones[zoneId] then
                 local zoneData = aiBrain.Zones.Land.zones[zoneId]
                 if zoneData.friendlydirectfireantisurfacethreat and zoneData.friendlydirectfireantisurfacethreat > threat then
@@ -187,6 +187,10 @@ function GreaterThanAlliedThreatInZone(aiBrain, locationType, threat)
     return false
 end
 
+function LandThreatAtAdjacentZones(aiBrain)
+
+end
+
 function GreaterThanAlliedThreatInAdjacentZones(aiBrain, locationType, threat)
     if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive then
         local position = aiBrain.BuilderManagers[locationType].Position
@@ -197,11 +201,11 @@ function GreaterThanAlliedThreatInAdjacentZones(aiBrain, locationType, threat)
         local friendlyDirectFireThreat = 0
         if landZones[zoneId].edges and table.getn(landZones[zoneId].edges) > 0 then
             for k, v in landZones[zoneId].edges do
-                if landZones[v.zone].enemylandthreat > 0 then
-                    enemyLandThreat = enemyLandThreat + landZones[v.zone].enemylandthreat
+                if v.zone.enemylandthreat > 0 then
+                    enemyLandThreat = enemyLandThreat + v.zone.enemylandthreat
                 end
-                if landZones[v.zone].friendlydirectfireantisurfacethreat > 0 then
-                    friendlyDirectFireThreat = friendlyDirectFireThreat + landZones[v.zone].friendlydirectfireantisurfacethreat
+                if v.zone.friendlydirectfireantisurfacethreat > 0 then
+                    friendlyDirectFireThreat = friendlyDirectFireThreat + v.zone.friendlydirectfireantisurfacethreat
                 end
             end
         end
@@ -209,6 +213,24 @@ function GreaterThanAlliedThreatInAdjacentZones(aiBrain, locationType, threat)
             return false
         end
         return true
+    end
+    return false
+end
+
+function BaseNeedsMoreFactoryBuildRate(aiBrain, locationType, buildRateType)
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    if factoryManager then
+        local threatAssignment = factoryManager.ZoneThreatAssignment or 0
+        local buildRate = factoryManager[buildRateType]
+        if not buildRate or buildRate <= 0 then
+            buildRate = 1
+        end
+        local loadRatio = threatAssignment / buildRate
+        --LOG('Base '..tostring(locationType)..' Load Ratio '..tostring(loadRatio)..' Threat Assignment was '..tostring(threatAssignment)..' BuildRate was '..tostring(buildRate))
+        if loadRatio > 2 then
+            --LOG('Base Deemed as needing more factories at position '..tostring(tostring(repr(aiBrain.BuilderManagers[locationType].FactoryManager.Location))))
+            return true
+        end
     end
     return false
 end

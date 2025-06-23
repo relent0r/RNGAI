@@ -156,9 +156,12 @@ StructureManager = Class {
                 }
             },
         }
+        self.ZoneStructures = {}
         self.ShieldCoverage = {}
         self.TMDRequired = false
         self.StructuresRequiringTMD = {}
+        self.ShieldsRequired = false
+        self.StructuresRequiringShields = {}
         self.ExtractorUpgradeQueue = {}
     end,
 
@@ -196,6 +199,149 @@ StructureManager = Class {
             end
         end
         return temptable
+    end,
+
+    RegisterZoneStructure = function(self, unit)
+        if unit and not unit.Dead then
+            if not unit['rngdata'] then
+                unit['rngdata'] = {}
+            end
+            local rngData = unit['rngdata']
+            if not rngData.ZoneType or not rngData.ZoneID then
+                --LOG('No zone id')
+                local unitPos = unit:GetPosition()
+                if RUtils.PositionOnWater(unitPos[1], unitPos[3]) then
+                    rngData.ZoneID = MAP:GetZoneID(unitPos,self.Brain.Zones.Naval.index)
+                    rngData.ZoneType = 'Naval'
+                else
+                    rngData.ZoneID = MAP:GetZoneID(unitPos,self.Brain.Zones.Land.index)
+                    rngData.ZoneType = 'Land'
+                end
+                --LOG('zone id was set to '..tostring(rngData.ZoneID))
+            end
+            rngData.StructureType = self:GetStructureType(unit)
+            self.ZoneStructures[rngData.ZoneID] = self.ZoneStructures[rngData.ZoneID] or {}
+            self.ZoneStructures[rngData.ZoneID][rngData.StructureType] = self.ZoneStructures[rngData.ZoneID][rngData.StructureType] or {}
+            if not self.ZoneStructures[rngData.ZoneID][rngData.StructureType][unit.EntityId] then
+                self.ZoneStructures[rngData.ZoneID][rngData.StructureType][unit.EntityId] = unit
+                --LOG('Registered structure: '..rngData.StructureType..' in zone '..rngData.ZoneID)
+            end
+        end
+    end,
+
+    RemoveZoneStructure = function(self, unit)
+        local rngData = unit.rngdata
+        if rngData and rngData.ZoneID and rngData.StructureType then
+            local zoneTable = self.ZoneStructures[rngData.ZoneID]
+            if zoneTable then
+                local structTable = zoneTable[rngData.StructureType]
+                if structTable and structTable[unit.EntityId] then
+                    structTable[unit.EntityId] = nil
+                    --LOG('Removed structure '..rngData.StructureType..' from zone '..rngData.ZoneID)
+                    if rngData.StructureType == 'EXTRACTOR' then
+                        self:ForkThread(self.CheckZoneLoss, rngData.ZoneID, rngData.ZoneType)
+                    end
+                end
+            end
+        end
+    end,
+
+    CheckZoneLoss = function(self, zoneId, zoneType)
+        local zone
+        local aiBrain = self.Brain
+        if zoneType == 'Naval' then
+            zone = aiBrain.Zones.Naval.zones[zoneId]
+        else
+            zone = aiBrain.Zones.Land.zones[zoneId]
+        end
+        if zone then
+            local extractorTable = self.ZoneStructures[zoneId]['EXTRACTOR']
+            local extractorCount = 0
+            for _, v in extractorTable do
+                if v and not v.Dead then
+                    extractorCount = extractorCount + 1
+                end
+            end
+            if extractorCount == 0 then
+                LOG('We lost all extractors for zone ID '..tostring(zoneId))
+                local defenseZoneRequired = RUtils.DetermineDefensiveInterceptZone(aiBrain, aiBrain.BrainIntel.StartPos, zoneId, 'land')
+                if defenseZoneRequired then
+                    LOG('We require a defense zone for '..tostring(defenseZoneRequired))
+                    local pdCount = 0
+                    if self.ZoneStructures[defenseZoneRequired]['TECH1POINTDEFENSE'] then
+                        for _, v in self.ZoneStructures[defenseZoneRequired]['TECH1POINTDEFENSE'] do
+                            if v and not v.Dead then
+                                pdCount = pdCount + 1
+                            end
+                        end
+                    end
+                    LOG('Current PD count in zone is '..tostring(pdCount))
+                    if pdCount < 1 then
+                        local zonePos
+                        if zoneType == 'Naval' then
+                            zonePos = aiBrain.Zones.Naval.zones[defenseZoneRequired].pos
+                        else
+                            zonePos = aiBrain.Zones.Land.zones[defenseZoneRequired].pos
+                        end
+                        if zonePos then
+                            LOG('We have a zone pos of '..tostring(repr(zonePos)))
+                            if not aiBrain.IntelManager:IsExistingStructureRequestPresent(zonePos, 15, 'TECH1POINTDEFENSE') then
+                                aiBrain.IntelManager:RequestStructureNearPosition(zonePos, 15, 'TECH1POINTDEFENSE')
+                                LOG('Have requested structure near position '..tostring(repr(zonePos)))
+                            end
+                        end
+                    end
+                    LOG('We have lost a zone and the best point for a defensive structure adjacent to main is '..tostring(defenseZoneRequired))
+                end
+            end
+        end
+    end,
+    
+    AddZoneStructure = function(self, unit)
+        if not self.Initialized or not RNGAIGLOBALS.ZoneGenerationComplete then
+            --LOG('Not initialized yet, go to wait')
+            self:ForkThread(function()
+                local timeout = 0
+                while not self.Initialized or not RNGAIGLOBALS.ZoneGenerationComplete do
+                    coroutine.yield(5)
+                    timeout = timeout + 1
+                    if timeout > 100 then
+                        WARN("AI-RNG: Deferred AddZoneStructure timed out.")
+                        return
+                    end
+                end
+                self:RegisterZoneStructure(unit)
+            end)
+        else
+            self:RegisterZoneStructure(unit)
+        end
+    end,
+
+    GetStructureType = function(self, unit)
+        local cat = unit.Blueprint.CategoriesHash
+
+        if cat.RADAR then
+            return 'RADAR'
+        elseif cat.TACTICALMISSILEDEFENSE then
+            return 'TACTICALMISSILEDEFENSE'
+        elseif cat.SHIELD then
+            return 'SHIELD'
+        elseif cat.ARTILLERY then
+            return 'ARTILLERY'
+        elseif cat.ANTIAIR then
+            return 'ANTIAIR'
+        elseif cat.DEFENSE and cat.DIRECTFIRE and cat.TECH1 and not cat.ANTIAIR then
+            return 'TECH1POINTDEFENSE'
+        elseif cat.FACTORY then
+            return 'FACTORY'
+        elseif cat.MASSEXTRACTION then
+            return 'EXTRACTOR'
+        elseif cat.ENERGYPRODUCTION then
+            return 'ENERGYPRODUCTION'
+        end
+
+        return 'UNKNOWN_' .. unit.Blueprint.BlueprintId
+
     end,
 
     FactoryDataCaptureRNG = function(self)
@@ -247,6 +393,10 @@ StructureManager = Class {
             if not RNGAIGLOBALS.HighestTeamNavalPhase[myArmy.Team] then
                 RNGAIGLOBALS.HighestTeamNavalPhase[myArmy.Team] = 1
             end
+        end
+        local buildMultiplier = 1.0
+        if self.Brain.CheatEnabled then
+            buildMultiplier = self.Brain.EcoManager.BuildMultiplier
         end
         while true do
             -- Create a table rather than a million locals
@@ -325,14 +475,20 @@ StructureManager = Class {
                 if baseName ~= 'FLOATING' then
                     if manager.FactoryManager.FactoryList and not table.empty(manager.FactoryManager.FactoryList) then
                         local massToFactoryValues = manager.BaseSettings.MassToFactoryValues
+                        local landFactoryBuildRate = 0
+                        local airFactoryBuildRate = 0
+                        local navalFactoryBuildRate = 0
                         for c, unit in manager.FactoryManager.FactoryList do
                             local unitCat = unit.Blueprint.CategoriesHash
                             if not IsDestroyed(unit) then
                                 if unitCat.LAND then
+                                    
                                     if unitCat.TECH1 then
                                         RNGINSERT(FactoryData.T1LAND, unit)
                                         if unit:IsUnitState('Upgrading') then
                                             FactoryData.T1LANDUpgrading = FactoryData.T1LANDUpgrading + 1
+                                        else
+                                            landFactoryBuildRate = landFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         end
                                         FactoryData.TotalT1LAND = FactoryData.TotalT1LAND + 1
                                         FactoryData.T1LANDApproxConsumption = FactoryData.T1LANDApproxConsumption + massToFactoryValues.T1LandValue
@@ -346,6 +502,8 @@ StructureManager = Class {
                                         end
                                         if unit:IsUnitState('Upgrading') then
                                             FactoryData.T2LANDUpgrading = FactoryData.T2LANDUpgrading + 1
+                                        else
+                                            landFactoryBuildRate = landFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         end
                                         FactoryData.TotalT2LAND = FactoryData.TotalT2LAND + 1
                                         FactoryData.T2LANDApproxConsumption = FactoryData.T2LANDApproxConsumption + massToFactoryValues.T2LandValue
@@ -357,14 +515,18 @@ StructureManager = Class {
                                             end
                                             FactoryData.T3LANDHQCount[unit.UnitId] = FactoryData.T3LANDHQCount[unit.UnitId] + 1
                                         end
+                                        landFactoryBuildRate = landFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         FactoryData.TotalT3LAND = FactoryData.TotalT3LAND + 1
                                         FactoryData.T3LANDApproxConsumption = FactoryData.T3LANDApproxConsumption + massToFactoryValues.T3LandValue
                                     end
                                 elseif unitCat.AIR then
+
                                     if unitCat.TECH1 then
                                         RNGINSERT(FactoryData.T1AIR, unit)
                                         if unit:IsUnitState('Upgrading') then
                                             FactoryData.T1AIRUpgrading = FactoryData.T1AIRUpgrading + 1
+                                        else
+                                            airFactoryBuildRate = airFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         end
                                         FactoryData.TotalT1AIR = FactoryData.TotalT1AIR + 1
                                         FactoryData.T1AIRApproxConsumption = FactoryData.T1AIRApproxConsumption + massToFactoryValues.T1AirValue
@@ -378,6 +540,8 @@ StructureManager = Class {
                                         end
                                         if unit:IsUnitState('Upgrading') then
                                             FactoryData.T2AIRUpgrading = FactoryData.T2AIRUpgrading + 1
+                                        else
+                                            airFactoryBuildRate = airFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         end
                                         FactoryData.TotalT2AIR = FactoryData.TotalT2AIR + 1
                                         FactoryData.T2AIRApproxConsumption = FactoryData.T2AIRApproxConsumption + massToFactoryValues.T2AirValue
@@ -389,6 +553,7 @@ StructureManager = Class {
                                             end
                                             FactoryData.T3AIRHQCount[unit.UnitId] = FactoryData.T3AIRHQCount[unit.UnitId] + 1
                                         end
+                                        airFactoryBuildRate = airFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         FactoryData.TotalT3AIR = FactoryData.TotalT3AIR + 1
                                         FactoryData.T3AIRApproxConsumption = FactoryData.T3AIRApproxConsumption + massToFactoryValues.T3AirValue
                                     end
@@ -397,6 +562,8 @@ StructureManager = Class {
                                         RNGINSERT(FactoryData.T1NAVAL, 1, unit)
                                         if unit:IsUnitState('Upgrading') then
                                             FactoryData.T1NAVALUpgrading = FactoryData.T1NAVALUpgrading + 1
+                                        else
+                                            navalFactoryBuildRate = navalFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         end
                                         FactoryData.TotalT1NAVAL = FactoryData.TotalT1NAVAL + 1
                                         FactoryData.T1NAVALApproxConsumption = FactoryData.T1NAVALApproxConsumption + massToFactoryValues.T1NavalValue
@@ -410,6 +577,8 @@ StructureManager = Class {
                                         end
                                         if unit:IsUnitState('Upgrading') then
                                             FactoryData.T2NAVALUpgrading = FactoryData.T2NAVALUpgrading + 1
+                                        else
+                                            navalFactoryBuildRate = navalFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         end
                                         FactoryData.TotalT2NAVAL = FactoryData.TotalT2NAVAL + 1
                                         FactoryData.T2NAVALApproxConsumption = FactoryData.T2NAVALApproxConsumption + massToFactoryValues.T2NavalValue
@@ -421,12 +590,19 @@ StructureManager = Class {
                                             end
                                             FactoryData.T3NAVALHQCount[unit.UnitId] = FactoryData.T3NAVALHQCount[unit.UnitId] + 1
                                         end
+                                        navalFactoryBuildRate = navalFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         FactoryData.TotalT3NAVAL = FactoryData.TotalT3NAVAL + 1
                                         FactoryData.T3NAVALApproxConsumption = FactoryData.T3NAVALApproxConsumption + massToFactoryValues.T3NavalValue
                                     end
                                 end
                             end
                         end
+                        manager.FactoryManager.LandBuildRate = landFactoryBuildRate
+                        manager.FactoryManager.AirBuildRate = airFactoryBuildRate
+                        manager.FactoryManager.NavalBuildRate = navalFactoryBuildRate
+                        --LOG('Land BuildRate for '..tostring(baseName)..' is '..tostring(manager.FactoryManager.LandBuildRate))
+                        --LOG('Air BuildRate for '..tostring(baseName)..' is '..tostring(manager.FactoryManager.AirBuildRate))
+                        --LOG('Naval BuildRate for '..tostring(baseName)..' is '..tostring(manager.FactoryManager.NavalBuildRate))
                     end
                     if manager.BaseSettings.MassToFactoryValues then
                         if baseName == 'MAIN' then
@@ -1391,7 +1567,6 @@ StructureManager = Class {
                 local upgradedFactory = unit.UnitBeingBuilt
                 local fractionComplete = upgradedFactory:GetFractionComplete()
                 unit.Upgrading = true
-                unit.Offline = true
                 if hq == 'LAND' then
                     self.Brain.EngineerAssistManagerFocusLandUpgrade = true
                 elseif hq =='AIR' then
@@ -1436,7 +1611,6 @@ StructureManager = Class {
                     end
                 end
                 unit.Upgrading = false
-                unit.Offline = false
             end
         end
     end,
@@ -1500,6 +1674,8 @@ StructureManager = Class {
             local currentEnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
             local currentMassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
             -- Logging starts here
+
+            --local currentTime = GetGameTimeSeconds()
             --LOG('{ "GameTime" : '..tostring(currentTime)..', "Nickname": "'..tostring(aiBrain.Nickname)..'" }')
             --LOG('{ "GameTime" : '..tostring(currentTime)..', "CoreT3Extractors" : "'..tostring(aiBrain.EcoManager.CoreExtractorT3Count)..'" }')
             --LOG('{ "GameTime" : '..tostring(currentTime)..', "CoreExtractorsTotal" : "'..tostring(aiBrain.EcoManager.TotalCoreExtractors)..'" }')
@@ -1510,8 +1686,8 @@ StructureManager = Class {
             --LOG('T1ExtractorUpgradeCount '..tostring(extractorsDetail.TECH1Upgrading))
             --LOG('T2ExtractorUpgradeCount '..tostring(extractorsDetail.TECH2Upgrading))
             --LOG('Current T2 to T1 extractor ratio '..tostring(extractorsDetail.TECH2 / extractorsDetail.TECH1))
-            
-
+            --LOG('Tech1 extractors '..tostring(extractorsDetail.TECH1))
+            --LOG('Tech2 extractors '..tostring(extractorsDetail.TECH2))
 
             if aiBrain.EcoManager.CoreExtractorT3Count < 3 and aiBrain.EcoManager.TotalCoreExtractors > 2 and aiBrain.cmanager.income.r.m > (140 * multiplier) and (aiBrain.smanager.Current.Structure.fact.Land.T3 > 0 or aiBrain.smanager.Current.Structure.fact.Air.T3 > 0) and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 then
                 aiBrain.EcoManager.CoreMassPush = true
@@ -1534,7 +1710,7 @@ StructureManager = Class {
             --LOG('Energy Efficiency '..tostring(currentEnergyEfficiency))
 
             if aiBrain.EcoManager.CoreMassPush and extractorsDetail.TECH2Upgrading < 1 and aiBrain.cmanager.income.r.m > (140 * multiplier) then
-                --LOG('Trigger all tiers true')
+                --LOG('Trigger all tiers true '..tostring(aiBrain.Nickname))
                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(60)
                 continue
@@ -1544,7 +1720,7 @@ StructureManager = Class {
             and aiBrain.BrainIntel.SelfThreat.ExtractorCount > aiBrain.BrainIntel.MassSharePerPlayer 
             and extractorsDetail.TECH2Upgrading < aiBrain.EcoManager.CoreMassMarkerCount 
             and energyEfficiencyOverTime > 1.1 and currentEnergyEfficiency >= 1.1 and energyStorage > 8000 then
-                --LOG('We Could upgrade an extractor now with over time of 1.1 and energy storage of 8000')
+                --LOG('We Could upgrade an extractor now with over time of 1.1 and energy storage of 8000 '..tostring(aiBrain.Nickname))
                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(80)
                 continue
@@ -1553,12 +1729,12 @@ StructureManager = Class {
             and extractorsDetail.TECH2Upgrading < 1 and aiBrain.BrainIntel.SelfThreat.ExtractorCount > aiBrain.BrainIntel.MassSharePerPlayer  
             and coreExtractorT2Count > 0
             and energyStorage > 8000 and energyEfficiencyOverTime > 1.1 and currentEnergyEfficiency >= 1.1 then
-                --LOG('Extractor upgrade triggered due to massshareperplayer being higher than average')
+                --LOG('Extractor upgrade triggered due to massshareperplayer being higher than average '..tostring(aiBrain.Nickname))
                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(80)
                 continue
             elseif massStorage > 2500 and energyStorage > 8000 and energyEfficiencyOverTime > 1.1 and currentEnergyEfficiency >= 1.1 and extractorsDetail.TECH2Upgrading < 2 then
-                --LOG('We Could upgrade an extractor now with over time')
+                --LOG('We Could upgrade an extractor now with over time '..tostring(aiBrain.Nickname))
                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(80)
                 continue
@@ -1566,13 +1742,15 @@ StructureManager = Class {
             if extractorsDetail.TECH1Upgrading < 5 and extractorsDetail.TECH2Upgrading < 2 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 800) and 
                    energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and extractorsDetail.TECH2 > 0 and 
                    (upgradeSpend > (tech2Consumption / 2) or extractorsDetail.TECH1 == 0) and (upgradeSpend > tech2Consumption * 2.2) then
-                        --LOG('We Could upgrade a t2 extractor now with over time and we are not already upgrading t2')
+                        --LOG('We Could upgrade a t2 extractor now with over time and we are not already upgrading t2 '..tostring(aiBrain.Nickname))
                         self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         coroutine.yield(30)
-            elseif extractorsDetail.TECH1Upgrading < 4 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 600 or upgradeSpend - totalSpend > (tech2Consumption / 2) or upgradeSpend > tech2Consumption) and 
+            elseif extractorsDetail.TECH1Upgrading < 4 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and ((totalSpend < upgradeSpend and extractorsDetail.TECH1 == 0) or massStorage > 600 or upgradeSpend - totalSpend > (tech2Consumption / 2) or upgradeSpend > tech2Consumption) and 
                     energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and extractorsDetail.TECH2 > 0 and 
                     (extractorsDetail.TECH1 > 0 and (extractorsDetail.TECH2 / extractorsDetail.TECH1 >= 1.2) or extractorsDetail.TECH1 == 0) then
-                        --LOG('We Could upgrade a t2 extractor now with over time ratio 1.2 and we are not already upgrading t2')
+                        --LOG('We Could upgrade a t2 extractor now with over time ratio 1.2 and we are not already upgrading t2 '..tostring(aiBrain.Nickname))
+                        --LOG('Upgrade spend at the time was '..tostring(upgradeSpend))
+                        --LOG('Tech2 consumption at the time was '..tostring(tech2Consumption))
                         self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         coroutine.yield(30)
             elseif extractorsDetail.TECH1Upgrading < 3 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 600) and 
@@ -1593,11 +1771,11 @@ StructureManager = Class {
                     coroutine.yield(60)
             elseif massStorage > 500 and energyStorage > 3000 and extractorsDetail.TECH2Upgrading < 2 and coreExtractorT2Count + aiBrain.EcoManager.CoreExtractorT3Count >= aiBrain.EcoManager.TotalCoreExtractors 
                    and massEfficiencyOverTime >= 1.015 and energyEfficiencyOverTime >= 1.1 and currentEnergyEfficiency >= 1.1 and currentMassEfficiency >= 1.015 then
-                    --LOG('We Could upgrade an extractor now with storage and efficiency t2')
+                    --LOG('We Could upgrade an extractor now with storage and efficiency t2 '..tostring(aiBrain.Nickname))
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                     coroutine.yield(30)
             elseif massStorage > 2500 and energyStorage > 8000 and massEfficiencyOverTime >= 0.8 and energyEfficiencyOverTime >= 0.9 and currentEnergyEfficiency >= 1.05 and currentMassEfficiency > 0.8 then
-                    --LOG('We could update an extractor because we have alot of mass storage')
+                    --LOG('We could update an extractor because we have alot of mass storage '..tostring(aiBrain.Nickname))
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                     coroutine.yield(30)
             elseif extractorsDetail.TECH1 > 0 and extractorsDetail.TECH1Upgrading < 8 and extractorsDetail.TECH2Upgrading > 0 and upgradeTrigger and totalSpend < upgradeSpend 
@@ -1719,7 +1897,6 @@ StructureManager = Class {
             Land = {},
             Naval = {},
         }
-
         for tier, extractors in extractorTable do
             if allTiers or tier == "TECH1" then
                 for _, c in extractors do
@@ -1734,7 +1911,7 @@ StructureManager = Class {
                 end
             end
         end
-    
+        
         -- Evaluate zones
         for layer, zones in zoneExtractors do
             local zoneGroup = aiBrain.Zones[layer]
@@ -1745,6 +1922,15 @@ StructureManager = Class {
                     for _, c in extractors do
                         if not bestExtractor or zoneDist < lowestDist then
                             bestExtractor = c
+                            bestZone = zoneID
+                            lowestDist = zoneDist
+                        end
+                    end
+                elseif zoneID == -1 then
+                    for _, e in extractors do
+                        local zoneDist = e:GetPosition()
+                        if not bestExtractor or zoneDist < lowestDist then
+                            bestExtractor = e
                             bestZone = zoneID
                             lowestDist = zoneDist
                         end
@@ -1969,7 +2155,11 @@ StructureManager = Class {
         coroutine.yield(math.random(50, 100))
         while self.Brain.Status ~= "Defeat" do
             coroutine.yield(60)
-            local structures = self.Brain:GetListOfUnits((categories.MASSEXTRACTION + categories.FACTORY) - categories.TECH1  + categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3), true)
+            local structures = self.Brain:GetListOfUnits(
+                ((categories.MASSEXTRACTION + categories.FACTORY) - categories.TECH1 + categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)) 
+                + (categories.STRUCTURE * categories.STRATEGIC * categories.TECH3),
+                true
+            )
             local tmdRequired = {}
             local shieldRequired = {}
             for _, v in structures do
@@ -2052,8 +2242,4 @@ function CreateDummyManager(brain)
     dm = DummyManager()
     dm:Create()
     return dm
-end
-
-function GetStructureManager(brain)
-    return brain.StructureManager
 end

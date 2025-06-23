@@ -32,25 +32,6 @@ function GreaterThanArmyThreat(aiBrain, type, number)
 
 end
 
-function LastKnownUnitDetection(aiBrain, locationType, type)
-    if type == 'tml' then
-        if aiBrain.EnemyIntel.TML then
-            for _, v in aiBrain.EnemyIntel.TML do
-                if v.object and not v.object.Dead then
-                    if VDist3Sq(aiBrain.BuilderManagers[locationType].Position, v.position) < 75625 then
-                        local defensiveUnitCount = RUtils.DefensivePointUnitCountRNG(aiBrain, locationType, 1, 'TMD')
-                        --RNGLOG('LastKnownUnitDetection true for TML at '..repr(v.position))
-                        if defensiveUnitCount < 5 then
-                            return true
-                        end
-                    end
-                end
-            end
-        end
-    end
-    return false
-end
-
 function EnemyAirSnipeIsRiskActive(aiBrain)
     if aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
         return true
@@ -60,22 +41,34 @@ end
 
 function EnemyAirSnipeDefenceRequired(aiBrain, locationType)
     if aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
-        local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable[locationType].PositionKey
-        if positionKey then
-            local aaCovered
-            local aaCount = 0
-            for k , v in aiBrain.BuilderManagers[locationType].DefensivePoints[2][positionKey].AntiAir do
-                if v and not v.Dead then
-                    aaCount = aaCount + 1
-                    if aaCount > 1 then
-                        aaCovered = true
-                        break
+        if aiBrain.BrainIntel.ACUDefensivePositionKeyTable[locationType] and aiBrain.BrainIntel.ACUDefensivePositionKeyTable[locationType].PositionKey then
+            local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable[locationType].PositionKey
+            local zoneId = aiBrain.BuilderManagers[locationType].ZoneID
+            if zoneId then
+                local zone = aiBrain.Zones.Land.zones[zoneId]
+                if zone and positionKey then
+                    local aaCovered
+                    local aaCount = 0
+                    if zone.defensespokes then
+                        local layerTable = zone.defensespokes[positionKey.Spoke][positionKey.Layer]
+                        if layerTable then
+                            for k , v in layerTable.AntiAir do
+                                if v and not v.Dead then
+                                    aaCount = aaCount + 1
+                                    if aaCount > 1 then
+                                        LOG('EnemyAirSnipeDefenceChecked and not required')
+                                        aaCovered = true
+                                        break
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    if not aaCovered then
+                        LOG('EnemyAirSnipeDefenceRequired')
+                        return true
                     end
                 end
-            end
-            if not aaCovered then
-                --LOG('EnemyAirSnipeDefenceRequired')
-                return true
             end
         end
     end
@@ -560,83 +553,6 @@ function EnemyUnitsGreaterAtRestrictedRNG(aiBrain, locationType, number, type)
     return false
 end
 
-function BaseZoneThreatGreaterThanDefenses(aiBrain, locationType, pointTier, type)
-    local perimeterMonitor = aiBrain.BasePerimeterMonitor[locationType]
-    local builderManager = aiBrain.BuilderManagers[locationType]
-    if perimeterMonitor then
-        if type == 'LAND' then
-            if perimeterMonitor.ZoneThreatTable and  perimeterMonitor.ZoneThreatTable.landthreat > 0 then
-                local basePosition = builderManager.Position
-                local bestPoint
-                local bestKey
-                if perimeterMonitor.ZoneThreatTable.landthreat > 0 then
-                    local zoneAngle
-                    local highestThreatZone
-                    local highestThreatZonePos
-                    for _, v in perimeterMonitor.ZoneThreatTable.land do
-                        if not highestThreatZone or v.Threat > highestThreatZone then
-                            highestThreatZone = highestThreatZone
-                            highestThreatZonePos = v.Position
-                        end
-                    end
-                    if highestThreatZone and highestThreatZonePos then
-                        zoneAngle = RUtils.GetAngleToPosition(builderManager.Position, highestThreatZonePos)
-                    end
-                    if not RNGTableEmpty(builderManager.DefensivePoints[pointTier]) then
-                        if zoneAngle then
-                            local pointCheck = zoneAngle
-                            for k, v in builderManager.DefensivePoints[pointTier] do
-                                local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
-                                if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
-                                    bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
-                                    bestKey = k
-                                end
-                            end
-                        end
-                    end
-                    if bestPoint then
-                        if builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < perimeterMonitor.ZoneThreatTable.landthreat * 2.5 then
-                            --LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
-                            return true
-                        else
-                            --LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
-                        end
-                    end
-                    return true
-                end
-                return true
-            end
-        elseif type == 'AIR' then
-            if perimeterMonitor.ZoneThreatTable and  perimeterMonitor.ZoneThreatTable.airthreat > 0 then
-                --RNGLOG('Air units greater than '..number..' at base location '..locationType)
-                return true
-            end
-        elseif type == 'ANTIAIR' then
-            if perimeterMonitor.ZoneThreatTable and  perimeterMonitor.ZoneThreatTable.antiairthreat > 0 then
-                --RNGLOG('Air units greater than '..number..' at base location '..locationType)
-                return true
-            end
-        elseif type == 'ANTISURFACEAIR' then
-            if perimeterMonitor.ZoneThreatTable and  perimeterMonitor.ZoneThreatTable.airthreat > 0 then
-                --RNGLOG('AntiSurfaceAir units greater than '..number..' at base location '..locationType)
-                return true
-            end
-        elseif type == 'NAVAL' then
-            if perimeterMonitor.ZoneThreatTable and  perimeterMonitor.ZoneThreatTable.navalthreat > 0 then
-                --RNGLOG('Naval units greater than '..number..' at base location '..locationType)
-                return true
-            end
-        elseif type == 'LANDNAVAL' then
-            if perimeterMonitor.ZoneThreatTable 
-            and (perimeterMonitor.ZoneThreatTable.landthreat > 0 or perimeterMonitor.ZoneThreatTable.navalthreat > 0) then
-                --RNGLOG('LandNaval units greater than '..number..' at base location '..locationType)
-                return true
-            end
-        end
-    end
-    return false
-end
-
 function PerimeterHistoricalThreatGreaterThan(aiBrain, locationType, number, type)
     if aiBrain.BasePerimeterMonitor[locationType] then
         if type == 'LAND' then
@@ -681,31 +597,34 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
     local perimeterMonitor = aiBrain.BasePerimeterMonitor[locationType]
     local builderManager = aiBrain.BuilderManagers[locationType]
     if perimeterMonitor then
-        local basePosition = aiBrain.BuilderManagers[locationType].Position
+        local basePosition = builderManager.Position
+        local baseZoneId = builderManager.ZoneID
+        local zone = aiBrain.Zones.Land.zones[baseZoneId]
         local bestPoint
         local bestKey
         if type == 'LAND' then
-            if not RNGTableEmpty(builderManager.DefensivePoints[pointTier]) then
-                if perimeterMonitor.RecentLandAngle then
-                    local pointCheck = perimeterMonitor.RecentLandAngle
-                    for k, v in builderManager.DefensivePoints[pointTier] do
-                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
-                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
-                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
-                            bestKey = k
+            local totalAntiSurfaceThreat = 0
+            if perimeterMonitor.RecentLandAngle then
+                local pointCheck = perimeterMonitor.RecentLandAngle
+                local defensiveSpokes = zone.defensespokes
+                local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
+                --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
+                if closestSpokeIndex then
+                    local spokeTable= defensiveSpokes[closestSpokeIndex]
+                    if spokeTable then
+                        for _, point in spokeTable do
+                            totalAntiSurfaceThreat = totalAntiSurfaceThreat + (point.AntiSurfaceThreat or 0)
                         end
                     end
                 end
             end
-            if bestPoint then
-                if builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < perimeterMonitor.LandThreat * 2.5 then
-                    --LOG('Base Perimeter Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..tostring(perimeterMonitor.LandThreat * 2.5))
-                    return true
-                else
-                    --LOG('Base Perimeter Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..tostring(perimeterMonitor.LandThreat * 2.5))
-                end
+            if totalAntiSurfaceThreat < perimeterMonitor.LandThreat * 2.5 then
+                --LOG('Base Perimeter Defensive point has antisurface threat of '..tostring(totalAntiSurfaceThreat)..' less than current of '..tostring(perimeterMonitor.LandThreat * 2.5))
+                return true
+            else
+                --LOG('Base Perimeter Defensive point has antisurface threat of '..tostring(totalAntiSurfaceThreat)..' greater than current of '..tostring(perimeterMonitor.LandThreat * 2.5))
             end
-            if perimeterMonitor.ZoneThreatTable and perimeterMonitor.ZoneThreatTable.landthreat > 0 then
+            if perimeterMonitor.ZoneThreatTable then
                 local basePosition = builderManager.Position
                 local bestPoint
                 local bestKey
@@ -720,109 +639,111 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
                         end
                     end
                     if highestThreatValue and highestThreatZonePos then
-                        --LOG('Perimeter monitor has a high threat zone for land at base '..tostring(locationType))
+                        --LOG('Have highest threat zone value, checking against spokes')
                         zoneAngle = RUtils.GetAngleToPosition(builderManager.Position, highestThreatZonePos)
-                    end
-                    if not RNGTableEmpty(builderManager.DefensivePoints[pointTier]) then
                         if zoneAngle then
-                            local pointCheck = zoneAngle
-                            for k, v in builderManager.DefensivePoints[pointTier] do
-                                local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
-                                if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
-                                    bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
-                                    bestKey = k
+                            local defensiveSpokes = zone.defensespokes
+                            if defensiveSpokes then
+                                local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, zoneAngle)
+                                local spokeTable = defensiveSpokes[closestSpokeIndex]
+                                for _, point in spokeTable do
+                                    totalAntiSurfaceThreat = totalAntiSurfaceThreat + (point.AntiSurfaceThreat or 0)
                                 end
                             end
                         end
-                    end
-                    if bestPoint then
-                        if builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < perimeterMonitor.ZoneThreatTable.landthreat * 2.5 then
-                            --LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
+                        if totalAntiSurfaceThreat < perimeterMonitor.ZoneThreatTable.landthreat * 2.5 then
+                            --LOG('Base Zone Defensive point has antisurface threat of '..tostring(totalAntiSurfaceThreat)..' less than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
                             return true
                         else
-                            --LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
+                            --LOG('Base Zone Defensive point has antisurface threat of '..tostring(totalAntiSurfaceThreat)..' greater than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
                         end
                     end
                 end
             end
         elseif type == 'AIR' then
-            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
-                if aiBrain.BasePerimeterMonitor[locationType].RecentAirAngle then
-                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentAirAngle
-                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
-                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
-                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
-                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
-                            bestKey = k
+            local totalAntiAirThreat = 0
+            if perimeterMonitor.RecentAirAngle then
+                local pointCheck = perimeterMonitor.RecentAirAngle
+                local defensiveSpokes = zone.defensespokes
+                local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
+                --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
+                if closestSpokeIndex then
+                    local spokeTable= defensiveSpokes[closestSpokeIndex]
+                    if spokeTable then
+                        for _, point in spokeTable do
+                            totalAntiAirThreat = totalAntiAirThreat + (point.AntiAirThreat or 0)
                         end
                     end
                 end
             end
-            if bestPoint then
-                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat < aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5 then
-                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
-                    return true
-                else
-                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
-                end
+            if totalAntiAirThreat < perimeterMonitor.AntiAirThreat * 2.5 then
+                --LOG('Base Perimeter Defensive point has antiair threat of '..tostring(totalAntiAirThreat)..' less than current of '..tostring(perimeterMonitor.AirThreat * 2.5))
+                return true
+            else
+                --LOG('Base Perimeter Defensive point has antiair threat of '..tostring(totalAntiAirThreat)..' greater than current of '..tostring(perimeterMonitor.AirThreat * 2.5))
             end
         elseif type == 'ANTISURFACEAIR' then
-            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
-                if aiBrain.BasePerimeterMonitor[locationType].RecentSurfaceAirAngle then
-                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentSurfaceAirAngle
-                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
-                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
-                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
-                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
-                            bestKey = k
+            local totalAntiAirThreat = 0
+            if perimeterMonitor.RecentSurfaceAirAngle then
+                local pointCheck = perimeterMonitor.RecentSurfaceAirAngle
+                local defensiveSpokes = zone.defensespokes
+                local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
+                --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
+                if closestSpokeIndex then
+                    local spokeTable= defensiveSpokes[closestSpokeIndex]
+                    if spokeTable then
+                        for _, point in spokeTable do
+                            totalAntiAirThreat = totalAntiAirThreat + (point.AntiAirThreat or 0)
                         end
                     end
                 end
             end
-            if bestPoint then
-                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat < aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5 then
-                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
-                    return true
-                else
-                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiAirThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].AirThreat * 2.5))
-                end
+            if totalAntiAirThreat < perimeterMonitor.AirThreat * 2.5 then
+                --LOG('Base Perimeter Defensive point has antiair threat of '..tostring(totalAntiAirThreat)..' less than current of '..tostring(perimeterMonitor.AirThreat * 2.5))
+                return true
+            else
+                --LOG('Base Perimeter Defensive point has antiair threat of '..tostring(totalAntiAirThreat)..' greater than current of '..tostring(perimeterMonitor.AirThreat * 2.5))
             end
         elseif type == 'NAVAL' then
-            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
-                if aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle then
-                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle
-                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
-                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
-                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
-                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
-                            bestKey = k
+            local totalNavalThreat = 0
+            if perimeterMonitor.RecentNavalAngle then
+                local pointCheck = perimeterMonitor.RecentNavalAngle
+                local defensiveSpokes = zone.defensespokes
+                local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
+                LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
+                if closestSpokeIndex then
+                    local spokeTable= defensiveSpokes[closestSpokeIndex]
+                    if spokeTable then
+                        for _, point in spokeTable do
+                            totalNavalThreat = totalNavalThreat + (point.NavalThreat  or 0)
                         end
                     end
                 end
             end
-            if bestPoint then
-                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5 then
-                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5))
-                    return true
-                else
-                    --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..repr(aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5))
-                end
+            if totalNavalThreat < perimeterMonitor.NavalThreat * 2.5 then
+                LOG('Base Perimeter Defensive point has naval threat of '..tostring(totalNavalThreat)..' less than current of '..tostring(perimeterMonitor.NavalThreat  * 2.5))
+                return true
+            else
+                LOG('Base Perimeter Defensive point has naval threat of '..tostring(totalNavalThreat)..' greater than current of '..tostring(perimeterMonitor.NavalThreat  * 2.5))
             end
         elseif type == 'LANDNAVAL' then
-            if not RNGTableEmpty(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier]) then
-                if aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle or aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle then
-                    local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle or aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle
-                    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier] do
-                        local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
-                        if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
-                            bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
-                            bestKey = k
+            local totalAntiSurfaceThreat = 0
+            if aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle or aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle then
+                local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle or aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle
+                local defensiveSpokes = zone.defensespokes
+                local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
+                --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
+                if closestSpokeIndex then
+                    local spokeTable= defensiveSpokes[closestSpokeIndex]
+                    if spokeTable then
+                        for _, point in spokeTable do
+                            totalAntiSurfaceThreat = totalAntiSurfaceThreat + (point.AntiSurfaceThreat or 0)
                         end
                     end
                 end
             end
             if bestPoint then
-                if aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < (aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5 or aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5) then
+                if totalAntiSurfaceThreat < (aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5 or aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5) then
                     --LOG('Defensive point has antisurface threat of '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..repr((aiBrain.BasePerimeterMonitor[locationType].NavalThreat * 2.5)..' or land of '..repr(aiBrain.BasePerimeterMonitor[locationType].LandThreat * 2.5)))
                     return true
                 else
@@ -845,25 +766,21 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
                 if highestThreatValue and highestThreatZonePos then
                     --LOG('Perimeter monitor has a high threat zone for land at base '..tostring(locationType))
                     zoneAngle = RUtils.GetAngleToPosition(builderManager.Position, highestThreatZonePos)
-                end
-                if not RNGTableEmpty(builderManager.DefensivePoints[pointTier]) then
                     if zoneAngle then
-                        local pointCheck = zoneAngle
-                        for k, v in builderManager.DefensivePoints[pointTier] do
-                            local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
-                            if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
-                                bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
-                                bestKey = k
+                        local defensiveSpokes = zone.defensespokes
+                        if defensiveSpokes then
+                            local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, zoneAngle)
+                            local spokeTable = defensiveSpokes[closestSpokeIndex]
+                            for _, point in spokeTable do
+                                totalAntiSurfaceThreat = totalAntiSurfaceThreat + (point.AntiSurfaceThreat or 0)
                             end
                         end
                     end
-                end
-                if bestPoint then
-                    if builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < perimeterMonitor.ZoneThreatTable.landthreat * 2.5 then
-                        --LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
+                    if totalAntiSurfaceThreat < perimeterMonitor.ZoneThreatTable.landthreat * 2.5 then
+                        --LOG('Base Zone Defensive point has antisurface to land threat of '..tostring(totalAntiSurfaceThreat)..' less than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
                         return true
                     else
-                        --LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
+                        --LOG('Base Zone Defensive point has antisurface to land threat of '..tostring(totalAntiSurfaceThreat)..' greater than current of '..tostring(perimeterMonitor.ZoneThreatTable.landthreat * 2.5))
                     end
                 end
             end
@@ -881,27 +798,23 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
                     end
                 end
                 if highestThreatValue and highestThreatZonePos then
-                    --LOG('Perimeter monitor has a high threat zone for naval at base '..tostring(locationType))
+                    --LOG('Perimeter monitor has a high threat zone for land at base '..tostring(locationType))
                     zoneAngle = RUtils.GetAngleToPosition(builderManager.Position, highestThreatZonePos)
-                end
-                if not RNGTableEmpty(builderManager.DefensivePoints[pointTier]) then
                     if zoneAngle then
-                        local pointCheck = zoneAngle
-                        for k, v in builderManager.DefensivePoints[pointTier] do
-                            local pointAngle = RUtils.GetAngleToPosition(basePosition, v.Position)
-                            if not bestPoint or (math.abs(pointCheck - pointAngle) < bestPoint.Angle) then
-                                bestPoint = { Position = v.Position, Angle = math.abs(pointCheck - pointAngle)}
-                                bestKey = k
+                        local defensiveSpokes = zone.defensespokes
+                        if defensiveSpokes then
+                            local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, zoneAngle)
+                            local spokeTable = defensiveSpokes[closestSpokeIndex]
+                            for _, point in spokeTable do
+                                totalAntiSurfaceThreat = totalAntiSurfaceThreat + (point.AntiSurfaceThreat or 0)
                             end
                         end
                     end
-                end
-                if bestPoint then
-                    if builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat < perimeterMonitor.ZoneThreatTable.navalthreat * 2.5 then
-                        --LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' less than current of '..tostring(perimeterMonitor.ZoneThreatTable.navalthreat * 2.5))
+                    if totalAntiSurfaceThreat < perimeterMonitor.ZoneThreatTable.navalthreat  * 2.5 then
+                        --LOG('Base Zone Defensive point has antisurface naval threat of '..tostring(totalAntiSurfaceThreat)..' less than current of '..tostring(perimeterMonitor.ZoneThreatTable.navalthreat  * 2.5))
                         return true
                     else
-                        --LOG('Base Zone Defensive point has antisurface threat of '..tostring(builderManager.DefensivePoints[pointTier][bestKey].AntiSurfaceThreat)..' greater than current of '..tostring(perimeterMonitor.ZoneThreatTable.navalthreat * 2.5))
+                        --LOG('Base Zone Defensive point has antisurface naval threat of '..tostring(totalAntiSurfaceThreat)..' greater than current of '..tostring(perimeterMonitor.ZoneThreatTable.navalthreat  * 2.5))
                     end
                 end
             end
@@ -1771,43 +1684,55 @@ end
 
 function DefensivePointShieldRequired(aiBrain, locationType)
     local snipeCaution = aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat
+    local zoneId = aiBrain.BuilderManagers[locationType].ZoneID
+    if not zoneId then return false end
+
+    local zone = aiBrain.Zones.Land.zones[zoneId]
+    if not zone or not zone.defensespokes then return false end
+
     if snipeCaution then
-        local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey
+        local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'] 
+            and aiBrain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey
         if positionKey then
-            local shieldCovered
-            for k , v in aiBrain.BuilderManagers['MAIN'].DefensivePoints[2][positionKey].Shields do
-                if v and not v.Dead then
-                    shieldCovered = true
-                    break
+            local point = zone.defensespokes[positionKey.Spoke] 
+                and zone.defensespokes[positionKey.Spoke][positionKey.Index]
+            if point and point.Shields then
+                for _, shield in point.Shields do
+                    if shield and not shield.Dead then
+                        return false  -- Covered
+                    end
                 end
             end
-            if not shieldCovered then
-                return true
+            return true  -- No shields found
+        end
+    end
+
+    -- General shield coverage check
+    for _, spoke in zone.defensespokes do
+        for _, pt in spoke do
+            local unitCount = 0
+            for _, unit in pt.DirectFire do
+                if unit and not unit.Dead then
+                    unitCount = unitCount + 1
+                end
+            end
+
+            if unitCount > 1 then
+                local shieldPresent = false
+                for _, shield in pt.Shields do
+                    if shield and not shield.Dead then
+                        shieldPresent = true
+                        break
+                    end
+                end
+
+                if not shieldPresent then
+                    return true -- Needs shield here
+                end
             end
         end
     end
-    for k, v in aiBrain.BuilderManagers[locationType].DefensivePoints[2] do
-        local unitCount = 0
-        for _, b in v.DirectFire do
-            if b and not b.Dead then
-                unitCount = unitCount + 1
-            end
-        end
-        if unitCount > 1 then
-            local shieldPresent = false
-            for _, b in v.Shields do
-                if b and not b.Dead then
-                    shieldPresent = true
-                    break
-                end
-            end
-            --RNGLOG('DefensivePoint needs shield unit count is '..unitCount)
-            --RNGLOG('DefensivePoint needs shield '..repr(aiBrain.BuilderManagers[locationType].DefensivePoints[2][k].DirectFire))
-            if not shieldPresent then
-                return true
-            end
-        end
-    end
+
     return false
 end
 
@@ -1915,7 +1840,7 @@ function RequireTMDCheckRNG(aiBrain, locationType)
     if smInstance.TMDRequired then
         return true
     end
-    local baseZone = aiBrain.BuilderManagers[locationType].Zone
+    local baseZone = aiBrain.BuilderManagers[locationType].ZoneID
     if baseZone then
         local locationMobileSiloUnits = aiBrain.Zones.Land.zones[baseZone].enemySilos
         if locationType ~= 'FLOATING' and locationMobileSiloUnits  > 0 then
@@ -1975,7 +1900,7 @@ function ZoneAvailableRNG(aiBrain)
 end
 
 function HighValueZone(aiBrain, locationType)
-    local zoneId = aiBrain.BuilderManagers[locationType].Zone
+    local zoneId = aiBrain.BuilderManagers[locationType].ZoneID
     if aiBrain.Zones.Land.zones[zoneId] then
         local resourceValue = aiBrain.Zones.Land.zones[zoneId].resourcevalue
         if resourceValue > 2 then

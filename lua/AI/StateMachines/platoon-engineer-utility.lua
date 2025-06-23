@@ -381,6 +381,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 LocationType = self.LocationType,
                                 Type = 'TMD',
                                 Tier = pointTier,
+                                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAITMDBaseTemplate.lua',
                                 BuildStructures = {
                                     { Unit = 'T2MissileDefense', Categories = categories.STRUCTURE * categories.ANTIMISSILE * categories.DEFENSE * categories.TECH2 },
                                 },
@@ -395,6 +396,51 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             return
                         else
                             --LOG('Position is greater than 20')
+                            self:ChangeState(self.NavigateToTaskLocation)
+                            return
+                        end
+                    end
+                elseif data.Task == 'T1PDBuild' then
+                    LOG('Engineer Received T1PD Build')
+                    local t1PdPosition = data.Position
+                    if t1PdPosition then
+                        --LOG('We have a position')
+                        local rx = engPos[1] - t1PdPosition[1]
+                        local rz = engPos[3] - t1PdPosition[3]
+                        local t1PdPosDistance = rx * rx + rz * rz
+                        --LOG('Pos distance is '..tostring(tmdPosDistance))
+                        self.BuilderData = {
+                            Construction = {
+                                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIT1PDTemplate.lua',
+                                BaseTemplate = 'T1PDTemplate',
+                                BuildClose = false,
+                                EmergencyBuild = true,
+                                OrderedTemplate = true,
+                                Type = 'Land',
+                                Tier = 1,
+                                BuildStructures = {
+                                    { Unit = 'T1GroundDefense', Categories = categories.STRUCTURE * categories.DIRECTFIRE * categories.DEFENSE * categories.TECH1 },
+                                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
+                                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
+                                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
+                                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
+                                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
+                                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
+                                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
+                                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
+                                },
+                                LocationType = 'LocationType',
+                            },
+                            Position = t1PdPosDistance,
+                            ResetTaskData = true
+                        }
+                        if t1PdPosDistance < 400 then
+                            LOG('T1PD Position is less than 20 units')
+                            LOG('Set Task Data')
+                            self:ChangeState(self.SetTaskData)
+                            return
+                        else
+                            LOG('T1PD Position is greater than 20')
                             self:ChangeState(self.NavigateToTaskLocation)
                             return
                         end
@@ -661,7 +707,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                             coroutine.yield(45)
                                         end
                                     end
-                                    
+                                end
+                                if IsDestroyed(eng) then
+                                    return
                                 end
                                 if brokenPathMovement and reclaimUnit and eng:IsUnitState('Reclaiming') then
                                     while not IsDestroyed(reclaimUnit) and not IsDestroyed(eng) do
@@ -723,6 +771,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local avoidZonePos = self.BuilderData.Alter
             StateUtils.SetupStateBuildAICallbacksRNG(eng)
             if cons.NearDefensivePoints then
+                --LOG('Requesting structure near defensive point')
                 if cons.Type == 'TMD' then
                     local zone
                     local zoneId
@@ -734,8 +783,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if zoneId and zone.BuilderManager.Position then
-                        reference = RUtils.GetDefensivePointRNG(aiBrain, zone.BuilderManager.LocationType or 'MAIN', cons.Tier or 2, 'Silo')
-                        LOG('Reference returned '..tostring(repr(reference)))
+                        reference = RUtils.GetDefensiveSpokePointRNG(aiBrain, zone.BuilderManager.LocationType or 'MAIN', cons.Tier or 2, 'Silo')
                     else
                         local tmdPositions = RUtils.GetTMDPosition(aiBrain, eng)
                         --LOG('Try to get TMD position')
@@ -748,9 +796,10 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         --LOG('reference for TMD position '..tostring(repr(reference)))
                     end
                 else
-                    reference = RUtils.GetDefensivePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, cons.Type)
+                    reference = RUtils.GetDefensiveSpokePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, cons.Type)
                 end
                 if reference then
+                    --LOG('Defensive Point received from spoke query '..tostring(repr(reference)))
                     buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
                     RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
                 else
@@ -845,6 +894,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 relative = true
                 if cons.BuildClose then
                     relativeTo = RNGCOPY(eng:GetPosition())
+                elseif self.BuilderData.Position then
+                    relativeTo = self.BuilderData.Position
                 else
                     relativeTo = aiBrain.BuilderManagers[cons.LocationType].Position
                 end

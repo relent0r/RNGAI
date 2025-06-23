@@ -13,7 +13,7 @@ BuilderGroup {
         Priority = 755,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'scout'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -25,7 +25,7 @@ BuilderGroup {
         Priority = 745,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'tank'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -40,7 +40,7 @@ BuilderGroup {
         Priority = 745,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'arty'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -55,7 +55,7 @@ BuilderGroup {
         Priority = 746,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T1', 'arty'} },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Land',
@@ -69,7 +69,7 @@ BuilderGroup {
         Priority = 743,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'aa'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -84,7 +84,7 @@ BuilderGroup {
         Priority = 746,
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', {'LocationType', 'MAIN' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading', nil, true}},
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T1', 'aa'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -105,7 +105,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T2', 'mobilebomb'} },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Land',
@@ -119,7 +119,7 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'tank'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -134,7 +134,7 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'bot'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -150,7 +150,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T2', 'bot'} },
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading', nil, true}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'bot'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -165,7 +165,7 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'aa'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -181,7 +181,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T2', 'aa'} },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Land',
@@ -195,7 +195,7 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'shield'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -209,7 +209,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2MobileShields',
         Priority = 755,
         BuilderConditions = {
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T2', 'shield'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -224,7 +224,7 @@ BuilderGroup {
         Priority = 751,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T2', 'mml'} },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Land',
@@ -238,7 +238,7 @@ BuilderGroup {
         Priority = 746,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T2', 'stealth'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -254,7 +254,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T2', 'amphib'} },
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Land',
@@ -270,7 +270,7 @@ BuilderGroup {
         Priority = 755,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'tank'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -285,7 +285,7 @@ BuilderGroup {
         Priority = 755,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'armoured'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -300,7 +300,7 @@ BuilderGroup {
         Priority = 753,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'aa'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -316,7 +316,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T3', 'aa'} },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Land',
@@ -330,7 +330,7 @@ BuilderGroup {
         Priority = 756,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T3', 'arty'} },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Land',
@@ -344,7 +344,7 @@ BuilderGroup {
         Priority = 755,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'shield'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -359,7 +359,7 @@ BuilderGroup {
         Priority = 755,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T3', 'sniper'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -374,7 +374,7 @@ BuilderGroup {
         Priority = 756,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T3', 'sniper'} },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Land',
@@ -388,7 +388,7 @@ BuilderGroup {
         Priority = 756,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T3', 'mml'} },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Land',
@@ -408,7 +408,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { UCBC, 'ArmyManagerBuild', { 'Land', 'T1', 'scout'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -421,7 +421,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.20}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -438,7 +438,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 4 }},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'AMPHIBIOUS' } },
-            { EBC, 'FactorySpendRatioRNG', {'Land', 'LandUpgrading'}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.20}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
             { UCBC, 'UnitCapCheckLess', { .85 } },

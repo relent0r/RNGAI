@@ -131,7 +131,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 end
             end
             local enemyACU, enemyACUDistance = StateUtils.GetClosestEnemyACU(aiBrain, self.Pos)
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, true, true)
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, true, true, 400)
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
                 --self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
@@ -177,6 +177,12 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
+                end
+                if threat.allySurface > threat.enemySurface and threat.allyRadiusThreat > 0 and threat.enemySurface > threat.allyRadiusThreat then
+                    self:LogDebug(string.format('DecideWhatToDo enemy threat is greater than our short radius threat but we have more actual threat'))
+                    self.retreat=true
+                    self:ChangeState(self.Retreating)
+                    return
                 end
                 self.retreat=false
             end
@@ -338,8 +344,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 end
                 if targetZone then
                     self:LogDebug(string.format('TargetZone is '..tostring(targetZone)..' our home zone is '..tostring(aiBrain.BuilderManagers[self.LocationType].Zone)))
-                    if self.LocationType and aiBrain.BuilderManagers[self.LocationType].Zone then
-                        if targetZone == aiBrain.BuilderManagers[self.LocationType].Zone then
+                    if self.LocationType and aiBrain.BuilderManagers[self.LocationType].ZoneID then
+                        if targetZone == aiBrain.BuilderManagers[self.LocationType].ZoneID then
                             self:LogDebug(string.format('Zone detected was our starting base, go to loiter mode'))
                             self.BuilderData = {
                                 TargetZone = targetZone,
@@ -562,7 +568,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 return
             end
             local potentialTargetZone = StateUtils.SearchHighestThreatFromZone(aiBrain, self.Pos, 'land', 'antisurface')
-            if potentialTargetZone and potentialTargetZone ~= self.Zone then
+            if potentialTargetZone and potentialTargetZone ~= self.ZoneID then
                 --LOG('Zone Control found edge zone with potential target')
                 local zonePos = potentialTargetZone.pos
                 --LOG('target zone is '..tostring(potentialTargetZone.id))

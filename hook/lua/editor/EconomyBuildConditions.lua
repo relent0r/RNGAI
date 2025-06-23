@@ -382,7 +382,7 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, layer, requireBu
     local resourceCount = 0
     local massSpendTotal = 0
     local zoneBasedIncome = 0
-    local locationZone = aiBrain.BuilderManagers[locationType].Zone
+    local locationZone = aiBrain.BuilderManagers[locationType].ZoneID
     local highValue = 1
     local landZones = aiBrain.Zones.Land.zones
     if landZones[locationZone].teamvalue and landZones[locationZone].teamvalue < 1 then
@@ -557,10 +557,19 @@ function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType,requireBui
     return MassIncomeToFactoryRNG(aiBrain,'<')
 end
 
-function FactorySpendRatioRNG(aiBrain,uType,upgradeType, noStorageCheck, demandBuilder)
+function FactorySpendRatioRNG(aiBrain,LocationType, uType,upgradeType, noStorageCheck, demandBuilder)
     local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
     local currentFactorySpend = aiBrain.cmanager.categoryspend.fact[uType] - aiBrain.cmanager.categoryspend.fact[upgradeType]
     local productionRatio = demandBuilder and math.max(aiBrain.ProductionRatios[uType], aiBrain.DefaultProductionRatios[uType]) or aiBrain.ProductionRatios[uType]
+    if not demandBuilder then
+        if aiBrain.BuilderManagers[LocationType].FactoryManager.ZoneThreatAssignment then
+            local zoneThreat = aiBrain.BuilderManagers[LocationType].FactoryManager.ZoneThreatAssignment
+            if zoneThreat > 0 and zoneThreat < 5 then
+                --LOG('ZoneThreatAssignment is lower than 5, decrease production ratio')
+                productionRatio = productionRatio * 0.5
+            end
+        end
+    end
     if currentFactorySpend / ( aiBrain.cmanager.income.r.m - (mexSpend * 0.5)) < productionRatio then
         if aiBrain.EnemyIntel.ChokeFlag and uType == 'Land' then 
             if (GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.10 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.95) then

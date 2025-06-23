@@ -1733,8 +1733,6 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EcoManager.BuildMultiplier = tonumber(ScenarioInfo.Options.BuildMult)
             self.BrainIntel.OmniCheatEnabled = ScenarioInfo.Options.OmniCheat == 'on'
         end
-        --This coin flip is done for aggressive expansion chances
-        self.coinFlip = math.random(1,3)
        --LOG('Build Multiplier now set, this impacts many economy checks that look at income '..self.EcoManager.EcoMultiplier)
 
         -- Table to holding the starting reclaim
@@ -1813,7 +1811,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EngineerAssistManagerBrainRNG)
         self:ForkThread(self.AllyEconomyHelpThread)
         self:ForkThread(self.HeavyEconomyRNG)
-        self:ForkThread(self.FactoryEcoManagerRNG)
         self:ForkThread(IntelManagerRNG.LastKnownThread)
         self:ForkThread(RUtils.CanPathToCurrentEnemyRNG)
         self:ForkThread(Mapping.SetMarkerInformation)
@@ -2021,27 +2018,6 @@ AIBrain = Class(RNGAIBrainClass) {
         while true do
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea, '0000FF')
             DrawCircle(self.BuilderManagers['MAIN'].Position, BaseRestrictedArea/2, 'FF0000')
-            --[[
-            for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
-                for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
-                    if im.MapIntelGrid[i][k].ScoutPriority > 0 then
-                        DrawCircle(im.MapIntelGrid[i][k].Position, 10, 'FFA500')
-                    end
-                end
-            end]]
-            --[[
-            if self.BuilderManagers['MAIN'].DefensivePoints[1] then
-                for _, v in self.BuilderManagers['MAIN'].DefensivePoints[1] do
-                    DrawCircle(v.Position, 10, 'FFA500')
-                end
-            end
-            if self.BuilderManagers['MAIN'].DefensivePoints[2] then
-                for _, v in self.BuilderManagers['MAIN'].DefensivePoints[2] do
-                    DrawCircle(v.Position, 10, 'FFA500')
-                end
-            end]]
-                    
-
             WaitTicks(2)
         end
     end,
@@ -2085,7 +2061,7 @@ AIBrain = Class(RNGAIBrainClass) {
         else
             multiplier = 1
         end
-        if self.BuilderManagers['MAIN'].Zone then
+        if self.BuilderManagers['MAIN'].ZoneID then
             local homeZone = self.BuilderManagers['MAIN'].Zone
             if self.Zones.Land.zones[homeZone].resourcevalue > 0 then
                 local homeExtractors = self.Zones.Land.zones[homeZone].resourcevalue
@@ -2326,7 +2302,6 @@ AIBrain = Class(RNGAIBrainClass) {
             PlatoonFormManager = PlatoonFormManager.CreatePlatoonFormManager(self, baseName, position, radius, useCenter),
             EngineerManager = EngineerManager.CreateEngineerManager(self, baseName, position, radius),
             PathableZones = {},
-            DefensivePoints = {},
             BuilderHandles = {},
             CoreResources = {},
             ReclaimData = {},
@@ -2338,15 +2313,57 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self.NumBases = self.NumBases + 1
         if baseLayer == 'Water' then
-            --LOG('Created Water base of name '..baseName)
+            LOG('Created Water base of name '..baseName)
         end
         self:ForkThread(self.SetPathableZonesForBase, position, baseName)
         self:ForkThread(RUtils.SetCoreResources, position, baseName)
         self:ForkThread(self.GetGraphArea, position, baseName, baseLayer)
         self:ForkThread(self.GetBaseZone, position, baseName, baseLayer)
-        self:ForkThread(self.GetDefensivePointTable, baseName, 'BaseRestrictedArea', position)
-        if self.RNGDEBUG then
-            RNGLOG('Defensive Point Table for buildermanager '..baseName..'  '..repr(self.BuilderManagers[baseName].DefensivePoints))
+        self:ForkThread(self.GetDefensivePointTable, baseName, 'BaseRestrictedArea', position, baseLayer)
+    end,
+
+    GetBaseZone = function(self, position, baseName, baseLayer)
+        -- This will set the zone of the factory manager so we don't need to look it up every time
+        -- Needs to wait a while for the GraphArea properties to be populated
+        local zoneId
+        local zoneSet = false
+        while not zoneSet do
+            if baseLayer then
+                if baseLayer == 'Water' then
+                    zoneId = MAP:GetZoneID(position,self.Zones.Naval.index)
+                else
+                    zoneId = MAP:GetZoneID(position,self.Zones.Land.index)
+                    --LOG('Requested land zone for base, zone returned was '..tostring(zone))
+                end
+            end
+            if not zoneId then
+                WARN('Missing zone for builder manager land node or no path markers')
+            end
+            if zoneId then
+                self.BuilderManagers[baseName].ZoneID = zoneId
+                if zoneId > -1 then
+                    if baseLayer == 'Water' then
+                        if not self.Zones.Naval.zones[zoneId] then
+                        end
+                        self.Zones.Naval.zones[zoneId].BuilderManager = self.BuilderManagers[baseName]
+                        self.BuilderManagers[baseName].Zone = self.Zones.Naval.zones[zoneId]
+                    else
+                        if not self.Zones.Land.zones[zoneId] then
+                        end
+                        self.Zones.Land.zones[zoneId].BuilderManager = self.BuilderManagers[baseName]
+                        self.BuilderManagers[baseName].Zone = self.Zones.Land.zones[zoneId]
+                        LOG('BuilderManager zone is set')
+                    end
+                    return
+                else
+                    WARN('No Zone found at provided position '..tostring(position[1])..':'..tostring(position[3]))
+                end
+                LOG('Zone is '..self.BuilderManagers[baseName].ZoneID)
+                zoneSet = true
+            else
+                LOG('No zone for builder manager')
+            end
+            coroutine.yield(10)
         end
     end,
 
@@ -2416,60 +2433,16 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
-    GetDefensivePointTable = function(self, baseName, area, position)
+    GetDefensivePointTable = function(self, baseName, area, position, layer)
         -- This will set the graph area of the factory manager so we don't need to look it up every time
         local defensivePointTableSet = false
         while not defensivePointTableSet do
             if self.OperatingAreas[area] then
                 local range = self.OperatingAreas[area]
-                local DefensivePoints = RUtils.GenerateDefensivePointTable(self, baseName, range, position)
-                self.BuilderManagers[baseName].DefensivePoints = DefensivePoints
-                --LOG('Defensive Points set for base '..repr(self.BuilderManagers[baseName].DefensivePoints))
+                self:ForkThread(RUtils.GenerateDefensiveSpokeTable, baseName, range, position, layer)
                 defensivePointTableSet = true
             end
             coroutine.yield(3)
-        end
-    end,
-
-    GetBaseZone = function(self, position, baseName, baseLayer)
-        -- This will set the zone of the factory manager so we don't need to look it up every time
-        -- Needs to wait a while for the GraphArea properties to be populated
-        local zone
-        local zoneSet = false
-        while not zoneSet do
-            if baseLayer then
-                if baseLayer == 'Water' then
-                    zone = MAP:GetZoneID(position,self.Zones.Naval.index)
-                else
-                    zone = MAP:GetZoneID(position,self.Zones.Land.index)
-                    --LOG('Requested land zone for base, zone returned was '..tostring(zone))
-                end
-            end
-            if not zone then
-                WARN('Missing zone for builder manager land node or no path markers')
-            end
-            if zone then
-                
-                self.BuilderManagers[baseName].Zone = zone
-                if zone > -1 then
-                    if baseLayer == 'Water' then
-                        if not self.Zones.Naval.zones[zone] then
-                        end
-                        self.Zones.Naval.zones[zone].BuilderManager = self.BuilderManagers[baseName]
-                    else
-                        if not self.Zones.Land.zones[zone] then
-                        end
-                        self.Zones.Land.zones[zone].BuilderManager = self.BuilderManagers[baseName]
-                    end
-                else
-                    WARN('No Zone found at provided position '..tostring(position[1])..':'..tostring(position[3]))
-                end
-                --RNGLOG('Zone is '..self.BuilderManagers[baseName].Zone)
-                zoneSet = true
-            else
-                --RNGLOG('No zone for builder manager')
-            end
-            coroutine.yield(30)
         end
     end,
 
@@ -2723,6 +2696,8 @@ AIBrain = Class(RNGAIBrainClass) {
         local brainGridInstance = self.GridBrain
         for k, v in self.BuilderManagers do
             if k ~= 'FLOATING' and v.FactoryManager.LocationActive then
+                local engineerManager = v.EngineerManager
+                local currentReclaimPlatoonCount = engineerManager and engineerManager:GetEngineerStateMachineCount('Engineers', 'ReclaimEngineer') or 0
                 local gx, gz = reclaimGridInstance:ToGridSpace(v.Position[1],v.Position[3])
                 local cells, count = reclaimGridInstance:FilterAndSortInRadius(gx, gz, self.BrainIntel.IMAPConfig.Rings, 50)
                 local maxEngineersRequired = 0
@@ -2731,7 +2706,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local reclaimAvailable = false
                 for k = 1, count do
                     local cell = cells[k] --[[@as AIGridReclaimCell]]
-                    if cell.TotalMass > 0 then
+                    if cell.TotalMass > 0 or cell.TotalEnergy > 0 then
                         local centerOfCell = reclaimGridInstance:ToWorldSpace(cell.X, cell.Z)
                         totalMassRequired = totalMassRequired + cell.TotalMass
                         totalEnergyRequired = totalEnergyRequired + cell.TotalEnergy
@@ -2740,13 +2715,14 @@ AIBrain = Class(RNGAIBrainClass) {
                         end]]
                     end
                 end
-                local maxEngineersRequired = math.max(math.ceil(totalMassRequired / 500), math.ceil(totalEnergyRequired / 500))
+                local maxEngineersRequired = math.max(math.ceil(totalMassRequired / 300), math.ceil(totalEnergyRequired / 700))
+                --LOG('Base Reclaim Check for '..tostring(k)..' : Engineers Required '..tostring(maxEngineersRequired )..' current reclaim engineers '..tostring(currentReclaimPlatoonCount))
                 if totalMassRequired > 500 or totalEnergyRequired > 1500 then
                     v.ReclaimData.ReclaimAvailable = true
-                    v.ReclaimData.EngineersRequired = math.max(4, maxEngineersRequired)
+                    v.ReclaimData.EngineersRequired = math.max(12, (maxEngineersRequired - currentReclaimPlatoonCount))
                 else 
                     v.ReclaimData.ReclaimAvailable = false
-                    v.ReclaimData.EngineersRequired = maxEngineersRequired
+                    v.ReclaimData.EngineersRequired = maxEngineersRequired - currentReclaimPlatoonCount
                 end
                 if k == 'MAIN' then
                     self.StartMassReclaimTotal = totalMassRequired
@@ -2754,7 +2730,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
-
     end,
 
     BaseMonitorAlertTimeoutRNG = function(self, pos, location, type)
@@ -3572,7 +3547,11 @@ AIBrain = Class(RNGAIBrainClass) {
                             if unitCat.MOBILE then
                                 if unitCat.LAND or unitCat.AMPHIBIOUS or unitCat.COMMAND then
                                     landUnits = landUnits + 1
-                                    landThreat = landThreat + unit.Blueprint.Defense.SurfaceThreatLevel
+                                    if unitCat.COMMAND then
+                                        landThreat = landThreat + unit:EnhancementThreatReturn()
+                                    else
+                                        landThreat = landThreat + unit.Blueprint.Defense.SurfaceThreatLevel
+                                    end
                                     if unitBp.Weapon[1].WeaponCategory == 'Direct Fire' then
                                         if not unitWeaponMaxRange or unitBp.Weapon[1].MaxRadius > unitWeaponMaxRange then
                                             unitWeaponMaxRange = unitBp.Weapon[1].MaxRadius
@@ -3630,12 +3609,12 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         end
                     end
-                    if v.Zone then
+                    if v.ZoneID then
                         local zones
                         if v.Layer == 'Water' then
-                            zoneThreatTable = RUtils.CalculateThreatWithDynamicDecay(self, k, 'Water', v.Zone, baseMilitaryArea, 0, baseRestrictedArea, 1.2, 1)
+                            zoneThreatTable = RUtils.CalculateThreatWithDynamicDecay(self, k, 'Water', v.ZoneID, baseMilitaryArea, 0, baseRestrictedArea, 1.2, 1)
                         else
-                            zoneThreatTable = RUtils.CalculateThreatWithDynamicDecay(self, k, 'Land', v.Zone, baseMilitaryArea, 0, baseRestrictedArea, 1.2, 1)
+                            zoneThreatTable = RUtils.CalculateThreatWithDynamicDecay(self, k, 'Land', v.ZoneID, baseMilitaryArea, 0, baseRestrictedArea, 1.2, 1)
                         end
                     end
                     self.BasePerimeterMonitor[k].LandUnits = landUnits
@@ -4494,17 +4473,21 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     elseif platoonType == 'SATELLITE' and platoonDPS then
                         if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 < GetGameTimeSeconds() then
-                            if RUtils.HaveUnitVisual(self, v.Unit, true) and not RUtils.ShieldProtectingTargetRNG(self, v.Unit, nil) then
-                                RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
-                                local gridX, gridY = im:GetIntelGrid(v.Position)
-                                local scoutRequired = true
-                                if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
-                                    scoutRequired = false
-                                end
-                                if scoutRequired then
-                                    im.MapIntelGrid[gridX][gridY].MustScout = true
-                                    im.MapIntelGrid[gridX][gridY].ACUIndexes[k] = true
-                                    --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
+                            if RUtils.HaveUnitVisual(self, v.Unit, true) then
+                                local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(self, v.Position, 46, 'Enemy')
+                                LOG('Director total shield health from acu check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
+                                if (totalShieldHealth / platoonDPS) < 12 then
+                                    RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
+                                    local gridX, gridY = im:GetIntelGrid(v.Position)
+                                    local scoutRequired = true
+                                    if im.MapIntelGrid[gridX][gridY].MustScout and im.MapIntelGrid[gridX][gridY].ACUIndexes[k] then
+                                        scoutRequired = false
+                                    end
+                                    if scoutRequired then
+                                        im.MapIntelGrid[gridX][gridY].MustScout = true
+                                        im.MapIntelGrid[gridX][gridY].ACUIndexes[k] = true
+                                        --RNGLOG('ScoutRequired for EnemyIntel.ACU '..repr(im.MapIntelGrid[gridX][gridY]))
+                                    end
                                 end
                             end
                         end
@@ -4550,7 +4533,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
                     --RNGLOG('Unit ID is '..v.Object.UnitId)
                     local shielded = false
-                    if RUtils.ShieldProtectingTargetRNG(self, v.Object, nil) then
+                    if (platoonType == 'SATELLITE' or platoonType == 'GUNSHIP') and platoonDPS then
+                        local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(self, v.Object:GetPosition(), 46, 'Enemy')
+                        LOG('Director total shield health from intel check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
+                        if (totalShieldHealth / platoonDPS) > 12 then
+                            shielded = true
+                        end
+                    elseif RUtils.ShieldProtectingTargetRNG(self, v.Object, nil) then
                         table.insert(shieldedUnits, v)
                         shielded = true
                     end
@@ -4596,7 +4585,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
                     --RNGLOG('Unit ID is '..v.Object.UnitId)
                     local shielded = false
-                    if RUtils.ShieldProtectingTargetRNG(self, v.Object, nil) then
+                    if (platoonType == 'SATELLITE' or platoonType == 'GUNSHIP') and platoonDPS then
+                        local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(self, v.Object:GetPosition(), 46, 'Enemy')
+                        LOG('Director total shield health from energy check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
+                        if (totalShieldHealth / platoonDPS) > 12 then
+                            shielded = true
+                        end
+                    elseif RUtils.ShieldProtectingTargetRNG(self, v.Object, nil) then
                         table.insert(shieldedUnits, v)
                         shielded = true
                     end
@@ -4642,7 +4637,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
                     --RNGLOG('Unit ID is '..v.Object.UnitId)
                     local shielded = false
-                    if RUtils.ShieldProtectingTargetRNG(self, v.Object, nil) then
+                    if (platoonType == 'SATELLITE' or platoonType == 'GUNSHIP') and platoonDPS then
+                        local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(self, v.Object:GetPosition(), 46, 'Enemy')
+                        LOG('Director total shield health from factory check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
+                        if (totalShieldHealth / platoonDPS) > 12 then
+                            shielded = true
+                        end
+                    elseif RUtils.ShieldProtectingTargetRNG(self, v.Object, nil) then
                         table.insert(shieldedUnits, v)
                         shielded = true
                     end
@@ -4692,7 +4693,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Enemy Index of unit is '..v.EnemyIndex)
                     --RNGLOG('Unit ID is '..v.Object.UnitId)
                     local shielded = false
-                    if RUtils.ShieldProtectingTargetRNG(self, v.Object, nil) then
+                    if (platoonType == 'SATELLITE' or platoonType == 'GUNSHIP') and platoonDPS then
+                        local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(self, v.Object:GetPosition(), 46, 'Enemy')
+                        LOG('Director total shield health from strategic check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
+                        if (totalShieldHealth / platoonDPS) > 12 then
+                            shielded = true
+                        end
+                    elseif RUtils.ShieldProtectingTargetRNG(self, v.Object, nil) then
                         table.insert(shieldedUnits, v)
                         shielded = true
                     end
@@ -4761,10 +4768,18 @@ AIBrain = Class(RNGAIBrainClass) {
                                             end
                                         end
                                     elseif platoonType == 'SATELLITE' and platoonDPS then
-                                        if RUtils.HaveUnitVisual(self, v.object, true) and not RUtils.ShieldProtectingTargetRNG(self, v.object, nil) then
-                                            closestMex = v.object
-                                            targetSelected = true
-                                            break
+                                        if RUtils.HaveUnitVisual(self, v.object, true) then
+                                            local shielded = false
+                                            local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(self, v.Object:GetPosition(), 46, 'Enemy')
+                                            LOG('Director total shield health from extractor check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
+                                            if (totalShieldHealth / platoonDPS) > 12 then
+                                                shielded = true
+                                            end
+                                            if not shielded then
+                                                closestMex = v.object
+                                                targetSelected = true
+                                                break
+                                            end
                                         end
                                     end
                                 end
@@ -4838,7 +4853,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             massPriorityTable.LAND_TECH2 = nil
                             massPriorityTable.LAND_TECH3 = nil
                         end
-                        if (self.BrainIntel.SelfThreat.AirNow + self.BrainIntel.SelfThreat.AllyAirThreat) > (self.EnemyIntel.EnemyThreatCurrent.Air * 1.1) then
+                        if (self.BrainIntel.SelfThreat.AirNow + self.BrainIntel.SelfThreat.AllyAirThreat) > (self.EnemyIntel.EnemyThreatCurrent.Air * 1.1) or self.CDRUnit.Caution then
                             massPriorityTable.AIR_TECH1 = 13
                             massPriorityTable.AIR_TECH2 = 10
                             massPriorityTable.AIR_TECH3 = 7
@@ -5591,358 +5606,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             self.EcoManager.EcoPowerPreemptive = false
-        end
-    end,
-
-    FactoryEcoManagerRNG = function(self)
-        coroutine.yield(Random(1,7))
-        while true do
-            if self.EcoManager.EcoManagerStatus == 'ACTIVE' and not self.BrainIntel.PlayerRole.SpamPlayer then
-                if GetGameTimeSeconds() < 240 then
-                    coroutine.yield(50)
-                    continue
-                end
-                local massStateCaution = self:EcoManagerMassStateCheck()
-                local unitTypePaused = false
-                local factType = 'Land'
-                if massStateCaution then
-                    if self.cmanager.categoryspend.fact['Land'] > (self.cmanager.income.r.m * self.ProductionRatios['Land']) then
-                        local deficit = self.cmanager.categoryspend.fact['Land'] - (self.cmanager.income.r.m * self.ProductionRatios['Land'])
-                        --RNGLOG('Land Factory Deficit is '..deficit)
-                        if self.BuilderManagers then
-                            for k, v in self.BuilderManagers do
-                                if self.BuilderManagers[k].FactoryManager then
-                                    if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
-                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Dead and not f.Upgrading then
-                                                if EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
-                                                    if not f.Offline then
-                                                        f.Offline = true
-                                                        --RNGLOG('Land T1 Factory Taken offline')
-                                                        deficit = deficit - 5
-                                                    end
-                                                end
-                                                if deficit <= 0 then
-                                                    break
-                                                end
-                                            end
-                                        end
-                                        --RNGLOG('Finished T1 Loop Land Factory Deficit is '..deficit)
-                                        if deficit <= 0 then
-                                            break
-                                        end
-                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Dead and not f.Upgrading then
-                                                if EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
-                                                    if not f.Offline then
-                                                        f.Offline = true
-                                                        --RNGLOG('Land T2 Factory Taken offline')
-                                                        deficit = deficit - 8
-                                                    end
-                                                end
-                                                if deficit <= 0 then
-                                                    break
-                                                end
-                                            end
-                                        end
-                                        --RNGLOG('Finished T2 Loop Land Factory Deficit is '..deficit)
-                                        if deficit <= 0 then
-                                            break
-                                        end
-                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Dead and not f.Upgrading then
-                                                if EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
-                                                    if not f.Offline then
-                                                        f.Offline = true
-                                                        --RNGLOG('Land T3 Factory Taken offline')
-                                                        deficit = deficit - 17
-                                                    end
-                                                end
-                                                if deficit <= 0 then
-                                                    break
-                                                end
-                                            end
-                                        end
-                                        --RNGLOG('Finished T3 Loop Land Factory Deficit is '..deficit)
-                                    end
-                                end
-                                if deficit <= 0 then
-                                    break
-                                end
-                            end
-                        end
-                    end
-                    if self.cmanager.categoryspend.fact['Air'] > (self.cmanager.income.r.m * self.ProductionRatios['Air']) then
-                        local deficit = self.cmanager.categoryspend.fact['Air'] - (self.cmanager.income.r.m * self.ProductionRatios['Air'])
-                        if self.BuilderManagers then
-                            for k, v in self.BuilderManagers do
-                                if self.BuilderManagers[k].FactoryManager then
-                                    if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
-                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Dead and not f.Upgrading then
-                                                if EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
-                                                    if not f.Offline then
-                                                        f.Offline = true
-                                                        --RNGLOG('Air T1 Factory Taken offline')
-                                                        deficit = deficit - 4
-                                                    end
-                                                end
-                                                if deficit <= 0 then
-                                                    break
-                                                end
-                                            end
-                                        end
-                                        --RNGLOG('Finished T1 Loop Air Factory Deficit is '..deficit)
-                                        if deficit <= 0 then
-                                            break
-                                        end
-                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Dead and not f.Upgrading then
-                                                if EntityCategoryContains(categories.TECH2 * categories.AIR, f) then
-                                                    if not f.Offline then
-                                                        f.Offline = true
-                                                        --RNGLOG('Air T2 Factory Taken offline')
-                                                        deficit = deficit - 7
-                                                    end
-                                                end
-                                                if deficit <= 0 then
-                                                    break
-                                                end
-                                            end
-                                        end
-                                        --RNGLOG('Finished T2 Loop Air Factory Deficit is '..deficit)
-                                        if deficit <= 0 then
-                                            break
-                                        end
-                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Dead and not f.Upgrading then
-                                                if EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
-                                                    if not f.Offline then
-                                                        f.Offline = true
-                                                        --RNGLOG('Air T3 Factory Taken offline')
-                                                        deficit = deficit - 17
-                                                    end
-                                                end
-                                                if deficit <= 0 then
-                                                    break
-                                                end
-                                            end
-                                        end
-                                        --RNGLOG('Finished T3 Loop Air Factory Deficit is '..deficit)
-                                    end
-                                end
-                                if deficit <= 0 then
-                                    break
-                                end
-                            end
-                        end
-                    end
-                    if self.cmanager.categoryspend.fact['Naval'] > (self.cmanager.income.r.m * self.ProductionRatios['Naval']) then
-                        local deficit = self.cmanager.categoryspend.fact['Naval'] - (self.cmanager.income.r.m * self.ProductionRatios['Naval'])
-                        --LOG('Naval Factory Deficit is '..deficit)
-                        if self.BuilderManagers then
-                            for k, v in self.BuilderManagers do
-                                if v.Layer == 'Water' and self.BuilderManagers[k].FactoryManager then
-                                    if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
-                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Dead and not f.Upgrading then
-                                                if EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
-                                                    if not f.Offline then
-                                                        f.Offline = true
-                                                        --LOG('Naval T1 Factory Taken offline')
-                                                        deficit = deficit - 4
-                                                    end
-                                                end
-                                                if deficit <= 0 then
-                                                    break
-                                                end
-                                            end
-                                        end
-                                        --LOG('Finished T1 Loop Naval Factory Deficit is '..deficit)
-                                        if deficit <= 0 then
-                                            break
-                                        end
-                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if not f.Dead and not f.Upgrading then
-                                                if EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
-                                                    if not f.Offline then
-                                                        f.Offline = true
-                                                        --RNGLOG('Naval T2 Factory Taken offline')
-                                                        deficit = deficit - 10
-                                                    end
-                                                end
-                                                if deficit <= 0 then
-                                                    break
-                                                end
-                                            end
-                                        end
-                                        --RNGLOG('Finished T2 Loop Naval Factory Deficit is '..deficit)
-                                        if deficit <= 0 then
-                                            break
-                                        end
-                                        for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                            if EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
-                                                if not f.Dead and not f.Upgrading then
-                                                    if not f.Offline then
-                                                        f.Offline = true
-                                                        --RNGLOG('Naval T3 Factory Taken offline')
-                                                        deficit = deficit - 20
-                                                    end
-                                                end
-                                            end
-                                            if deficit <= 0 then
-                                                break
-                                            end
-                                        end
-                                        --RNGLOG('Finished T3 Loop Naval Factory Deficit is '..deficit)
-                                    end
-                                end
-                                if deficit <= 0 then
-                                    break
-                                end
-                            end
-                        end
-                    end
-                end
-                if self.cmanager.categoryspend.fact['Land'] < (self.cmanager.income.r.m * self.ProductionRatios['Land']) then
-                    local surplus = (self.cmanager.income.r.m * self.ProductionRatios['Land']) - self.cmanager.categoryspend.fact['Land']
-                    --RNGLOG('Land Factory Surplus is '..surplus)
-                    if self.BuilderManagers then
-                        for k, v in self.BuilderManagers do
-                            if v.Layer ~= 'Water' and self.BuilderManagers[k].FactoryManager then
-                                if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
-                                    for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                        if not f.Dead and not f.Upgrading then
-                                            if EntityCategoryContains(categories.TECH3 * categories.LAND, f) then
-                                                if f.Offline then
-                                                    f.Offline = false
-                                                    --RNGLOG('Land T1 Factory put online')
-                                                    surplus = surplus - 17
-                                                end
-                                            elseif EntityCategoryContains(categories.TECH2 * categories.LAND, f) then
-                                                if f.Offline then
-                                                    f.Offline = false
-                                                    --RNGLOG('Land T2 Factory put online')
-                                                    surplus = surplus - 8
-                                                end
-                                            elseif EntityCategoryContains(categories.TECH1 * categories.LAND, f) then
-                                                if f.Offline then
-                                                    f.Offline = false
-                                                    --RNGLOG('Land T3 Factory put online')
-                                                    surplus = surplus - 4
-                                                end
-                                            end
-                                        end
-                                        if surplus <= 0 then
-                                            break
-                                        end
-                                    end
-                                end
-                            end
-                            if surplus <= 0 then
-                                break
-                            end
-                        end
-                    end
-                end
-                if self.cmanager.categoryspend.fact['Air'] < (self.cmanager.income.r.m * self.ProductionRatios['Air']) then
-                    local surplus = (self.cmanager.income.r.m * self.ProductionRatios['Air']) - self.cmanager.categoryspend.fact['Air']
-                    if self.BuilderManagers then
-                        for k, v in self.BuilderManagers do
-                            if v.Layer ~= 'Water' and self.BuilderManagers[k].FactoryManager then
-                                if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
-                                    for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                        if not f.Dead and not f.Upgrading then
-                                            if EntityCategoryContains(categories.TECH3 * categories.AIR, f) then
-                                                if f.Offline then
-                                                    f.Offline = false
-                                                    --RNGLOG('Air T1 Factory put online')
-                                                    surplus = surplus - 17
-                                                end
-                                            elseif EntityCategoryContains(categories.TECH2 * categories.AIR, f) then
-                                                if f.Offline then
-                                                    f.Offline = false
-                                                    --RNGLOG('Air T2 Factory put online')
-                                                    surplus = surplus - 7
-                                                end
-                                            elseif EntityCategoryContains(categories.TECH1 * categories.AIR, f) then
-                                                if f.Offline then
-                                                    f.Offline = false
-                                                    --RNGLOG('Air T3 Factory put online')
-                                                    surplus = surplus - 4
-                                                end
-                                            end
-                                            if surplus <= 0 then
-                                                break
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                            if surplus <= 0 then
-                                break
-                            end
-                        end
-                    end
-                end
-                if self.cmanager.categoryspend.fact['Naval'] < (self.cmanager.income.r.m * self.ProductionRatios['Naval']) then
-                    local surplus = (self.cmanager.income.r.m * self.ProductionRatios['Naval']) - self.cmanager.categoryspend.fact['Naval']
-                    --LOG('Naval Factory Surplus is '..surplus)
-                    if self.BuilderManagers then
-                        for k, v in self.BuilderManagers do
-                            if v.Layer == 'Water' and self.BuilderManagers[k].FactoryManager then
-                                if RNGGETN(self.BuilderManagers[k].FactoryManager.FactoryList) > 1 then
-                                    for _, f in self.BuilderManagers[k].FactoryManager.FactoryList do
-                                        if not f.Dead and not f.Upgrading then
-                                            --RNGLOG('Naval Factory not dead or upgrading')
-                                            if EntityCategoryContains(categories.TECH3 * categories.NAVAL, f) then
-                                                if f.Offline then
-                                                    f.Offline = false
-                                                    surplus = surplus - 20
-                                                end
-                                            elseif EntityCategoryContains(categories.TECH2 * categories.NAVAL, f) then
-                                                if f.Offline then
-                                                    f.Offline = false
-                                                    surplus = surplus - 10
-                                                end
-                                            elseif EntityCategoryContains(categories.TECH1 * categories.NAVAL, f) then
-                                                if f.Offline then
-                                                    f.Offline = false
-                                                    surplus = surplus - 4
-                                                end
-                                            end
-                                            if surplus <= 0 then
-                                                break
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                            if surplus <= 0 then
-                                break
-                            end
-                        end
-                    end
-                end
-            end
-            --debug
-            
-            local factories = GetListOfUnits(self, categories.FACTORY * categories.AIR, false, true)
-            local offlineFactoryCount = 0
-            local onlineFactoryCount = 0
-            for k, v in factories do
-                if v and not v.Dead then
-                    if v.Offline then
-                        offlineFactoryCount = offlineFactoryCount + 1
-                    else
-                        onlineFactoryCount = onlineFactoryCount + 1
-                    end
-                end
-            end
-           --LOG('Offline Factory Count '..offlineFactoryCount)
-           --LOG('Online Factory Count '..onlineFactoryCount)
-
-            coroutine.yield(20)
         end
     end,
     
@@ -7464,7 +7127,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.EngineerAssistManagerBrainRNG)
         self:ForkThread(self.AllyEconomyHelpThread)
         self:ForkThread(self.HeavyEconomyRNG)
-        self:ForkThread(self.FactoryEcoManagerRNG)
         self:ForkThread(IntelManagerRNG.LastKnownThread)
         self:ForkThread(RUtils.CanPathToCurrentEnemyRNG)
         self:ForkThread(Mapping.SetMarkerInformation)

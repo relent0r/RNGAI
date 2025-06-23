@@ -1874,9 +1874,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 cdr.BaseLocation = true
                 if brain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey then
                     retreatKey = brain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey
-                end
-                if brain.BuilderManagers['MAIN'].DefensivePoints[2][retreatKey].Position then
-                    acuHoldPosition = brain.BuilderManagers['MAIN'].DefensivePoints[2][retreatKey].Position
+                    acuHoldPosition = brain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].Position
                 end
                 self.BuilderData = {
                     Position = acuHoldPosition,
@@ -1964,7 +1962,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],cdr.CDRHome[1],cdr.CDRHome[3])
                                 if aPlatDistance > 1600 and aPlatToHomeDistance < distanceToHome then
                                     local threat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
-                                    if threat > 10 then
+                                    if threat > 15 then
                                         local platoonValue = aPlatDistance * aPlatDistance / threat
                                         local threatened = false
                                         
@@ -1984,7 +1982,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                         -- Penalize if path is threatened
                                         if threatened then
                                             --LOG('Risky platoon, increase platoonValue')
-                                            platoonValue = platoonValue * 2  -- Increase value (less desirable)
+                                            platoonValue = platoonValue * 5  -- Increase value (less desirable)
                                         end
                                         if not closestPlatoonDistance then
                                             closestPlatoonDistance = platoonValue
@@ -2041,7 +2039,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if closestBase and closestPlatoon then
+            if closestBase and closestPlatoon and not baseRetreat then
                 if closestBaseDistance < closestPlatoonDistance then
                     --LOG('We have a base or platoon to retreat to '..tostring(brain.Nickname))
                     if NavUtils.CanPathTo('Amphibious', cdr.Position, brain.BuilderManagers[closestBase].Position) then
@@ -2082,7 +2080,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.Navigating)
                     return
                 end
-            elseif closestPlatoon then
+            elseif closestPlatoon and not baseRetreat then
                 --LOG('We have a platoon to retreat to '..tostring(brain.Nickname))
                 if closestAPlatPos and NavUtils.CanPathTo('Amphibious', cdr.Position,closestAPlatPos) then
                     cdr.Retreat = false
@@ -2541,6 +2539,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 --RNGLOG('cdr.Upgrading is set to true')
                             end
                             if (cdr.HealthPercent < 0.40 and eta > 30 and cdr.CurrentEnemyThreat > 10 and cdr.DistanceToHome > 225) or (cdr.CurrentEnemyThreat > 30 and eta > 450 and cdr.CurrentFriendlyThreat < 15) then
+                                IssueStop({cdr})
+                                IssueClearCommands({cdr})
+                                cdr.Upgrading = false
+                                self.BuilderData = {}
+                                ----self:LogDebug(string.format('Cancel upgrade and emergency retreat'))
+                                self:ChangeState(self.Retreating)
+                                return
+                            end
+                            if cdr.CurrentEnemyThreat > 60 and math.max(0, cdr.CurrentEnemyThreat - cdr.CurrentFriendlyThreat) > 45 and eta > 450 and cdr.Confidence < 2.5 then
                                 IssueStop({cdr})
                                 IssueClearCommands({cdr})
                                 cdr.Upgrading = false

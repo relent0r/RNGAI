@@ -1,6 +1,8 @@
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local IntelManager = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 
 local WeakValueTable = { __mode = 'v' }
 
@@ -21,8 +23,10 @@ function OnCreate(unit)
                 local aiBrain = unit:GetAIBrain()
                 if aiBrain.RNG then
                     if unit:GetFractionComplete() == 1 then
-                        --LOG('Completed Unit '..tostring(unit.UnitId))
                         local unitCats = unit.Blueprint.CategoriesHash
+                        if unitCats.STRUCTURE and aiBrain.StructureManager then
+                            aiBrain.StructureManager:AddZoneStructure(unit)
+                        end
                         if unitCats.MASSEXTRACTION then
                             local unitPos = unit:GetPosition()
                             if VDist3Sq(unitPos, aiBrain.BuilderManagers['MAIN'].Position) < 6400 then
@@ -99,6 +103,7 @@ function OnCreate(unit)
                                 local tmdPosition = unit:GetPosition()
                                 ForkThread(aiBrain.IntelManager.FlushExistingStructureRequest, aiBrain.IntelManager, tmdPosition, defenseRadius, 'TMD')
                             end
+                        elseif unitCats.STRUCTURE and unitCats.DEFENSE then
                         end
                     end
                 end
@@ -116,6 +121,9 @@ function OnStopBeingBuilt(self, unit, builder, layer)
             local aiBrain = unit:GetAIBrain()
             if aiBrain.RNG then
                 local unitCats = unit.Blueprint.CategoriesHash
+                if unitCats.STRUCTURE and aiBrain.StructureManager then
+                    aiBrain.StructureManager:AddZoneStructure(unit)
+                end
                 if unitCats.MASSEXTRACTION then
                     local unitPos = unit:GetPosition()
                     if VDist3Sq(unitPos, aiBrain.BuilderManagers['MAIN'].Position) < 6400 then
@@ -248,6 +256,15 @@ function OnKilled(self, instigator, type, overkillRatio)
         end
         if sourceUnit and sourceUnit.GetAIBrain then
             IntelManager.ProcessSourceOnKilled(self, sourceUnit)
+        end
+    end
+    if self.GetAIBrain then
+        local brain = self:GetAIBrain()
+        if brain.RNG then
+            local unitCats = self.Blueprint.CategoriesHash
+            if unitCats.STRUCTURE then
+                brain.StructureManager:RemoveZoneStructure(self)
+            end
         end
     end
 end

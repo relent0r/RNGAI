@@ -726,57 +726,51 @@ function AIFindAggressiveBaseLocationRNG(aiBrain, locationType, radius, tMin, tM
 end
 
 function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange, atkPri)
+    local function PrioritizeTarget(unit, distance)
+        local eco = unit.Blueprint.Economy or {}
+        local mass = eco.BuildCostMass or 0
+        local energy = eco.BuildCostEnergy or 0
+        local value = mass + (energy * 0.01)
+        local ecoBonus = value * 0.5
+    
+        return distance - ecoBonus
+    end
     local position = platoon:GetPlatoonPosition()
     local CategoriesShield = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE
     if not aiBrain or not position or not maxRange then
         return false
     end
+    LOG('Novax looking for target, max platoon dps is '..tostring(platoon['rngdata'].MaxPlatoonDPS))
 
     local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS - categories.INSIGNIFICANTUNIT, position, maxRange, 'Enemy')
+    local bestPriority
     for _, v in atkPri do
         local retUnit = false
-        local distance = false
         local targetShields = 9999
         for num, unit in targetUnits do
             if not unit.Dead and EntityCategoryContains(v, unit) and platoon:CanAttackTarget(squad, unit) then
                 local unitPos = unit:GetPosition()
                 local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
                 --RNGLOG('Satellite Distance of unit to platoon '..VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]))
+                local unitDistance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
+                local priority =  PrioritizeTarget(unit, unitDistance)
                 if numShields == 0 then
-                    if (not retUnit) or (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                    if (not retUnit) or (not bestPriority or priority < bestPriority) then
                         retUnit = unit
-                        distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
                         targetShields = 0
+                        bestPriority = priority
                     end
-                elseif numShields > 0 and (not retUnit) or numShields > 0 and (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
-                    local shieldUnits = aiBrain:GetUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
-                    local totalShieldHealth = 0
-                    for _, sUnit in shieldUnits do
-                        if not sUnit.Dead and sUnit.MyShield and sUnit.MyShield.GetHealth then
-                            if sUnit.Blueprint.Defense.Shield.ShieldSize then 
-                                local shieldSize = sUnit.Blueprint.Defense.Shield.ShieldSize * 0.5
-                                if VDist3Sq(unitPos, sUnit:GetPosition()) < shieldSize * shieldSize then
-                                    totalShieldHealth = totalShieldHealth + sUnit.MyShield:GetHealth()
-                                end
-                            end
-                        end
-                    end
+                elseif numShields > 0 and ((not retUnit) or (not bestPriority or priority < bestPriority)) then
+                    local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(aiBrain, unitPos, 46, 'Enemy')
                     --RNGLOG('Satellite looking for target found shield')
                     --RNGLOG('Satellite max dps '..platoon['rngdata'].MaxPlatoonDPS..' total shield health '..totalShieldHealth)
-                    if totalShieldHealth == 0 then
-                        if (not retUnit) or (not distance or VDist2Sq(position[1], position[3], unitPos[1], unitPos[3]) < distance) then
+                    if totalShieldHealth == 0 or (totalShieldHealth / platoon['rngdata'].MaxPlatoonDPS) < 12 then
+                        if not bestPriority or priority < bestPriority then
                             retUnit = unit
-                            distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
-                            targetShields = 0
-                        end
-                    elseif totalShieldHealth > 0 then
-                        if (totalShieldHealth / platoon['rngdata'].MaxPlatoonDPS) < 12 then
-                            --LOG('Max platoon dps '..tostring(platoon['rngdata'].MaxPlatoonDPS))
-                            --LOG('Total Shield Health '..tostring(totalShieldHealth))
-                            --LOG('We can break this shield, platoon dps divided by total is '..tostring(totalShieldHealth / platoon['rngdata'].MaxPlatoonDPS))
-                            retUnit = unit
-                            distance = VDist2Sq(position[1], position[3], unitPos[1], unitPos[3])
-                            targetShields = numShields
+                            bestPriority = priority
+                            if totalShieldHealth > 0 then
+                                targetShields = numShields
+                            end
                         end
                     end
                 end
@@ -807,4 +801,6 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
     --LOG('We have no unit to attack')
     return false
 end
+
+
 

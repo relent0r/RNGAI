@@ -420,7 +420,11 @@ ExitConditions = function(self,aiBrain)
                 local enemyThreat = 0
                 for _,enemy in enemies do
                     local unitBp = enemy.Blueprint
-                    enemyThreat = enemyThreat + unitBp.Defense.SurfaceThreatLevel
+                    if unitBp.CategoriesHash.COMMAND then
+                        enemyThreat = enemyThreat + enemy:EnhancementThreatReturn()
+                    else
+                        enemyThreat = enemyThreat + unitBp.Defense.SurfaceThreatLevel
+                    end
                     if self.ZoneType == 'raid' and not self.retreat and unitBp.CategoriesHash.ENGINEER and not unitBp.CategoriesHash.COMMAND then
                         return true
                     end
@@ -839,13 +843,13 @@ ZoneUpdate = function(aiBrain, platoon)
         end
         local zoneID = MAP:GetZoneID(pos,zoneIndex)
         if zoneID > 0 then
-            platoon.Zone = zoneID
+            platoon.ZoneID = zoneID
         else
             local searchPoints = RUtils.DrawCirclePoints(4, 5, pos)
             for k, v in searchPoints do
                 zoneID = MAP:GetZoneID(v,zoneIndex)
                 if zoneID > 0 then
-                    platoon.Zone = zoneID
+                    platoon.ZoneID = zoneID
                     break
                 end
             end
@@ -1089,8 +1093,9 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
             end
             local unitCats = unit.Blueprint.CategoriesHash
             if unitCats.COMMAND then
-                unitTable.CommandThreat.TotalThreat = unitTable.CommandThreat.TotalThreat + unitThreat
-                unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                local commanderThreat = unit:EnhancementThreatReturn()
+                unitTable.CommandThreat.TotalThreat = unitTable.CommandThreat.TotalThreat + commanderThreat
+                unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + commanderThreat
                 RNGINSERT(unitTable.CommandThreat.Units, {Object = unit, Distance = distance})
             elseif unitCats.EXPERIMENTAL and (unitCats.LAND or unitCats.AMPHIBIOUS) then
                 unitTable.ExperimentalThreat.TotalThreat = unitTable.ExperimentalThreat.TotalThreat + unitThreat
@@ -1236,8 +1241,9 @@ function ExperimentalAirTargetLocalCheckRNG(aiBrain, position, platoon, maxRange
                 unitTable.ClosestUnitDistance = distance
             end
             if unit.Blueprint.CategoriesHash.COMMAND then
-                unitTable.CommandThreat.TotalThreat = unitTable.CommandThreat.TotalThreat + unitThreat
-                unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
+                local commanderThreat = unit:EnhancementThreatReturn()
+                unitTable.CommandThreat.TotalThreat = unitTable.CommandThreat.TotalThreat + commanderThreat
+                unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + commanderThreat
                 RNGINSERT(unitTable.CommandThreat.Units, {Object = unit, Distance = distance})
             elseif unit.Blueprint.CategoriesHash.EXPERIMENTAL and (unit.Blueprint.CategoriesHash.LAND or unit.Blueprint.CategoriesHash.AMPHIBIOUS) then
                 unitTable.ExperimentalThreat.TotalThreat = unitTable.ExperimentalThreat.TotalThreat + unitThreat
@@ -2593,9 +2599,9 @@ function GetAirRetreatLocation(aiBrain, unit)
     -- First-layer search (directly connected zones)
     if currentZone.edges and table.getn(currentZone.edges) > 0 then
         for _, edge in currentZone.edges do
-            local adjacentZone = landZones[edge.zone]
-            if adjacentZone and not checkedZones[edge.zone] then
-                checkedZones[edge.zone] = true
+            local adjacentZone = edge.zone
+            if adjacentZone and not checkedZones[edge.zone.id] then
+                checkedZones[edge.zone.id] = true
                 evaluateZone(adjacentZone)
             end
         end
@@ -2606,9 +2612,9 @@ function GetAirRetreatLocation(aiBrain, unit)
         local adjZone = landZones[checkedZoneId]
         if adjZone.edges and table.getn(adjZone.edges) > 0 then
             for _, edge in adjZone.edges do
-                local secondLayerZone = landZones[edge.zone]
-                if secondLayerZone and not checkedZones[edge.zone] then
-                    checkedZones[edge.zone] = true
+                local secondLayerZone = edge.zone
+                if secondLayerZone and not checkedZones[edge.zone.id] then
+                    checkedZones[edge.zone.id] = true
                     evaluateZone(secondLayerZone)
                 end
             end

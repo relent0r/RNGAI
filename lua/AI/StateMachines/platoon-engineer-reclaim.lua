@@ -251,11 +251,11 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
         Main = function(self)
             local aiBrain = self:GetBrain()
             local eng = self.eng
-            local maxReclaimRadius = self.Blueprint.Economy.MaxBuildDistance or 5
-           
+            local maxReclaimRadius = (eng.Blueprint.Economy.MaxBuildDistance or 5) * (eng.Blueprint.Economy.MaxBuildDistance or 5)
             local tableSize = RNGGETN(aiBrain.StartReclaimTable)
             self:LogDebug(string.format('Reclaim Table size is '..tostring(tableSize)))
             if tableSize > 0 then
+                IssueClearCommands({eng})
                 self:LogDebug(string.format('We aretrying to get start reclaim'))
                 local reclaimCount = 0
                 local firstReclaim = false
@@ -311,6 +311,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                                 if not closestReclaimDistance or reclaimDistance < closestReclaimDistance then
                                     self:LogDebug(string.format('We have selected a start reclaim, checking pathable'))
                                     if NavUtils.CanPathTo('Amphibious', engPos, r.Reclaim.CachePosition) then
+                                        self:LogDebug(string.format('We can path to start reclaim'))
                                         closestReclaim = r.Reclaim
                                         closestReclaimDistance = reclaimDistance
                                         closestReclaimKey = k
@@ -329,33 +330,37 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                             
                         end
                     end
-                    --LOG('Reclaim selected with a highestValue of '..tostring(highestValue).. ' at a distance of '..tostring(closestReclaimDistance))
                     if closestReclaim then
                         self:LogDebug(string.format('We have closest reclaim'))
                         --LOG('Closest Reclaim is true we are going to try reclaim it')
                         reclaimCount = reclaimCount + 1
                         --LOG('Reclaim Function - Issuing reclaim')
-                        IssueMove({eng}, closestReclaim.CachePosition)
-                        coroutine.yield(15)
+                        local engPos = eng:GetPosition()
+                        local reclaimDist = VDist3(engPos, closestReclaim.CachePosition)
+                        local lerpPosition = RUtils.lerpy(engPos, closestReclaim.CachePosition, {reclaimDist, reclaimDist - 4.5})
+                        IssueMove({eng}, lerpPosition)
+                        coroutine.yield(10)
                         local reclaimTimeout = 0
                         local massOverflow = false
                         while aiBrain:PlatoonExists(self) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 40) do
                             local reclaimDistance = VDist3Sq(engPos, closestReclaim.CachePosition)
-                            if reclaimDistance < maxReclaimRadius then
+                            if reclaimDistance <= (maxReclaimRadius + 9) then
                                 IssueReclaim({eng}, closestReclaim)
                             end
                             local brokenPathMovement = false
-                            coroutine.yield(1)
                             reclaimTimeout = reclaimTimeout + 1
                             --RNGLOG('Waiting for reclaim to no longer exist')
                             if eng:IsUnitState('Reclaiming') and reclaimTimeout > 0 then
                                 reclaimTimeout = reclaimTimeout - 1
                             end
-                            brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, eng, maxReclaimRadius)
+                            brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, eng, 5)
                             if brokenPathMovement and closestReclaim and (not IsDestroyed(closestReclaim)) then
-                                IssueMove({eng}, closestReclaim.CachePosition)
+                                local engPos = eng:GetPosition()
+                                local reclaimDist = VDist3(engPos, closestReclaim.CachePosition)
+                                local lerpPosition = RUtils.lerpy(engPos, closestReclaim.CachePosition, {reclaimDist, reclaimDist - 4})
+                                IssueMove({eng}, lerpPosition)
                             end
-                            coroutine.yield(15)
+                            coroutine.yield(10)
                         end
                         self:LogDebug(string.format('We should be setting the following table key to nil '..tostring(closestReclaimKey)))
                         table.insert(reclaimKeysToFlush, closestReclaimKey)

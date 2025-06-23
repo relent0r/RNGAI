@@ -1047,10 +1047,8 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 0.85 }},
-            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
+            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Sea' } },
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.0, 5.5 }},
-            --{ EBC, 'GreaterThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' } },
-            { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', 'Naval' } },
             { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH1 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.NAVAL * categories.TECH1 }},
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.FACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY, true }},
@@ -1278,12 +1276,12 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNG Factory Builder Land T1 Expansion Active',
+        BuilderName = 'RNG Factory Builder Land T1 Expansion ZoneThreat',
         PlatoonTemplate = 'EngineerStateT123RNG',
-        PriorityFunction = ActiveExpansion,
-        Priority = 0,
+        Priority = 950,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
+            { TBC, 'BaseNeedsMoreFactoryBuildRate', {'LocationType', 'LandBuildRate'} },
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND'} },
             { EBC, 'GreaterThanMassStorageOrEfficiency', { 150, 0.8 }},
             { EBC, 'GreaterThanEnergyEfficiencyOverTimeRNG', { 0.9 }},
@@ -1308,12 +1306,13 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNG Factory Builder Land T2 Expansion Active',
+        BuilderName = 'RNG Factory Builder Land T2 Expansion ZoneThreat',
         PlatoonTemplate = 'EngineerStateT23RNG',
         PriorityFunction = ActiveExpansion,
         Priority = 0,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
+            { TBC, 'BaseNeedsMoreFactoryBuildRate', {'LocationType', 'LandBuildRate'} },
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND'} },
             { EBC, 'GreaterThanMassStorageOrEfficiency', { 150, 0.9 }},
             { EBC, 'GreaterThanEnergyEfficiencyOverTimeRNG', { 1.0 }},
@@ -1339,12 +1338,13 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNG Factory Builder Land T3 Expansion Active',
+        BuilderName = 'RNG Factory Builder Land T3 Expansion ZoneThreat',
         PlatoonTemplate = 'EngineerStateT3RNG',
         PriorityFunction = ActiveExpansion,
         Priority = 0,
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
+            { TBC, 'BaseNeedsMoreFactoryBuildRate', {'LocationType', 'LandBuildRate'} },
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND'} },
             { EBC, 'GreaterThanMassStorageOrEfficiency', { 150, 0.9 }},
             { EBC, 'GreaterThanEnergyEfficiencyOverTimeRNG', { 1.0 }},

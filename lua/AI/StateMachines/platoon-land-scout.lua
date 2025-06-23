@@ -65,7 +65,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             self.ScoutSupported = true
             self.ExcludeFromMerge = true
             self.ScoutUnit = self:GetPlatoonUnits()[1]
-            self.Home = aiBrain.BuilderManagers[self.LocationType].Position
+            self.Home = table.copy(aiBrain.BuilderManagers[self.LocationType].Position)
             if aiBrain.EnemyIntel.LandPhase > 1 then
                 self.EnemyRadius = math.max(self['rngdata'].MaxPlatoonWeaponRange+35, 70)
             else
@@ -118,6 +118,9 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 end
+            end
+            if IsDestroyed(self) then
+                return
             end
             if (self.BuilderData.SupportUnit and not self.BuilderData.SupportUnit.Dead) or (self.BuilderData.SupportPlatoon and not IsDestroyed(self.BuilderData.SupportPlatoon)) then
                 --self:LogDebug(string.format('We are going to support a unit'))
@@ -192,7 +195,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     if NavUtils.CanPathTo(self.MovementLayer, targetData.Position, scoutPos) then
                         self.BuilderData = {
                             ZonePosition = targetData.Position,
-                            Zone = targetData.Zone,
+                            ZoneID = targetData.ZoneID,
                             ScoutType = scoutType
                         }
                         self.PlatoonAttached = true
@@ -213,7 +216,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     if NavUtils.CanPathTo(self.MovementLayer, targetData.Position, scoutPos) then
                         self.BuilderData = {
                             ZonePosition = targetData.Position,
-                            Zone = targetData.Zone,
+                            ZoneID = targetData.LandZoneID,
                             ScoutType = scoutType
                         }
                         self.PlatoonAttached = true
@@ -384,7 +387,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     local movePos = RUtils.AvoidLocation(holdPos, scoutPos, 4)
                     StateUtils.IssueNavigationMove(scout, movePos)
                 end
-                if builderData.Zone and aiBrain.Zones.Land[builderData.Zone].intelassignment.RadarCoverage then
+                if builderData.ZoneID and aiBrain.Zones.Land[builderData.ZoneID].intelassignment.RadarCoverage then
                     coroutine.yield(10)
                     --RNGLOG('RadarCoverage true')
                     break
@@ -542,7 +545,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if scoutType == 'ZoneLocation' then
-                        if aiBrain.Zones.Land[builderData.Zone].intelassignment.RadarCoverage then
+                        if aiBrain.Zones.Land[builderData.ZoneID].intelassignment.RadarCoverage then
                             coroutine.yield(10)
                             --RNGLOG('RadarCoverage true')
                             break

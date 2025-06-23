@@ -198,8 +198,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 elseif self.MovementLayer == 'Water' then
                     zoneSet = aiBrain.Zones.Naval.zones
                 end
-                local homeFriendlyAntiAir = zoneSet[homeBase.Zone].friendlylandantiairthreat
-                local homeFriendlyAntiAirAllocated = zoneSet[homeBase.Zone].friendlyantiairallocatedthreat
+                local homeFriendlyAntiAir = zoneSet[homeBase.ZoneID].friendlylandantiairthreat
+                local homeFriendlyAntiAirAllocated = zoneSet[homeBase.ZoneID].platoonallocations.friendlyantiairallocatedthreat
                 if targetThreat > 8 and homeFriendlyAntiAir < targetThreat and homeFriendlyAntiAirAllocated < targetThreat and basePosition and NavUtils.CanPathTo(self.MovementLayer, self.Pos, basePosition) and VDist3Sq(self.Pos, basePosition) < 90000 then
                     local targetZone = MAP:GetZoneID(basePosition,self.Zones.Land.index)
                     self.BuilderData = {
@@ -208,7 +208,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         CutOff = 400
                     }
                     self.ZoneAllocated = targetZone
-                    zoneSet[homeBase.Zone].friendlyantiairallocatedthreat = zoneSet[homeBase.Zone].friendlyantiairallocatedthreat + (self.CurrentPlatoonThreatAntiAir or 0)
+                    zoneSet[homeBase.ZoneID].platoonallocations.friendlyantiairallocatedthreat = zoneSet[homeBase.ZoneID].platoonallocations.friendlyantiairallocatedthreat + (self.CurrentPlatoonThreatAntiAir or 0)
                     --self:LogDebug(string.format('DecideWhatToDo target zone navigate'))
                     self:ChangeState(self.Navigating)
                     return
@@ -220,8 +220,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 coroutine.yield(Random(5,35))
                 targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType, true)
                 if targetZone then
-                    if self.LocationType and aiBrain.BuilderManagers[self.LocationType].Zone then
-                        if targetZone == aiBrain.BuilderManagers[self.LocationType].Zone then
+                    if self.LocationType and aiBrain.BuilderManagers[self.LocationType].ZoneID then
+                        if targetZone == aiBrain.BuilderManagers[self.LocationType].ZoneID then
                             self:LogDebug(string.format('Zone detected was our starting base, go to loiter mode'))
                             self.BuilderData = {
                                 TargetZone = targetZone,
@@ -239,7 +239,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         CutOff = 400
                     }
                     self.ZoneAllocated = targetZone
-                    aiBrain.Zones.Land.zones[targetZone].friendlyantiairallocatedthreat = aiBrain.Zones.Land.zones[targetZone].friendlyantiairallocatedthreat + (self.CurrentPlatoonThreatAntiAir or 0)
+                    aiBrain.Zones.Land.zones[targetZone].platoonallocations.friendlyantiairallocatedthreat = aiBrain.Zones.Land.zones[targetZone].platoonallocations.friendlyantiairallocatedthreat + (self.CurrentPlatoonThreatAntiAir or 0)
                     local zx = platPos[1] - self.BuilderData.Position[1]
                     local zz = platPos[3] - self.BuilderData.Position[3]
                     if zx * zx + zz * zz < 3600 then
@@ -294,27 +294,51 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             --LOG('ACUSupport trying to use transport')
             local aiBrain = self:GetBrain()
             local builderData = self.BuilderData
+            local currentZoneID = builderData.TargetZone
+            local currentZone
+
             if not builderData.Position then
                 WARN('No position passed to ZoneControlDefense')
                 self:ChangeState(self.DecideWhatToDo)
                 return false
             end
-            if aiBrain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint then
+
+            local inWater = RUtils.PositionOnWater(self.Pos[1], self.Pos[3])
+            if not currentZoneID then
+                if inWater then
+                    currentZoneID = MAP:GetZoneID(self.Pos,aiBrain.Zones.Naval.index)
+                else
+                    currentZoneID = MAP:GetZoneID(self.Pos,aiBrain.Zones.Land.index)
+                end
+            end
+
+            if inWater then
+                currentZone = aiBrain.Zones.Naval.zones[currentZoneID]
+            else
+                currentZone = aiBrain.Zones.Land.zones[currentZoneID]
+            end
+
+            if currentZone then
                 --LOG('Zone Control is moving to factory manager rally point')
                 local platUnits = self:GetPlatoonUnits()
                 for _, v in platUnits do
-                    StateUtils.IssueNavigationMove(v, aiBrain.BuilderManagers[self.LocationType].FactoryManager.RallyPoint)
+                    StateUtils.IssueNavigationMove(v, currentZone.pos)
                 end
                 coroutine.yield(25)
             end
+
             local counter = 0
             while counter < 10 do
                 counter = counter + 1
                 coroutine.yield(20)
+                local adjacentThreatCheck = StateUtils.SearchHighestThreatFromZone(aiBrain, self.Pos,'air')
+                if adjacentThreatCheck then
+                    break
+                end
             end
+
             self.BuilderData = {}
             self:ChangeState(self.DecideWhatToDo)
-            return
         end,
     },
 

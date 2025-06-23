@@ -14,6 +14,7 @@ local RNGPI = math.pi
 local RNGCAT = table.cat
 local RNGCOPY = table.copy
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
+local WeakValueTable = { __mode = 'v' }
 
 -- We'll use these too later
 local GetMarkers = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
@@ -125,7 +126,38 @@ RNGLandResourceSet = Class(ZoneSet){
                 zoneList[k] = nil
             end
             for _, v in startLocations do
-                zoneList[head] = {pos=v.position, component=MAP:GetComponent(v.position,self.layer), weight=table.getn(v.resourcemarkers), startpositionclose=true, enemystructurethreat=0, enemylandthreat=0, enemyantisurfacethreat=0, enemyantiairthreat=0, enemySilos=0, friendlyantisurfacethreat=0, friendlylandantiairthreat=0, friendlydirectfireantisurfacethreat=0, friendlyindirectantisurfacethreat=0,resourcevalue=table.getn(v.resourcemarkers), resourcemarkers=v.resourcemarkers, zonealert=false, control=1, enemystartdata = { }, allystartdata = { },  bestarmy = false, teamvalue = 1, friendlyantiairallocatedthreat=0, label = 0, BuilderManager = {}, lastexpansionattempt = 0, engineerplatoonallocated = false, intelassignment = {}}
+                zoneList[head] = {
+                    pos=v.position, 
+                    component=MAP:GetComponent(v.position,self.layer), 
+                    weight=table.getn(v.resourcemarkers), 
+                    startpositionclose=true, 
+                    enemystructurethreat=0, 
+                    gridenemylandthreat=0, 
+                    enemylandthreat=0, 
+                    enemyantisurfacethreat=0, 
+                    enemyantiairthreat=0, 
+                    enemySilos=0, 
+                    friendlyantisurfacethreat=0, 
+                    friendlylandantiairthreat=0, 
+                    friendlydirectfireantisurfacethreat=0, 
+                    friendlyindirectantisurfacethreat=0,
+                    resourcevalue=table.getn(v.resourcemarkers), 
+                    resourcemarkers=v.resourcemarkers, 
+                    zonealert=false, 
+                    control=1, 
+                    enemystartdata = { }, 
+                    allystartdata = { },  
+                    bestarmy = false, 
+                    teamvalue = 1, 
+                    platoonallocations = {friendlyantiairallocatedthreat=0}, 
+                    label = 0, 
+                    BuilderManager = {}, 
+                    lastexpansionattempt = 0, 
+                    engineerplatoonallocated = false, 
+                    intelassignment = {}, 
+                    zoneincome = 0, 
+                    defensespokes = false,
+                }
                 head = head + 1
             end
         
@@ -194,7 +226,38 @@ RNGLandResourceSet = Class(ZoneSet){
                 end
             end
             initialZoneCount = initialZoneCount + 1
-            table.insert(initialZones, {pos={x,GetSurfaceHeight(x,z),z}, component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), weight=best.weight, startpositionclose=startPos, enemylandthreat=0, enemyantiairthreat=0, friendlyantisurfacethreat=0, friendlylandantiairthreat=0, friendlydirectfireantisurfacethreat=0, friendlyindirectantisurfacethreat=0,resourcevalue=table.getn(resourceGroup), resourcemarkers=resourceGroup, zonealert=false, control=1, enemystartdata = { }, allystartdata = { },  bestarmy = false, teamvalue = 1, friendlyantiairallocatedthreat=0, label = 0, BuilderManager = false, lastexpansionattempt = 0, engineerplatoonallocated = false, intelassignment = {}})
+            table.insert(initialZones, {
+                pos={x,GetSurfaceHeight(x,z),z}, 
+                component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), 
+                weight=best.weight, 
+                startpositionclose=startPos, 
+                enemystructurethreat=0, 
+                gridenemylandthreat=0, 
+                enemylandthreat=0, 
+                enemyantisurfacethreat=0, 
+                enemyantiairthreat=0, 
+                enemySilos=0, 
+                friendlyantisurfacethreat=0, 
+                friendlylandantiairthreat=0, 
+                friendlydirectfireantisurfacethreat=0, 
+                friendlyindirectantisurfacethreat=0,
+                resourcevalue=table.getn(resourceGroup), 
+                resourcemarkers=resourceGroup, 
+                zonealert=false, 
+                control=1, 
+                enemystartdata = { }, 
+                allystartdata = { }, 
+                bestarmy = false, 
+                teamvalue = 1, 
+                platoonallocations = {friendlyantiairallocatedthreat=0}, 
+                label = 0, 
+                BuilderManager = false, 
+                lastexpansionattempt = 0, 
+                engineerplatoonallocated = false, 
+                intelassignment = {}, 
+                zoneincome = 0, 
+                defensespokes = false,
+            })
         end
         local finalZonesList, zoneCount = AssimilateZones(initialZones, initialZoneCount)
         for i=1, zoneCount do

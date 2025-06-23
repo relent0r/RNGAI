@@ -53,7 +53,6 @@ BuilderGroup {
                     categories.INDIRECTFIRE * categories.DEFENSE,
                     categories.SHIELD * categories.STRUCTURE,
                 },
-                --Scale = true,
                 AvoidCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION,
                 AdjacencyDistance = 15,
                 maxUnits = 1,
@@ -154,7 +153,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'LessThanEnergyTrendCombinedRNG', { 120.0 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.10}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.30}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 3, categories.ENERGYPRODUCTION * categories.TECH2, 1, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 - categories.HYDROCARBON }},
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -228,7 +227,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'LessThanEnergyTrendCombinedRNG', { 500.0, true } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.10, 0.10}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.30}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
             { UCBC, 'UnitCapCheckLess', { .85 } },

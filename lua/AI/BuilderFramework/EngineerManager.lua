@@ -107,6 +107,19 @@ EngineerManager = Class(BuilderManager) {
         return 0
     end,
 
+    GetEngineerStateMachineCount = function(self, unitType, stateMachine)
+        local stateMachineCount = 0
+        if self.ConsumptionUnits[unitType] then
+            for _, e in self.ConsumptionUnits[unitType].UnitsList do
+                local stateMachineType = e.PlatoonHandle.PlatoonData.StateMachine
+                if stateMachineType and stateMachineType == stateMachine then
+                    stateMachineCount = stateMachineCount + 1
+                end
+            end
+        end
+        return stateMachineCount
+    end,
+
     ---@param self EngineerManager
     ---@param category EntityCategory
     ---@param engCategory EntityCategory
@@ -494,7 +507,7 @@ EngineerManager = Class(BuilderManager) {
                 unit.BuilderManagerData = {}
             end
             unit.BuilderManagerData.LocationType = self.LocationType
-            RUtils.AddDefenseUnit(self.Brain, self.LocationType, unit)
+            RUtils.AddDefenseUnitToSpoke(self.Brain, self.LocationType, unit)
         end
         for k,v in self.ConsumptionUnits do
             if EntityCategoryContains(v.Category, unit) then
@@ -754,6 +767,16 @@ EngineerManager = Class(BuilderManager) {
                     import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'RadarBuild', Position = radarRequestPos, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
                     return true
                 end
+                local tech1PointDefenseRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 75, 'TECH1POINTDEFENSE')
+                if tech1PointDefenseRequestPos then
+                    LOG('T1PD Request found')
+                    local locationPlatoon = aiBrain:MakePlatoon('T1PDPlatoon', 'StateMachineAIRNG')
+                    aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
+                    unit.PlatoonHandle = locationPlatoon
+                    locationPlatoon.PlanName = 'StateMachineAIRNG'
+                    import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'T1PDBuild', Position = tech1PointDefenseRequestPos, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
+                    return true
+                end
             end
             if layer ~= 'Water' and (unitCats.TECH2 or unitCats.TECH3) then
                 if aiBrain.StructureManager and aiBrain.StructureManager.TMDRequired then
@@ -802,6 +825,30 @@ EngineerManager = Class(BuilderManager) {
                             end
                         end
                     end
+                    --[[
+                    if aiBrain.StructureManager and aiBrain.StructureManager.ShieldsRequired then
+                        local structureManager = aiBrain.StructureManager
+                        local locationExtractorUnits = aiBrain.Zones.Land.zones[baseZone].units.EXTRACTOR
+                        for _, v in locationExtractorUnits do
+                            if v and not v.Dead then
+                                local isDefended = structureManager:StructureShieldCheck(v)
+                                if not isDefended then
+                                    if not aiBrain.IntelManager:IsExistingStructureRequestPresent(basePos, 65, 'SHIELD') then
+                                        aiBrain.IntelManager:RequestStructureNearPosition(basePos, 65, 'SHIELD')
+                                        local shieldRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 120, 'SHIELD')
+                                        if shieldRequestPos then
+                                            local locationPlatoon = aiBrain:MakePlatoon('ShieldPlatoon', 'StateMachineAIRNG')
+                                            aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
+                                            unit.PlatoonHandle = locationPlatoon
+                                            locationPlatoon.PlanName = 'StateMachineAIRNG'
+                                            import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'ShieldBuild', Position = basePos, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
+                                            return true
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end]]
                 end
             end
         end

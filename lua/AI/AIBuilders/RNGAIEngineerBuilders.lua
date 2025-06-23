@@ -10,6 +10,7 @@ local MIBC = '/lua/editor/MiscBuildConditions.lua'
 local EBC = '/lua/editor/EconomyBuildConditions.lua'
 local MABC = '/lua/editor/MarkerBuildConditions.lua'
 local TBC = '/lua/editor/ThreatBuildConditions.lua'
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
 local AirDefenseScramble = function(self, aiBrain, builderManager)
@@ -54,22 +55,38 @@ local StartingReclaimPresent = function(self, aiBrain, builderManager)
 end
 
 local ReclaimBasedFactoryPriority = function(self, aiBrain, builderManager)
-    if aiBrain.StartReclaimCurrent > 500 then
-        --RNGLOG('Priority Function More than 500 reclaim')
-        return 740
-    end
-    if aiBrain:GetNumPlatoonsTemplateNamed('EngineerReclaimStateT1RNG') < 7 then
+    local locationType = builderManager.LocationType
+    local reclaimData = aiBrain.BuilderManagers[locationType].ReclaimData
+    if reclaimData.EngineersRequired and reclaimData.EngineersRequired > 0 then
         return 756
     end
     return 0
 end
 
-local ReclaimMinFactoryPriority = function(self, aiBrain, builderManager)
-    local gameTime = GetGameTimeSeconds()
+local ReclaimMassInRadiusPriority = function(self, aiBrain, builderManager)
     local locationType = builderManager.LocationType
-    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
-    if gameTime > 380 or (factoryManager and factoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND) > 2) then
+    if not aiBrain.GridReclaim then
+        return 0
+    end
+
+    local position = aiBrain.BuilderManagers[locationType].Position
+    local reclaimData = aiBrain.BuilderManagers[locationType].ReclaimData
+    if not position then return 0 end
+
+    local reclaimGrid = aiBrain.GridReclaim
+    local bx, bz = reclaimGrid:ToGridSpace(position[1],position[3])
+
+    -- Use the dynamic radius function
+    local radius = math.floor(RUtils.GetDynamicReclaimRadius(aiBrain, locationType))
+
+    -- Reclaim cells above this mass value will be considered
+    local threshold = 8
+    local cellMass = reclaimGrid:MaximumInRadius(bx, bz, radius)
+
+    if cellMass.TotalMass > 500 and reclaimData.EngineersRequired and reclaimData.EngineersRequired > 0 then
         return 900
+    elseif cellMass.TotalMass > 250 and reclaimData.EngineersRequired and reclaimData.EngineersRequired > 0 then
+        return 700
     end
     return 0
 end
@@ -160,6 +177,7 @@ BuilderGroup {
         Priority = 775,
         BuilderConditions = {
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.ENGINEER * (categories.TECH2 + categories.TECH3) }},
             { EBC, 'NegativeEcoPowerCheck', { 0.0 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.0 }},
             { UCBC, 'UnitCapCheckLess', { .9 } },
@@ -428,7 +446,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 871, -- low factory priority
         BuilderConditions = {
-            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -442,6 +460,17 @@ BuilderGroup {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0} },
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
             { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'All',
+    },
+    Builder {
+        BuilderName = 'RNGAI Factory Engineer T3 Naval',
+        PlatoonTemplate = 'T2BuildEngineer',
+        Priority = 872, -- low factory priority
+        BuilderConditions = {
+            { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH3 - categories.COMMAND }},
+            { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'All',
     },
@@ -1065,10 +1094,10 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Engineer Reclaim T1',
         PlatoonTemplate = 'EngineerReclaimStateT1RNG',
-        PriorityFunction = ReclaimMinFactoryPriority,
+        PriorityFunction = ReclaimMassInRadiusPriority,
         DelayEqualBuildPlattons = {'EngineerReclaim', 1},
         Priority = 0,
-        InstanceCount = 6,
+        InstanceCount = 12,
         BuilderConditions = {
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { EBC, 'GreaterThanEnergyTrendOverTimeRNG', { 0.0 } },
@@ -1215,6 +1244,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Engineer Reclaim T1 Excess Expansion',
         PlatoonTemplate = 'EngineerReclaimStateT1RNG',
         Priority = 900,
+        PriorityFunction = ReclaimMassInRadiusPriority,
         InstanceCount = 16,
         BuilderConditions = {
                 { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 }},

@@ -99,6 +99,9 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.AttackTarget)
                 return
             end
+            if aiBrain.CDRUnit.Caution  then
+                target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, aiBrain.CDRUnit.Position, self, 'Attack', 30, {categories.MOBILE * (categories.DIRECTFIRE + categories.INDIRECTFIRE)}, false, self.CurrentPlatoonThreatAntiSurface)
+            end
             if not self.StratBomberPresent and self.PlatoonData.Defensive and homeDist and homeDist > 25600 and self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead then
                 local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, nil, nil, nil, false, self.StratBomberPresent)
                 if target then

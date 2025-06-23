@@ -245,8 +245,7 @@ function CDRBrainThread(cdr)
         ]]
         if cdr.EnemyAirPresent and not cdr.AtHoldPosition then
             if aiBrain.BuilderManagers['MAIN'] and aiBrain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey then
-                local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey
-                cdr.HoldPosition = aiBrain.BuilderManagers['MAIN'].DefensivePoints[2][positionKey].Position
+                cdr.HoldPosition = aiBrain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].Position
                 local hx = cdr.HoldPosition[1]
                 local hz = cdr.HoldPosition[3]
                 local ax = cdr.Position[1] - hx
