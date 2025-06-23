@@ -431,16 +431,43 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 },
                                 LocationType = 'LocationType',
                             },
-                            Position = t1PdPosDistance,
+                            Position = t1PdPosition,
                             ResetTaskData = true
                         }
                         if t1PdPosDistance < 400 then
-                            LOG('T1PD Position is less than 20 units')
-                            LOG('Set Task Data')
                             self:ChangeState(self.SetTaskData)
                             return
                         else
-                            LOG('T1PD Position is greater than 20')
+                            self:ChangeState(self.NavigateToTaskLocation)
+                            return
+                        end
+                    end
+                elseif data.Task == 'SMDBuild' then
+                    LOG('Engineer Received SMD Build')
+                    local smdPosition = data.Position
+                    if smdPosition then
+                        LOG('We have a position')
+                        local rx = engPos[1] - smdPosition[1]
+                        local rz = engPos[3] - smdPosition[3]
+                        local smdPosDistance = rx * rx + rz * rz
+                        LOG('Pos distance is '..tostring(tmdPosDistance))
+                        self.BuilderData = {
+                            Construction = {
+                                DesiresAssist = true,
+                                NumAssistees = 5,
+                                BuildClose = false,
+                                BuildStructures = {
+                                    { Unit = 'T3StrategicMissileDefense', Categories = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3 },
+                                },
+                                LocationType = self.LocationType,
+                            },
+                            Position = smdPosition,
+                            ResetTaskData = true
+                        }
+                        if smdPosDistance < 400 then
+                            self:ChangeState(self.SetTaskData)
+                            return
+                        else
                             self:ChangeState(self.NavigateToTaskLocation)
                             return
                         end

@@ -332,6 +332,8 @@ StructureManager = Class {
             return 'ANTIAIR'
         elseif cat.DEFENSE and cat.DIRECTFIRE and cat.TECH1 and not cat.ANTIAIR then
             return 'TECH1POINTDEFENSE'
+        elseif cat.TECH3 and cat.STRUCTURE and cat.DEFENSE and cat.ANTIMISSILE then
+            return 'SMD'
         elseif cat.FACTORY then
             return 'FACTORY'
         elseif cat.MASSEXTRACTION then

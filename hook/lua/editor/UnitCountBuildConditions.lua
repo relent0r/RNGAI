@@ -56,7 +56,7 @@ function EnemyAirSnipeDefenceRequired(aiBrain, locationType)
                                 if v and not v.Dead then
                                     aaCount = aaCount + 1
                                     if aaCount > 1 then
-                                        LOG('EnemyAirSnipeDefenceChecked and not required')
+                                        --LOG('EnemyAirSnipeDefenceChecked and not required')
                                         aaCovered = true
                                         break
                                     end
@@ -65,7 +65,7 @@ function EnemyAirSnipeDefenceRequired(aiBrain, locationType)
                         end
                     end
                     if not aaCovered then
-                        LOG('EnemyAirSnipeDefenceRequired')
+                        --LOG('EnemyAirSnipeDefenceRequired')
                         return true
                     end
                 end
@@ -710,7 +710,7 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
                 local pointCheck = perimeterMonitor.RecentNavalAngle
                 local defensiveSpokes = zone.defensespokes
                 local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
-                LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
+                --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
                 if closestSpokeIndex then
                     local spokeTable= defensiveSpokes[closestSpokeIndex]
                     if spokeTable then
@@ -721,10 +721,10 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
                 end
             end
             if totalNavalThreat < perimeterMonitor.NavalThreat * 2.5 then
-                LOG('Base Perimeter Defensive point has naval threat of '..tostring(totalNavalThreat)..' less than current of '..tostring(perimeterMonitor.NavalThreat  * 2.5))
+                --LOG('Base Perimeter Defensive point has naval threat of '..tostring(totalNavalThreat)..' less than current of '..tostring(perimeterMonitor.NavalThreat  * 2.5))
                 return true
             else
-                LOG('Base Perimeter Defensive point has naval threat of '..tostring(totalNavalThreat)..' greater than current of '..tostring(perimeterMonitor.NavalThreat  * 2.5))
+                --LOG('Base Perimeter Defensive point has naval threat of '..tostring(totalNavalThreat)..' greater than current of '..tostring(perimeterMonitor.NavalThreat  * 2.5))
             end
         elseif type == 'LANDNAVAL' then
             local totalAntiSurfaceThreat = 0

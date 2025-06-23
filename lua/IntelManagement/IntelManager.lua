@@ -2015,7 +2015,7 @@ IntelManager = Class {
     IntelGridSetGraph = function(self, locationType, x, z, startPos, endPos)
         if (not startPos) or (not endPos) then
             WARN('IntelGridSetGraph start or end position was nil')
-            LOG('startPos '..tostring(repr(startPos))..' end Pos '..tostring(repr(endPos)))
+            --LOG('startPos '..tostring(repr(startPos))..' end Pos '..tostring(repr(endPos)))
             return
         end
         if not self.MapIntelGrid[x][z].Graphs[locationType] then

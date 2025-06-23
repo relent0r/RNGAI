@@ -740,7 +740,7 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
     if not aiBrain or not position or not maxRange then
         return false
     end
-    LOG('Novax looking for target, max platoon dps is '..tostring(platoon['rngdata'].MaxPlatoonDPS))
+    --LOG('Novax looking for target, max platoon dps is '..tostring(platoon['rngdata'].MaxPlatoonDPS))
 
     local targetUnits = aiBrain:GetUnitsAroundPoint(categories.ALLUNITS - categories.INSIGNIFICANTUNIT, position, maxRange, 'Enemy')
     local bestPriority

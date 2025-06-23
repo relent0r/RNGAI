@@ -177,7 +177,7 @@ end
 function GetDynamicReclaimRadius(aiBrain, locationType)
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
     if not engineerManager then
-        LOG('No Engineer manager at location')
+        --LOG('No Engineer manager at location')
         return 0
     end
 
@@ -4002,7 +4002,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
         local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
         local recentAngle = aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle
         if not recentAngle then 
-            LOG('No recent land angle for position')
+            --LOG('No recent land angle for position')
             return false 
         end
 
@@ -4032,7 +4032,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
         end
 
         if not closestSpokeIndex then 
-            LOG('No closestSpokeIndex')
+            --LOG('No closestSpokeIndex')
             return false 
         end
 
@@ -4072,14 +4072,14 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                 defensivePoint = pt.Position
                 break
             else
-                LOG('Too many enemy units for spoke point')
+                --LOG('Too many enemy units for spoke point')
             end
         end
     elseif pointType == 'AntiAir' then
         local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
         local recentAngle = aiBrain.BasePerimeterMonitor[baseLocation].RecentAirAngle
         if not recentAngle then 
-            LOG('No recent land angle for position')
+            --LOG('No recent land angle for position')
             return false 
         end
 
@@ -4109,7 +4109,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
         end
 
         if not closestSpokeIndex then 
-            LOG('No closestSpokeIndex')
+            --LOG('No closestSpokeIndex')
             return false 
         end
 
@@ -4149,20 +4149,20 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                 defensivePoint = pt.Position
                 break
             else
-                LOG('Too many enemy units for spoke point')
+                --LOG('Too many enemy units for spoke point')
             end
         end
     elseif pointType == 'Naval' then
         local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
         local recentAngle = aiBrain.BasePerimeterMonitor[baseLocation].RecentNavalAngle
         if not recentAngle then 
-            LOG('No recent land angle for position')
+            --LOG('No recent land angle for position')
             return false 
         end
 
         local closestSpokeIndex = nil
         local smallestAngleDiff = nil
-        LOG('Recent Naval angle is '..tostring(recentAngle))
+        --LOG('Recent Naval angle is '..tostring(recentAngle))
 
         -- Find the spoke whose direction most closely matches the recent enemy angle
         for spokeIndex, spokePoints in ipairs(defensiveSpokes) do
@@ -4186,7 +4186,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
         end
 
         if not closestSpokeIndex then 
-            LOG('No closestSpokeIndex')
+            --LOG('No closestSpokeIndex')
             return false 
         end
 
@@ -4226,7 +4226,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                 defensivePoint = pt.Position
                 break
             else
-                LOG('Too many enemy units for spoke point')
+                --LOG('Too many enemy units for spoke point')
             end
         end
     elseif pointType == 'Silo' then
@@ -4275,7 +4275,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                     defensivePoint = pt.Position
                     break
                 else
-                    LOG('Too many enemy units for spoke point')
+                    --LOG('Too many enemy units for spoke point')
                 end
             end
         end
@@ -4335,7 +4335,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                 end
                 local isTMDPresent = GetSpokePointStructureType(spokePoints[i], 'TMD')
                 if isTMDPresent then
-                    LOG('Already TMD at this spoke point')
+                    --LOG('Already TMD at this spoke point')
                     continue
                 end
                 local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
@@ -4343,7 +4343,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                     defensivePoint = pt.Position
                     break
                 else
-                    LOG('Too many enemy units for spoke point')
+                    --LOG('Too many enemy units for spoke point')
                 end
             end
         end
@@ -4402,7 +4402,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                     defensivePoint = pt.Position
                     break
                 else
-                    LOG('Too many enemy units for spoke point')
+                    --LOG('Too many enemy units for spoke point')
                 end
             end
         end

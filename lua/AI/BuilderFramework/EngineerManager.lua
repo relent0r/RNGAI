@@ -755,27 +755,31 @@ EngineerManager = Class(BuilderManager) {
                 end
             end
 
-            if layer ~= 'Water' and self.LocationType == 'FLOATING' then
-                local radarRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 75, 'RADAR')
-                if radarRequestPos then
-                    --LOG('Radar Request found')
-                    -- Fork a lightweight radar builder platoon
-                    local locationPlatoon = aiBrain:MakePlatoon('RadarPlatoon', 'StateMachineAIRNG')
-                    aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
-                    unit.PlatoonHandle = locationPlatoon
-                    locationPlatoon.PlanName = 'StateMachineAIRNG'
-                    import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'RadarBuild', Position = radarRequestPos, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
-                    return true
+            if layer ~= 'Water' then
+                if self.LocationType == 'FLOATING' then
+                    local radarRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 75, 'RADAR')
+                    if radarRequestPos then
+                        --LOG('Radar Request found')
+                        -- Fork a lightweight radar builder platoon
+                        local locationPlatoon = aiBrain:MakePlatoon('RadarPlatoon', 'StateMachineAIRNG')
+                        aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
+                        unit.PlatoonHandle = locationPlatoon
+                        locationPlatoon.PlanName = 'StateMachineAIRNG'
+                        import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'RadarBuild', Position = radarRequestPos, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
+                        return true
+                    end
                 end
-                local tech1PointDefenseRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 75, 'TECH1POINTDEFENSE')
-                if tech1PointDefenseRequestPos then
-                    LOG('T1PD Request found')
-                    local locationPlatoon = aiBrain:MakePlatoon('T1PDPlatoon', 'StateMachineAIRNG')
-                    aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
-                    unit.PlatoonHandle = locationPlatoon
-                    locationPlatoon.PlanName = 'StateMachineAIRNG'
-                    import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'T1PDBuild', Position = tech1PointDefenseRequestPos, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
-                    return true
+                if self.LocationType == 'FLOATING' or self.LocationType == 'MAIN' then
+                    local tech1PointDefenseRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 75, 'TECH1POINTDEFENSE')
+                    if tech1PointDefenseRequestPos then
+                        LOG('T1PD Request found')
+                        local locationPlatoon = aiBrain:MakePlatoon('T1PDPlatoon', 'StateMachineAIRNG')
+                        aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
+                        unit.PlatoonHandle = locationPlatoon
+                        locationPlatoon.PlanName = 'StateMachineAIRNG'
+                        import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'T1PDBuild', Position = tech1PointDefenseRequestPos, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
+                        return true
+                    end
                 end
             end
             if layer ~= 'Water' and (unitCats.TECH2 or unitCats.TECH3) then
@@ -849,6 +853,60 @@ EngineerManager = Class(BuilderManager) {
                             end
                         end
                     end]]
+                end
+            end
+            if (aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime <= 1.0 and aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime <= 1.2) then
+                --RNGLOG('GreaterThanEconEfficiencyOverTime passed True')
+                local EnergyEfficiency = math.min(aiBrain:GetEconomyIncome('ENERGY') / aiBrain:GetEconomyRequested('ENERGY'), 2)
+                local MassEfficiency = math.min(aiBrain:GetEconomyIncome('MASS') / aiBrain:GetEconomyRequested('MASS'), 2)
+                if (MassEfficiency <= 1.0 and EnergyEfficiency <= 1.2) then
+                    return
+                end
+            end
+            local numEnemyUnits = aiBrain.emanager.Nuke.T3
+            if numEnemyUnits > 0 then
+                LOG('Enemy has a nuke')
+                local currentSMD = self:GetNumUnits('AntiNuke')
+                if currentSMD == 0 then
+                    LOG('We dont have an SMD at this location')
+                    local beingBuiltSmd = 0
+                    for _, v in self.StructuresBeingBuilt['TECH3'] do
+                        if v and not v.Dead then
+                            local unitCats = v.Blueprint.CategoriesHash
+                            if unitCats.STRUCTURE and unitCats.DEFENSE and unitCats.ANTIMISSILE then
+                                beingBuiltSmd = beingBuiltSmd + 1
+                            end
+                        end
+                    end
+                    if beingBuiltSmd == 0 then
+                        local builderManager = self.Brain.BuilderManagers[self.LocationType]
+                        local structureManager = self.Brain.StructureManager
+                        if builderManager.ZoneID then
+                            local structureTable = structureManager.ZoneStructures[builderManager.ZoneID]['EXTRACTOR']
+                            local extractorIncome = 0
+                            if structureTable then
+                                for _, v in structureTable do
+                                    if v and not v.Dead and v.GetProductionPerSecondMass then
+                                        extractorIncome = extractorIncome + v:GetProductionPerSecondMass()
+                                    end
+                                end
+                            end
+                            if extractorIncome > 30 * aiBrain.EcoManager.EcoMultiplier then
+                                if not aiBrain.IntelManager:IsExistingStructureRequestPresent(basePos, 45, 'SMD') then
+                                    aiBrain.IntelManager:RequestStructureNearPosition(basePos, 45, 'SMD')
+                                    local smdRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 120, 'SMD')
+                                    if smdRequestPos then
+                                        local locationPlatoon = aiBrain:MakePlatoon('SMDPlatoon', 'StateMachineAIRNG')
+                                        aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
+                                        unit.PlatoonHandle = locationPlatoon
+                                        locationPlatoon.PlanName = 'StateMachineAIRNG'
+                                        import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'SMDBuild', Position = basePos, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
+                                        return true
+                                    end
+                                end
+                            end
+                        end
+                    end
                 end
             end
         end

@@ -218,7 +218,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 if validPath then
                     total = total + (current or 0)
                 else
-                    LOG('*AI DEBUG: Invalid Path passed to GetFromNested '..tostring(repr(path)))
+                    --LOG('*AI DEBUG: Invalid Path passed to GetFromNested '..tostring(repr(path)))
                     total = total + 0
                 end
             end
@@ -2312,9 +2312,6 @@ AIBrain = Class(RNGAIBrainClass) {
             BaseType = RUtils.GetBaseType(baseName) or 'MAIN',
         }
         self.NumBases = self.NumBases + 1
-        if baseLayer == 'Water' then
-            LOG('Created Water base of name '..baseName)
-        end
         self:ForkThread(self.SetPathableZonesForBase, position, baseName)
         self:ForkThread(RUtils.SetCoreResources, position, baseName)
         self:ForkThread(self.GetGraphArea, position, baseName, baseLayer)
@@ -2352,16 +2349,16 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                         self.Zones.Land.zones[zoneId].BuilderManager = self.BuilderManagers[baseName]
                         self.BuilderManagers[baseName].Zone = self.Zones.Land.zones[zoneId]
-                        LOG('BuilderManager zone is set')
+                        --LOG('BuilderManager zone is set')
                     end
                     return
                 else
                     WARN('No Zone found at provided position '..tostring(position[1])..':'..tostring(position[3]))
                 end
-                LOG('Zone is '..self.BuilderManagers[baseName].ZoneID)
+                --LOG('Zone is '..self.BuilderManagers[baseName].ZoneID)
                 zoneSet = true
             else
-                LOG('No zone for builder manager')
+                --LOG('No zone for builder manager')
             end
             coroutine.yield(10)
         end
@@ -4475,7 +4472,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         if ((v.HP / platoonDPS) < 15 or v.HP < 2000) and v.LastSpotted + 120 < GetGameTimeSeconds() then
                             if RUtils.HaveUnitVisual(self, v.Unit, true) then
                                 local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(self, v.Position, 46, 'Enemy')
-                                LOG('Director total shield health from acu check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
+                                --LOG('Director total shield health from acu check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
                                 if (totalShieldHealth / platoonDPS) < 12 then
                                     RNGINSERT(enemyACUIndexes, { Index = k, Position = v.Position } )
                                     local gridX, gridY = im:GetIntelGrid(v.Position)
@@ -4535,7 +4532,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     local shielded = false
                     if (platoonType == 'SATELLITE' or platoonType == 'GUNSHIP') and platoonDPS then
                         local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(self, v.Object:GetPosition(), 46, 'Enemy')
-                        LOG('Director total shield health from intel check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
+                        --LOG('Director total shield health from intel check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
                         if (totalShieldHealth / platoonDPS) > 12 then
                             shielded = true
                         end
@@ -4587,7 +4584,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     local shielded = false
                     if (platoonType == 'SATELLITE' or platoonType == 'GUNSHIP') and platoonDPS then
                         local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(self, v.Object:GetPosition(), 46, 'Enemy')
-                        LOG('Director total shield health from energy check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
+                        --LOG('Director total shield health from energy check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
                         if (totalShieldHealth / platoonDPS) > 12 then
                             shielded = true
                         end
@@ -4639,7 +4636,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     local shielded = false
                     if (platoonType == 'SATELLITE' or platoonType == 'GUNSHIP') and platoonDPS then
                         local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(self, v.Object:GetPosition(), 46, 'Enemy')
-                        LOG('Director total shield health from factory check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
+                        --LOG('Director total shield health from factory check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
                         if (totalShieldHealth / platoonDPS) > 12 then
                             shielded = true
                         end
@@ -4695,7 +4692,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     local shielded = false
                     if (platoonType == 'SATELLITE' or platoonType == 'GUNSHIP') and platoonDPS then
                         local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(self, v.Object:GetPosition(), 46, 'Enemy')
-                        LOG('Director total shield health from strategic check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
+                        --LOG('Director total shield health from strategic check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
                         if (totalShieldHealth / platoonDPS) > 12 then
                             shielded = true
                         end
@@ -4771,7 +4768,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                         if RUtils.HaveUnitVisual(self, v.object, true) then
                                             local shielded = false
                                             local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(self, v.Object:GetPosition(), 46, 'Enemy')
-                                            LOG('Director total shield health from extractor check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
+                                            --LOG('Director total shield health from extractor check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
                                             if (totalShieldHealth / platoonDPS) > 12 then
                                                 shielded = true
                                             end
