@@ -5041,3 +5041,51 @@ function ArmyManagerBuildCondition(aiBrain, builderManager)
 end
 ]]
 
+-- zonesTable: dictionary of zoneID -> zoneData { edges = {adjacentZoneID, ...} }
+-- isZoneSafe: function(zoneID) -> boolean
+-- safeZones: set (table as keys) of safe zone IDs (optional, else compute starting from baseZone)
+-- baseZoneID: ID of the main base zone
+
+function GetDefensiveCurveZones(zonesTable, isZoneSafe, baseZoneID, safeZones)
+    -- Step 1: Find all safe zones reachable from baseZoneID if safeZones not provided
+    if not safeZones then
+        safeZones = {}
+        local queue = { baseZoneID }
+        safeZones[baseZoneID] = true
+
+        while #queue > 0 do
+            local current = table.remove(queue, 1)
+            local zoneData = zonesTable[current]
+            if zoneData then
+                for _, neighborID in ipairs(zoneData.edges) do
+                    if not safeZones[neighborID] and isZoneSafe(neighborID) then
+                        safeZones[neighborID] = true
+                        table.insert(queue, neighborID)
+                    end
+                end
+            end
+        end
+    end
+
+    -- Step 2: Find all zones adjacent to safeZones that are NOT safe
+    local defensiveCurveZones = {}
+
+    for safeZoneID,_ in pairs(safeZones) do
+        local zoneData = zonesTable[safeZoneID]
+        if zoneData then
+            for _, neighborID in ipairs(zoneData.edges) do
+                if not safeZones[neighborID] and not isZoneSafe(neighborID) then
+                    defensiveCurveZones[neighborID] = true
+                end
+            end
+        end
+    end
+
+    -- Convert defensiveCurveZones from keys to list
+    local defensiveCurveList = {}
+    for zoneID,_ in pairs(defensiveCurveZones) do
+        table.insert(defensiveCurveList, zoneID)
+    end
+
+    return defensiveCurveList
+end
