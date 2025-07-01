@@ -537,6 +537,35 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI ACU Structure Builders Expansion',
+    BuildersType = 'EngineerBuilder',
+    Builder {    	
+        BuilderName = 'RNGAI ACU T1 Power Trend Expansion',
+        PlatoonTemplate = 'CommanderDummyRNG',
+        Priority = 1000,
+        DelayEqualBuildPlattons = {'Energy', 3},
+        BuilderConditions = {
+            { EBC, 'NegativeEcoPowerCheckInstant', { 15.0 } }, -- If our energy is trending into negatives
+            { UCBC, 'ValidateHydroIncome', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.HYDROCARBON) } },
+            { UCBC, 'PowerBuildCapabilityExist', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON, categories.ENGINEER * (categories.TECH2 + categories.TECH3) }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            DesiresAssist = false,
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomACUBaseTemplates.lua',
+                BaseTemplate = 'ACUCustomBaseTemplates',
+                AdjacencyCategory = categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND),
+                BuildStructures = {
+                    { Unit = 'T1EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE - categories.HYDROCARBON },
+                },
+            }
+        }
+    },
+}
+
+BuilderGroup {
     BuilderGroupName = 'RNGAI ACU Build Assist',
     BuildersType = 'EngineerBuilder',
     Builder {

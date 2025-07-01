@@ -504,7 +504,7 @@ FactoryBuilderManager = Class(BuilderManager) {
                 end
             else
                 local template = self:GetFactoryTemplate(builder:GetPlatoonTemplate(), factory)
-                LOG('*AI DEBUG: ARMY '..tostring(self.Brain:GetArmyIndex())..': Factory Builder Manager Building - '..tostring(builder.BuilderName)..' at base '..tostring(self.LocationType))
+                --LOG('*AI DEBUG: ARMY '..tostring(self.Brain:GetArmyIndex())..': Factory Builder Manager Building - '..tostring(builder.BuilderName)..' at base '..tostring(self.LocationType))
                 self.Brain:BuildPlatoon(template, {factory}, 1)
             end
         else
@@ -870,6 +870,7 @@ FactoryBuilderManager = Class(BuilderManager) {
                         table.insert(queue, 'T1LandScout')
                         table.insert(queue, 'T1BuildEngineer')
                         table.insert(queue, 'T1BuildEngineer')
+                        table.insert(queue, 'T1LandScout')
                     else
                         table.insert(queue, 'T1LandDFBot')
                         table.insert(queue, 'T1LandScout')
@@ -877,6 +878,7 @@ FactoryBuilderManager = Class(BuilderManager) {
                         table.insert(queue, 'T1LandScout')
                         table.insert(queue, 'T1BuildEngineer')
                         table.insert(queue, 'T1BuildEngineer')
+                        table.insert(queue, 'T1LandScout')
                     end
                 else
                     for i=1, 4 do
@@ -902,6 +904,7 @@ FactoryBuilderManager = Class(BuilderManager) {
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1BuildEngineer')
                         table.insert(queue, 'T1BuildEngineer')
+                        table.insert(queue, 'T1LandScout')
                     else
                         table.insert(queue, 'T1LandDFBot')
                         table.insert(queue, 'T1LandScout')
@@ -910,6 +913,7 @@ FactoryBuilderManager = Class(BuilderManager) {
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1BuildEngineer')
                         table.insert(queue, 'T1BuildEngineer')
+                        table.insert(queue, 'T1LandScout')
                     end
                 else
                     for i=1, 3 do
@@ -934,6 +938,7 @@ FactoryBuilderManager = Class(BuilderManager) {
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1BuildEngineer')
                         table.insert(queue, 'T1BuildEngineer')
+                        table.insert(queue, 'T1LandScout')
                     else
                         table.insert(queue, 'T1LandDFBot')
                         table.insert(queue, 'T1LandScout')
@@ -943,6 +948,7 @@ FactoryBuilderManager = Class(BuilderManager) {
                         table.insert(queue, 'T1LandDFTank')
                         table.insert(queue, 'T1BuildEngineer')
                         table.insert(queue, 'T1BuildEngineer')
+                        table.insert(queue, 'T1LandScout')
                     end
                     if self.Brain.StartReclaimCurrent > 500 then
                         for i=1, 2 do

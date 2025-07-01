@@ -65,12 +65,14 @@ IntelManager = Class {
             IntelCoverage = 0,
             MustScoutArea = false,
         }
+        self.ZoneToGridMap = {}
+        self.ScoutingCurveZones = {}
         self.CurrentFrontLineZones = {}
-        self.RadarRequests = {}
         self.StructureRequests = {
             RADAR = {},
             TMD = {},
             TECH1POINTDEFENSE = {},
+            SMD = {}
         }
         self.MapMaximumValues = {
             MaximumResourceValue = 0,
@@ -320,6 +322,8 @@ IntelManager = Class {
         self:ForkThread(self.ZoneExpansionThreadRNG)
         self:ForkThread(self.TacticalIntelCheck)
         self:ForkThread(self.GenerateZonePathDistanceCache)
+        self:ForkThread(self.MaintainScoutingCurve)
+        self:ForkThread(self.StructureRequestThread)
         self.Brain:ForkThread(self.Brain.BuildScoutLocationsRNG)
         --self:ForkThread(self.DrawZoneArmyValue)
         if self.Debug then
@@ -328,6 +332,59 @@ IntelManager = Class {
 
         --LOG('RNGAI : IntelManager Started')
         self.Initialized = true
+    end,
+
+    MaintainScoutingCurve = function(self)
+        -- Currently this only really works on land maps. To be improved.
+
+        coroutine.yield(50)
+        local mainZoneID = self.Brain.BuilderManagers['MAIN'].ZoneID
+        --LOG('Main base ID for player '..tostring(self.Brain.Nickname)..' is '..tostring(mainZoneID))
+        local zones = self.Brain.Zones.Land.zones
+
+        while self.Brain.Status ~= 'Defeat' do
+            coroutine.yield(50)
+            local scoutPosTable = self:GetDefensiveCurveZones(zones, mainZoneID, nil)
+            self.ScoutingCurveZones = scoutPosTable
+            --[[
+            LOG('scoutPosTable has '..tostring(table.getn(scoutPosTable))..' positions')
+            local counter = 0
+            while counter < 150 do
+                coroutine.yield(2)
+                for k, v in scoutPosTable do
+                    DrawCircle(zones[v].pos,3*zones[v].weight,'b967ff')
+                end
+                counter = counter + 1
+            end
+            ]]
+        end
+    end,
+
+    GetScoutCurveZone = function(self, scoutPos)
+        local aiBrain = self.Brain
+        if not aiBrain.ZonesInitialized then
+            return false
+        end
+        if not scoutPos[1] then
+            return false
+        end
+        local curveZones = self.ScoutingCurveZones
+        local zones = self.Brain.Zones.Land.zones
+        local zoneId
+        local zoneIdTable = {}
+        if curveZones then
+            for _, v in curveZones do
+                local zone = zones[v]
+                if zone and (not zone.intelassignment.ScoutUnit or zone.intelassignment.ScoutUnit.Dead) then
+                    zoneId = v
+                    table.insert(zoneIdTable, { ZoneID = zones[v].id, ZoneType = 'Land', ZonePosition = zones[v].pos })
+                end
+            end
+        end
+        if table.getn(zoneIdTable) > 0 then
+            table.sort(zoneIdTable,function(k1,k2) return VDist2Sq(k1.ZonePosition[1],k1.ZonePosition[3],scoutPos[1],scoutPos[3])<VDist2Sq(k2.ZonePosition[1],k2.ZonePosition[3],scoutPos[1],scoutPos[3]) end)
+            return zoneIdTable[1]
+        end
     end,
 
     ForkThread = function(self, fn, ...)
@@ -1507,6 +1564,108 @@ IntelManager = Class {
         end
     end,
 
+    ZoneIsIntelStale = function(self, zone, time)
+        local cells = self.ZoneToGridMap[zone.id]
+        if not cells then
+            return false
+        end
+        local staleCount = 0
+        local total = 0
+    
+        for _, cell in cells do
+            total = total + 1
+    
+            local stale = false
+    
+            if not cell.IntelCoverage or cell.IntelCoverage == false then
+                stale = true
+            end
+    
+            if not cell.LastScouted or (time - cell.LastScouted > 90) then
+                stale = true
+            end
+    
+            if stale then
+                staleCount = staleCount + 1
+            end
+        end
+    
+        -- If more than 50% of the zone is stale, mark the whole zone as stale
+        return staleCount / total > 0.5
+    end,
+
+    IsZoneSafeToScout = function(self, currentTime, zone)
+        if zone.status == 'Allied' or zone.status == 'Unoccupied' or (zone.status == 'Contested' and zone.enemyantisurfacethreat == 0) then
+            if zone.enemystartdata then
+                for _, v in zone.enemystartdata do
+                    if v.startdistance < 100 then
+                        if GetThreatAtPosition(self.Brain, zone.pos, 0, true, 'StructuresNotMex') > 0 then
+                            return false
+                        end
+                    end
+                end
+            end
+            --[[
+            -- Not implementing this yet as it needs more refinement
+            if zone.status ~= 'Allied' and self:ZoneIsIntelStale(zone, currentTime) then
+                return false
+            end
+            ]]
+            return true
+        end
+        return false
+    end,
+
+    GetDefensiveCurveZones = function(self, zonesTable, baseZoneID, safeZones)
+
+        local aiBrain = self.Brain
+        local zoneToGridMappings = self.ZoneToGridMap
+        local currentTime = GetGameTimeSeconds()
+        -- Step 1: Find all safe zones reachable from baseZoneID if safeZones not provided
+        if not safeZones then
+            safeZones = {}
+            local queue = { baseZoneID }
+            safeZones[baseZoneID] = true
+    
+            while table.getn(queue) > 0 do
+                local current = table.remove(queue, 1)
+                local zoneData = zonesTable[current]
+                if zoneData then
+                    for _, neighborID in ipairs(zoneData.edges) do
+                        if not safeZones[neighborID.zone.id] and self:IsZoneSafeToScout(currentTime, neighborID.zone) then
+                            safeZones[neighborID.zone.id] = true
+                            table.insert(queue, neighborID.zone.id)
+                        end
+                    end
+                end
+            end
+        end
+        --LOG('Safe zones now has '..tostring(table.getn(safeZones))..' zones')
+    
+        -- Step 2: Find all zones adjacent to safeZones that are NOT safe
+        local defensiveCurveZones = {}
+    
+        for safeZoneID, _ in pairs(safeZones) do
+            local zoneData = zonesTable[safeZoneID]
+            if zoneData then
+                for _, neighborID in ipairs(zoneData.edges) do
+                    if not self:IsZoneSafeToScout(currentTime, neighborID.zone) then
+                        defensiveCurveZones[safeZoneID] = true
+                        break  -- we only need one unsafe neighbor to qualify this zone
+                    end
+                end
+            end
+        end
+    
+        -- Convert defensiveCurveZones from keys to list
+        local defensiveCurveList = {}
+        for zoneID,_ in pairs(defensiveCurveZones) do
+            table.insert(defensiveCurveList, zoneID)
+        end
+    
+        return defensiveCurveList
+    end,
+
     TacticalIntelCheck = function(self)
         coroutine.yield(300)
         local aiBrain = self.Brain
@@ -1750,12 +1909,11 @@ IntelManager = Class {
         local closestPlayer = false
         local aiBrain = self.Brain
         local selfIndex = aiBrain:GetArmyIndex()
+        local teamReference = aiBrain.TeamReference
         coroutine.yield(selfIndex)
-        local myArmy = ScenarioInfo.ArmySetup[aiBrain.Name]
-        if not RNGAIGLOBALS.PlayerRoles[myArmy.Team] then
-            RNGAIGLOBALS.PlayerRoles[myArmy.Team] = {}
+        if not RNGAIGLOBALS.PlayerRoles[teamReference] then
+            RNGAIGLOBALS.PlayerRoles[teamReference] = {}
         end
-        --LOG('MyArmy team is '..tostring(myArmy.Team))
         if aiBrain.BrainIntel.AllyCount > 2 and aiBrain.EnemyIntel.EnemyCount > 0 then
             local closestDistance
             local selfDistanceToTeammates
@@ -1815,7 +1973,7 @@ IntelManager = Class {
                         if not airRestricted then
                             if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer then
                                 local alreadySelected = false
-                                for _, v in RNGAIGLOBALS.PlayerRoles[myArmy.Team] do
+                                for _, v in RNGAIGLOBALS.PlayerRoles[teamReference] do
                                     if v == 'AirPlayer' then
                                         alreadySelected = true
                                         break
@@ -1826,7 +1984,7 @@ IntelManager = Class {
                                     aiBrain.BrainIntel.PlayerRole.AirPlayer = true
                                     aiBrain.BrainIntel.PlayerStrategy.T3AirRush = true
                                     --LOG('Player set to Air Role '..aiBrain.Nickname)
-                                    RNGAIGLOBALS.PlayerRoles[myArmy.Team][selfIndex] = 'AirPlayer'
+                                    RNGAIGLOBALS.PlayerRoles[teamReference][selfIndex] = 'AirPlayer'
                                     aiBrain:EvaluateDefaultProductionRatios()
                                     return
                                 end
@@ -1840,7 +1998,7 @@ IntelManager = Class {
                         -- assign SpamPlayer role
                         if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer then
                             local alreadySelected = false
-                            for _, v in RNGAIGLOBALS.PlayerRoles[myArmy.Team] do
+                            for _, v in RNGAIGLOBALS.PlayerRoles[teamReference] do
                                 if v == 'SpamPlayer' then
                                     alreadySelected = true
                                     break
@@ -1848,7 +2006,7 @@ IntelManager = Class {
                             end
                             if not alreadySelected then
                                 aiBrain.BrainIntel.PlayerRole.SpamPlayer = true
-                                RNGAIGLOBALS.PlayerRoles[myArmy.Team][selfIndex] = 'SpamPlayer'
+                                RNGAIGLOBALS.PlayerRoles[teamReference][selfIndex] = 'SpamPlayer'
                                 self:ForkThread(self.SpamTriggerDurationThread, 480)
                                 --LOG('Assigned SpamPlayer to '..aiBrain.Nickname)
                                 return
@@ -1872,9 +2030,9 @@ IntelManager = Class {
                 if not navalRestricted then
                     local navalPlayer
                     local alreadySelected = false
-                    for _, v in RNGAIGLOBALS.PlayerRoles[myArmy.Team] do
+                    for _, v in RNGAIGLOBALS.PlayerRoles[teamReference] do
                         if v == 'NavalPlayer' then
-                            --LOG('Naval Player already exist in team '..tostring(repr(RNGAIGLOBALS.PlayerRoles[myArmy.Team])))
+                            --LOG('Naval Player already exist in team '..tostring(repr(RNGAIGLOBALS.PlayerRoles[teamReference])))
                             alreadySelected = true
                             break
                         end
@@ -1895,7 +2053,7 @@ IntelManager = Class {
                             if navalPlayer then
                                 aiBrain.BrainIntel.PlayerRole.NavalPlayer = true
                                 --LOG('Player set to Naval Role '..aiBrain.Nickname)
-                                RNGAIGLOBALS.PlayerRoles[myArmy.Team][selfIndex] = 'NavalPlayer'
+                                RNGAIGLOBALS.PlayerRoles[teamReference][selfIndex] = 'NavalPlayer'
                                 aiBrain:EvaluateDefaultProductionRatios()
                                 return
                             end
@@ -1916,7 +2074,7 @@ IntelManager = Class {
                 if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' and aiBrain.EnemyIntel.EnemyStartLocations[EnemyIndex].Distance < 348100 then
                     if not aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer and not aiBrain.BrainIntel.PlayerRole.AirPlayer then
                         aiBrain.BrainIntel.PlayerRole.SpamPlayer = true
-                        RNGAIGLOBALS.PlayerRoles[myArmy.Team][selfIndex] = 'SpamPlayer'
+                        RNGAIGLOBALS.PlayerRoles[teamReference][selfIndex] = 'SpamPlayer'
                         self:ForkThread(self.SpamTriggerDurationThread, 360)
                     end
                 end
@@ -2736,7 +2894,8 @@ IntelManager = Class {
             --LOG('selfLandThreatMultiplied '..tostring(selfThreat.LandNow * 1.4))
             --LOG('enemyLandThreat '..tostring(enemyThreat.Land))
             local safeAntiAir = selfThreat.AntiAirNow > 0 and selfThreat.AntiAirNow or 0.1
-            if selfThreat.LandNow * 1.3 > enemyThreat.Land and safeAntiAir < enemyThreat.Air or enemyThreat.AirSurface > 75 and selfThreat.LandNow * 1.7 > enemyThreat.Land then
+            --LOG('Current land now threat is '..tostring(selfThreat.LandNow))
+            if selfThreat.LandNow > 20 and selfThreat.LandNow * 1.3 > enemyThreat.Land and safeAntiAir < enemyThreat.Air or enemyThreat.AirSurface > 75 and selfThreat.LandNow * 1.7 > enemyThreat.Land then
                 local teamValueCount = 0
                 if aiBrain.BuilderManagers['MAIN'].PathableZones.Zones then
                     local landZones = aiBrain.Zones.Land.zones
@@ -3234,7 +3393,7 @@ IntelManager = Class {
 
     AssignEngineerToStructureRequestNearPosition = function(self, eng, position, radius, structureType)
         local radiusSq = radius * radius
-        --LOG('Checking for an existing requests, current request count '..tostring(table.getn(self.RadarRequests)))
+        --LOG('Checking for an existing requests, current request count '..tostring(table.getn(self.StructureRequests)))
         if self.StructureRequests[structureType] then
             for _, v in self.StructureRequests[structureType] do
                 if not v.Assigned then
@@ -3268,7 +3427,14 @@ IntelManager = Class {
         local buildKeyMap = {
             RADAR = 'RadarBuild',
             TMD = 'TMDBuild',
+            SMD = 'SMDBuild',
+            TECH1POINTDEFENSE = 'T1PDBuild',
         }
+        local key = buildKeyMap[structureType]
+        if not key then
+            WARN('AI-RNG: buildKeyMap missing entry for structure type '..tostring(structureType))
+            return false
+        end
         
         for i = table.getn(requestTable), 1, -1 do
             local data = requestTable[i]
@@ -3376,6 +3542,12 @@ IntelManager = Class {
 
     RequestStructureNearPosition = function(self, position, radius, structureType)
         local gridX, gridZ = self:GetIntelGrid(position)
+        local zoneId
+        if RUtils.PositionInWater(position) then
+            zoneId = MAP:GetZoneID(position,self.Brain.Zones.Naval.index)
+        else
+            zoneId = MAP:GetZoneID(position,self.Brain.Zones.Land.index)
+        end
         if gridZ and gridZ then
             if self.StructureRequests[structureType] then
                 table.insert(self.StructureRequests[structureType], {
@@ -3386,9 +3558,52 @@ IntelManager = Class {
                     AssignedTime = nil,
                     AssignedEngineer = nil,
                     RequestedTime = GetGameTimeSeconds(),
+                    ZoneID = zoneId,
                 })
             else
                 WARN('AI-RNG: Invalid structure type passed to RequestStructureNearPosition, passed value was '..tostring(structureType))
+            end
+        end
+    end,
+
+    StructureRequestThread = function(self)
+        coroutine.yield(50)
+        local aiBrain = self.Brain
+        while aiBrain.Status ~= 'Defeat' do
+            coroutine.yield(30)
+            local numEnemyUnits = aiBrain.emanager.Nuke.T3
+            if numEnemyUnits and numEnemyUnits > 0 then
+                for _, builderManager in aiBrain.BuilderManagers do
+                    local structureManager = aiBrain.StructureManager
+                    if builderManager.ZoneID then
+                        local structureTable = structureManager.ZoneStructures[builderManager.ZoneID]['EXTRACTOR']
+                        local extractorIncome = 0
+                        local numberOfExtractors = 0
+                        if structureTable then
+                            for _, v in structureTable do
+                                if v and not v.Dead and v.GetProductionPerSecondMass then
+                                    numberOfExtractors = numberOfExtractors + 1
+                                    extractorIncome = extractorIncome + v:GetProductionPerSecondMass()
+                                end
+                            end
+                        end
+                        if extractorIncome > 24 * aiBrain.EcoManager.EcoMultiplier then
+                            local engineerManager = builderManager.EngineerManager
+                            local currentSMD = engineerManager:GetNumUnits('AntiNuke')
+                            if currentSMD == 0 then
+                                if not aiBrain.IntelManager:IsExistingStructureRequestPresent(engineerManager.Location, 45, 'SMD') then
+                                    local queuedSmdCount = engineerManager:NumStructuresQueued('TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' })
+                                    if queuedSmdCount == 0 then
+                                        local beingBuiltSmd = engineerManager:NumStructuresBeingBuilt('TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' })
+                                        if beingBuiltSmd == 0 then
+                                            aiBrain.IntelManager:RequestStructureNearPosition(engineerManager.Location, 45, 'SMD')
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
             end
         end
     end,
@@ -4149,6 +4364,7 @@ CreateIntelGrid = function(aiBrain)
     if aiBrain.RNGDEBUG then
         RNGLOG('Intel Grid MapSize X : '..mx..' Z: '..mz)
     end
+    local zoneToGridMap = aiBrain.IntelManager.ZoneToGridMap
 
     -- smaller maps have a 8x8 iMAP
     if mx == mz and mx == 256 then 
@@ -4209,7 +4425,14 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z].DistanceToMain = VDist3(intelGrid[x][z].Position, aiBrain.BrainIntel.StartPos) 
             intelGrid[x][z].Water = GetTerrainHeight(cx, cz) < GetSurfaceHeight(cx, cz)
             intelGrid[x][z].Size = { sx = fx, sz = fz}
-            intelGrid[x][z].LandZoneID = MAP:GetZoneID({cx, GetTerrainHeight(cx, cz), cz},aiBrain.Zones.Land.index) or 0
+            local zoneId = MAP:GetZoneID({cx, GetTerrainHeight(cx, cz), cz},aiBrain.Zones.Land.index) or 0
+            if not zoneToGridMap[zoneId] then
+                zoneToGridMap[zoneId] = {}
+            end
+            if zoneId > 0 then
+                table.insert(zoneToGridMap[zoneId], intelGrid[x][z])
+            end
+            intelGrid[x][z].LandZoneID = zoneId
             intelGrid[x][z].Enabled = true
         end
     end
@@ -5046,46 +5269,3 @@ end
 -- safeZones: set (table as keys) of safe zone IDs (optional, else compute starting from baseZone)
 -- baseZoneID: ID of the main base zone
 
-function GetDefensiveCurveZones(zonesTable, isZoneSafe, baseZoneID, safeZones)
-    -- Step 1: Find all safe zones reachable from baseZoneID if safeZones not provided
-    if not safeZones then
-        safeZones = {}
-        local queue = { baseZoneID }
-        safeZones[baseZoneID] = true
-
-        while #queue > 0 do
-            local current = table.remove(queue, 1)
-            local zoneData = zonesTable[current]
-            if zoneData then
-                for _, neighborID in ipairs(zoneData.edges) do
-                    if not safeZones[neighborID] and isZoneSafe(neighborID) then
-                        safeZones[neighborID] = true
-                        table.insert(queue, neighborID)
-                    end
-                end
-            end
-        end
-    end
-
-    -- Step 2: Find all zones adjacent to safeZones that are NOT safe
-    local defensiveCurveZones = {}
-
-    for safeZoneID,_ in pairs(safeZones) do
-        local zoneData = zonesTable[safeZoneID]
-        if zoneData then
-            for _, neighborID in ipairs(zoneData.edges) do
-                if not safeZones[neighborID] and not isZoneSafe(neighborID) then
-                    defensiveCurveZones[neighborID] = true
-                end
-            end
-        end
-    end
-
-    -- Convert defensiveCurveZones from keys to list
-    local defensiveCurveList = {}
-    for zoneID,_ in pairs(defensiveCurveZones) do
-        table.insert(defensiveCurveList, zoneID)
-    end
-
-    return defensiveCurveList
-end

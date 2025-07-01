@@ -263,10 +263,8 @@ StructureManager = Class {
                 end
             end
             if extractorCount == 0 then
-                LOG('We lost all extractors for zone ID '..tostring(zoneId))
                 local defenseZoneRequired = RUtils.DetermineDefensiveInterceptZone(aiBrain, aiBrain.BrainIntel.StartPos, zoneId, 'land')
                 if defenseZoneRequired then
-                    LOG('We require a defense zone for '..tostring(defenseZoneRequired))
                     local pdCount = 0
                     if self.ZoneStructures[defenseZoneRequired]['TECH1POINTDEFENSE'] then
                         for _, v in self.ZoneStructures[defenseZoneRequired]['TECH1POINTDEFENSE'] do
@@ -275,7 +273,6 @@ StructureManager = Class {
                             end
                         end
                     end
-                    LOG('Current PD count in zone is '..tostring(pdCount))
                     if pdCount < 1 then
                         local zonePos
                         if zoneType == 'Naval' then
@@ -284,14 +281,11 @@ StructureManager = Class {
                             zonePos = aiBrain.Zones.Land.zones[defenseZoneRequired].pos
                         end
                         if zonePos then
-                            LOG('We have a zone pos of '..tostring(repr(zonePos)))
                             if not aiBrain.IntelManager:IsExistingStructureRequestPresent(zonePos, 15, 'TECH1POINTDEFENSE') then
                                 aiBrain.IntelManager:RequestStructureNearPosition(zonePos, 15, 'TECH1POINTDEFENSE')
-                                LOG('Have requested structure near position '..tostring(repr(zonePos)))
                             end
                         end
                     end
-                    LOG('We have lost a zone and the best point for a defensive structure adjacent to main is '..tostring(defenseZoneRequired))
                 end
             end
         end
@@ -384,16 +378,17 @@ StructureManager = Class {
         end
         coroutine.yield(Random(5,20))
         local myArmy = ScenarioInfo.ArmySetup[self.Brain.Name]
-        if myArmy.Team and myArmy.Team > 1 then
+        local teamReference = self.Brain.TeamReference
+        if teamReference then
             self.Team = myArmy.Team
-            if not RNGAIGLOBALS.HighestTeamAirPhase[myArmy.Team] then
-                RNGAIGLOBALS.HighestTeamAirPhase[myArmy.Team] = 1
+            if not RNGAIGLOBALS.HighestTeamAirPhase[teamReference] then
+                RNGAIGLOBALS.HighestTeamAirPhase[teamReference] = 1
             end
-            if not RNGAIGLOBALS.HighestTeamLandPhase[myArmy.Team] then
-                RNGAIGLOBALS.HighestTeamLandPhase[myArmy.Team] = 1
+            if not RNGAIGLOBALS.HighestTeamLandPhase[teamReference] then
+                RNGAIGLOBALS.HighestTeamLandPhase[teamReference] = 1
             end
-            if not RNGAIGLOBALS.HighestTeamNavalPhase[myArmy.Team] then
-                RNGAIGLOBALS.HighestTeamNavalPhase[myArmy.Team] = 1
+            if not RNGAIGLOBALS.HighestTeamNavalPhase[teamReference] then
+                RNGAIGLOBALS.HighestTeamNavalPhase[teamReference] = 1
             end
         end
         local buildMultiplier = 1.0
@@ -692,16 +687,16 @@ StructureManager = Class {
             if self.Brain.BrainIntel.PlayerStrategy.T3AirRush and FactoryData.TotalT3AIR > 0 then
                 self.Brain.BrainIntel.PlayerStrategy.T3AirRush = false
             end
-            if myArmy.Team and myArmy.Team > 1 then
+            if teamReference > 1 then
                 local airPhase = GetFactoryPhase(self.Brain.Nickname, self.Factories.AIR)
                 local landPhase = GetFactoryPhase(self.Brain.Nickname, self.Factories.LAND)
                 local navalPhase = GetFactoryPhase(self.Brain.Nickname, self.Factories.NAVAL)
-                local currentAir = RNGAIGLOBALS.HighestTeamAirPhase[myArmy.Team] or 1
-                local currentLand = RNGAIGLOBALS.HighestTeamLandPhase[myArmy.Team] or 1
-                local currentNaval = RNGAIGLOBALS.HighestTeamNavalPhase[myArmy.Team] or 1
-                RNGAIGLOBALS.HighestTeamAirPhase[myArmy.Team] = math.max(currentAir, airPhase)
-                RNGAIGLOBALS.HighestTeamLandPhase[myArmy.Team] = math.max(currentLand, landPhase)
-                RNGAIGLOBALS.HighestTeamNavalPhase[myArmy.Team] = math.max(currentNaval, navalPhase)
+                local currentAir = RNGAIGLOBALS.HighestTeamAirPhase[teamReference] or 1
+                local currentLand = RNGAIGLOBALS.HighestTeamLandPhase[teamReference] or 1
+                local currentNaval = RNGAIGLOBALS.HighestTeamNavalPhase[teamReference] or 1
+                RNGAIGLOBALS.HighestTeamAirPhase[teamReference] = math.max(currentAir, airPhase)
+                RNGAIGLOBALS.HighestTeamLandPhase[teamReference] = math.max(currentLand, landPhase)
+                RNGAIGLOBALS.HighestTeamNavalPhase[teamReference] = math.max(currentNaval, navalPhase)
             end
             --LOG('Structure Manager')
             --LOG('Number of upgrading T1 Land '..self.Factories.LAND[1].UpgradingCount)
@@ -880,6 +875,7 @@ StructureManager = Class {
             totalNavalT3HQCount = totalNavalT3HQCount + v
         end
         local aiBrain = self.Brain
+        local teamReference = aiBrain.TeamReference
 
         -- HQ Upgrades
         local mexSpend = aiBrain.EcoManager.TotalMexSpend or 0
@@ -888,7 +884,7 @@ StructureManager = Class {
         local energyEfficiencyOverTime = aiBrain.EconomyOverTimeCurrent.EnergyEfficiencyOverTime
         local disableForT3AirRushStrategy = aiBrain.BrainIntel.PlayerStrategy.T3AirRush
         --RNGLOG('Actual Mex Income '..actualMexIncome)
-        --LOG('Highest Team phase is '..tostring(RNGAIGLOBALS.HighestTeamAirPhase[self.Team]))
+        --LOG('Highest Team phase is '..tostring(RNGAIGLOBALS.HighestTeamAirPhase[teamReference]))
 
         local t2LandPass = false
         if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 and not disableForT3AirRushStrategy then
@@ -947,7 +943,7 @@ StructureManager = Class {
                 end
             end
         end
-        local t2AirRush = (aiBrain.amanager.Demand.Air.T2.torpedo > 0 or aiBrain.RNGEXP or aiBrain.BrainIntel.PlayerRole.AirPlayer or (factionIndex == 2 and actualMexIncome > (25 * multiplier)) or ((self.Team and RNGAIGLOBALS.HighestTeamAirPhase[self.Team] < 1.5 or not self.Team and aiBrain.BrainIntel.AirPhase < 1.5) and aiBrain.EnemyIntel.AirPhase > 1))
+        local t2AirRush = (aiBrain.amanager.Demand.Air.T2.torpedo > 0 or aiBrain.RNGEXP or aiBrain.BrainIntel.PlayerRole.AirPlayer or (factionIndex == 2 and actualMexIncome > (25 * multiplier)) or ((teamReference and RNGAIGLOBALS.HighestTeamAirPhase[teamReference] < 1.5 or not teamReference and aiBrain.BrainIntel.AirPhase < 1.5) and aiBrain.EnemyIntel.AirPhase > 1))
         if t2AirRush and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
             --LOG('Air Player T2 factory upgrade checking if massEfficiencyOverTime '..tostring(massEfficiencyOverTime)..' energyEfficiencyOverTime '..tostring(energyEfficiencyOverTime))
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
@@ -1093,7 +1089,7 @@ StructureManager = Class {
                 end
             end
         end
-        local t3AirRush = aiBrain.BrainIntel.PlayerRole.AirPlayer or ((self.Team and RNGAIGLOBALS.HighestTeamAirPhase[self.Team] < 2.5 or not self.Team and aiBrain.BrainIntel.AirPhase < 2.5) and aiBrain.EnemyIntel.AirPhase > 2)
+        local t3AirRush = aiBrain.BrainIntel.PlayerRole.AirPlayer or ((teamReference and RNGAIGLOBALS.HighestTeamAirPhase[teamReference] < 2.5 or not teamReference and aiBrain.BrainIntel.AirPhase < 2.5) and aiBrain.EnemyIntel.AirPhase > 2)
         if not t3AirPass and t3AirRush and totalAirT3HQCount < 1 and totalAirT2HQCount > 0 and self.Factories.AIR[2].UpgradingCount < 1 and self.Factories.AIR[2].Total > 0 then
             --LOG('Air Player T3 factory upgrade checking if massEfficiencyOverTime '..tostring(massEfficiencyOverTime)..' energyEfficiencyOverTime '..tostring(energyEfficiencyOverTime))
             if aiBrain.EconomyOverTimeCurrent.MassIncome > (2.5 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 100.0 then

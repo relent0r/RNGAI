@@ -51,25 +51,25 @@ EngineerManager = Class(BuilderManager) {
             Strategic = { Category = categories.STRUCTURE * categories.STRATEGIC * categories.TECH3, Units = {}, UnitsList = {}, Count = 0, },
             Experimental = { Category = categories.STRUCTURE * categories.EXPERIMENTAL, Units = {}, UnitsList = {}, Count = 0, },
         }
-        self.QueuedStructures = setmetatable({}, WeakValueTable)
+        self.QueuedStructures = {}
         self.QueuedStructures = {
-            TECH1 = setmetatable({}, WeakValueTable),
-            TECH2 = setmetatable({}, WeakValueTable),
-            TECH3 = setmetatable({}, WeakValueTable),
-            EXPERIMENTAL = setmetatable({}, WeakValueTable),
-            SUBCOMMANDER = setmetatable({}, WeakValueTable),
-            COMMAND = setmetatable({}, WeakValueTable),
-            DEFENSE = setmetatable({}, WeakValueTable),
+            TECH1 = {},
+            TECH2 = {},
+            TECH3 = {},
+            EXPERIMENTAL = {},
+            SUBCOMMANDER = {},
+            COMMAND = {},
+            DEFENSE = {},
         }
-        self.StructuresBeingBuilt = setmetatable({}, WeakValueTable)
+        self.StructuresBeingBuilt = {}
         self.StructuresBeingBuilt = {
-            TECH1 = setmetatable({}, WeakValueTable),
-            TECH2 = setmetatable({}, WeakValueTable),
-            TECH3 = setmetatable({}, WeakValueTable),
-            EXPERIMENTAL = setmetatable({}, WeakValueTable),
-            SUBCOMMANDER = setmetatable({}, WeakValueTable),
-            COMMAND = setmetatable({}, WeakValueTable),
-            DEFENSE = setmetatable({}, WeakValueTable),
+            TECH1 = {},
+            TECH2 = {},
+            TECH3 = {},
+            EXPERIMENTAL = {},
+            SUBCOMMANDER = {},
+            COMMAND = {},
+            DEFENSE = {},
         }
         self:AddBuilderType('Any')
     end,
@@ -493,6 +493,26 @@ EngineerManager = Class(BuilderManager) {
         self.ConsumptionUnits = {
             Engineers = { Category = categories.ENGINEER, Units = {}, UnitsList = {}, Count = 0, },
         }
+        self.QueuedStructures = {}
+        self.QueuedStructures = {
+            TECH1 = {},
+            TECH2 = {},
+            TECH3 = {},
+            EXPERIMENTAL = {},
+            SUBCOMMANDER = {},
+            COMMAND = {},
+            DEFENSE = {},
+        }
+        self.StructuresBeingBuilt = {}
+        self.StructuresBeingBuilt = {
+            TECH1 = {},
+            TECH2 = {},
+            TECH3 = {},
+            EXPERIMENTAL = {},
+            SUBCOMMANDER = {},
+            COMMAND = {},
+            DEFENSE = {},
+        }
 
         self:AddBuilderType('Any')
     end,
@@ -772,7 +792,7 @@ EngineerManager = Class(BuilderManager) {
                 if self.LocationType == 'FLOATING' or self.LocationType == 'MAIN' then
                     local tech1PointDefenseRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 75, 'TECH1POINTDEFENSE')
                     if tech1PointDefenseRequestPos then
-                        LOG('T1PD Request found')
+                        --LOG('T1PD Request found')
                         local locationPlatoon = aiBrain:MakePlatoon('T1PDPlatoon', 'StateMachineAIRNG')
                         aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
                         unit.PlatoonHandle = locationPlatoon
@@ -864,52 +884,68 @@ EngineerManager = Class(BuilderManager) {
                 end
             end
             local numEnemyUnits = aiBrain.emanager.Nuke.T3
-            if numEnemyUnits > 0 then
-                LOG('Enemy has a nuke')
+            if unitCats.TECH3 and numEnemyUnits and numEnemyUnits > 0 then
                 local currentSMD = self:GetNumUnits('AntiNuke')
                 if currentSMD == 0 then
-                    LOG('We dont have an SMD at this location')
-                    local beingBuiltSmd = 0
-                    for _, v in self.StructuresBeingBuilt['TECH3'] do
-                        if v and not v.Dead then
-                            local unitCats = v.Blueprint.CategoriesHash
-                            if unitCats.STRUCTURE and unitCats.DEFENSE and unitCats.ANTIMISSILE then
-                                beingBuiltSmd = beingBuiltSmd + 1
-                            end
-                        end
-                    end
-                    if beingBuiltSmd == 0 then
-                        local builderManager = self.Brain.BuilderManagers[self.LocationType]
-                        local structureManager = self.Brain.StructureManager
-                        if builderManager.ZoneID then
-                            local structureTable = structureManager.ZoneStructures[builderManager.ZoneID]['EXTRACTOR']
-                            local extractorIncome = 0
-                            if structureTable then
-                                for _, v in structureTable do
-                                    if v and not v.Dead and v.GetProductionPerSecondMass then
-                                        extractorIncome = extractorIncome + v:GetProductionPerSecondMass()
-                                    end
-                                end
-                            end
-                            if extractorIncome > 30 * aiBrain.EcoManager.EcoMultiplier then
-                                if not aiBrain.IntelManager:IsExistingStructureRequestPresent(basePos, 45, 'SMD') then
-                                    aiBrain.IntelManager:RequestStructureNearPosition(basePos, 45, 'SMD')
-                                    local smdRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 120, 'SMD')
-                                    if smdRequestPos then
-                                        local locationPlatoon = aiBrain:MakePlatoon('SMDPlatoon', 'StateMachineAIRNG')
-                                        aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
-                                        unit.PlatoonHandle = locationPlatoon
-                                        locationPlatoon.PlanName = 'StateMachineAIRNG'
-                                        import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'SMDBuild', Position = basePos, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
-                                        return true
-                                    end
-                                end
-                            end
+                    if not aiBrain.IntelManager:IsAssignedStructureRequestPresent(self.Location, 120, 'SMD') then
+                        local smdRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 120, 'SMD')
+                        if smdRequestPos then
+                            local locationPlatoon = aiBrain:MakePlatoon('SMDPlatoon', 'StateMachineAIRNG')
+                            aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')
+                            unit.PlatoonHandle = locationPlatoon
+                            locationPlatoon.PlanName = 'StateMachineAIRNG'
+                            import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'SMDBuild', Position = self.Location, LocationType = self.LocationType} }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
+                            return true
                         end
                     end
                 end
             end
         end
+    end,
+
+    NumStructuresQueued = function(self, techCategory, categoriesTable)
+        local timeStamp = GetGameTimeSeconds()
+        local queuedStructures = self.QueuedStructures[techCategory]
+        local structuresQueued = 0
+        if queuedStructures then
+            for k, v in queuedStructures do
+                local itemUnitCats = v.CategoriesHash
+                local allMatch = true
+                for _, cat in categoriesTable do
+                    if not itemUnitCats[cat] then
+                        allMatch = false
+                        break
+                    end
+                end
+                if allMatch and v.Engineer and not v.Engineer.Dead and v.TimeStamp + 30 > timeStamp then
+                    structuresQueued = structuresQueued + 1
+                end
+            end
+        end
+        return structuresQueued
+    end,
+
+    NumStructuresBeingBuilt = function(self, techCategory, categoriesTable)
+        local beingBuiltStructures = self.StructuresBeingBuilt[techCategory]
+        local structuresBeingBuilt = 0
+        if beingBuiltStructures then
+            for k, v in beingBuiltStructures do
+                if v.Unit and not v.Unit.Dead then
+                    local itemUnitCats = v.Unit.Blueprint.CategoriesHash
+                    local allMatch = true
+                    for _, cat in categoriesTable do
+                        if not itemUnitCats[cat] then
+                            allMatch = false
+                            break
+                        end
+                    end
+                    if allMatch then
+                        structuresBeingBuilt = structuresBeingBuilt + 1
+                    end
+                end
+            end
+        end
+        return structuresBeingBuilt
     end,
 
     ---@param self EngineerManager

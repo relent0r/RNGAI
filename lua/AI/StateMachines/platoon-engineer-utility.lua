@@ -401,7 +401,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 elseif data.Task == 'T1PDBuild' then
-                    LOG('Engineer Received T1PD Build')
                     local t1PdPosition = data.Position
                     if t1PdPosition then
                         --LOG('We have a position')
@@ -411,6 +410,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         --LOG('Pos distance is '..tostring(tmdPosDistance))
                         self.BuilderData = {
                             Construction = {
+                                T1PDBuild = true,
                                 BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIT1PDTemplate.lua',
                                 BaseTemplate = 'T1PDTemplate',
                                 BuildClose = false,
@@ -443,16 +443,15 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 elseif data.Task == 'SMDBuild' then
-                    LOG('Engineer Received SMD Build')
                     local smdPosition = data.Position
                     if smdPosition then
-                        LOG('We have a position')
                         local rx = engPos[1] - smdPosition[1]
                         local rz = engPos[3] - smdPosition[3]
                         local smdPosDistance = rx * rx + rz * rz
-                        LOG('Pos distance is '..tostring(tmdPosDistance))
                         self.BuilderData = {
                             Construction = {
+                                SMDBuild = true,
+                                NoPause = true,
                                 DesiresAssist = true,
                                 NumAssistees = 5,
                                 BuildClose = false,

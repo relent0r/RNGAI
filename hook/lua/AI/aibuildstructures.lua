@@ -22,16 +22,12 @@ function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relati
     end
     local newEntry = {whatToBuild, buildLocation, relative, borderWarning}
     table.insert(builder.EngineerBuildQueue, newEntry)
-    if builder.PlatoonHandle.PlatoonData.Construction.HighValue then
+    if builder.PlatoonHandle.PlatoonData.Construction or builder.PlatoonHandle.BuilderData.Construction then
         --LOG('Engineer is building high value item')
         local ALLBPS = __blueprints
         local unitBp = ALLBPS[whatToBuild]
-        --LOG('Unit being built '..repr(whatToBuild))
-        --LOG('Tech category of unit being built '..repr(unitBp.TechCategory))
         if not builder.BuilderManagerData.EngineerManager.QueuedStructures[unitBp.TechCategory][builder.EntityId] then
-            --LOG('Added engineer entry to queued structures')
-            builder.BuilderManagerData.EngineerManager.QueuedStructures[unitBp.TechCategory][builder.EntityId] = {Engineer = builder, TimeStamp = GetGameTimeSeconds()}
-            --LOG('Queue '..repr(builder.BuilderManagerData.EngineerManager.QueuedStructures[unitBp.TechCategory]))
+            builder.BuilderManagerData.EngineerManager.QueuedStructures[unitBp.TechCategory][builder.EntityId] = {Engineer = builder, TimeStamp = GetGameTimeSeconds(), CategoriesHash = table.copy(unitBp.CategoriesHash)}
         end
     end
 end

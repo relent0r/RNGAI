@@ -198,16 +198,14 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                             ZoneID = targetData.ZoneID,
                             ScoutType = scoutType
                         }
-                        self.PlatoonAttached = true
-                        targetData.ScoutPresent = true
                         local rx = scoutPos[1] - targetData.Position[1]
                         local rz = scoutPos[3] - targetData.Position[3]
                         if rx * rx + rz * rz > 4225 then
-                            --self:LogDebug(string.format('Zone Location scout greater than 65 units navigate'))
+                            self:LogDebug(string.format('Zone Location scout greater than 65 units navigate'))
                             self:ChangeState(self.Navigating)
                             return
                         else
-                            --self:LogDebug(string.format('Zone Location close, hold position'))
+                            self:LogDebug(string.format('Zone Location close, hold position'))
                             self:ChangeState(self.HoldPosition)
                             return
                         end
@@ -219,16 +217,14 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                             ZoneID = targetData.LandZoneID,
                             ScoutType = scoutType
                         }
-                        self.PlatoonAttached = true
-                        targetData.ScoutPresent = true
                         local rx = scoutPos[1] - targetData.Position[1]
                         local rz = scoutPos[3] - targetData.Position[3]
                         if rx * rx + rz * rz > 4225 then
-                            --self:LogDebug(string.format('Zone Location scout greater than 65 units navigate'))
+                            self:LogDebug(string.format('Zone Location scout greater than 65 units navigate'))
                             self:ChangeState(self.Navigating)
                             return
                         else
-                            --self:LogDebug(string.format('Zone Location close, hold position'))
+                            self:LogDebug(string.format('Zone Location close, hold position'))
                             self:ChangeState(self.HoldPosition)
                             return
                         end
@@ -365,6 +361,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
         --- The platoon searches for a target
         ---@param self AIPlatoonLandScoutBehavior
         Main = function(self)
+            --LOG('Scout is going to try and hold position')
             local aiBrain = self:GetBrain()
             local scout = self.ScoutUnit
             local im = IntelManagerRNG.GetIntelManager(aiBrain)
@@ -387,12 +384,58 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     local movePos = RUtils.AvoidLocation(holdPos, scoutPos, 4)
                     StateUtils.IssueNavigationMove(scout, movePos)
                 end
-                if builderData.ZoneID and aiBrain.Zones.Land[builderData.ZoneID].intelassignment.RadarCoverage then
+                if builderData.ZoneID and aiBrain.Zones.Land.zones[builderData.ZoneID].intelassignment.RadarCoverage then
                     coroutine.yield(10)
                     --RNGLOG('RadarCoverage true')
                     break
                 end
                 coroutine.yield(40)
+                if builderData.ZoneID then
+                    --LOG('Scout is holding at a zone, try to probe an unknown edge')
+                    local zone = aiBrain.Zones.Land.zones[builderData.ZoneID]
+                    local edges = zone.edges
+                    local probeTargets = {}
+                    for _, edge in edges do
+                        local neighbor = edge.zone
+                        if not aiBrain.IntelManager:IsZoneSafeToScout(nil, neighbor) then
+                            table.insert(probeTargets, neighbor)
+                        end
+                    end
+                    if table.getn(probeTargets) > 0 then
+                        local targetZone = probeTargets[Random(1, table.getn(probeTargets))]
+                        local currentPos = scout:GetPosition()
+                        local targetPos = targetZone.pos
+                        local dx = targetPos[1] - currentPos[1]
+                        local dz = targetPos[3] - currentPos[3]
+                        local dist = math.sqrt(dx * dx + dz * dz)
+                        local probeDist = math.min(dist * 0.5, 100)
+                        local waypoint, length = NavUtils.DirectionTo(self.MovementLayer, currentPos, targetPos, probeDist)
+                        --LOG('Probing zone '..tostring(repr(targetPos)))
+                    
+                        -- Issue move toward edge
+                        StateUtils.IssueNavigationMove(scout, waypoint)
+                        coroutine.yield(60) -- allow time to scout before returning
+                        -- Return to original holdPos
+                        StateUtils.IssueNavigationMove(scout, self.holdpos)
+                        coroutine.yield(60)
+                        if aiBrain.IntelManager.ScoutingCurveZones then
+                            local shiftZone = true
+                            for _, v in aiBrain.IntelManager.ScoutingCurveZones do
+                                if v == builderData.ZoneID then
+                                    shiftZone = false
+                                    break
+                                end
+                            end
+                            if shiftZone then
+                                --LOG('shiftZone for scout unit')
+                                if zone.intelassignment.ScoutUnit and zone.intelassignment.ScoutUnit.EntityId == scout.EntityId then
+                                    zone.intelassignment.ScoutUnit = nil
+                                end
+                                break
+                            end
+                        end
+                    end
+                end
             end
             coroutine.yield(20)
             self:ChangeState(self.DecideWhatToDo)
@@ -545,7 +588,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if scoutType == 'ZoneLocation' then
-                        if aiBrain.Zones.Land[builderData.ZoneID].intelassignment.RadarCoverage then
+                        if aiBrain.Zones.Land.zones[builderData.ZoneID].intelassignment.RadarCoverage then
                             coroutine.yield(10)
                             --RNGLOG('RadarCoverage true')
                             break

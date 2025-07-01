@@ -64,7 +64,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             if currenEnemy then
                 local EnemyIndex = currenEnemy:GetArmyIndex()
                 local OwnIndex = brain:GetArmyIndex()
-                if brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
+                if brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][self.LocationType] == 'LAND' then
                     --LOG('We can path to the enemy')
                     --LOG('PlayableArea = '..tostring(repr(playableArea)))
                     if playableArea[3] and playableArea[3] <= 512 or playableArea[4] and playableArea[4] <= 512 then
@@ -163,8 +163,152 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     brain.BrainIntel.SuicideModeTarget = nil
                 end
             end
-            if cdr.Confidence < 3.5 and cdr.DistanceToHome > 2500 then
+            --LOG('Current acu health '..tostring(cdr.Health))
+            --LOG('Current acu confidence '..tostring(cdr.Confidence))
+            if cdr.Confidence < 3.5 and cdr.DistanceToHome > 625 then
                 --LOG('CDR has low confidence')
+                if self.BuilderData.Expansion then
+                    local mainbaseOverride = false
+                    if self.LocationType == 'MAIN' then
+                        local mainBaseFactoryList = brain.BuilderManagers['MAIN'].FactoryManager.FactoryList
+                        local factoryCount = 0
+                        if mainBaseFactoryList then
+                            for _, f in mainBaseFactoryList do
+                                if f and not f.Dead then
+                                    factoryCount = factoryCount + 1
+                                end
+                            end
+                            if factoryCount == 0 then
+                                mainbaseOverride = true
+                            end
+                        end
+                    end
+                    if self.BuilderData.ExpansionBuilt and mainbaseOverride then
+                        if self.BuilderData.ExpansionData then
+                            self.LocationType = 'ZONE_'..self.BuilderData.ExpansionData
+                            brain.BuilderManagers[self.LocationType].EngineerManager:AddUnit(cdr, true)
+                            cdr.CDRHome = brain.BuilderManagers[self.LocationType].Location
+                            self.BuilderData = {}
+                        end
+                        coroutine.yield(5)
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                    if mainbaseOverride then
+                        self.BuilderData.NoReassign = true
+                        self:ChangeState(self.Expand)
+                        return
+                    end
+                end
+                if self.BuilderData.FailedRetreat or cdr.DistanceToHome < 900 then
+                    self:LogDebug(string.format('Failed Retreat or DistanceToHome < 625, current distance to home is '..tostring(cdr.DistanceToHome)))
+                    if cdr.DistanceToHome < 900 then
+                        local homeBase = brain.BuilderManagers[self.LocationType]
+                        self:LogDebug(string.format('LocationType is '..tostring(self.LocationType)))
+                        local mainbaseOverride = false
+                        if self.LocationType == 'MAIN' then
+                            local mainBaseFactoryList = brain.BuilderManagers['MAIN'].FactoryManager.FactoryList
+                            local factoryCount = 0
+                            if mainBaseFactoryList then
+                                for _, f in mainBaseFactoryList do
+                                    if f and not f.Dead then
+                                        factoryCount = factoryCount + 1
+                                    end
+                                end
+                                if factoryCount == 0 then
+                                    mainbaseOverride = true
+                                end
+                            end
+                        end
+                        if not homeBase or not homeBase.FactoryManager.LocationActive or mainbaseOverride then
+                            self:LogDebug(string.format('No Factory manager at our homebase'))
+                            local threat=RUtils.GrabPosDangerRNG(brain,cdr.CDRHome,80,80, true, false, true, true, nil)
+                            if threat.allySurface and threat.enemySurface and threat.allySurface*1.3 < (threat.enemySurface - threat.enemyStructure) and threat.enemySurface > 40 then
+                                self:LogDebug(string.format('High threat at our homebase'))
+                                local closestActiveLocation
+                                local closestActiveDistance
+                                for _, b in brain.BuilderManagers do
+                                    local baseDistance = VDist3Sq(self.Pos, b.Location)
+                                    if b.FactoryManager and b.FactoryManager.LocationActive then
+                                        if not closestActiveDistance or baseDistance < closestActiveDistance then
+                                            closestActiveDistance = baseDistance
+                                            closestActiveLocation = b.LocationType
+                                        end
+                                    end
+                                end
+                                if closestActiveLocation then
+                                    self:LogDebug(string.format('Changing our home location'))
+                                    self.LocationType = closestActiveLocation
+                                    cdr.CDRHome = brain.BuilderManagers[closestActiveLocation].Location
+                                    if cdr.BuilderManagerData.EngineerManager.RemoveUnit then
+                                        cdr.BuilderManagerData.EngineerManager:RemoveUnit(cdr)
+                                    end
+                                    brain.BuilderManagers[self.LocationType].EngineerManager:AddUnit(cdr, true)
+                                else
+                                    local expansionsAvailable = 0
+                                    for _, v in im.ZoneExpansions.Pathable do
+                                        if v.TeamValue >= 1.0 then
+                                            expansionsAvailable = expansionsAvailable + 1
+                                        end
+                                    end
+                                    self:LogDebug(string.format('Current expansion count is '..tostring(expansionCount)))
+                                    if expansionsAvailable > 0 then
+                                        if not table.empty(im.ZoneExpansions.Pathable) then
+                                            local stageExpansion
+                                            local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
+                                            local maxRange
+                                            if gameTime < 480 then
+                                                --LOG('ACU Looking wide for expansion as its early')
+                                                self:LogDebug(string.format('Its early so we should go for something further'))
+                                                maxRange = math.min(BaseDMZArea, 385)
+                                                stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, maxRange, 'Land', 10, 'acu')
+                                                ----self:LogDebug(string.format('Distance to Expansion is '..tostring(VDist3(stageExpansion.Expansion.Position,cdr.Position))))
+                                            else
+                                                self:LogDebug(string.format('Its later so we should go for something closer'))
+                                                local enemyBaseRange = math.sqrt(brain.EnemyIntel.ClosestEnemyBase) / 2
+                                                maxRange = math.min(enemyBaseRange, 256)
+                                                stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, maxRange, 'Land', 10, 'acu')
+                                            end
+
+                                            if stageExpansion then
+                                                self.BuilderData = {
+                                                    Expansion = true,
+                                                    Position = stageExpansion.Expansion.Position,
+                                                    ExpansionData = stageExpansion.Key,
+                                                    CutOff = 225
+                                                }
+                                                brain.Zones.Land.zones[stageExpansion.Key].engineerplatoonallocated = self
+                                                brain.Zones.Land.zones[stageExpansion.Key].lastexpansionattempt = GetGameTimeSeconds()
+                                                self:LogDebug(string.format('We have found a position to expand to, navigating, team value is '..tostring(brain.Zones.Land.zones[stageExpansion.Key].teamvalue)))
+                                                self:LogDebug(string.format('The destination position is '..tostring(self.BuilderData.Position[1])..':'..tostring(self.BuilderData.Position[3])))
+                                                self:ChangeState(self.Navigating)
+                                                return
+                                            else
+                                                self:LogDebug(string.format('We couldnt find an expansion'))
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets, acuRisk = RUtils.AIAdvancedFindACUTargetRNG(brain, cdr)
+                    if closestThreatUnit then
+                        self.BuilderData = {
+                            AttackTarget = closestThreatUnit,
+                            Position = closestThreatUnit:GetPosition(), 
+                        }
+                        self:ChangeState(self.AttackRetreat)
+                        return
+                    elseif target then
+                        self.BuilderData = {
+                            AttackTarget = closestThreatUnit,
+                            Position = closestThreatUnit:GetPosition(), 
+                        }
+                        self:ChangeState(self.AttackRetreat)
+                        return
+                    end
+                end
                 self:LogDebug(string.format('cdr has low confidence'))
                 local closestEnemyACU = StateUtils.GetClosestEnemyACU(brain, cdr.CDRHome)
                 local enemyAcuOverride = false
@@ -306,16 +450,24 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             Position = expansionPosition,
                             Time = gameTime
                         }
+                        if cdr.BuilderManagerData.EngineerManager.RemoveUnit then
+                            cdr.BuilderManagerData.EngineerManager:RemoveUnit(cdr)
+                        end
+                        brain.BuilderManagers[self.LocationType].EngineerManager:AddUnit(cdr, true)
                         self:LogDebug(string.format('Threat present at expansion after its build'))
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
-                    cdr.BuilderManagerData.EngineerManager:RemoveUnit(cdr)
-                    brain.BuilderManagers['MAIN'].EngineerManager:AddUnit(cdr, true)
+                    if not self.BuilderData.NoReassign then
+                        if cdr.BuilderManagerData.EngineerManager.RemoveUnit then
+                            cdr.BuilderManagerData.EngineerManager:RemoveUnit(cdr)
+                        end
+                        brain.BuilderManagers[self.LocationType].EngineerManager:AddUnit(cdr, true)
+                    end
                 end
                 local expansionCount = 0
                 for k, manager in brain.BuilderManagers do
-                    if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not table.empty(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
+                    if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not table.empty(manager.FactoryManager.FactoryList) and k ~= self.LocationType then
                         ----self:LogDebug(string.format('We already have an expansion with a factory '..tostring(k)))
                         expansionCount = expansionCount + 1
                         if expansionCount > 1 then
@@ -411,7 +563,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local expansionCount = 0
                         for k, manager in brain.BuilderManagers do
                         --RNGLOG('Checking through expansion '..k)
-                            if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not RNGTableEmpty(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
+                            if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not RNGTableEmpty(manager.FactoryManager.FactoryList) and k ~= self.LocationType then
                                 expansionCount = expansionCount + 1
                                 if expansionCount > 1 then
                                     break
@@ -426,38 +578,42 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                         self:LogDebug(string.format('Current expansion count is '..tostring(expansionCount)))
                         if not brain.RNGEXP and expansionCount < 2 and expansionsAvailable > 1 then
-                            if not table.empty(im.ZoneExpansions.Pathable) then
-                                local stageExpansion
-                                local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
-                                local maxRange
-                                if gameTime < 480 then
-                                    --LOG('ACU Looking wide for expansion as its early')
-                                    self:LogDebug(string.format('Its early so we should go for something further'))
-                                    maxRange = math.min(BaseDMZArea * 1.5, 385)
-                                    stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, maxRange, 'Land', 10, 'acu')
-                                    ----self:LogDebug(string.format('Distance to Expansion is '..tostring(VDist3(stageExpansion.Expansion.Position,cdr.Position))))
-                                else
-                                    self:LogDebug(string.format('Its later so we should go for something closer'))
-                                    local enemyBaseRange = math.sqrt(brain.EnemyIntel.ClosestEnemyBase) / 2
-                                    maxRange = math.min(enemyBaseRange, 256)
-                                    stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, maxRange, 'Land', 10, 'acu')
-                                end
+                            local monitor = brain.BasePerimeterMonitor and brain.BasePerimeterMonitor[self.LocationType]
+                            local landThreat = monitor and monitor.LandThreat
+                            local enemyIntel = brain.EnemyIntel
+                            local enemyDistance = enemyIntel and enemyIntel.ClosestEnemyBase
+                            if landThreat < 4 and enemyDistance > 13225 then
+                                if not table.empty(im.ZoneExpansions.Pathable) then
+                                    local stageExpansion
+                                    local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
+                                    local maxRange
+                                    if gameTime < 480 then
+                                        --LOG('ACU Looking wide for expansion as its early')
+                                        self:LogDebug(string.format('Its early so we should go for something further'))
+                                        maxRange = math.min(BaseDMZArea * 1.5, 385)
+                                        stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, maxRange, 'Land', 10, 'acu')
+                                        ----self:LogDebug(string.format('Distance to Expansion is '..tostring(VDist3(stageExpansion.Expansion.Position,cdr.Position))))
+                                    else
+                                        self:LogDebug(string.format('Its later so we should go for something closer'))
+                                        local enemyBaseRange = math.sqrt(brain.EnemyIntel.ClosestEnemyBase) / 2
+                                        maxRange = math.min(enemyBaseRange, 256)
+                                        stageExpansion = IntelManagerRNG.QueryExpansionTable(brain, cdr.Position, maxRange, 'Land', 10, 'acu')
+                                    end
 
-                                if stageExpansion then
-                                    self.BuilderData = {
-                                        Expansion = true,
-                                        Position = stageExpansion.Expansion.Position,
-                                        ExpansionData = stageExpansion.Key,
-                                        CutOff = 225
-                                    }
-                                    brain.Zones.Land.zones[stageExpansion.Key].engineerplatoonallocated = self
-                                    brain.Zones.Land.zones[stageExpansion.Key].lastexpansionattempt = GetGameTimeSeconds()
-                                    self:LogDebug(string.format('We have found a position to expand to, navigating, team value is '..tostring(brain.Zones.Land.zones[stageExpansion.Key].teamvalue)))
-                                    self:LogDebug(string.format('The destination position is '..tostring(self.BuilderData.Position[1])..':'..tostring(self.BuilderData.Position[3])))
-                                    self:ChangeState(self.Navigating)
-                                    return
-                                else
-                                    self:LogDebug(string.format('We couldnt find an expansion'))
+                                    if stageExpansion then
+                                        self.BuilderData = {
+                                            Expansion = true,
+                                            Position = stageExpansion.Expansion.Position,
+                                            ExpansionData = stageExpansion.Key,
+                                            CutOff = 225
+                                        }
+                                        brain.Zones.Land.zones[stageExpansion.Key].engineerplatoonallocated = self
+                                        brain.Zones.Land.zones[stageExpansion.Key].lastexpansionattempt = GetGameTimeSeconds()
+                                        self:LogDebug(string.format('We have found a position to expand to, navigating, team value is '..tostring(brain.Zones.Land.zones[stageExpansion.Key].teamvalue)))
+                                        self:LogDebug(string.format('The destination position is '..tostring(self.BuilderData.Position[1])..':'..tostring(self.BuilderData.Position[3])))
+                                        self:ChangeState(self.Navigating)
+                                        return
+                                    end
                                 end
                             end
                         end
@@ -476,7 +632,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
                             local baseDistance = VDist3Sq(cdr.Position, base.Position)
                             local distanceToHome = cdr.DistanceToHome
-                            if distanceToHome > baseDistance and baseDistance < 6400 and baseName ~= 'MAIN' and cdr.Health > 7000 then
+                            if distanceToHome > baseDistance and baseDistance < 6400 and baseName ~= self.LocationType and cdr.Health > 7000 then
                                 if not closestBaseDistance then
                                     closestBaseDistance = baseDistance
                                 end
@@ -560,7 +716,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 self:LogDebug(string.format(' friendly inner circle '..tostring(cdr.CurrentFriendlyInnerCircle)..' enemy inner circle '..tostring(cdr.CurrentEnemyInnerCircle)))
                 local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets
                 cdr.Combat = true
-                if (not cdr.SuicideMode and cdr.DistanceToHome > maxBaseRange and (not cdr:IsUnitState('Building'))) and not self.BuilderData.DefendExpansion or (cdr.PositionStatus == 'Hostile' and cdr.Caution) then
+                if (not cdr.SuicideMode and cdr.DistanceToHome > maxBaseRange and (not cdr:IsUnitState('Building'))) and not self.BuilderData.DefendExpansion or ((cdr.PositionStatus == 'Hostile' and cdr.Caution) and cdr.DistanceToHome > 2500) then
                     self:LogDebug(string.format('OverCharge running but ACU is beyond its MaxBaseRange '..tostring(cdr.MaxBaseRange)..' property or in caution and enemy territory'))
                     --LOG('Current cdr confidence is '..tostring(cdr.Confidence))
                     --LOG('Max base range '..tostring(cdr.MaxBaseRange))
@@ -578,7 +734,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 --RNGLOG('Retreat Expansion number of factories '..RNGGETN(base.FactoryManager.FactoryList))
                                 local baseDistance = VDist3Sq(cdr.Position, base.Position)
                                 local distanceToHome = cdr.DistanceToHome
-                                if distanceToHome > baseDistance and baseDistance < 6400 and baseName ~= 'MAIN' and cdr.Health > 7000 then
+                                if distanceToHome > baseDistance and baseDistance < 6400 and baseName ~= self.LocationType and cdr.Health > 7000 then
                                     if not closestBaseDistance then
                                         closestBaseDistance = baseDistance
                                     end
@@ -621,10 +777,10 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if not cdr.SuicideMode then
                     if self.BuilderData.DefendExpansion then
                         ----self:LogDebug(string.format('Defend expansion looking for target'))
-                        target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets = RUtils.AIAdvancedFindACUTargetRNG(brain, nil, nil, 80, self.BuilderData.Position)
+                        target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets, acuRisk = RUtils.AIAdvancedFindACUTargetRNG(brain, cdr, nil, nil, 80, self.BuilderData.Position)
                     else
                         self:LogDebug(string.format('Look for normal target'))
-                        target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets = RUtils.AIAdvancedFindACUTargetRNG(brain)
+                        target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets, acuRisk = RUtils.AIAdvancedFindACUTargetRNG(brain, cdr)
                     end
                 elseif cdr.SuicideMode then
                     self:LogDebug(string.format('Are we in suicide mode?'))
@@ -640,6 +796,14 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if not cdr.SuicideMode and target and cdr.Phase == 3 and brain.GridPresence:GetInferredStatus(target:GetPosition()) == 'Hostile' then
                     ----self:LogDebug(string.format('Have target but we are in phase 3 and target is in hostile territory cancel'))
                     target = false
+                end
+                if closestThreatUnit and acuRisk then
+                    self.BuilderData = {
+                        AttackTarget = closestThreatUnit,
+                        Position = closestThreatUnit:GetPosition(), 
+                    }
+                    self:ChangeState(self.AttackRetreat)
+                    return
                 end
                 if not target and closestThreatDistance < 1600 and closestThreatUnit and not IsDestroyed(closestThreatUnit) then
                     --RNGLOG('No Target Found due to high threat, closestThreatDistance is below 1225 so we will attack that ')
@@ -970,7 +1134,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     local expansionCount = 0
                     for k, manager in brain.BuilderManagers do
                     --RNGLOG('Checking through expansion '..k)
-                        if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not RNGTableEmpty(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
+                        if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not RNGTableEmpty(manager.FactoryManager.FactoryList) and k ~= self.LocationType then
                             expansionCount = expansionCount + 1
                             if expansionCount > 1 then
                                 break
@@ -1234,7 +1398,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             ----self:LogDebug(string.format('ACU is assisting'))
             if self.BuilderData.Assist then
                 for _, cat in self.BuilderData.Assist.BeingBuiltCategories do
-                    assistList = RUtils.GetAssisteesRNG(brain, 'MAIN', categories.ENGINEER, cat, categories.ALLUNITS)
+                    assistList = RUtils.GetAssisteesRNG(brain, self.LocationType, categories.ENGINEER, cat, categories.ALLUNITS)
                     if not RNGTableEmpty(assistList) then
                         break
                     end
@@ -1641,6 +1805,201 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    AttackRetreat = State {
+
+        StateName = 'AttackRetreat',
+        StateColor = "ff0000",
+
+        --- The platoon raids the target
+        ---@param self AIPlatoonACUBehavior
+        Main = function(self)
+            local brain = self:GetBrain()
+            local cdr = self.cdr
+            if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
+                local target = self.BuilderData.AttackTarget
+                local snipeAttempt = false
+                if target and not target.Dead then
+                    cdr.Target = target
+                    local targetPos = target:GetPosition()
+                    local cdrPos = cdr:GetPosition()
+                    cdr.TargetPosition = targetPos
+                    local targetDistance = VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
+                    local enemyMaxRange = StateUtils.GetUnitMaxWeaponRange(target, 'Direct Fire') or 0
+                    if enemyMaxRange > cdr.WeaponRange then
+                        if targetDistance <= (cdr.WeaponRange * cdr.WeaponRange) and brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
+                            IssueOverCharge({cdr}, target)
+                            coroutine.yield(10)
+                        end
+                        local safeDistance = enemyMaxRange + 10
+                        local retreatVector = Vector(cdrPos[1] - targetPos[1], 0, cdrPos[3] - targetPos[3])
+                        retreatVector = RUtils.NormalizeVector(retreatVector)
+                    
+                        local retreatPos = {cdrPos[1] + retreatVector[1] * safeDistance, cdrPos[2], cdrPos[3] + retreatVector[3] * safeDistance}
+                                       
+                        StateUtils.IssueNavigationMove(cdr, retreatPos)
+                        coroutine.yield(30)
+                        self:LogDebug('Enemy outranges ACU, retreating')
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                    local targetCat = target.Blueprint.CategoriesHash
+                    if targetCat.COMMAND then
+                        local enemyACUHealth = target:GetHealth()
+                        local shieldHealth, shieldNumber = RUtils.GetShieldCoverAroundUnit(brain, target)
+                        if shieldHealth > 0 then
+                            enemyACUHealth = enemyACUHealth + shieldHealth
+                        end
+
+                        if enemyACUHealth < cdr.Health then
+                            acuAdvantage = true
+                        end
+                        local defenseThreat = RUtils.CheckDefenseThreat(brain, targetPos)
+                        if defenseThreat > 45 and cdr.SuicideMode then
+                            ACUFunc.SetAcuSnipeMode(cdr, 'DEFAULT')
+                            cdr.SnipeMode = false
+                            cdr.SuicideMode = false
+                            brain.BrainIntel.SuicideModeActive = false
+                            brain.BrainIntel.SuicideModeTarget = nil
+                        end
+
+                        if enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3250 and not RUtils.PositionInWater(targetPos) and defenseThreat < 45 then
+                            ----self:LogDebug(string.format('Enemy ACU could be killed or drawn, should we try?, enable snipe mode'))
+                            if target and not IsDestroyed(target) then
+                                ACUFunc.SetAcuSnipeMode(cdr, 'ACU')
+                                cdr:SetAutoOvercharge(true)
+                                cdr.SnipeMode = true
+                                cdr.SuicideMode = true
+                                brain.BrainIntel.SuicideModeActive = true
+                                brain.BrainIntel.SuicideModeTarget = target
+                                self.BuilderData.ACUTarget = target
+                                snipeAttempt = true
+                                local gameTime = GetGameTimeSeconds()
+                                local index = target:GetAIBrain():GetArmyIndex()
+                                if not brain.TacticalMonitor.TacticalMissions.ACUSnipe[index] then
+                                    brain.TacticalMonitor.TacticalMissions.ACUSnipe[index] = {}
+                                end
+                                brain.TacticalMonitor.TacticalMissions.ACUSnipe[index]['AIR'] = { GameTime = gameTime, CountRequired = 4 }
+                                brain.TacticalMonitor.TacticalMissions.ACUSnipe[index]['LAND'] = { GameTime = gameTime, CountRequired = 4 }
+                            end
+                        elseif enemyACUHealth < 4500 and cdr.Health - enemyACUHealth < 3000 or cdr.CurrentFriendlyInnerCircle > cdr.CurrentEnemyInnerCircle * 1.3 then
+                                if not cdr.SnipeMode then
+                                    ----self:LogDebug(string.format('Enemy ACU is under HP limit we can potentially draw, enable snipe mode'))
+                                    ACUFunc.SetAcuSnipeMode(cdr, 'ACU')
+                                    cdr.SnipeMode = true
+                                end
+                        elseif cdr.SnipeMode then
+                            ACUFunc.SetAcuSnipeMode(cdr, 'DEFAULT')
+                            cdr.SnipeMode = false
+                            cdr.SuicideMode = false
+                            brain.BrainIntel.SuicideModeActive = false
+                            brain.BrainIntel.SuicideModeTarget = nil
+                        end
+                    elseif targetCat.STRUCTURE and (targetCat.DIRECTFIRE or targetCat.INDIRECTFIRE) then
+                        ----self:LogDebug(string.format('Setting snipe mode for PDs'))
+                        ACUFunc.SetAcuSnipeMode(cdr, 'STRUCTURE')
+                        cdr.SnipeMode = true
+                    elseif cdr.SnipeMode then
+                        ACUFunc.SetAcuSnipeMode(cdr, 'DEFAULT')
+                        cdr.SnipeMode = false
+                        cdr.SuicideMode = false
+                        brain.BrainIntel.SuicideModeActive = false
+                        brain.BrainIntel.SuicideModeTarget = nil
+                    end
+                    if target and not target.Dead and not target:BeenDestroyed() then
+                        targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
+                        local movePos
+                        local currentLayer = cdr:GetCurrentLayer() 
+                        if target.Blueprint.CategoriesHash.RECLAIMABLE and currentLayer == 'Seabed' and targetDistance < 10 then
+                            ----self:LogDebug(string.format('acu is under water and target is close, attempt reclaim, current unit distance is '..VDist3(cdrPos, targetPos)))
+                            IssueClearCommands({cdr})
+                            IssueReclaim({cdr}, target)
+                            movePos = targetPos
+                        elseif snipeAttempt then
+                            ----self:LogDebug(string.format('Moving to enemy acu pos'))
+                            movePos = targetPos
+                        elseif cdr.CurrentEnemyInnerCircle < 20 then
+                            movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - 14})
+                        else
+                            movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 5)})
+                        end
+                        if not snipeAttempt and currentLayer ~= 'Seabed' and brain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
+                            local checkPoints = ACUFunc.DrawCirclePoints(6, 15, movePos)
+                            local alternateFirePos = false
+                            for k, v in checkPoints do
+                                if not brain:CheckBlockingTerrain({v[1],GetTerrainHeight(v[1],v[3]),v[3]}, targetPos, 'none') and VDist3Sq({v[1],GetTerrainHeight(v[1],v[3]),v[3]}, targetPos) < VDist3Sq(cdrPos, targetPos) then
+                                    movePos = v
+                                    alternateFirePos = true
+                                    break
+                                end
+                            end
+                            if alternateFirePos then
+                                StateUtils.IssueNavigationMove(cdr, movePos)
+                            else
+                                StateUtils.IssueNavigationMove(cdr, cdr.CDRHome)
+                            end
+                            coroutine.yield(30)
+                            IssueClearCommands({cdr})
+                        end
+                        StateUtils.IssueNavigationMove(cdr, movePos)
+                        coroutine.yield(30)
+                        if not snipeAttempt then
+                            if not IsDestroyed(target) and not ACUFunc.CheckRetreat(cdrPos,targetPos,target) then
+                                targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
+                                local direction = math.random(2) == 1 and 1 or -1
+                                local cdrNewPos = RUtils.GetLateralMovePos(targetPos, cdrPos, 6, direction)
+                                if brain:CheckBlockingTerrain(cdrNewPos, targetPos, 'none') then
+                                    if direction == 1 then
+                                        cdrNewPos = RUtils.GetLateralMovePos(cdrNewPos, targetPos, 6, -1)
+                                    else
+                                        cdrNewPos = RUtils.GetLateralMovePos(cdrNewPos, targetPos, 6, 1)
+                                    end
+                                end
+                                StateUtils.IssueNavigationMove(cdr, cdrNewPos)
+                                coroutine.yield(30)
+                            end
+                        end
+                    end
+                    if brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired and cdr.CurrentEnemyInnerCircle > 8 then
+                        local overChargeFired = false
+                        local innerCircleEnemies = GetNumUnitsAroundPoint(brain, categories.MOBILE * categories.LAND + categories.STRUCTURE, cdr.Position, cdr.WeaponRange - 3, 'Enemy')
+                        if innerCircleEnemies > 0 then
+                            local result, newTarget = ACUFunc.CDRGetUnitClump(brain, cdr.Position, cdr.WeaponRange - 3)
+                            if newTarget and VDist3Sq(cdr.Position, newTarget:GetPosition()) < (cdr.WeaponRange * cdr.WeaponRange) - 9 then
+                                if cdr.GetNavigator then
+                                    IssueOverCharge({cdr}, newTarget)
+                                else
+                                    IssueClearCommands({cdr})
+                                    IssueOverCharge({cdr}, newTarget)
+                                end
+                                
+                                overChargeFired = true
+                            end
+                        end
+                        if not overChargeFired and VDist3Sq(cdr:GetPosition(), target:GetPosition()) < cdr.WeaponRange * cdr.WeaponRange then
+                            if cdr.GetNavigator then
+                                IssueOverCharge({cdr}, target)
+                            else
+                                IssueClearCommands({cdr})
+                                IssueOverCharge({cdr}, target)
+                            end
+                        end
+                    end
+                end
+            end
+            coroutine.yield(10)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+
+        Visualize = function(self)
+            local position = self:GetPlatoonPosition()
+            local target = self.BuilderData.AttackTarget:GetPosition()
+            if position and target then
+                DrawLinePop(position, target, self.StateColor)
+            end
+        end
+    },
+
     AttackTarget = State {
 
         StateName = 'AttackTarget',
@@ -1872,9 +2231,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 local acuHoldPosition
                 cdr.Retreat = true
                 cdr.BaseLocation = true
-                if brain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey then
-                    retreatKey = brain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey
-                    acuHoldPosition = brain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].Position
+                if brain.BrainIntel.ACUDefensivePositionKeyTable[self.LocationType].PositionKey then
+                    retreatKey = brain.BrainIntel.ACUDefensivePositionKeyTable[self.LocationType].PositionKey
+                    acuHoldPosition = brain.BrainIntel.ACUDefensivePositionKeyTable[self.LocationType].Position
                 end
                 self.BuilderData = {
                     Position = acuHoldPosition,
@@ -1915,7 +2274,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 end
-                if supportPlatoon then
+                if supportPlatoon and supportPlatoon.CurrentPlatoonThreatDirectFireAntiSurface > 8 then
+                    --LOG('Retreating to support platoon, support platoon has '..tostring(supportPlatoon.CurrentPlatoonThreatDirectFireAntiSurface)..' surface threat')
                     local threatened
                     closestPlatoon = supportPlatoon
                     closestAPlatPos = supportPlatoon:GetPlatoonPosition()
@@ -2005,7 +2365,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local closestBase
             local closestBaseDistance
             if cdr.Phase > 2 or brain.EnemyIntel.LandPhase > 2.5 then
-                closestBase = 'MAIN'
+                closestBase = self.LocationType
             end
             if not closestBase and brain.BuilderManagers then
                 local takeThreatIntoAccount = false
@@ -2018,7 +2378,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     if not table.empty(base.FactoryManager.FactoryList) then
                         local bypass = false
                         local baseDistance = VDist3Sq(cdr.Position, base.Position)
-                        if takeThreatIntoAccount and baseName ~= 'MAIN' then
+                        if takeThreatIntoAccount and baseName ~= self.LocationType then
                             for _, threat in threatLocations do
                                 if threat[3] > 30 and RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3], threat[1], threat[2]) < 0.35 then
                                     bypass = true
@@ -2026,7 +2386,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if not bypass then
-                            if distanceToHome > baseDistance and (baseDistance > 1225 or (table.getn(base.FactoryManager.FactoryList) > 1 and baseDistance > 612 and cdr.Health > 7000 )) or (cdr.GunUpgradeRequired and not cdr.Caution) or (cdr.HighThreatUpgradeRequired and not cdr.Caution) or baseName == 'MAIN' then
+                            if distanceToHome > baseDistance and (baseDistance > 1225 or (table.getn(base.FactoryManager.FactoryList) > 1 and baseDistance > 612 and cdr.Health > 7000 )) or (cdr.GunUpgradeRequired and not cdr.Caution) or (cdr.HighThreatUpgradeRequired and not cdr.Caution) or baseName == self.LocationType then
                                 if not closestBaseDistance then
                                     closestBaseDistance = baseDistance
                                 end
@@ -2056,7 +2416,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 else
                     --LOG('We have an alt platoon to retreat to '..tostring(brain.Nickname))
                     if closestAPlatPos and NavUtils.CanPathTo('Amphibious', cdr.Position,closestAPlatPos) then
-                        --LOG('Retreating to platoon '..tostring(brain.Nickname))
+                        --LOG('Retreating to platoon '..tostring(brain.Nickname)..' with a surface threat of '..tostring(closestPlatoon.CurrentPlatoonThreatDirectFireAntiSurface))
                         cdr.Retreat = false
                         self.BuilderData = {
                             Position = closestAPlatPos,
@@ -2081,7 +2441,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             elseif closestPlatoon and not baseRetreat then
-                --LOG('We have a platoon to retreat to '..tostring(brain.Nickname))
+                --LOG('We have a platoon to retreat to '..tostring(brain.Nickname)..' with a surface threat of '..tostring(closestPlatoon.CurrentPlatoonThreatDirectFireAntiSurface))
                 if closestAPlatPos and NavUtils.CanPathTo('Amphibious', cdr.Position,closestAPlatPos) then
                     cdr.Retreat = false
                     self.BuilderData = {
@@ -2113,6 +2473,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Navigating)
                 return
             end
+            self.BuilderData = {
+                FailedRetreat = true,
+            }
             --LOG('no command was issued in retreat, moving back to decide what to do')
             self:LogDebug(string.format('No command was issued during retreat request, moving back to decidewhattodo'))
             self:ChangeState(self.DecideWhatToDo)
@@ -2138,8 +2501,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local massMarkerCount = 0
             local expansionMarkerCount = 0
             local MassMarker = {}
+            local builderData = self.BuilderData
             cdr.EngineerBuildQueue = {}
-            local object = brain.Zones.Land.zones[self.BuilderData.ExpansionData]
+            local object = brain.Zones.Land.zones[builderData.ExpansionData]
             --LOG('Object '..repr(object))
             if object then
                 for _, v in object.resourcemarkers do
@@ -2199,7 +2563,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if expansionMarkerCount > 1 then
                     local expansionCount = 0
                     for k, manager in brain.BuilderManagers do
-                        if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not RNGTableEmpty(manager.FactoryManager.FactoryList) and k ~= 'MAIN' then
+                        if manager.FactoryManager.LocationActive and manager.Layer ~= 'Water' and not RNGTableEmpty(manager.FactoryManager.FactoryList) and k ~= self.LocationType then
                             expansionCount = expansionCount + 1
                             if expansionCount > 1 then
                                 break
@@ -2279,9 +2643,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                                 brain:BuildStructure(cdr, v[1],v[2],v[3])
                                                 while (not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or cdr:IsUnitState('Building') or cdr:IsUnitState("Moving") do
                                                     coroutine.yield(10)
-                                                    if cdr.Caution then
+                                                    if cdr.Caution and not builderData.NoReassign then
                                                         cdr.BuilderManagerData.EngineerManager:RemoveUnit(cdr)
-                                                        brain.BuilderManagers['MAIN'].EngineerManager:AddUnit(cdr, true)
+                                                        brain.BuilderManagers[self.LocationType].EngineerManager:AddUnit(cdr, true)
                                                         ----self:LogDebug(string.format('cdr.Caution while building expansion'))
                                                         self:ChangeState(self.DecideWhatToDo)
                                                         return
@@ -2347,9 +2711,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                                 brain:BuildStructure(cdr, v[1],v[2],v[3])
                                                 while (not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or cdr:IsUnitState('Building') or cdr:IsUnitState("Moving") do
                                                     coroutine.yield(10)
-                                                    if cdr.Caution then
+                                                    if cdr.Caution and not builderData.NoReassign then
                                                         cdr.BuilderManagerData.EngineerManager:RemoveUnit(cdr)
-                                                        brain.BuilderManagers['MAIN'].EngineerManager:AddUnit(cdr, true)
+                                                        brain.BuilderManagers[self.LocationType].EngineerManager:AddUnit(cdr, true)
                                                         ----self:LogDebug(string.format('cdr.Caution while building expansion'))
                                                         self:ChangeState(self.DecideWhatToDo)
                                                         return
@@ -2796,6 +3160,13 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
+            if eng.EnemyCDRPresent then
+                if GetNumUnitsAroundPoint(brain, categories.COMMAND, cdr.Position, 25, 'Enemy') > 0 then
+                    coroutine.yield(10)
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
+            end
             --RNGINSERT(eng.EngineerBuildQueue, {whatToBuild, buildLocation, false})
             if not RNGTableEmpty(buildMassPoints) then
                 whatToBuild = aiBrain:DecideWhatToBuild(eng, 'T1Resource', buildingTmpl)
@@ -2983,7 +3354,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if currenEnemy then
                     local EnemyIndex = currenEnemy:GetArmyIndex()
                     local OwnIndex = aiBrain:GetArmyIndex()
-                    if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] ~= 'LAND' then
+                    if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex][self.LocationType] ~= 'LAND' then
                         factoryType = 'T1AirFactory'
                     end
                 end
@@ -3092,13 +3463,13 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     --RNGLOG('CommanderInitializeAIRNG : We should be close to the hydro now')
                 end
                 IssueClearCommands({eng})
-                local assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
+                local assistList = RUtils.GetAssisteesRNG(aiBrain, self.LocationType, categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
                 local assistee = false
                 --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
                 local assistListCount = 0
                 while not not RNGTableEmpty(assistList) do
                     coroutine.yield( 15 )
-                    assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
+                    assistList = RUtils.GetAssisteesRNG(aiBrain, self.LocationType, categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
                     assistListCount = assistListCount + 1
                     --LOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
                     if assistListCount > 10 then
@@ -3197,7 +3568,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     --aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                                 end
                             else
-                                local assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.FACTORY * categories.AIR, categories.ALLUNITS)
+                                local assistList = RUtils.GetAssisteesRNG(aiBrain, self.LocationType, categories.ENGINEER, categories.FACTORY * categories.AIR, categories.ALLUNITS)
                                 local assistee = false
                                 if not RNGTableEmpty(assistList) and GetEconomyTrend(aiBrain, 'MASS') > 0 then
                                     -- only have one unit in the list; assist it
@@ -3270,13 +3641,13 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
                 if airFactoryBuilt and aiBrain.EconomyOverTimeCurrent.EnergyIncome < 24 then
                     if aiBrain:IsAnyEngineerBuilding(categories.STRUCTURE * categories.HYDROCARBON) then
-                        local assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
+                        local assistList = RUtils.GetAssisteesRNG(aiBrain, self.LocationType, categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
                         local assistee = false
                         --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
                         local assistListCount = 0
                         while not not RNGTableEmpty(assistList) do
                             coroutine.yield( 15 )
-                            assistList = RUtils.GetAssisteesRNG(aiBrain, 'MAIN', categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
+                            assistList = RUtils.GetAssisteesRNG(aiBrain, self.LocationType, categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
                             assistListCount = assistListCount + 1
                             --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
                             if assistListCount > 10 then

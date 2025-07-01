@@ -1587,14 +1587,15 @@ BuildAIDoneRNG = function(unit, params)
         table.remove(unit.EngineerBuildQueue, 1)
     end
     if unit.UnitBeingBuilt then
-        local locationType = unit.PlatoonHandle.PlatoonData.Construction.LocationType
+        local unitBeingBuilt = unit.UnitBeingBuilt
+        local locationType = unit.PlatoonHandle.PlatoonData.Construction.LocationType or unit.PlatoonHandle.LocationType
         local highValue = unit.PlatoonHandle.PlatoonData.Construction.HighValue
-        if locationType and highValue then
+        if locationType then
             local aiBrain = unit.Brain
             if aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt then
                 --LOG('StructuresBeingBuilt exist on engineer manager '..repr(aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt))
                 local structuresBeingBuilt = aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt
-                local unitBp = unit.Blueprint
+                local unitBp = unitBeingBuilt.Blueprint
                 if structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] then
                     structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] = nil
                 end
@@ -1638,9 +1639,9 @@ StartBuildRNG = function(eng, unit)
     if not eng.AIPlatoonReference then return end
     --LOG("*AI DEBUG: Build done " .. unit.EntityId)
     if eng and not eng.Dead and unit and not unit.Dead then
-        local locationType = eng.PlatoonHandle.PlatoonData.Construction.LocationType
-        local highValue = eng.PlatoonHandle.PlatoonData.Construction.HighValue
-        if locationType and highValue then
+        local locationType = eng.PlatoonHandle.PlatoonData.Construction.LocationType or eng.PlatoonHandle.LocationType
+        local highValue = eng.PlatoonHandle.PlatoonData.Construction.HighValue or false
+        if locationType then
             local aiBrain = eng.Brain
             local multiplier = aiBrain.EcoManager.EcoMultiplier
             if aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt then
@@ -1654,14 +1655,14 @@ StartBuildRNG = function(eng, unit)
                 if structuresBeingBuilt[unitBp.TechCategory] and not structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] then
                     for _, v in structuresBeingBuilt do
                         for _, c in v do
-                            if c and not c.Dead then
-                                if c:GetFractionComplete() < 0.98 then
+                            if c.Unit and not c.Unit.Dead and c.HighValue then
+                                if c.Unit:GetFractionComplete() < 0.98 then
                                     unitsBeingBuilt = unitsBeingBuilt + 1
                                 end
                             end
                         end
                     end
-                    if unitsBeingBuilt > 0 and aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (275 * multiplier) then
+                    if highValue and unitsBeingBuilt > 0 and aiBrain.EconomyOverTimeCurrent.MassIncome * 10 < aiBrain.EcoManager.ApproxFactoryMassConsumption + (275 * multiplier) then
                         if queuedStructures[unitBp.TechCategory][eng.EntityId] then
                             queuedStructures[unitBp.TechCategory][eng.EntityId] = nil
                         end
@@ -1674,7 +1675,7 @@ StartBuildRNG = function(eng, unit)
                         if queuedStructures[unitBp.TechCategory][eng.EntityId] then
                             queuedStructures[unitBp.TechCategory][eng.EntityId] = nil
                         end
-                        structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] = unit
+                        structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] = { Unit = unit, HighValue = highValue, Engineer = eng}
                     end
                 end
             end
@@ -2072,16 +2073,12 @@ function AddToBuildQueueRNG(aiBrain, builder, whatToBuild, buildLocation, relati
     end
     local newEntry = { whatToBuild, buildLocation, relative, borderWarning }
     table.insert(builder.EngineerBuildQueue, newEntry)
-    if builder.PlatoonHandle.PlatoonData.Construction.HighValue then
+    if builder.PlatoonHandle.PlatoonData.Construction or builder.PlatoonHandle.BuilderData.Construction then
         --LOG('Engineer is building high value item')
         local ALLBPS = __blueprints
         local unitBp = ALLBPS[whatToBuild]
-        --LOG('Unit being built '..repr(whatToBuild))
-        --LOG('Tech category of unit being built '..repr(unitBp.TechCategory))
         if not builder.BuilderManagerData.EngineerManager.QueuedStructures[unitBp.TechCategory][builder.EntityId] then
-            --LOG('Added engineer entry to queued structures')
-            builder.BuilderManagerData.EngineerManager.QueuedStructures[unitBp.TechCategory][builder.EntityId] = {Engineer = builder, TimeStamp = GetGameTimeSeconds()}
-            --LOG('Queue '..repr(builder.BuilderManagerData.EngineerManager.QueuedStructures[unitBp.TechCategory]))
+            builder.BuilderManagerData.EngineerManager.QueuedStructures[unitBp.TechCategory][builder.EntityId] = {Engineer = builder, TimeStamp = GetGameTimeSeconds(), CategoriesHash = table.copy(unitBp.CategoriesHash)}
         end
     end
 end
@@ -2647,4 +2644,93 @@ function RetreatPositionUnderArtilleryThreat(retreatPosition, threatData)
         end
     end
     return false
+end
+
+function CheckEngineerReclaimOrEvadeLoop(eng, aiBrain, maxTicks)
+    if eng.Dead then return end
+    maxTicks = maxTicks or 100
+    if not eng['rngdata'] then
+        eng['rngdata'] = {}
+    end
+
+    local tick = 0
+    while tick < maxTicks and not eng.Dead do
+        local pos = eng:GetPosition()
+        local engBP = eng.Blueprint
+        local engSpeed = engBP.Physics.MaxSpeed or 1.8
+        local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.MOBILE, pos, 45, 'Enemy')
+
+        local closestThreat, reclaimTarget
+        local minThreatDistSq = math.huge
+        local minReclaimDistSq = math.huge
+
+        for _, eunit in enemyUnits do
+            if eunit and not eunit.Dead and eunit:GetFractionComplete() == 1 then
+                local epos = eunit:GetPosition()
+                local distSq = VDist3Sq(pos, epos)
+
+                if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
+                    -- Reclaimable non-dangerous target
+                    if distSq < 144 and distSq < minReclaimDistSq then
+                        reclaimTarget = eunit
+                        minReclaimDistSq = distSq
+                    end
+
+                elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, eunit) then
+                    local ebp = eunit.Blueprint
+                    local threatLevel = ebp.Defense.SurfaceThreatLevel or 1
+                    local enemySpeed = ebp.Physics.MaxSpeed or 2.5
+                    local timeToReach = math.sqrt(distSq) / enemySpeed
+                    local timeToFlee = 6 / engSpeed
+
+                    if distSq < minThreatDistSq and threatLevel > 0 then
+                        closestThreat = {
+                            unit = eunit,
+                            distSq = distSq,
+                            threatLevel = threatLevel,
+                            timeToReach = timeToReach,
+                            timeToFlee = timeToFlee,
+                            pos = epos,
+                        }
+                        minThreatDistSq = distSq
+                    end
+                end
+            end
+        end
+
+        -- Decision logic loop
+        if reclaimTarget and (not closestThreat or closestThreat.timeToReach > closestThreat.timeToFlee) then
+            -- Attempt to reclaim (safe to do so)
+            if VDist3Sq(eng:GetPosition(), reclaimTarget:GetPosition()) > 100 then
+                IssueClearCommands({eng})
+                IssueReclaim({eng}, reclaimTarget)
+                eng.rngdata.lastReclaimTarget = reclaimTarget
+                eng.rngdata.lastOrderTick = GetGameTick()
+            end
+
+        elseif closestThreat then
+            if closestThreat.timeToReach <= closestThreat.timeToFlee then
+                -- Reclaim dangerous enemy since we can't escape
+                if VDist3Sq(eng:GetPosition(), closestThreat.unit:GetPosition()) > 100 then
+                    IssueClearCommands({eng})
+                    IssueReclaim({eng}, closestThreat.unit)
+                    eng.rngdata.lastReclaimTarget = reclaimTarget
+                    eng.rngdata.lastOrderTick = GetGameTick()
+                end
+            else
+                -- Escape possible
+                local fleePos = RUtils.AvoidLocation(closestThreat.pos, pos, 50)
+                IssueClearCommands({eng})
+                IssueMove({eng}, fleePos)
+                eng.rngdata.lastMovePosition = fleePos
+                eng.rngdata.lastOrderTick = GetGameTick()
+            end
+        else
+            -- No immediate threats or targets
+            break
+        end
+
+        tick = tick + 1
+        coroutine.yield(3)
+    end
 end

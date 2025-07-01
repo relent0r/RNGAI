@@ -12,3 +12,4 @@ ZoneDistanceCache = {
 HighestTeamAirPhase = {}
 HighestTeamLandPhase = {}
 HighestTeamNavalPhase = {}
+ReservedBuildPositions = {}

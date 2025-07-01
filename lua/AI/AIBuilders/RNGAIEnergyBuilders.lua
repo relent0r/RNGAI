@@ -261,6 +261,33 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Energy Builder Expansion',
     BuildersType = 'EngineerBuilder',
     Builder {
+        BuilderName = 'RNGAI T1Engineer Pgen Scale Expansion Emergency',
+        PlatoonTemplate = 'EngineerStateT123RNG',
+        Priority = 910,
+        InstanceCount = 1,
+        DelayEqualBuildPlattons = {'Energy', 3},
+        BuilderConditions = {
+            { EBC, 'LessThanEnergyTrendRNG', { 3.0 } },
+            { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }}, -- Don't build after 1 T2 Pgens Exist
+            { UCBC, 'UnitCapCheckLess', { .85 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildPower',
+            NeedGuard = false,
+            DesiresAssist = true,
+            Construction = {
+                AdjacencyPriority = {categories.FACTORY * categories.STRUCTURE * (categories.AIR + categories.LAND)},
+                AdjacencyDistance = 50,
+                EcoSelector = 'ENERGY',
+                BuildStructures = {
+                    { Unit = 'T1EnergyProduction', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE - categories.HYDROCARBON },
+                },
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T1Engineer Pgen Scale Expansion',
         PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 900,

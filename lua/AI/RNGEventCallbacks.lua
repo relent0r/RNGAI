@@ -103,7 +103,11 @@ function OnCreate(unit)
                                 local tmdPosition = unit:GetPosition()
                                 ForkThread(aiBrain.IntelManager.FlushExistingStructureRequest, aiBrain.IntelManager, tmdPosition, defenseRadius, 'TMD')
                             end
-                        elseif unitCats.STRUCTURE and unitCats.DEFENSE then
+                        elseif unitCats.STRUCTURE and unitCats.DEFENSE and unitCats.ANTIMISSILE and unitCats.TECH3 then
+                            if aiBrain.IntelManager then
+                                local smdPosition = unit:GetPosition()
+                                ForkThread(aiBrain.IntelManager.FlushExistingStructureRequest, aiBrain.IntelManager, smdPosition, 120, 'SMD')
+                            end
                         end
                     end
                 end
@@ -199,6 +203,11 @@ function OnStopBeingBuilt(self, unit, builder, layer)
                     if aiBrain.IntelManager then
                         local tmdPosition = unit:GetPosition()
                         ForkThread(aiBrain.IntelManager.FlushExistingStructureRequest, aiBrain.IntelManager, tmdPosition, defenseRadius, 'TMD')
+                    end
+                elseif unitCats.STRUCTURE and unitCats.DEFENSE and unitCats.ANTIMISSILE and unitCats.TECH3 then
+                    if aiBrain.IntelManager then
+                        local smdPosition = unit:GetPosition()
+                        ForkThread(aiBrain.IntelManager.FlushExistingStructureRequest, aiBrain.IntelManager, smdPosition, 120, 'SMD')
                     end
                 end
             end

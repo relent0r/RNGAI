@@ -1041,6 +1041,7 @@ BuilderGroup {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.8 }},
             { UCBC, 'HaveSMDRatioVersusEnemySMLRNG', { 0.50, 'LocationType' } },
+            { UCBC, 'NoStructureOfCategoryQueuedOrBeingBuilt', {'LocationType', 'TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' } }}
         },
         BuilderType = 'Any',
         BuilderData = {

@@ -272,25 +272,27 @@ Platoon = Class(RNGAIPlatoonClass) {
             for locName, locData in aiBrain.BuilderManagers do
                 if not locData.DistressCall then
                     local position = locData.EngineerManager.Location
-                    local radius = locData.EngineerManager.Radius
-                    local distressRange = locData.BaseSettings.DistressRange or aiBrain.BaseMonitor.PoolDistressRange
-                    local distressLocation = aiBrain:BaseMonitorDistressLocationRNG(position, distressRange, aiBrain.BaseMonitor.PoolDistressThreshold, 'Land')
+                    if position then
+                        local radius = locData.EngineerManager.Radius
+                        local distressRange = locData.BaseSettings.DistressRange or aiBrain.BaseMonitor.PoolDistressRange
+                        local distressLocation = aiBrain:BaseMonitorDistressLocationRNG(position, distressRange, aiBrain.BaseMonitor.PoolDistressThreshold, 'Land')
 
-                    -- Distress !
-                    if distressLocation then
-                        --RNGLOG('*AI DEBUG: ARMY '.. aiBrain:GetArmyIndex() ..': --- POOL DISTRESS RESPONSE ---')
+                        -- Distress !
+                        if distressLocation then
+                            --RNGLOG('*AI DEBUG: ARMY '.. aiBrain:GetArmyIndex() ..': --- POOL DISTRESS RESPONSE ---')
 
-                        -- Grab the units at the location
-                        local group = self:GetPlatoonUnitsAroundPoint(defenseUnits , position, radius)
+                            -- Grab the units at the location
+                            local group = self:GetPlatoonUnitsAroundPoint(defenseUnits , position, radius)
 
-                        -- Move the group to the distress location and then back to the location of the base
-                        IssueClearCommands(group)
-                        IssueAggressiveMove(group, distressLocation)
-                        IssueMove(group, position)
+                            -- Move the group to the distress location and then back to the location of the base
+                            IssueClearCommands(group)
+                            IssueAggressiveMove(group, distressLocation)
+                            IssueMove(group, position)
 
-                        -- Set distress active for duration
-                        locData.DistressCall = true
-                        self:ForkThread(self.UnlockBaseManagerDistressLocation, locData)
+                            -- Set distress active for duration
+                            locData.DistressCall = true
+                            self:ForkThread(self.UnlockBaseManagerDistressLocation, locData)
+                        end
                     end
                 end
             end

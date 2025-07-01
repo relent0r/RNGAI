@@ -875,13 +875,13 @@ function SetArcPoints(position,enemyPosition,radius,num,arclength)
     return coords
 end
 
-function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, basePosition, cdrThreat)
+function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRange, basePosition, cdrThreat)
 
     if not cdrPos then
-        cdrPos = aiBrain.CDRUnit.Position
+        cdrPos = cdr.Position
     end
     if not maxRange then
-        maxRange = aiBrain.CDRUnit.MaxBaseRange
+        maxRange = cdr.MaxBaseRange
     end
     if not movementLayer then
         movementLayer = 'Amphibious'
@@ -915,6 +915,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
     local returnTarget = false
     local highThreat = 0
     local acuDistanceToBase = VDist3Sq(cdrPos, basePosition)
+    local cdrHealthPercent = cdr.HealthPercent or 1
     if aiBrain.BasePerimeterMonitor['MAIN'].LandThreat > 15 then
         --RNGLOG('High Threat at main base, get target from there')
         cdrPos = aiBrain.BuilderManagers['MAIN'].Position
@@ -1239,7 +1240,21 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             end
         end
     end
+    local acuInTrouble = false
+
+    -- Define thresholds (you can tune these based on testing)
+    local lowHealth = cdrHealthPercent < 0.35
+    local closeToBase = acuDistanceToBase < 900
+    local highEnemyThreat = (cdr.CurrentEnemyInnerCircle > math.max(60, cdr.CurrentFriendlyInnerCircle)) or (cdr.CurrentEnemyInnerCircle > cdr.CurrentFriendlyInnerCircle and returnAcu)
+
+    -- Use multiple heuristics to judge trouble
+    if lowHealth and (closeToBase and highEnemyThreat or cdr.Confidence < 3.5)then
+        acuInTrouble = true
+    elseif closeToBase and highThreat > 180 then
+        acuInTrouble = true
+    end
     if returnTarget then
+
         local targetPos = returnTarget:GetPosition()
         if highThreat < 1 then
             highThreat = GetThreatAtPosition(aiBrain, targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
@@ -1250,10 +1265,10 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdrPos, movementLayer, maxRange, ba
             aiBrain.ACUSupport.TargetPosition = targetPos
         end
         --RNGLOG('ACUTARGETTING : Returning Target')
-        return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets
+        return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets, acuInTrouble
     end
     --RNGLOG('No target being returned for ACU targeting')
-    return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets
+    return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets, acuInTrouble
 end
 
 function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted, navalOnly)
@@ -4708,28 +4723,26 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             return supportPlatoon, scoutType
         end
     end
-    if (not platoonNeedScout) and (not platoon.ZonesValidated) then
-        scoutPos = scout:GetPosition()
-        local scoutMarker
-        for k, zone in aiBrain.Zones.Land.zones do
-            if zone.teamvalue > 1.5 and zone.intelassignment then
-                local ia = zone.intelassignment
-                if (not ia.RadarCoverage) and (not ia.ScoutUnit or ia.ScoutUnit.Dead) and (not ia.StartPosition) then
-                    if NavUtils.CanPathTo(platoon.MovementLayer, scoutPos, zone.pos) then
-                        scoutMarker = { ZoneID = zone.id, Position = zone.pos }
-                        ia.ScoutUnit = scout
-                        break
-                    else
-                        coroutine.yield(5)
-                    end
+    if (not platoonNeedScout) then
+        local zoneCurveItem = im:GetScoutCurveZone(scoutPos)
+        if zoneCurveItem then
+            --LOG('Have zone curve item, zone id is '..tostring(zoneCurveItem.ZoneID))
+            local zone = aiBrain.Zones.Land.zones[zoneCurveItem.ZoneID]
+            local ia = zone.intelassignment
+            if not ia.ScoutUnit or ia.ScoutUnit.Dead then
+                if NavUtils.CanPathTo(platoon.MovementLayer, scoutPos, zoneCurveItem.ZonePosition) then
+                    scoutMarker = { ZoneID = zoneCurveItem.ZoneID, Position = zoneCurveItem.ZonePosition }
+                    ia.ScoutUnit = scout
+                    --LOG('No scout unit assigned to zone and we can path to it, id is '..tostring(zoneCurveItem.ZoneID))
+                else
+                    coroutine.yield(5)
                 end
             end
-        end
-        if scoutMarker then
-            --RNGLOG('Scout Marker Found, moving to position')
-            scoutType = 'ZoneLocation'
-            --RNGLOG('ScoutDest is zone location')
-            return scoutMarker, scoutType
+            if scoutMarker then
+                --LOG('Confirming ScoutUnit is present '..tostring(ia.ScoutUnit.UnitId))
+                --LOG('Returning scout marker for zone')
+                return scoutMarker, 'ZoneLocation'
+            end
         end
     end
     if platoon.FindPlatoonCounter and (not platoonNeedScout) and platoon.FindPlatoonCounter < 5 then
@@ -7991,31 +8004,23 @@ function EvaluateZonePriority(zone, normalizedDistance)
 end
 
 function DetermineDefensiveInterceptZone(aiBrain, mainBasePosition, lostZoneId, threatType)
-    LOG('Recieved check for defensive intercept zone '..tostring(lostZoneId))
     local zoneThreatKey = threatType and ("enemy" .. string.lower(threatType) .. "threat") or nil
-    LOG('zoneThreatKey is '..tostring(zoneThreatKey))
     if not zoneThreatKey then return nil end
 
     local mainZoneId = MAP:GetZoneID(mainBasePosition, aiBrain.Zones.Land.index)
     local mainZone = aiBrain.Zones.Land.zones[mainZoneId]
-    LOG('Main base zone is '..tostring(mainZone.id))
     if not mainZone then return nil end
 
     -- Step 1: Get all adjacent zones to main zone (Z1s)
     for _, edge in ipairs(mainZone.edges or {}) do
         local firstRingZone = edge.zone
-        LOG('Check first ring zoneid '..tostring(firstRingZone.id))
         if firstRingZone and firstRingZone.enemylandthreat == 0 then
-            LOG('Land Threat is zero at first edge zone')
             -- Step 2: See if the lost zone (Z2) is adjacent to this Z1
             for _, secondEdge in ipairs(firstRingZone.edges or {}) do
                 if secondEdge.zone and secondEdge.zone.id == lostZoneId then
-                    LOG('Second edge matches lost zone, check friendly vs enemy threat')
                     -- Step 3: Evaluate Z1 for defensive placement
                     local threat = secondEdge.zone[zoneThreatKey] or 0
                     local friendly = firstRingZone.friendlydirectfireantisurfacethreat or 0
-                    LOG('Enemy threat '..tostring(threat))
-                    LOG('Friendly threat '..tostring(friendly))
                     if threat > friendly then
                         return firstRingZone.id  -- Candidate zone for defense
                     end

@@ -466,6 +466,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.MOBILE, pos, 45, 'Enemy')
                                 for _, eunit in enemyUnits do
                                     local enemyUnitPos = eunit:GetPosition()
+                                    local enemyDistance = VDist3Sq(enemyUnitPos, pos)
                                     if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
                                         if VDist3Sq(enemyUnitPos, pos) < 144 then
                                             --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
@@ -479,7 +480,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                             end
                                         end
                                     elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, eunit) then
-                                        --RNGLOG('MexBuild found enemy unit, try avoid it')
+                                        -- enemy unit was 204 when the avoid decision was made
+                                        --LOG('MexBuild found enemy unit, try avoid it, distance is '..tostring(VDist3Sq(enemyUnitPos, pos)))
                                         if VDist3Sq(enemyUnitPos, pos) < 81 then
                                             --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
                                             if eunit and not eunit.Dead and eunit:GetFractionComplete() == 1 then

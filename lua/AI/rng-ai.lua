@@ -122,6 +122,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 AIUtils.SetupCheat(self, true)
                 ScenarioInfo.ArmySetup[self.Name].AIPersonality = string.sub(per, 1, cheatPos - 1)
             end
+            local playerTeam = ScenarioInfo.ArmySetup[self.Name].Team
+            if playerTeam == 1 then
+                self.TeamReference = self.Name
+            else
+                self.TeamReference = playerTeam
+            end
+
 
             self.CurrentPlan = self.AIPlansList[self:GetFactionIndex()][1]
             self:ForkThread(self.InitialAIThread)
@@ -3103,6 +3110,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     Team = false,
                 }
                 local armyIndex = v:GetArmyIndex()
+                local playerTeam = ScenarioInfo.ArmySetup['ARMY_'..armyIndex].Team
+                --LOG('Walking through player '..tostring(v.Nickname)..' the ScenarioInfo states this is team id '..tostring(ScenarioInfo.ArmySetup['ARMY_'..armyIndex].Team))
                 -- Share resources with friends but don't regard their strength
                 if ArmyIsCivilian(armyIndex) then
                     local enemyStructureThreat = self:GetThreatsAroundPosition(MainPos, 16, true, 'Structures', armyIndex)
@@ -3112,13 +3121,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     self:SetResourceSharing(true)
                     allyCount = allyCount + 1
                     insertTable.Enemy = false
-                    insertTable.Team = v.Team
+                    insertTable.Team = playerTeam
                 elseif not IsEnemy(selfIndex, armyIndex) then
                     insertTable.Enemy = false
                 end
                 if insertTable.Enemy == true then
                     enemyCount = enemyCount + 1
-                    insertTable.Team = v.Team
+                    insertTable.Team = playerTeam
                     RNGINSERT(enemyBrains, v)
                 end
                 if not ArmyIsCivilian(armyIndex) then
@@ -3131,14 +3140,11 @@ AIBrain = Class(RNGAIBrainClass) {
                             army = b
                         end
                     end
-                    if army.Team and army.Team ~= 1 then
+                    if playerTeam and playerTeam ~= 1 then
                         --RNGLOG('Army is team '..army.Team)
-                        teams[army.Team] = true
+                        teams[playerTeam] = true
                     elseif IsEnemy(selfIndex, armyIndex) then
                         --RNGLOG('Army has no team and is enemy')
-                        if army.Team then
-                            --RNGLOG('Team presented is '..army.Team)
-                        end
                         if not teams[teamKey] then
                             --RNGLOG('Settings teams index 2 to true')
                             teams[teamKey] = true
@@ -4767,7 +4773,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                     elseif platoonType == 'SATELLITE' and platoonDPS then
                                         if RUtils.HaveUnitVisual(self, v.object, true) then
                                             local shielded = false
-                                            local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(self, v.Object:GetPosition(), 46, 'Enemy')
+                                            local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(self, v.object:GetPosition(), 46, 'Enemy')
                                             --LOG('Director total shield health from extractor check '..tostring(totalShieldHealth)..' platoonDPS '..tostring(platoonDPS))
                                             if (totalShieldHealth / platoonDPS) > 12 then
                                                 shielded = true
@@ -5627,7 +5633,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         v:SetPaused(false)
                         continue
                     end
-                    if v.PlatoonHandle.PlatoonData.Construction.NoPause then continue end
+                    if v.PlatoonHandle.PlatoonData.Construction.NoPause or v.PlatoonHandle.BuilderData.Construction.NoPause then continue end
                     if type == 'MASS' and EntityCategoryContains( engineerCats , v.UnitBeingBuilt) then
                         if EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingBuilt) then
                             if self:GetEconomyTrend('MASS') <= 0 and self:GetEconomyStored('MASS') == 0 and self:GetEconomyTrend('ENERGY') > 2 then

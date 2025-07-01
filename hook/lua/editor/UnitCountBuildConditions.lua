@@ -1361,8 +1361,9 @@ function ValidateLateGameBuild(aiBrain, locationType)
     local multiplier = aiBrain.EcoManager.EcoMultiplier
     if queuedStructures then
         for k, v in queuedStructures do
-            if k == 'TECH3' or k == 'EXPERIMENTAL' then
-                for _, c in v do
+            for _, c in v do
+                local unitCats = c.CategoriesHash
+                if unitCats and ((unitCats.STRATEGIC and unitCats.TECH3) or unitCats.EXPERIMENTAL) then
                     --LOG('Checking queue item '..repr(c))
                     if c.Engineer and not c.Engineer.Dead then
                         if c.TimeStamp + 30 > timeStamp then
@@ -1384,8 +1385,8 @@ function ValidateLateGameBuild(aiBrain, locationType)
         for k, v in structuresBeingBuilt do
             if k == 'TECH3' or k == 'EXPERIMENTAL' then
                 for _, c in v do
-                    if c and not c.Dead then
-                        if c:GetFractionComplete() < 0.98 then
+                    if c.Unit and not c.Unit.Dead and c.HighValue then
+                        if c.Unit.GetFractionComplete and c.Unit:GetFractionComplete() < 0.98 then
                             unitsBeingBuilt = unitsBeingBuilt + 1
                         end
                     end
@@ -2181,6 +2182,24 @@ function RequireEnergyStorage(aiBrain)
         end
     end
     return false
+end
+
+function NoStructureOfCategoryQueuedOrBeingBuilt(aiBrain, locationType, techCategory, categoriesTable)
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    if not engineerManager then return false end
+
+    if engineerManager:NumStructuresQueued(techCategory, categoriesTable) > 0 then
+        return false
+    end
+
+    if engineerManager:NumStructuresBeingBuilt(techCategory, categoriesTable) > 0 then
+        return false
+    end
+
+    if aiBrain.IntelManager and aiBrain.IntelManager:IsAssignedStructureRequestPresent(engineerManager.Location, 120, 'SMD') then
+        return false
+    end
+    return true
 end
 
 --[[
