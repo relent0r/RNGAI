@@ -235,7 +235,7 @@ BuilderGroup {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.8, 0.9 }},
             { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 2, 'AIR'}},
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.DEFENSE * categories.TECH2 * categories.ANTIAIR}},
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 6, categories.DEFENSE * categories.ANTIAIR * (categories.TECH2 + categories.TECH3)}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },
         BuilderType = 'Any',
@@ -594,40 +594,6 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Defence Restricted Breach Sea Expansion',
-        PlatoonTemplate = 'EngineerStateT1RNG',
-        Priority = 950,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.DEFENSE * categories.ANTINAVY}},
-            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'NAVAL' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.9, 0.9 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            StateMachine = 'EngineerBuilder',
-            JobType = 'BuildStructure',
-            DesiresAssist = true,
-            NumAssistees = 5,
-            Construction = {
-                BuildClose = false,
-                NearDefensivePoints = true,
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
-                BaseTemplate = 'BaseTemplates',
-                EmergencyBuild = true,
-                Type = 'Naval',
-                Tier = 1,
-                maxUnits = 1,
-                maxRadius = 5,
-                BuildStructures = {
-                    { Unit = 'T1NavalDefense', Categories = categories.STRUCTURE * categories.ANTINAVY * categories.DEFENSE * categories.TECH1 },
-                },
-                LocationType = 'LocationType',
-            }
-        }
-    },
-    Builder {
         BuilderName = 'RNGAI T2 Defence Engineer Single Historical',
         PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 950,
@@ -850,13 +816,13 @@ BuilderGroup {
             DesiresAssist = true,
             NumAssistees = 5,
             Construction = {
-                BuildClose = true,
-                AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY * categories.NAVAL},
-                AvoidCategory = categories.STRUCTURE * categories.ANTINAVY * categories.DEFENSE,
-                EmergencyBuild = true,
+                BuildClose = false,
                 NearDefensivePoints = true,
-                maxUnits = 1,
-                maxRadius = 3,
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua',
+                BaseTemplate = 'BaseTemplates',
+                EmergencyBuild = true,
+                Type = 'Naval',
+                Tier = 1,
                 BuildStructures = {
                     { Unit = 'T1NavalDefense', Categories = categories.STRUCTURE * categories.ANTINAVY * categories.DEFENSE * categories.TECH1 },
                 },
@@ -884,12 +850,10 @@ BuilderGroup {
             NumAssistees = 5,
             Construction = {
                 BuildClose = true,
-                AdjacencyPriority = {categories.STRUCTURE * categories.FACTORY * categories.NAVAL},
-                AvoidCategory = categories.STRUCTURE * categories.ANTINAVY * categories.DEFENSE,
                 EmergencyBuild = true,
                 NearDefensivePoints = true,
-                maxUnits = 1,
-                maxRadius = 3,
+                Type = 'Naval',
+                Tier = 1,
                 BuildStructures = {
                     { Unit = 'T2NavalDefense', Categories = categories.STRUCTURE * categories.ANTINAVY * categories.DEFENSE * categories.TECH2 },
                 },

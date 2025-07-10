@@ -735,6 +735,7 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
     
         return distance - ecoBonus
     end
+    local fallbackShieldedTargets = {}
     local position = platoon:GetPlatoonPosition()
     local CategoriesShield = categories.DEFENSE * categories.SHIELD * categories.STRUCTURE
     if not aiBrain or not position or not maxRange then
@@ -772,6 +773,13 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
                                 targetShields = numShields
                             end
                         end
+                    else
+                        -- Fallback candidates incase we are dealing with a turtle that is fully shielded
+                        table.insert(fallbackShieldedTargets, {
+                            Unit = unit,
+                            ShieldHealth = totalShieldHealth,
+                            Priority = priority
+                        })
                     end
                 end
             end
@@ -796,6 +804,19 @@ function AIFindUndefendedBrainTargetInRangeRNG(aiBrain, platoon, squad, maxRange
             --LOG('We have a retUnit and will return it')
             --RNGLOG('Satellite has target')
             return retUnit
+        end
+    end
+    if not retUnit and table.getn(fallbackShieldedTargets) > 0 then
+        table.sort(fallbackShieldedTargets, function(a, b)
+            return a.ShieldHealth < b.ShieldHealth  -- pick weakest shield
+        end)
+    
+        local fallback = fallbackShieldedTargets[1]
+        if fallback then
+            -- Optional: Double-check it's still alive and valid
+            if not fallback.Unit.Dead then
+                return fallback.Unit
+            end
         end
     end
     --LOG('We have no unit to attack')

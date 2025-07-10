@@ -1589,20 +1589,19 @@ BuildAIDoneRNG = function(unit, params)
     if unit.UnitBeingBuilt then
         local unitBeingBuilt = unit.UnitBeingBuilt
         local locationType = unit.PlatoonHandle.PlatoonData.Construction.LocationType or unit.PlatoonHandle.LocationType
-        local highValue = unit.PlatoonHandle.PlatoonData.Construction.HighValue
         if locationType then
             local aiBrain = unit.Brain
             if aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt then
                 --LOG('StructuresBeingBuilt exist on engineer manager '..repr(aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt))
                 local structuresBeingBuilt = aiBrain.BuilderManagers[locationType].EngineerManager.StructuresBeingBuilt
                 local unitBp = unitBeingBuilt.Blueprint
-                if structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] then
-                    structuresBeingBuilt[unitBp.TechCategory][unit.EntityId] = nil
+                if structuresBeingBuilt[unitBp.TechCategory][unitBeingBuilt.EntityId] then
+                    structuresBeingBuilt[unitBp.TechCategory][unitBeingBuilt.EntityId] = nil
                 end
             end
         end
     end
-    if table.empty(unit.EngineerBuildQueue) then
+    if table.empty(unit.EngineerBuildQueue) and unit.PlatoonHandle.ChangeStateExt then
         unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
     end
     --RNGLOG('Queue size after remove '..RNGGETN(unit.EngineerBuildQueue))

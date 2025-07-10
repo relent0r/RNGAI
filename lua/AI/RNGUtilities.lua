@@ -3133,10 +3133,10 @@ function MexUpgradeManagerRNG(aiBrain)
     end
 end
 
-AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, avoidZones)
+AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, avoidZones, zoneType)
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
     local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location or position
-    local zoneSet = aiBrain.Zones.Land.zones
+    local zoneSet = aiBrain.Zones[zoneType].zones
     local currentTime = GetGameTimeSeconds()
     local retPos, retName, refZone
     radius = radius * radius
@@ -3147,18 +3147,58 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
        --RNGLOG('Location Pos is '..repr(pos))
     end
    --RNGLOG('Checking if Dynamic Expansions Table Exist')
-    if not table.empty(im.ZoneExpansions.Pathable) then
-        for _, v in im.ZoneExpansions.Pathable do
-            local skipPos = false
-            if avoidZones and avoidZones[v.ZoneID] then
-                skipPos = true
+    local zoneFound = false
+    if zoneType == 'Land' then
+        if not table.empty(im.ZoneExpansions.Pathable) then
+            for _, v in im.ZoneExpansions.Pathable do
+                local skipPos = false
+                if avoidZones and avoidZones[v.ZoneID] then
+                    skipPos = true
+                end
+                if not skipPos and v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive
+                and (not zoneSet[v.ZoneID].engineerplatoonallocated or IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated)) and (currentTime >= zoneSet[v.ZoneID].lastexpansionattempt + 30 or zoneSet[v.ZoneID].lastexpansionattempt == 0 ) then
+                    retPos = zoneSet[v.ZoneID].pos
+                    retName = 'LAND_ZONE_'..v.ZoneID
+                    refZone = v.ZoneID
+                    zoneFound = true
+                    break
+                end
             end
-            if not skipPos and v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive
-            and (not zoneSet[v.ZoneID].engineerplatoonallocated or IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated)) and (currentTime >= zoneSet[v.ZoneID].lastexpansionattempt + 30 or zoneSet[v.ZoneID].lastexpansionattempt == 0 ) then
-                retPos = zoneSet[v.ZoneID].pos
-                retName = 'ZONE_'..v.ZoneID
-                refZone = v.ZoneID
-                break
+        end
+        if not zoneFound then
+            if not table.empty(im.ZoneExpansions.NonPathable) then
+                for _, v in im.ZoneExpansions.NonPathable do
+                    local skipPos = false
+                    if avoidZones and avoidZones[v.ZoneID] then
+                        skipPos = true
+                    end
+                    if not skipPos and v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive
+                    and (not zoneSet[v.ZoneID].engineerplatoonallocated or IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated)) and (currentTime >= zoneSet[v.ZoneID].lastexpansionattempt + 30 or zoneSet[v.ZoneID].lastexpansionattempt == 0 ) then
+                        retPos = zoneSet[v.ZoneID].pos
+                        retName = 'LAND_ZONE_'..v.ZoneID
+                        refZone = v.ZoneID
+                        zoneFound = true
+                        break
+                    end
+                end
+            end
+        end
+    end
+    if zoneType == 'Naval' then
+        if not table.empty(im.ZoneExpansions.Naval) then
+            for _, v in im.ZoneExpansions.Naval do
+                local skipPos = false
+                if avoidZones and avoidZones[v.ZoneID] then
+                    skipPos = true
+                end
+                if not skipPos and v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive
+                and (not zoneSet[v.ZoneID].engineerplatoonallocated or IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated)) and (currentTime >= zoneSet[v.ZoneID].lastexpansionattempt + 30 or zoneSet[v.ZoneID].lastexpansionattempt == 0 ) then
+                    retPos = zoneSet[v.ZoneID].pos
+                    retName = 'NAVAL_ZONE_'..v.ZoneID
+                    refZone = v.ZoneID
+                    zoneFound = true
+                    break
+                end
             end
         end
     end
@@ -3714,7 +3754,7 @@ function GetShieldHealthAroundPosition(aiBrain, position, radius, affiliation)
     local totalShieldHealth = 0
     for _, sUnit in shieldUnits do
         if not sUnit.Dead and sUnit.MyShield and sUnit.MyShield.GetHealth then
-            if sUnit.Blueprint.Defense.Shield.ShieldSize then 
+            if sUnit:GetFractionComplete() == 1.0 and sUnit.Blueprint.Defense.Shield.ShieldSize then 
                 local shieldSize = sUnit.Blueprint.Defense.Shield.ShieldSize * 0.5
                 if VDist3Sq(position, sUnit:GetPosition()) < shieldSize * shieldSize then
                     totalShieldHealth = totalShieldHealth + sUnit.MyShield:GetHealth()
@@ -3875,6 +3915,7 @@ GenerateDefensiveSpokeTable  = function(aiBrain, baseName, range, basePosition, 
         end
         return true
     end
+    --LOG('Generate Defensive spokes for '..tostring(baseName))
     local acuHoldPoint = false
     local pointCheckAngle = GetAngleToPosition(basePosition, aiBrain.MapCenterPoint)
     local spokes = {}
@@ -3893,29 +3934,32 @@ GenerateDefensiveSpokeTable  = function(aiBrain, baseName, range, basePosition, 
         end
     end
     if not zoneId then
-        WARN('Missing zone for builder manager land node or no path markers')
+        WARN('Genearte Defensive Spoke table Missing zone for builder manager land node or no path markers')
     end
     if zoneId then
         if zoneId > -1 then
             if baseLayer == 'Water' then
                 if not aiBrain.Zones.Naval.zones[zoneId] then
-                    WARN('No Naval zone found for defensive spokes for zone ID '..tostring(zoneId))
+                    WARN('No Naval zone found for defensive spokes for zone ID '..tostring(zoneId)..' this was a naval zone')
                 end
                 zone = aiBrain.Zones.Naval.zones[zoneId]
+                --LOG('Naval zone being used ')
             else
                 if not aiBrain.Zones.Land.zones[zoneId] then
-                    WARN('No Land zone found for defensive spokes for zone ID '..tostring(zoneId))
+                    WARN('No Land zone found for defensive spokes for zone ID '..tostring(zoneId)..' this was a land zone')
                 end
                 zone = aiBrain.Zones.Land.zones[zoneId]
+                --LOG('Land zone being used')
             end
         else
-            WARN('No Zone found at provided position '..tostring(basePosition[1])..':'..tostring(basePosition[3]))
+            WARN('No Zone found at provided position '..tostring(basePosition[1])..':'..tostring(basePosition[3])..' zone id returned was '..tostring(zoneId)..' base layer was '..tostring(baseLayer))
             return
         end
     else
-        WARN('No Zone found at provided position '..tostring(basePosition[1])..':'..tostring(basePosition[3]))
+        WARN('No Zone found at provided position '..tostring(basePosition[1])..':'..tostring(basePosition[3])..' nil zone id returned, base layer was '..tostring(baseLayer))
         return
     end
+    --LOG('We are now generating the spokes for zone '..tostring(zoneId))
 
     for spokeIdx = 1, numSpokes do
         local angle = (2 * math.pi / numSpokes) * spokeIdx
@@ -3931,9 +3975,9 @@ GenerateDefensiveSpokeTable  = function(aiBrain, baseName, range, basePosition, 
             if baseName == 'MAIN' then
                 local angleToPoint = GetAngleToPosition(basePosition, pos)
                 local angleDelta = NormalizeAngle(pointCheckAngle - angleToPoint)
-                local graphArea = NavUtils.GetLabel('Land', pos)
+                local label = NavUtils.GetLabel('Land', pos)
             
-                if pointEnabled and graphArea and (not acuHoldPoint or angleDelta < acuHoldPoint.Angle) then
+                if pointEnabled and label and (not acuHoldPoint or angleDelta < acuHoldPoint.Angle) then
                     acuHoldPoint = {
                         Spoke = spokeIdx,
                         Layer = layerIdx,
@@ -4168,10 +4212,11 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
             end
         end
     elseif pointType == 'Naval' then
-        local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
+        --LOG('Zone id for base is '..tostring(baseZoneId))
+        local defensiveSpokes = aiBrain.Zones.Naval.zones[baseZoneId].defensespokes
         local recentAngle = aiBrain.BasePerimeterMonitor[baseLocation].RecentNavalAngle
         if not recentAngle then 
-            --LOG('No recent land angle for position')
+            --LOG('No recent naval angle for position')
             return false 
         end
 
@@ -4245,8 +4290,13 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
             end
         end
     elseif pointType == 'Silo' then
-        local baseZone = aiBrain.BuilderManagers[baseLocation].Zone
-        local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
+        local defensiveSpokes
+        local baseZone = aiBrain.BuilderManagers[baseLocation].ZoneID
+        if aiBrain.BuilderManagers[baseLocation].Layer == 'Water' then
+            defensiveSpokes = aiBrain.Zones.Naval.zones[baseZoneId].defensespokes
+        else
+            defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
+        end
         if baseZone and aiBrain.Zones.Land.zones[baseZone].enemySiloAngle then
             local recentAngle = aiBrain.Zones.Land.zones[baseZone].enemySiloAngle
             if not recentAngle then return false end
@@ -4295,7 +4345,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
             end
         end
     elseif pointType == 'TML' then
-        local baseZone = aiBrain.BuilderManagers[baseLocation].Zone
+        local baseZone = aiBrain.BuilderManagers[baseLocation].ZoneID
         local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
         if baseZone and aiBrain.Zones.Land.zones[baseZone].RecentTMLAngle then
             local recentAngle = aiBrain.Zones.Land.zones[baseZone].RecentTMLAngle
@@ -4363,7 +4413,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
             end
         end
     elseif pointType == 'STRUCTURE' then
-        local baseZone = aiBrain.BuilderManagers[baseLocation].Zone
+        local baseZone = aiBrain.BuilderManagers[baseLocation].ZoneID
         local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
         if baseZone then
             local bestTargetDistance
@@ -4422,18 +4472,22 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
             end
         end
     elseif pointType == 'SHIELD' then
-        local baseZone = aiBrain.BuilderManagers[baseLocation].Zone
+        local baseZone = aiBrain.BuilderManagers[baseLocation].ZoneID
         local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
         if baseZone then
             local acuShieldRequired = false
             if pointTier == 2 and aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat then
+                --LOG('Enemy Air Snipe Threat')
                 local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseLocation].PositionKey
+                --LOG('Position key returned '..tostring(repr(positionKey)))
                 if positionKey then
                     local spokePoint = defensiveSpokes[positionKey.Spoke][positionKey.Layer]
                     local isShieldPresent = GetSpokePointStructureType(spokePoint, 'Shields')
+                    --LOG('Is shield present '..tostring(isShieldPresent))
                     if not isShieldPresent then
                         acuShieldRequired = true
                         defensivePoint = aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseLocation].Position
+                        --LOG('Defensive point being returned is '..tostring(repr(defensivePoint)))
                     end
                 end
             end
@@ -4523,7 +4577,7 @@ AddDefenseUnitToSpoke = function(aiBrain, locationType, finishedUnit)
     --LOG('Attempting to add defense unit to spoke')
 
     local unitPos = finishedUnit:GetPosition()
-    local zoneId = aiBrain.BuilderManagers[locationType].Zone
+    local zoneId = aiBrain.BuilderManagers[locationType].ZoneID
     local spokes = aiBrain.Zones.Land.zones[zoneId].defensespokes
     if not spokes then return end
 
@@ -4575,7 +4629,7 @@ RemoveDefenseUnitFromSpoke = function(aiBrain, locationType, killedUnit)
     --LOG('Removing defense unit from spokt')
 
     local unitPos = killedUnit:GetPosition()
-    local zoneId = aiBrain.BuilderManagers[locationType].Zone
+    local zoneId = aiBrain.BuilderManagers[locationType].ZoneID
     local spokes = aiBrain.Zones.Land.zones[zoneId] and aiBrain.Zones.Land.zones[zoneId].defensespokes
     if not spokes then return end
 
@@ -6881,19 +6935,19 @@ GetCustomUnitReplacement = function(self, template, templateName, faction)
     local retTemplate = false
     local templateData = self.Brain.CustomUnits[templateName]
     if templateData and templateData[faction] then
-        -- LOG('*AI DEBUG: Replacement for '..templateName..' exists.')
+        --LOG('*AI DEBUG: Replacement for '..templateName..' exists.')
         local rand = Random(1,100)
         local possibles = {}
         for k,v in templateData[faction] do
             if rand <= v[2] or template[1] == 'NoOriginalUnit' then
-                -- LOG('*AI DEBUG: Insert possibility.')
+                --LOG('*AI DEBUG: Insert possibility.')
                 table.insert(possibles, v[1])
             end
         end
         if not table.empty(possibles) then
             rand = Random(1,TableGetn(possibles))
             local customUnitID = possibles[rand]
-            -- LOG('*AI DEBUG: Replaced with '..customUnitID)
+            --'*AI DEBUG: Replaced with '..customUnitID)
             retTemplate = { customUnitID, template[2], template[3], template[4], template[5] }
         end
     end
@@ -7311,14 +7365,16 @@ CalculateRelativeDistanceValue = function(a_distance, b_distance)
     return normalized_distance
 end
 
-GetBaseType = function(baseName)
+GetBaseType = function(baseName, layer)
     local baseType
     if not baseName then
         WARN('No base name provided for GetBaseType')
         return
     end
-    if string.find(baseName, 'ZONE') then
+    if layer ~= 'Water' and string.find(baseName, 'ZONE') then
         baseType = 'Zone Area'
+    elseif layer == 'Water' then
+        baseType = 'Naval Area'
     else
         baseType = MarkerUtils.GetMarker(baseName).Type
     end
@@ -7739,17 +7795,17 @@ end
 
 function ValidateFactoryManager(aiBrain, locationType, layer, unit)
     local locationRadius
-    local graphArea
+    local label
     local unitPos = unit:GetPosition()
     local friendlyLocation
     local markerType
     if layer == 'Water' then
         locationRadius = 70
-        graphArea = NavUtils.GetLabel('Water', unitPos)
+        label = NavUtils.GetLabel('Water', unitPos)
         markerType = 'Naval Area'
     else
         locationRadius = 120
-        graphArea = NavUtils.GetLabel('Land', unitPos)
+        label = NavUtils.GetLabel('Land', unitPos)
         markerType = 'Zone Expansion'
     end
     local friendlyBaseClose = false
@@ -7759,7 +7815,7 @@ function ValidateFactoryManager(aiBrain, locationType, layer, unit)
             if layer == 'Water' and v.Layer ~= 'Water' then
                 continue
             end
-            if v.GraphArea ==  graphArea then
+            if v.Label ==  label then
                 local rx = v.Position[1] - unitPos[1]
                 local rz = v.Position[3] - unitPos[3]
                 local baseDistance = rx * rx + rz * rz
@@ -7973,7 +8029,7 @@ function EvaluateZonePriority(zone, normalizedDistance)
         (zone.enemyantisurfacethreat or 0) * 0.5 +
         (zone.enemyantiairthreat or 0) * 0.25 +
         (zone.resourcevalue or 0) * 2.0 +
-        (zone.zoneincome or 0)
+        (zone.zoneincome.selfincome or 0)
 
     if zone.status == 'Allied' then
         defenseUrgency = defenseUrgency + 50
@@ -8029,4 +8085,372 @@ function DetermineDefensiveInterceptZone(aiBrain, mainBasePosition, lostZoneId, 
         end
     end
     return nil
+end
+
+function GetZoneIncomeValue(zone, zoneSelectionType, enemyStartClose, allyStartClose)
+    local selfWeight
+    local allyWeight
+    local enemyWeight
+    if zoneSelectionType == 'raid' then
+        selfWeight = 0.0
+        allyWeight = 0.0
+        enemyWeight = 1.2
+    else
+        selfWeight = 1.5
+        allyWeight = 0.75
+        enemyWeight = 0.5
+    end
+    local resourceValueBonus = (zone.resourcevalue or 0 ) * 0.5
+    local incomeScore = zone.zoneincome.selfincome * selfWeight +
+        zone.zoneincome.allyincome * allyWeight +
+        zone.zoneincome.enemyincome * enemyWeight +
+        resourceValueBonus
+
+    -- Cap incomeScore if close to enemy start and surrounded by enemy-controlled zones
+    if enemyStartClose and zone.edges then
+        local surrounded = true
+        for _, adj in zone.edges do
+            local neighbor = adj.zone
+            if neighbor and neighbor.zoneincome and (neighbor.zoneincome.enemyincome or 0) <= 0 then
+                surrounded = false
+                break
+            end
+        end
+        if surrounded then
+            incomeScore = math.min(incomeScore, 5)
+        end
+    end
+
+    if zone.edges then
+        local surroundedByAllies = true
+        for _, adj in zone.edges do
+            local neighbor = adj.zone
+            if neighbor and neighbor.zoneincome and (neighbor.zoneincome.selfincome + neighbor.zoneincome.allyincome) <= 0 then
+                surroundedByAllies = false
+                break
+            end
+        end
+        if surroundedByAllies then
+            if allyStartClose then
+                incomeScore = math.min(incomeScore, 5)
+            else
+                incomeScore = math.min(incomeScore, 8)
+            end
+        end
+    end
+
+    return math.min(math.max(incomeScore, 0), 50)
+end
+
+function GetDistanceValue(mapDiagonalSq, zone, platoonPosition, enemyPosition)
+    local zoneDistanceSq = math.max(1, VDist2Sq(zone.pos[1], zone.pos[3], platoonPosition[1], platoonPosition[3]))
+
+    local enemyDistanceSq = 1
+    if enemyPosition and zone.pos then
+        enemyDistanceSq = math.max(1, VDist2Sq(zone.pos[1], zone.pos[3], enemyPosition[1], enemyPosition[3]))
+    end
+
+    local zoneDistanceScore = 1.0 - math.min(zoneDistanceSq / mapDiagonalSq, 1.0)
+    local enemyDistanceScore = 1.0 - math.min(enemyDistanceSq / mapDiagonalSq, 1.0)
+
+    return zoneDistanceScore, enemyDistanceScore
+end
+
+function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
+    local friendly = zone.friendlyantisurfacethreat or 0
+    local enemy = zone.enemyantisurfacethreat or 0
+    if zone.platoonallocations and zone.platoonallocations.friendlydirectfireallocatedthreat and ( zone.status == 'Allied' or zone.status == 'Contested' ) and zoneSelectionType ~= 'raid' then
+        friendly = friendly + zone.platoonallocations.friendlydirectfireallocatedthreat * 0.6
+    end
+
+    if platoon and platoon.CurrentPlatoonThreatDirectFireAntiSurface then
+        friendly = friendly + platoon.CurrentPlatoonThreatDirectFireAntiSurface
+    end
+
+    if enemy <= 0 then
+        return 0
+    end
+
+    local cappedFriendly = math.min(friendly, enemy * 1.5)
+    local ratio = cappedFriendly / enemy
+
+    if zoneSelectionType == 'raid' then
+        return math.min(math.max((ratio - 1.0), 0), 2.0)
+    else
+        return math.min(math.max((ratio - 0.5), 0), 2.0)
+    end
+end
+
+GetZonePressureValue = function(enemyStartClose, zone, platoon)
+    local friendlyStrength = math.max(platoon.CurrentPlatoonThreatDirectFireAntiSurface or 1, zone.friendlyantisurfacethreat or 1)
+
+    -- Normalize threat ratio between [0, 1]
+    local directThreatRatio = 0.0
+    if zone.enemyantisurfacethreat > 0 then
+        directThreatRatio = math.min(zone.enemyantisurfacethreat / friendlyStrength, 1.0)
+    end
+
+    -- Grid-based persistent threat, like artillery, snipers, etc
+    local gridThreat = zone.gridenemylandthreat or 0
+    local gridThreatPressure = math.min(gridThreat / 100, 1.0)  -- scale 0-1, assuming 100 is "high"
+
+    -- Structural enemy pressure: total threat (including structures)
+    local structuralThreat = (zone.enemystructurethreat or 0) + (zone.enemyantisurfacethreat or 0)
+    local structuralPressure = math.min(structuralThreat / 100, 1.0)
+
+    -- Start bias: penalize heavy zones close to enemy start
+    local startBias = 1.0
+    if enemyStartClose then
+        startBias = 1.2
+    end
+
+    -- Final blend
+    local pressure = (
+        0.5 * directThreatRatio + 
+        0.3 * gridThreatPressure + 
+        0.2 * structuralPressure
+    ) * startBias
+
+    return pressure  -- approximately 0.0 (safe) to 1.5+ (high risk)
+end
+
+GetZoneContiguityValue = function(intelmanager, zone)
+    local bonus = 0
+    local totalAdj = 0
+    local frontlineZones = intelmanager.CurrentFrontLineZones
+
+    if not zone.edges then
+        return 0
+    end
+
+    for _, adj in zone.edges do
+        local neighbor = adj.zone
+        totalAdj = totalAdj + 1
+
+        if neighbor then
+            local neighborId = neighbor.id
+            if frontlineZones and frontlineZones[neighborId] then
+                bonus = bonus + 1.5
+            elseif neighbor.status == 'Allied' then
+                bonus = bonus + 1.0
+            elseif neighbor.status == 'Contested' then
+                bonus = bonus + 0.8
+            elseif neighbor.status == 'Hostile' then
+                -- New logic: reward adjacency to hostile zones when pushing forward
+                if zone.status == 'Unoccupied' then
+                    bonus = bonus + 0.8  -- aggressive incentive
+                else
+                    bonus = bonus + 0.3  -- smaller bonus if we're already controlling this zone
+                end
+            end
+        end
+    end
+
+    -- Normalize by number of adjacents to keep values ~[0, 1.5]
+    if totalAdj > 0 then
+        return bonus / totalAdj
+    else
+        return 0
+    end
+end
+
+GetAdjacencyThreatBonus = function(intelmanager, zone, statusValueTable, threatType)
+    local bonus = 1
+    local frontlineZones = intelmanager.CurrentFrontLineZones
+    if zone.edges then
+        for _, adjId in zone.edges do
+            local neighbor = adjId.zone
+            if neighbor then
+                local neighborStatus = neighbor.status
+                local statusVal = GetAdaptiveStatusValue(zone, intelmanager)
+
+                if neighborStatus ~= 'Allied' or (neighborStatus == 'Allied' and (neighbor.zoneincome.selfincome + neighbor.zoneincome.allyincome) == 0 )then
+                    bonus = bonus + (0.20 * statusVal)
+                end
+
+                local threat = 0
+                if threatType == 'Air' then
+                    threat = neighbor.enemyairthreat
+                elseif threatType == 'Surface' then
+                    threat = neighbor.enemyantisurfacethreat + neighbor.enemystructurethreat
+                else
+                    threat = math.max(neighbor.enemyairthreat, neighbor.enemyantisurfacethreat)
+                end
+
+                if threat > 0 then
+                    bonus = bonus + 0.4
+                end
+                if frontlineZones and frontlineZones[neighbor.id] then
+                    bonus = bonus + 0.4
+                end
+                if neighbor.edges then
+                    for _, secondAdj in neighbor.edges do
+                        local secondNeighbor = secondAdj.zone
+                        if secondNeighbor and frontlineZones and frontlineZones[secondNeighbor.id] then
+                            bonus = bonus + 0.20  -- smaller bonus for indirect adjacency
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return bonus
+end
+
+GetZoneHomeBiasValue = function(allyStartClose, enemyStartClose, zone)
+    local bias = 0
+
+    -- Penalize zones close to your own start if not threatened
+    if allyStartClose then
+        if zone.gridenemylandthreat == 0 then
+            bias = bias - 1.0  -- negative penalty
+        end
+    end
+
+    -- Penalize pushing into enemy start zones too soon unless you have a strong presence
+    if enemyStartClose then
+        local friendly = zone.friendlyantisurfacethreat or 0
+        local enemy = zone.enemyantisurfacethreat or 0
+        -- ratio capped at 1.0 to limit penalty reduction
+        local ratio = math.min(friendly / (enemy + 1), 1.0)
+
+        -- penalty reduces as friendly presence grows, but always <= 0
+        bias = bias - (0.5 * (1.0 - ratio))
+    end
+
+    return bias  -- always zero or negative
+end
+
+GetZoneEncirclementValue = function(zone)
+    if not zone.edges then return 0 end
+
+    local hostileAdj = 0
+    local contestedAdj = 0
+    local unoccupiedAdj = 0
+    local alliedAdj = 0
+    local totalAdj = 0
+
+    -- First-hop encirclement context
+    for _, adj in zone.edges do
+        local neighbor = adj.zone
+        if neighbor then
+            totalAdj = totalAdj + 1
+            local status = neighbor.status
+            if status == 'Hostile' then
+                hostileAdj = hostileAdj + 1
+            elseif status == 'Contested' then
+                contestedAdj = contestedAdj + 1
+            elseif status == 'Unoccupied' then
+                unoccupiedAdj = unoccupiedAdj + 1
+            elseif status == 'Allied' then
+                alliedAdj = alliedAdj + 1
+            end
+        end
+    end
+
+    if totalAdj == 0 then return 0 end
+    if hostileAdj == totalAdj then return 0 end  -- Too risky to push straight into core
+
+    local effectiveHostile = hostileAdj + (contestedAdj * 0.6) + (unoccupiedAdj * 0.3)
+    local effectiveAllied = alliedAdj
+    local encirclementScore = (effectiveHostile - effectiveAllied * 0.5) / totalAdj
+
+    -- Now do 2nd and 3rd-hop exploration for forward potential
+    local seen = {}
+    local potentialValue = 0
+    local function exploreHops(z, depth)
+        if depth == 0 or not z.edges then return end
+        for _, adj in z.edges do
+            local neighbor = adj.zone
+            if neighbor and not seen[neighbor.id] then
+                seen[neighbor.id] = true
+                local status = neighbor.status
+                if status == 'Contested' then
+                    potentialValue = potentialValue + 1.0
+                elseif status == 'Unoccupied' then
+                    potentialValue = potentialValue + 0.6
+                elseif status == 'Hostile' then
+                    potentialValue = potentialValue + 0.3
+                end
+                exploreHops(neighbor, depth - 1)
+            end
+        end
+    end
+
+    -- 2-3 hop search from current zone
+    seen[zone.id] = true
+    exploreHops(zone, 3)
+
+    potentialValue = math.min(potentialValue / 10, 2.0)  -- Normalize range ~[0,2]
+
+    local finalScore = math.max(encirclementScore, 0) + potentialValue
+    return finalScore
+end
+
+function GetRaidFlankBonusValue(zone, baselineAngleDeg, flankMaxBonus)
+    flankMaxBonus = flankMaxBonus or 2.0
+
+    -- Find closest enemy start angle from the zone's cached data
+    local enemyBaseAngleDeg = nil
+    local minDist
+
+    for _, v in pairs(zone.enemystartdata or {}) do
+        if not minDist or v.startdistance < minDist then
+            minDist = v.startdistance
+            enemyBaseAngleDeg = v.startangle  -- already precomputed!
+        end
+    end
+
+    if not enemyBaseAngleDeg then
+        return 0
+    end
+
+    -- Calculate angular difference (0 to 180)
+    local diff = modulo(math.abs(enemyBaseAngleDeg - baselineAngleDeg), 360)
+    if diff > 180 then
+        diff = 360 - diff
+    end
+
+    -- Flank bonus peaks at 90 degrees difference
+    local bonus = math.sin(math.rad(diff)) * flankMaxBonus
+
+    return bonus
+end
+
+function GetAdaptiveStatusValue(zone, intelmanager)
+    local status = zone.status
+    local valueTable = {
+        Allied = 0.5,
+        Unoccupied = 1.5,
+        Contested = 2.5,
+        Hostile = 0.0,
+    }
+
+    local isFrontline = intelmanager.CurrentFrontLineZones and intelmanager.CurrentFrontLineZones[zone.id]
+    local isAdjacentToHostile = false
+
+    if zone.edges then
+        for _, adj in zone.edges do
+            local neighbor = adj.zone
+            if neighbor and neighbor.status == 'Hostile' then
+                isAdjacentToHostile = true
+                break
+            end
+        end
+    end
+
+    -- Adjust based on context
+    if status == 'Allied' and isFrontline then
+        valueTable.Allied = 1.2  -- frontline zones are relevant for anchoring expansion
+    end
+
+    if isAdjacentToHostile then
+        if status == 'Unoccupied' then
+            valueTable.Unoccupied = valueTable.Unoccupied + 1.0
+        elseif status == 'Contested' then
+            valueTable.Contested = valueTable.Contested + 0.5
+        end
+    end
+
+    return valueTable[status] or 1
 end

@@ -105,7 +105,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'ZoneAvailableRNG', { 'LocationType' } },
+            { UCBC, 'LandZoneAvailableRNG', { 'LocationType', 1000 } },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
@@ -137,7 +137,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'ZoneAvailableRNG', { 'LocationType' } },
+            { UCBC, 'LandZoneAvailableRNG', { 'LocationType', 1000 } },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
@@ -167,7 +167,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Naval Expansion Builders Small',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Naval Expansion Area FrigateRaid',
+        BuilderName = 'RNGAI T1 Naval Expansion Zone FrigateRaid',
         PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 0,
         PriorityFunction = FrigateRaid,
@@ -176,7 +176,7 @@ BuilderGroup {
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
-            { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', false, 250, -1000, 100, 1, 'AntiSurface' } },
+            { UCBC, 'NavalZoneAvailableRNG', { 'LocationType', 250 } },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
@@ -203,7 +203,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Naval Expansion Area 250 Small',
+        BuilderName = 'RNGAI T1 Naval Expansion Zone Small',
         PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 740,
         PriorityFunction = NavalExpansionAdjust,
@@ -212,7 +212,7 @@ BuilderGroup {
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'NavalBaseLimitRNG', { 2 } }, -- Forces limit to the number of naval expansions
             { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 3,  categories.FACTORY * categories.STRUCTURE }},
-            { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', true, 250, -1000, 100, 1, 'AntiSurface' } },
+            { UCBC, 'NavalZoneAvailableRNG', { 'LocationType', 256 } },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -228,7 +228,7 @@ BuilderGroup {
                 ExpansionBase = true,
                 NearMarkerType = 'Naval Area',
                 ExpansionRadius = 70,
-                LocationRadius = 250, -- radius from LocationType to build
+                LocationRadius = 256, -- radius from LocationType to build
                 LocationType = 'LocationType',
                 ThreatMin = -1000,
                 ThreatMax = 100,
@@ -247,7 +247,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Naval Expansion Builders Large',
     BuildersType = 'EngineerBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Naval Expansion Area FrigateRaid Large',
+        BuilderName = 'RNGAI T1 Naval Expansion Zone FrigateRaid Large',
         PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 0,
         PriorityFunction = FrigateRaid,
@@ -256,7 +256,7 @@ BuilderGroup {
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
-            { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', false, 250, -1000, 100, 1, 'AntiSurface' } },
+            { UCBC, 'NavalZoneAvailableRNG', { 'LocationType', 250 } },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
@@ -283,7 +283,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1 Naval Expansion Area 650 Large',
+        BuilderName = 'RNGAI T1 Naval Expansion Zone Large',
         PlatoonTemplate = 'EngineerStateT123RNG',
         PriorityFunction = NavalExpansionAdjust,
         Priority = 750,
@@ -292,7 +292,7 @@ BuilderGroup {
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'NavalBaseLimitRNG', { 3 } }, -- Forces limit to the number of naval expansions
-            { UCBC, 'NavalAreaNeedsEngineerRNG', { 'LocationType', true, 650, -1000, 100, 1, 'AntiSurface' } },
+            { UCBC, 'NavalZoneAvailableRNG', { 'LocationType', 650} },
             { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 3, categories.FACTORY * categories.STRUCTURE }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.0}},
             { UCBC, 'UnitCapCheckLess', { .85 } },

@@ -11,6 +11,7 @@ local SUtils = import("/lua/ai/sorianutilities.lua")
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+local NavUtils = import('/lua/sim/NavUtils.lua')
 
 local TableGetn = table.getn
 local WeakValueTable = { __mode = 'v' }
@@ -597,7 +598,6 @@ EngineerManager = Class(BuilderManager) {
     ---@param unit Unit
     TaskFinished = function(manager, unit)
         if manager.LocationType ~= 'FLOATING' and VDist3(manager.Location, unit:GetPosition()) > manager.Radius and not EntityCategoryContains(categories.COMMAND, unit) then
-            --LOG('Engineer is more than distance from manager, radius is '..manager.Radius..' distance is '..VDist3(manager.Location, unit:GetPosition()))
             manager:ReassignUnit(unit)
         else
             manager:ForkEngineerTask(unit)
@@ -611,7 +611,6 @@ EngineerManager = Class(BuilderManager) {
         local bestManager = false
         local distance = false
         local unitPos = unit:GetPosition()
-        --LOG('Reassigning Engineer')
         for k,v in managers do
             if (v.FactoryManager.LocationActive and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0) or v == 'MAIN' then
                 local checkDistance = VDist3(v.EngineerManager:GetLocationCoords(), unitPos)
@@ -619,16 +618,13 @@ EngineerManager = Class(BuilderManager) {
                     distance = checkDistance
                 end
                 if checkDistance < v.EngineerManager.Radius and checkDistance < distance then
-                    --LOG('Manager radius is '..v.EngineerManager.Radius)
                     distance = checkDistance
                     bestManager = v.EngineerManager
-                    --LOG('Engineer Being reassigned to '..bestManager.LocationType)
                 end
             end
         end
         if not bestManager then
             if self.Brain.BuilderManagers['FLOATING'].EngineerManager then
-                --LOG('Engineer Being reassigned to floating engineer manager')
                 bestManager = self.Brain.BuilderManagers['FLOATING'].EngineerManager
             end
         end
@@ -689,7 +685,7 @@ EngineerManager = Class(BuilderManager) {
             --   --RNGLOG('*AI DEBUG: ARMY '..self.Brain.Nickname..': Engineer Manager Forming - '..builder.BuilderName..' - Priority: '..builder:GetPriority())
             --end
 
-            --RNGLOG('*AI DEBUG: ARMY ', repr(self.Brain:GetArmyIndex()),': Engineer Manager Forming - ',repr(builder.BuilderName),' - Priority: ', builder:GetPriority())
+            --LOG('*AI DEBUG: ARMY ', repr(self.Brain:GetArmyIndex()),': Engineer Manager Forming - ',repr(builder.BuilderName),' - Priority: ', builder:GetPriority())
             hndl.PlanName = template[2]
 
             --If we have specific AI, fork that AI thread
@@ -827,7 +823,7 @@ EngineerManager = Class(BuilderManager) {
                         end
                     end
                 end
-                local baseZone = aiBrain.BuilderManagers[self.LocationType].Zone
+                local baseZone = aiBrain.BuilderManagers[self.LocationType].ZoneID
                 if baseZone then
                     local locationMobileSiloUnits = aiBrain.Zones.Land.zones[baseZone].enemySilos
                     if locationMobileSiloUnits and locationMobileSiloUnits  > 0 then
@@ -886,7 +882,9 @@ EngineerManager = Class(BuilderManager) {
             local numEnemyUnits = aiBrain.emanager.Nuke.T3
             if unitCats.TECH3 and numEnemyUnits and numEnemyUnits > 0 then
                 local currentSMD = self:GetNumUnits('AntiNuke')
-                if currentSMD == 0 then
+                local beingBuiltSmd = self:NumStructuresBeingBuilt('TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' })
+                local queuedSmdCount = self:NumStructuresQueued('TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' })
+                if currentSMD == 0 and beingBuiltSmd == 0 and queuedSmdCount == 0 then
                     if not aiBrain.IntelManager:IsAssignedStructureRequestPresent(self.Location, 120, 'SMD') then
                         local smdRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 120, 'SMD')
                         if smdRequestPos then
@@ -940,6 +938,7 @@ EngineerManager = Class(BuilderManager) {
                         end
                     end
                     if allMatch then
+                        --LOG('Found unit with id '..tostring(v.Unit.UnitId)..' completion percent is '..tostring(v.Unit:GetFractionComplete()))
                         structuresBeingBuilt = structuresBeingBuilt + 1
                     end
                 end

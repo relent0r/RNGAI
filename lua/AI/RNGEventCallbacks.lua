@@ -377,7 +377,7 @@ function OnTransfered(transferedUnits, toArmy, captured, originBrain)
                             local refZone = brain.IntelManager:GetClosestZone(brain, false, { armyStartX, GetSurfaceHeight(armyStartX, armyStartZ), armyStartZ }, false, false, false)
                             local zone = brain.Zones.Land.zones[refZone]
                             if zone then
-                                local refName = 'ZONE_'..zone.id
+                                local refName = 'LAND_ZONE_'..zone.id
                                 local reference = zone.pos
                                 brain:AddBuilderManagers(reference, 120, refName, true)
                                 local baseValues = {}

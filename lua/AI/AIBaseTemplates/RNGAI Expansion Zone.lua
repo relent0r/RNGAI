@@ -81,9 +81,9 @@ BaseBuilderTemplate {
         if markerType ~= 'Zone Expansion' then
             return -1
         end
-        if aiBrain.BuilderManagers['MAIN'].GraphArea then
+        if aiBrain.BuilderManagers['MAIN'].Label then
             local NavUtils = import('/lua/sim/NavUtils.lua')
-            local mainBaseLabel = aiBrain.BuilderManagers['MAIN'].GraphArea
+            local mainBaseLabel = aiBrain.BuilderManagers['MAIN'].Label
             local label = NavUtils.GetLabel('Land', location)
             if mainBaseLabel == label then
                 return 100

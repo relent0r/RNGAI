@@ -185,7 +185,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                     if self.BuilderData.ExpansionBuilt and mainbaseOverride then
                         if self.BuilderData.ExpansionData then
-                            self.LocationType = 'ZONE_'..self.BuilderData.ExpansionData
+                            self.LocationType = 'LAND_ZONE_'..self.BuilderData.ExpansionData
                             brain.BuilderManagers[self.LocationType].EngineerManager:AddUnit(cdr, true)
                             cdr.CDRHome = brain.BuilderManagers[self.LocationType].Location
                             self.BuilderData = {}
@@ -545,7 +545,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             else
                 multiplier = 1
             end
-            if ScenarioInfo.Options.AICDRCombat ~= 'cdrcombatOff' and brain.EnemyIntel.LandPhase < 3 and gameTime < 1500 then
+            if ScenarioInfo.Options.AICDRCombat ~= 'cdrcombatOff' and brain.EnemyIntel.LandPhase < 2.5 and gameTime < 1500 then
                 if (brain.EconomyOverTimeCurrent.MassIncome > (0.8 * multiplier) and brain.EconomyOverTimeCurrent.EnergyIncome * 10 > brain.EcoManager.MinimumPowerRequired)
                     or (brain.EconomyOverTimeCurrent.EnergyTrendOverTime > 6.0 and brain.EconomyOverTimeCurrent.EnergyIncome > 18) then
                     local enemyAcuClose = false
@@ -558,7 +558,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    if not enemyAcuClose and brain.BrainIntel.LandPhase < 2 and cdr.CurrentEnemyInnerCircle < 20 and not self.BuilderData.DefendExpansion then
+                    if not enemyAcuClose and brain.BrainIntel.LandPhase < 2.5 and cdr.CurrentEnemyInnerCircle < 20 and not self.BuilderData.DefendExpansion then
                         self:LogDebug(string.format('We want to try and expand '))
                         local expansionCount = 0
                         for k, manager in brain.BuilderManagers do
@@ -2571,8 +2571,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if expansionCount < 2 then
-                        if not brain.BuilderManagers['ZONE_'..object.id] then
-                            brain:AddBuilderManagers(object.pos, 60, 'ZONE_'..object.id, true)
+                        if not brain.BuilderManagers['LAND_ZONE_'..object.id] then
+                            brain:AddBuilderManagers(object.pos, 60, 'LAND_ZONE_'..object.id, true)
                             local baseValues = {}
                             local highPri = false
                             local markerType
@@ -2597,9 +2597,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             local pick = validNames[ Random(1, RNGGETN(validNames)) ]
                             cdr.BuilderManagerData.EngineerManager:RemoveUnit(cdr)
                             --RNGLOG('Adding CDR to expansion manager')
-                            brain.BuilderManagers['ZONE_'..object.id].EngineerManager:AddUnit(cdr, true)
+                            brain.BuilderManagers['LAND_ZONE_'..object.id].EngineerManager:AddUnit(cdr, true)
                             --SPEW('*AI DEBUG: AINewExpansionBase(): ARMY ' .. brain:GetArmyIndex() .. ': Expanding using - ' .. pick .. ' at location ' .. baseName)
-                            import('/mods/RNGAI/lua/ai/aiaddbuildertable.lua').AddGlobalBaseTemplate(brain, 'ZONE_'..object.id, pick)
+                            import('/mods/RNGAI/lua/ai/aiaddbuildertable.lua').AddGlobalBaseTemplate(brain, 'LAND_ZONE_'..object.id, pick)
 
                             -- The actual factory building part
                             local baseTmplDefault = import('/lua/BaseTemplates.lua')
@@ -2669,9 +2669,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             cdr.EngineerBuildQueue={}
                             self.BuilderData.ExpansionBuilt = true
                             object.engineerplatoonallocated = false
-                        elseif brain.BuilderManagers['ZONE_'..object.id].FactoryManager:GetNumFactories() == 0 then
+                        elseif brain.BuilderManagers['LAND_ZONE_'..object.id].FactoryManager:GetNumFactories() == 0 then
                             local abortBuild = false
-                            brain.BuilderManagers['ZONE_'..object.id].EngineerManager:AddUnit(cdr, true)
+                            brain.BuilderManagers['LAND_ZONE_'..object.id].EngineerManager:AddUnit(cdr, true)
                             local baseTmplDefault = import('/lua/BaseTemplates.lua')
                             local factoryCount = 0
                             if object.resourcevalue > 2 then
@@ -2738,7 +2738,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             self.BuilderData.ExpansionBuilt = true
                             object.engineerplatoonallocated = false
                         --RNGLOG('There is a manager here but no factories')
-                        elseif brain.BuilderManagers['ZONE_'..object.id].FactoryManager:GetNumFactories() > 0 then
+                        elseif brain.BuilderManagers['LAND_ZONE_'..object.id].FactoryManager:GetNumFactories() > 0 then
                             self.BuilderData.ExpansionBuilt = true
                         end
                     end
@@ -2892,7 +2892,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             local tick = GetGameTick()
                             local seconds = GetGameTimeSeconds()
                             local progress = cdr:GetWorkProgress()
-                            --RNGLOG('progress '..repr(progress))
+                            --LOG('progress '..repr(progress))
                             if lastTick then
                                 if progress > lastProgress then
                                     eta = seconds + ((tick - lastTick) / 10) * ((1-progress)/(progress-lastProgress))
@@ -2900,7 +2900,13 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                             
                             if cdr.Upgrading then
-                                --RNGLOG('cdr.Upgrading is set to true')
+                                --LOG('cdr.Upgrading is set to true')
+                                --LOG('cdr.HealthPercent '..tostring(cdr.HealthPercent))
+                                --LOG('eta '..tostring(eta))
+                                --LOG('cdr.CurrentEnemyThreat '..tostring(cdr.CurrentEnemyThreat))
+                                --LOG('cdr.DistanceToHome '..tostring(cdr.DistanceToHome))
+                                --LOG('cdr.CurrentFriendlyThreat '..tostring(cdr.CurrentFriendlyThreat))
+                                --LOG('cdr.Confidence '..tostring(cdr.Confidence))
                             end
                             if (cdr.HealthPercent < 0.40 and eta > 30 and cdr.CurrentEnemyThreat > 10 and cdr.DistanceToHome > 225) or (cdr.CurrentEnemyThreat > 30 and eta > 450 and cdr.CurrentFriendlyThreat < 15) then
                                 IssueStop({cdr})
@@ -2911,7 +2917,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 self:ChangeState(self.Retreating)
                                 return
                             end
-                            if cdr.CurrentEnemyThreat > 60 and math.max(0, cdr.CurrentEnemyThreat - cdr.CurrentFriendlyThreat) > 45 and eta > 450 and cdr.Confidence < 2.5 then
+                            if ((cdr.CurrentEnemyThreat > 60 and cdr.Confidence < 2.5) or (cdr.CurrentEnemyThreat > 140 and cdr.Confidence < 3.8)) and math.max(0, cdr.CurrentEnemyThreat - cdr.CurrentFriendlyThreat) > 45 and eta > 450 then
+                                --LOG('ACU Should be aborting now')
                                 IssueStop({cdr})
                                 IssueClearCommands({cdr})
                                 cdr.Upgrading = false

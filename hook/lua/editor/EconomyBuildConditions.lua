@@ -350,22 +350,9 @@ function HighValueGateRNG(aiBrain)
     return true
 end
 
-
-function MassIncomeToFactoryRNG(aiBrain, compareType)
-
-    local totalFactoryConsumption = aiBrain.EcoManager.ApproxLandFactoryMassConsumption + aiBrain.EcoManager.ApproxAirFactoryMassConsumption + aiBrain.EcoManager.ApproxNavalFactoryMassConsumption
-    local unitCount = aiBrain:GetEngineerManagerUnitsBeingBuilt(categories.EXPERIMENTAL + (categories.STRATEGIC * categories.TECH3))
-    totalFactoryConsumption = totalFactoryConsumption + (unitCount * 40)
-
-    if not CompareBody((aiBrain.EconomyOverTimeCurrent.MassIncome * 10), totalFactoryConsumption, compareType) then
-        --LOG('Mass to factory ratio false, mass consumption is '..tostring(totalFactoryConsumption)..' total income over time is '..tostring(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-        return false
-    end
-    --LOG('Mass to factory ratio true mass consumption is '..tostring(totalFactoryConsumption)..' total income over time is '..tostring(aiBrain.EconomyOverTimeCurrent.MassIncome * 10))
-    return true
-end
-
-function ZoneBasedFactoryToMassSupported(aiBrain, locationType, layer, requireBuilt, storageBuild)
+function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, layer, requireBuilt, storageBuild)
+    -- Use '<' to add factories (we are under-producing)
+    -- Use '>' to remove factories (we are over-producing)
     local manager = aiBrain.BuilderManagers[locationType]
     if not manager.FactoryManager then
         WARN('*AI WARNING: No Factory Manager at location - ' .. locationType)
@@ -397,8 +384,8 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, layer, requireBu
                     local dz = baseLocation[3] - zone.pos[3]
                     local posDist = dx * dx + dz * dz
                     if posDist < (expansionSize * expansionSize) and zone.bestarmy == index then
-                        if z.zoneincome then
-                            zoneBasedIncome = zoneBasedIncome + z.zoneincome
+                        if z.zoneincome.selfincome then
+                            zoneBasedIncome = zoneBasedIncome + z.zoneincome.selfincome
                         end
                         if zone.resourcevalue then
                             resourceCount = resourceCount + zone.resourcevalue
@@ -463,17 +450,21 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, layer, requireBu
             factoryDrain.t1NavalDrain = (massToFactoryValues.T1NavalValue or 8) * ecoMultiplier
             factoryDrain.t2NavalDrain = (massToFactoryValues.T2NavalValue or 20) * ecoMultiplier
             factoryDrain.t3NavalDrain = (massToFactoryValues.T3NavalValue or 30) * ecoMultiplier
-            for _, v in manager.FactoryManager.FactoryList do
-                if requireBuilt and v:GetFractionComplete() ~= 1 then
-                    continue
-                end
-                if v.Blueprint.CategoriesHash.NAVAL then
-                    if v.Blueprint.CategoriesHash.TECH1 then
-                        t1NavalFactories = t1NavalFactories + 1
-                    elseif v.Blueprint.CategoriesHash.TECH2 then
-                        t2NavalFactories = t2NavalFactories + 1
-                    elseif v.Blueprint.CategoriesHash.TECH3 then
-                        t3NavalFactories = t3NavalFactories + 1
+            for k, m in aiBrain.BuilderManagers do
+                if m.Layer == 'Water' and m.FactoryManager and m.FactoryManager.LocationActive then
+                    for _, v in m.FactoryManager.FactoryList do
+                        if requireBuilt and v:GetFractionComplete() ~= 1 then
+                            continue
+                        end
+                        if v.Blueprint.CategoriesHash.NAVAL then
+                            if v.Blueprint.CategoriesHash.TECH1 then
+                                t1NavalFactories = t1NavalFactories + 1
+                            elseif v.Blueprint.CategoriesHash.TECH2 then
+                                t2NavalFactories = t2NavalFactories + 1
+                            elseif v.Blueprint.CategoriesHash.TECH3 then
+                                t3NavalFactories = t3NavalFactories + 1
+                            end
+                        end
                     end
                 end
             end
@@ -507,16 +498,12 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, layer, requireBu
             productionRatio = aiBrain.ProductionRatios[layer]
         end
         --LOG('Production rato is '..tostring(productionRatio))
-
+        local currentRatio = massSpendTotal / availableResources
+        
         if storageBuild then
-            if (massSpendTotal / availableResources) * 1.5 < productionRatio then
-                return true
-            end
+            currentRatio = currentRatio * 1.5
         end
-
-        if massSpendTotal / availableResources < productionRatio then
-            return true
-        end
+        return CompareBody(currentRatio, productionRatio, compareType)
     end
     return false
 end
@@ -533,28 +520,6 @@ function LessThanEconIncomeOverTimeRNG(aiBrain, massIncome, energyIncome)
         return true
     end
     return false
-end
-
-function GreaterThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType, requireBuilt)
-    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
-    if not factoryManager then
-        WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
-        return false
-    end
-    --RNGLOG('Location Type '..locationType)
-
-    return MassIncomeToFactoryRNG(aiBrain,'>')
-end
-
-function LessThanMassToFactoryRatioBaseCheckRNG(aiBrain, locationType,requireBuilt)
-    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
-    if not factoryManager then
-        WARN('*AI WARNING: FactoryCapCheck - Invalid location - ' .. locationType)
-        return false
-    end
-    --RNGLOG('Location Type '..locationType)
-
-    return MassIncomeToFactoryRNG(aiBrain,'<')
 end
 
 function FactorySpendRatioRNG(aiBrain,LocationType, uType,upgradeType, noStorageCheck, demandBuilder)
