@@ -575,6 +575,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
+            if not self.BuilderData.Position then
+                --LOG('Mobile air defense does not have a position')
+            end
             while not IsDestroyed(self) do
                 if VDist3Sq(self.BuilderData.Position,self.Pos) < 400 then
                     self.path = false

@@ -71,12 +71,12 @@ FactoryBuilderManager = Class(BuilderManager) {
         local navalLocation = self.Brain.BuilderManagers[self.LocationType].Layer == 'Water'
         while true do
             if self.LocationActive and self.RallyPoint then
-                -- LOG('*AI DEBUG: Checking Active Rally Point')
+                --LOG('*AI DEBUG: Checking Active Rally Point')
                 local newRally = false
                 local bestDist = 99999
                 local rallyheight = GetTerrainHeight(self.RallyPoint[1], self.RallyPoint[3])
                 if self.Brain:GetNumUnitsAroundPoint(categories.STRUCTURE, self.RallyPoint, 15, 'Ally') > 0 then
-                    -- LOG('*AI DEBUG: Searching for a new Rally Point Location')
+                    --LOG('*AI DEBUG: Searching for a new Rally Point Location')
                     for x = -30, 30, 5 do
                         for z = -30, 30, 5 do
                             local height = GetTerrainHeight(self.RallyPoint[1] + x, self.RallyPoint[3] + z)
@@ -98,7 +98,7 @@ FactoryBuilderManager = Class(BuilderManager) {
                     end
                     if newRally then
                         self.RallyPoint = newRally
-                        -- LOG('*AI DEBUG: Setting a new Rally Point Location')
+                        --LOG('*AI DEBUG: Setting a new Rally Point Location')
                         for k,v in self.FactoryList do
                             IssueClearFactoryCommands({v})
                             IssueFactoryRallyPoint({v}, self.RallyPoint)
@@ -235,7 +235,7 @@ FactoryBuilderManager = Class(BuilderManager) {
             end
             self.LocationActive = true
             if self.LocationType then
-                local zone = self.Brain.BuilderManagers[self.LocationType].Zone
+                local zone = self.Brain.BuilderManagers[self.LocationType].ZoneID
                 if zone then
                     if self.Brain.Zones.Land.zones[zone].engineerplatoonallocated then
                         self.Brain.Zones.Land.zones[zone].engineerplatoonallocated = nil
@@ -282,7 +282,7 @@ FactoryBuilderManager = Class(BuilderManager) {
 
                 local factoryNewlyCaptured = function(unit, captor)
                                             local aiBrain = captor:GetAIBrain()
-                                            -- LOG('*AI DEBUG: FACTORY: I was Captured by '..aiBrain.Nickname..'!')
+                                            --LOG('*AI DEBUG: FACTORY: I was Captured by '..aiBrain.Nickname..'!')
                                             if aiBrain.BuilderManagers then
                                                 local facManager = aiBrain.BuilderManagers[captor.BuilderManagerData.LocationType].FactoryManager
                                                 if facManager then
@@ -404,7 +404,7 @@ FactoryBuilderManager = Class(BuilderManager) {
             if faction and templateData.FactionSquads[faction] then
                 for k,v in templateData.FactionSquads[faction] do
                     if customData and customData[faction] then
-                        -- LOG('*AI DEBUG: Replacement unit found!')
+                        --LOG('*AI DEBUG: Replacement unit found!')
                         local replacement = self:GetCustomReplacement(v, templateName, faction)
                         if replacement then
                             table.insert(template, replacement)
@@ -452,19 +452,19 @@ FactoryBuilderManager = Class(BuilderManager) {
         local retTemplate = false
         local templateData = self.Brain.CustomUnits[templateName]
         if templateData and templateData[faction] then
-            -- LOG('*AI DEBUG: Replacement for '..templateName..' exists.')
+            --LOG('*AI DEBUG: Replacement for '..templateName..' exists.')
             local rand = Random(1,100)
             local possibles = {}
             for k,v in templateData[faction] do
                 if rand <= v[2] or template[1] == 'NoOriginalUnit' then
-                    -- LOG('*AI DEBUG: Insert possibility.')
+                    --LOG('*AI DEBUG: Insert possibility.')
                     table.insert(possibles, v[1])
                 end
             end
             if not table.empty(possibles) then
                 rand = Random(1,TableGetn(possibles))
                 local customUnitID = possibles[rand]
-                -- LOG('*AI DEBUG: Replaced with '..customUnitID)
+                --LOG('*AI DEBUG: Replaced with '..customUnitID)
                 retTemplate = { customUnitID, template[2], template[3], template[4], template[5] }
             end
         end
@@ -765,7 +765,7 @@ FactoryBuilderManager = Class(BuilderManager) {
             local customData = self.Brain.CustomUnits[v]
             for c, b in templateData.FactionSquads[faction] do
                 if customData and customData[faction] then
-                    -- LOG('*AI DEBUG: Replacement unit found!')
+                    --LOG('*AI DEBUG: Replacement unit found!')
                     local replacement = self:GetCustomReplacement(b, v, faction)
                     if replacement then
                         table.insert(template, replacement)

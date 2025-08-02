@@ -1,6 +1,7 @@
 local AIBasePlatoon = import("/lua/aibrains/platoons/platoon-base.lua").AIPlatoon
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
+local ALLBPS = __blueprints
 
 ---@class AIPlatoon : moho.platoon_methods
 ---@field BuilderData table
@@ -117,7 +118,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     self.NovaxUnits = {}
                 end
                 if not self.NovaxUnits[unit.EntityId] then
-                    self.NovaxUnits[unit.EntityId] = {Unit = unit, CurrentTarget = nil, CurrentTargetHealth = nil }
+                    self.NovaxUnits[unit.EntityId] = {Unit = unit, CurrentTarget = nil, CurrentTargetHealth = nil, UnitDPS = RUtils.CalculatedDPSRNG(ALLBPS['xea0002'].Weapon[1]) }
                 end
             end
             if unitCats.ARTILLERY and ( unitCats.STRUCTURE and unitCats.TECH3 or unitCats.EXPERIMENTAL ) then

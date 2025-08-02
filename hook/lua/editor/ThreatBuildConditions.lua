@@ -118,9 +118,9 @@ function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType, ratioRequired)
     if not factoryManager then
         return false
     end
-    local graphArea = aiBrain.BuilderManagers[locationtype].GraphArea
-    if not graphArea then
-        WARN('Missing GraphArea for expansion land node or no path markers')
+    local label = aiBrain.BuilderManagers[locationtype].Label
+    if not label then
+        WARN('Missing label for expansion land node or no path markers')
         return false
     end
     local gameTime = GetGameTimeSeconds()
@@ -129,32 +129,32 @@ function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType, ratioRequired)
         for k, x in aiBrain.EnemyIntel.EnemyThreatLocations do
             for _, z in x do
                 if tType == 'Defensive' then
-                    if z.LandLabel == graphArea and z.LandDefStructureCount and z.LandDefStructureCount > 0 and (gameTime - z.UpdateTime) < 45 then
+                    if z.LandLabel == label and z.LandDefStructureCount and z.LandDefStructureCount > 0 and (gameTime - z.UpdateTime) < 45 then
                         threatTotal = threatTotal + z.LandDefStructureThreat
                     end
-                elseif z[tType] and z[tType] > 0 and z.LandLabel == graphArea and (gameTime - z.UpdateTime) < 45 then
+                elseif z[tType] and z[tType] > 0 and z.LandLabel == label and (gameTime - z.UpdateTime) < 45 then
                     --LOG('ThreatPresentOnLabelRNG Threat is present in graph area of type '..tType)
                     threatTotal = threatTotal + z[tType]
                 end
             end
         end
-        if tType == 'Air' and aiBrain.GraphZones and aiBrain.GraphZones[graphArea].FriendlyLandAntiAirThreat < threatTotal then
+        if tType == 'Air' and aiBrain.GraphZones and aiBrain.GraphZones[label].FriendlyLandAntiAirThreat < threatTotal then
             return true
         end
-        if tType == 'Land' and aiBrain.GraphZones and aiBrain.GraphZones[graphArea].FriendlySurfaceDirectFireThreat < threatTotal then
+        if tType == 'Land' and aiBrain.GraphZones and aiBrain.GraphZones[label].FriendlySurfaceDirectFireThreat < threatTotal then
             return true
         end
-        if tType == 'StructuresNotMex' and aiBrain.GraphZones and aiBrain.GraphZones[graphArea].FriendlySurfaceInDirectFireThreat < threatTotal then
+        if tType == 'StructuresNotMex' and aiBrain.GraphZones and aiBrain.GraphZones[label].FriendlySurfaceInDirectFireThreat < threatTotal then
             return true
         end
-        if tType == 'Defensive' and aiBrain.GraphZones and aiBrain.GraphZones[graphArea].FriendlySurfaceInDirectFireThreat < threatTotal then
+        if tType == 'Defensive' and aiBrain.GraphZones and aiBrain.GraphZones[label].FriendlySurfaceInDirectFireThreat < threatTotal then
             --LOG('ThreatPresentOnLabelRNG Defensive threat found in graph for threat type '..tostring(tType))
             return true
         end
     end
     if tType == 'Air' and aiBrain.GraphZones then
-        if aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface and aiBrain.GraphZones[graphArea].FriendlyLandAntiAirThreat then
-            if aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface > 10 and aiBrain.GraphZones[graphArea].FriendlyLandAntiAirThreat < 10 then
+        if aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface and aiBrain.GraphZones[label].FriendlyLandAntiAirThreat then
+            if aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface > 10 and aiBrain.GraphZones[label].FriendlyLandAntiAirThreat < 10 then
                 return true
             end
         end

@@ -115,7 +115,7 @@ BuilderGroup {
         Priority = 880,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'LAND' }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 5, categories.LAND * categories.MOBILE * categories.DIRECTFIRE } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.7 }},
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -128,7 +128,7 @@ BuilderGroup {
         Priority = 881,
         BuilderConditions = {
             { UCBC, 'EnemyStructuresGreaterThanMobileAtPerimeter', { 'LocationType' }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.MOBILE * categories.INDIRECTFIRE } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -570,7 +570,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Zone Control Expansion',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 600,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 15,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL - categories.SCOUT } },
@@ -586,7 +586,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Common Expansion Small',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 600,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 30,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 15,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 4, categories.MOBILE * categories.LAND * (categories.DIRECTFIRE + categories.INDIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
@@ -641,7 +641,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Spam Aeon Expansion',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatHoverStateMachineRNG',                          -- Template Name. 
         Priority = 650,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 30,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 15,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { MIBC, 'FactionIndex', { 2 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
@@ -785,7 +785,7 @@ BuilderGroup {
         BuilderName = 'RNGAI Zone Control',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 800,                                                          -- Priority. 1000 is normal.
-        InstanceCount = 8,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 15,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },

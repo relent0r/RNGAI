@@ -920,13 +920,17 @@ LandScoutThreatThread = function(aiBrain, platoon)
                         coroutine.yield(10)
                         break
                     elseif platoon.StateName == 'Retreating' and not v.Dead then
+                        local enemyUnitRange = v['rngdata'].MaxWeaponRange or 20
+                        local threatDistance = math.max(0, enemyDistance - enemyUnitRange)
                         local oldEnemy = platoon.BuilderData.RetreatFrom
                         if oldEnemy and not IsDestroyed(oldEnemy) then
                             local oldEnemyPos = oldEnemy:GetPosition()
                             local cx = platPos[1] - oldEnemyPos[1]
                             local cz = platPos[3] - oldEnemyPos[3]
                             local oldEnemyDistance = cx * cx + cz * cz
-                            if enemyDistance < oldEnemyDistance then
+                            local oldEnemyRange = oldEnemy['rngdata'] and oldEnemy['rngdata'].MaxWeaponRange or 20
+                            local oldThreatDistance = math.max(0, oldEnemyDistance - oldEnemyRange)
+                            if threatDistance < oldThreatDistance then
                                 if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
                                     supportUnit = platoon.BuilderData.SupportUnit
                                 end
@@ -956,13 +960,16 @@ LandScoutThreatThread = function(aiBrain, platoon)
                         local ignoreUnit = false
 
                         local enemyUnitRange = v['rngdata'].MaxWeaponRange or 20
+                        local threatDistance = math.max(0, enemyDistance - enemyUnitRange)
                         local oldEnemy = platoon.BuilderData.RetreatFrom
                         if oldEnemy and not IsDestroyed(oldEnemy) then
                             local oldEnemyPos = oldEnemy:GetPosition()
                             local cx = platPos[1] - oldEnemyPos[1]
                             local cz = platPos[3] - oldEnemyPos[3]
                             local oldEnemyDistance = cx * cx + cz * cz
-                            if enemyDistance < oldEnemyDistance then
+                            local oldEnemyRange = oldEnemy['rngdata'] and oldEnemy['rngdata'].MaxWeaponRange or 20
+                            local oldThreatDistance = math.max(0, oldEnemyDistance - oldEnemyRange)
+                            if threatDistance < oldThreatDistance then
                                 local originLocation
                                 if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
                                     supportUnit = platoon.BuilderData.SupportUnit

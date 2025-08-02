@@ -65,7 +65,7 @@ function EnemyAirSnipeDefenceRequired(aiBrain, locationType)
                         end
                     end
                     if not aaCovered then
-                        --LOG('EnemyAirSnipeDefenceRequired')
+                        --LOG('EnemyAirSnipeDefenceRequired current count'..tostring(aaCount))
                         return true
                     end
                 end
@@ -162,7 +162,6 @@ function NavalBaseLimitRNG(aiBrain, limit)
             end
         end
     end
-    --LOG('Naval base count is '..count)
     return CompareBody(count, limit, '<')
 end
 
@@ -197,7 +196,7 @@ function RequirePresenceOnLabelRNG(aiBrain, expansionCount)
                         continue
                     end
                     if v.BaseType ~= 'Naval Area' and v.BaseType ~= 'FLOATING' then
-                        if v.GraphArea and v.GraphArea == id then
+                        if v.Label and v.Label == id then
                             --LOG('Found base in label '..id..' base name is '..v.BaseType)
                             baseDetected = true
                             break
@@ -607,13 +606,15 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
             if perimeterMonitor.RecentLandAngle then
                 local pointCheck = perimeterMonitor.RecentLandAngle
                 local defensiveSpokes = zone.defensespokes
-                local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
-                --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
-                if closestSpokeIndex then
-                    local spokeTable= defensiveSpokes[closestSpokeIndex]
-                    if spokeTable then
-                        for _, point in spokeTable do
-                            totalAntiSurfaceThreat = totalAntiSurfaceThreat + (point.AntiSurfaceThreat or 0)
+                if defensiveSpokes then
+                    local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
+                    --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
+                    if closestSpokeIndex then
+                        local spokeTable= defensiveSpokes[closestSpokeIndex]
+                        if spokeTable then
+                            for _, point in spokeTable do
+                                totalAntiSurfaceThreat = totalAntiSurfaceThreat + (point.AntiSurfaceThreat or 0)
+                            end
                         end
                     end
                 end
@@ -665,13 +666,15 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
             if perimeterMonitor.RecentAirAngle then
                 local pointCheck = perimeterMonitor.RecentAirAngle
                 local defensiveSpokes = zone.defensespokes
-                local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
-                --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
-                if closestSpokeIndex then
-                    local spokeTable= defensiveSpokes[closestSpokeIndex]
-                    if spokeTable then
-                        for _, point in spokeTable do
-                            totalAntiAirThreat = totalAntiAirThreat + (point.AntiAirThreat or 0)
+                if defensiveSpokes then
+                    local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
+                    --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
+                    if closestSpokeIndex then
+                        local spokeTable= defensiveSpokes[closestSpokeIndex]
+                        if spokeTable then
+                            for _, point in spokeTable do
+                                totalAntiAirThreat = totalAntiAirThreat + (point.AntiAirThreat or 0)
+                            end
                         end
                     end
                 end
@@ -687,13 +690,15 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
             if perimeterMonitor.RecentSurfaceAirAngle then
                 local pointCheck = perimeterMonitor.RecentSurfaceAirAngle
                 local defensiveSpokes = zone.defensespokes
-                local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
-                --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
-                if closestSpokeIndex then
-                    local spokeTable= defensiveSpokes[closestSpokeIndex]
-                    if spokeTable then
-                        for _, point in spokeTable do
-                            totalAntiAirThreat = totalAntiAirThreat + (point.AntiAirThreat or 0)
+                if defensiveSpokes then
+                    local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
+                    --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
+                    if closestSpokeIndex then
+                        local spokeTable= defensiveSpokes[closestSpokeIndex]
+                        if spokeTable then
+                            for _, point in spokeTable do
+                                totalAntiAirThreat = totalAntiAirThreat + (point.AntiAirThreat or 0)
+                            end
                         end
                     end
                 end
@@ -709,13 +714,15 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
             if perimeterMonitor.RecentNavalAngle then
                 local pointCheck = perimeterMonitor.RecentNavalAngle
                 local defensiveSpokes = zone.defensespokes
-                local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
-                --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
-                if closestSpokeIndex then
-                    local spokeTable= defensiveSpokes[closestSpokeIndex]
-                    if spokeTable then
-                        for _, point in spokeTable do
-                            totalNavalThreat = totalNavalThreat + (point.NavalThreat  or 0)
+                if defensiveSpokes then
+                    local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
+                    --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
+                    if closestSpokeIndex then
+                        local spokeTable= defensiveSpokes[closestSpokeIndex]
+                        if spokeTable then
+                            for _, point in spokeTable do
+                                totalNavalThreat = totalNavalThreat + (point.NavalThreat  or 0)
+                            end
                         end
                     end
                 end
@@ -731,13 +738,15 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
             if aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle or aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle then
                 local pointCheck = aiBrain.BasePerimeterMonitor[locationType].RecentLandAngle or aiBrain.BasePerimeterMonitor[locationType].RecentNavalAngle
                 local defensiveSpokes = zone.defensespokes
-                local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
-                --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
-                if closestSpokeIndex then
-                    local spokeTable= defensiveSpokes[closestSpokeIndex]
-                    if spokeTable then
-                        for _, point in spokeTable do
-                            totalAntiSurfaceThreat = totalAntiSurfaceThreat + (point.AntiSurfaceThreat or 0)
+                if defensiveSpokes then
+                    local closestSpokeIndex = RUtils.GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, pointCheck)
+                    --LOG('EnemyThreat check at base '..tostring(locationType)..' closestSpokeIndex is '..tostring(closestSpokeIndex))
+                    if closestSpokeIndex then
+                        local spokeTable= defensiveSpokes[closestSpokeIndex]
+                        if spokeTable then
+                            for _, point in spokeTable do
+                                totalAntiSurfaceThreat = totalAntiSurfaceThreat + (point.AntiSurfaceThreat or 0)
+                            end
                         end
                     end
                 end
@@ -1881,15 +1890,57 @@ function RequireRadarUpgradeRNG(aiBrain, locationType, radarTech)
     return true
 end
 
-function ZoneAvailableRNG(aiBrain)
+function LandZoneAvailableRNG(aiBrain, locationType, radius)
     local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
     local gameTime = GetGameTimeSeconds()
+    local homePosition = aiBrain.BuilderManagers[locationType].Position
+    local radius = radius * radius
     if not table.empty(im.ZoneExpansions.Pathable) then
         for _, v in im.ZoneExpansions.Pathable do
             if v.ZoneID then
                 local zone = aiBrain.Zones.Land.zones[v.ZoneID]
-                if (not zone.BuilderManager.FactoryManager.LocationActive or zone.BuilderManagerDisabled) and (not zone.engineerplatoonallocated or IsDestroyed(zone.engineerplatoonallocated)) and (zone.lastexpansionattempt == 0 or gameTime >= zone.lastexpansionattempt + 30) then
+                if zone and VDist3Sq(homePosition, zone.pos) < radius and (not zone.BuilderManager.FactoryManager.LocationActive or zone.BuilderManagerDisabled) and (not zone.engineerplatoonallocated or IsDestroyed(zone.engineerplatoonallocated)) and (zone.lastexpansionattempt == 0 or gameTime >= zone.lastexpansionattempt + 30) then
+                    if aiBrain:GetThreatAtPosition(zone.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    local noTransportsAvailable = not aiBrain.TransportPool or table.getn(aiBrain.TransportPool) < 1
+    if not noTransportsAvailable and not table.empty(im.ZoneExpansions.NonPathable) then
+        for _, v in im.ZoneExpansions.Pathable do
+            if v.ZoneID then
+                local zone = aiBrain.Zones.Land.zones[v.ZoneID]
+                if zone and VDist3Sq(homePosition, zone.pos) < radius and (not zone.BuilderManager.FactoryManager.LocationActive or zone.BuilderManagerDisabled) and (not zone.engineerplatoonallocated or IsDestroyed(zone.engineerplatoonallocated)) and (zone.lastexpansionattempt == 0 or gameTime >= zone.lastexpansionattempt + 30) then
+                    if aiBrain:GetThreatAtPosition(zone.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
+function NavalZoneAvailableRNG(aiBrain, locationType, radius)
+    local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
+    local im = IntelManagerRNG.GetIntelManager(aiBrain)
+    local gameTime = GetGameTimeSeconds()
+    local homePosition = aiBrain.BuilderManagers[locationType].Position
+    local managerAmphibLabel = aiBrain.BuilderManagers[locationType].AmphibLabel
+    local radius = radius * radius
+    local noTransportsAvailable = not aiBrain.TransportPool or table.getn(aiBrain.TransportPool) < 1
+    if not table.empty(im.ZoneExpansions.Naval) then
+        for _, v in im.ZoneExpansions.Naval do
+            if v.ZoneID then
+                local zone = aiBrain.Zones.Naval.zones[v.ZoneID]
+                local zoneAmphibLabel = zone.amphiblabel
+                if managerAmphibLabel and zoneAmphibLabel and managerAmphibLabel ~= zoneAmphibLabel and noTransportsAvailable then
+                    continue
+                end
+                if zone and VDist3Sq(homePosition, zone.pos) < radius and (not zone.BuilderManager.FactoryManager.LocationActive or zone.BuilderManagerDisabled) and (not zone.engineerplatoonallocated or IsDestroyed(zone.engineerplatoonallocated)) and (zone.lastexpansionattempt == 0 or gameTime >= zone.lastexpansionattempt + 30) then
                     if aiBrain:GetThreatAtPosition(zone.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
                         return true
                     end

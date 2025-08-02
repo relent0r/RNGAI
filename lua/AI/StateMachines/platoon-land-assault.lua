@@ -742,20 +742,20 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, targetPos, true)
+                    local zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, targetPos, true, nil, 'Land')
                     if attackStructure then
                         for _, v in platUnits do
                             if v['rngdata'].Role ~= 'Artillery' and v['rngdata'].Role ~= 'Silo' then
-                                if zoneRetreat then
-                                    IssueMove({v}, aiBrain.Zones.Land.zones[zoneRetreat].pos)
+                                if zoneRetreat.pos then
+                                    IssueMove({v}, zoneRetreat.pos)
                                 else
                                     IssueMove({v}, self.Home)
                                 end
                             end
                         end
                     else
-                        if zoneRetreat then
-                            self:MoveToLocation(aiBrain.Zones.Land.zones[zoneRetreat].pos, false)
+                        if zoneRetreat.pos then
+                            self:MoveToLocation(zoneRetreat.pos, false)
                         else
                             self:MoveToLocation(self.Home, false)
                         end

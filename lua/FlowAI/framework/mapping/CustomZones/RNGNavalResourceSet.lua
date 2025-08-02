@@ -2,6 +2,7 @@
 -- First import this class
 local ZoneSet = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Zones.lua').ZoneSet
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
+local MarkerUtils = import("/lua/sim/MarkerUtilities.lua")
 local RNGPOW = math.pow
 local RNGSQRT = math.sqrt
 local RNGGETN = table.getn
@@ -66,7 +67,8 @@ RNGNavalResourceSet = Class(ZoneSet){
         --RNGLOG('Zone Radius is '..zoneRadius)
 
         local markers = {}
-        for _, marker in ScenarioUtils.GetMarkers() do
+        local navalMarkers = MarkerUtils.GetMarkersByType('Naval Area')
+        for _, marker in GetMarkers() do
             if marker.type == 'Mass' then
                 if MAP:GetComponent(marker.position,self.layer) > 0 then
                     if GetTerrainHeight(marker.position[1], marker.position[3]) < GetSurfaceHeight(marker.position[1], marker.position[3]) then
@@ -74,13 +76,14 @@ RNGNavalResourceSet = Class(ZoneSet){
                     end
                 end
             end
+        end
+        for _, marker in navalMarkers do
             if marker.type == 'Naval Area' then
                 if MAP:GetComponent(marker.position,self.layer) > 0 then
-                    RNGINSERT(markers,marker)
+                    RNGINSERT(markers,{name=marker.name, position=marker.position, type=marker.type, size=marker.size})
                 end
             end
         end
-        --RNGLOG('Marker table size is '..RNGGETN(markers))
         
         for i = 1, 16 do
             local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
@@ -102,7 +105,6 @@ RNGNavalResourceSet = Class(ZoneSet){
                 end
             end
         end
-      
         local complete = (RNGGETN(markers) == 0)
        --RNGLOG('Starting GenerateZoneList Loop')
         local count = 0
@@ -151,34 +153,43 @@ RNGNavalResourceSet = Class(ZoneSet){
                     complete = false
                 end
             end
-            --LOG('Resource Group value '..table.getn(resourceGroup))
             self:AddZone({
                 pos={x,GetSurfaceHeight(x,z),z}, 
                 component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), 
                 weight=best.weight, 
                 startpositionclose=startPos, 
-                enemynavalthreat=0, 
+                enemystructurethreat=0, 
+                gridenemylandthreat=0, 
+                enemylandthreat=0, 
+                enemyantisurfacethreat=0, 
                 enemyantiairthreat=0, 
                 enemySilos=0, 
-                friendlynavalthreat=0, 
-                friendlyantiairthreat=0,
+                friendlyantisurfacethreat=0, 
                 friendlylandantiairthreat=0, 
                 friendlydirectfireantisurfacethreat=0, 
-                friendlyindirectantisurfacethreat=0, 
+                friendlyindirectantisurfacethreat=0,
                 resourcevalue=table.getn(resourceGroup), 
                 resourcemarkers=resourceGroup, 
                 zonealert=false, 
                 control=1, 
+                enemystartdata = { }, 
+                allystartdata = { }, 
                 bestarmy = false, 
                 teamvalue = 1, 
-                friendlyantiairallocatedthreat=0, 
+                platoonallocations = {friendlyantiairallocatedthreat=0, friendlydirectfireallocatedthreat=0}, 
                 label = 0, 
+                amphiblabel = 0,
                 BuilderManager = false, 
                 lastexpansionattempt = 0, 
                 engineerplatoonallocated = false, 
-                intelassignment = {},
-                zoneincome = 0, 
+                intelassignment = {}, 
+                zoneincome = {
+                    selfincome = 0,
+                    allyincome = 0,
+                    enemyincome = 0
+                }, 
                 defensespokes = false,
+                status = 'Unoccupied',
             })
         end
     end,

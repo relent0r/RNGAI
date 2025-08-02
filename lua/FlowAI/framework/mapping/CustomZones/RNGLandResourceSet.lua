@@ -149,14 +149,20 @@ RNGLandResourceSet = Class(ZoneSet){
                     allystartdata = { },  
                     bestarmy = false, 
                     teamvalue = 1, 
-                    platoonallocations = {friendlyantiairallocatedthreat=0}, 
+                    platoonallocations = {friendlyantiairallocatedthreat=0, friendlydirectfireallocatedthreat=0}, 
                     label = 0, 
+                    amphiblabel = 0,
                     BuilderManager = {}, 
                     lastexpansionattempt = 0, 
                     engineerplatoonallocated = false, 
                     intelassignment = {}, 
-                    zoneincome = 0, 
+                    zoneincome = {
+                        selfincome = 0,
+                        allyincome = 0,
+                        enemyincome = 0
+                    },  
                     defensespokes = false,
+                    status = 'Unoccupied',
                 }
                 head = head + 1
             end
@@ -249,14 +255,20 @@ RNGLandResourceSet = Class(ZoneSet){
                 allystartdata = { }, 
                 bestarmy = false, 
                 teamvalue = 1, 
-                platoonallocations = {friendlyantiairallocatedthreat=0}, 
+                platoonallocations = {friendlyantiairallocatedthreat=0, friendlydirectfireallocatedthreat=0}, 
                 label = 0, 
+                amphiblabel = 0,
                 BuilderManager = false, 
                 lastexpansionattempt = 0, 
                 engineerplatoonallocated = false, 
                 intelassignment = {}, 
-                zoneincome = 0, 
+                zoneincome = {
+                    selfincome = 0,
+                    allyincome = 0,
+                    enemyincome = 0
+                }, 
                 defensespokes = false,
+                status = 'Unoccupied',
             })
         end
         local finalZonesList, zoneCount = AssimilateZones(initialZones, initialZoneCount)

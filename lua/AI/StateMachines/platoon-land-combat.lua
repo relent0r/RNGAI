@@ -83,6 +83,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             --self:LogDebug('Land Combat DecideWhatToDo')
             local aiBrain = self:GetBrain()
             local rangedAttack = false
+            local rangedSkirmishAttack = false
             if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                 local suicideTarget = aiBrain.BrainIntel.SuicideModeTarget
                 local enemyAcuPosition = suicideTarget:GetPosition()
@@ -116,9 +117,11 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase, label)
             end
             if threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < (threat.enemySurface - threat.enemyStructure) and threat.allySurface < 450 then
-                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*3 > (threat.enemySurface - threat.enemyStructure) or 
-                   threat.allyrange > threat.enemyrange and threat.allySurface*3 > threat.enemySurface then
+                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*3 > (threat.enemySurface - threat.enemyStructure) then
                     rangedAttack = true
+                elseif threat.allyrange > threat.enemyrange and threat.allySurface*3 > threat.enemySurface then
+                    --LOG('Select ranged skirmish attack for platoon')
+                    rangedSkirmishAttack = true
                 else
                     --self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
                     self.retreat=true
@@ -192,6 +195,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     else
                         --LOG('Navigating to support platoon')
                         coroutine.yield(5)
+                        self.dest = self.BuilderData.Position
                         self:ChangeState(self.Navigating)
                         return
                     end
@@ -204,6 +208,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                         }
                         --LOG('Navigating to closest base')
                         coroutine.yield(5)
+                        self.dest = self.BuilderData.Position
                         self:ChangeState(self.Navigating)
                         return
                     end
@@ -212,6 +217,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             if StateUtils.SimpleTarget(self,aiBrain) then
                 if rangedAttack then
                     self:ChangeState(self.RangedCombatLoop)
+                    return
+                elseif rangedSkirmishAttack then
+                    self:ChangeState(self.RangedSkirmishCombatLoop)
                     return
                 else
                     self:ChangeState(self.CombatLoop)
@@ -639,6 +647,113 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    RangedSkirmishCombatLoop = State {
+        StateName = 'RangedSkirmishCombatLoop',
+    
+        ---@param self AIPlatoonLandCombatBehavior
+        Main = function(self)
+            --LOG('Ranged Skirmish combat activated')
+            local aiBrain = self:GetBrain()
+            local units = GetPlatoonUnits(self)
+    
+            if not aiBrain.BrainIntel.SuicideModeActive then
+                for k, unit in self.targetcandidates do
+                    if not unit or unit.Dead or not unit['rngdata'].machineworth then
+                        table.remove(self.targetcandidates, k)
+                    end
+                end
+            end
+    
+            if table.getn(self.targetcandidates) == 0 then
+                coroutine.yield(10)
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
+    
+            -- Get max enemy range
+            local maxEnemyRange = 0
+            for _, enemy in self.targetcandidates do
+                if not enemy.Dead and enemy['rngdata'] and enemy['rngdata'].MaxWeaponRange then
+                    maxEnemyRange = math.max(maxEnemyRange, enemy['rngdata'].MaxWeaponRange)
+                end
+            end
+    
+            -- Pick closest target to platoon center
+            local target, closestDist
+            for _, enemy in self.targetcandidates do
+                if not enemy.Dead then
+                    local ePos = enemy:GetPosition()
+                    local rx = self.Pos[1] - ePos[1]
+                    local rz = self.Pos[3] - ePos[3]
+                    local eDistance = rx * rx + rz * rz
+                    if not closestDist or eDistance < closestDist then
+                        target = enemy
+                        closestDist = eDistance
+                    end
+                end
+            end
+    
+            if not target then
+                coroutine.yield(10)
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end
+    
+            local targetPos = target:GetPosition()
+    
+            for _, v in units do
+                if not v.Dead and v['rngdata'] then
+                    local unitPos = v:GetPosition()
+                    local unitRange = v['rngdata'].MaxWeaponRange or 20
+                    local role = v['rngdata'].Role or 'Generic'
+    
+                    if unitRange > (maxEnemyRange + 2) then
+                        --LOG('Ranged unit is attacting target')
+                        -- Ranged unit outranges enemy, attack/kite
+                        StateUtils.VariableKite(self, v, target, true)
+    
+                    elseif role == 'Shield' or role == 'Stealth' then
+                        -- Escort role: hover close to ranged units
+                        local escortPos = StateUtils.GetBestPlatoonShieldPos(units, v, unitPos, target)
+                        if escortPos then
+                            StateUtils.IssueNavigationMove(v, escortPos)
+                        end
+    
+                    elseif role == 'Scout' then
+                        -- Intel role: stay at range but near front
+                        local intelRange = v['rngdata'].IntelRange or unitRange
+                        local rx = unitPos[1] - targetPos[1]
+                        local rz = unitPos[3] - targetPos[3]
+                        local targetDistance = rx * rx + rz * rz
+                        local movePos = RUtils.lerpy(unitPos, targetPos, {
+                            targetDistance,
+                            intelRange * intelRange - 25
+                        })
+                        StateUtils.IssueNavigationMove(v, movePos)
+    
+                    else
+                        -- Melee or short-range units: screen behind main line
+                        local margin = 5  -- a little buffer
+                        local safeRange = maxEnemyRange + margin
+                        local fallbackDist = safeRange * safeRange
+                        local rx = unitPos[1] - targetPos[1]
+                        local rz = unitPos[3] - targetPos[3]
+                        local targetDistance = rx * rx + rz * rz
+                        local movePos = RUtils.lerpy(unitPos, targetPos, {
+                            targetDistance,
+                            fallbackDist
+                        })
+                        StateUtils.IssueNavigationMove(v, movePos)
+                    end
+                end
+            end
+    
+            coroutine.yield(30)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
     Transporting = State {
 
         StateName = 'Transporting',
@@ -1000,12 +1115,12 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, targetPos, true)
+                    local zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, targetPos, true, nil, 'Land')
                     if attackStructure then
                         for _, v in platUnits do
                             if v['rngdata'].Role ~= 'Artillery' and v['rngdata'].Role ~= 'Silo' then
-                                if zoneRetreat then
-                                    local movePos = aiBrain.Zones.Land.zones[zoneRetreat].pos
+                                if zoneRetreat.pos then
+                                    local movePos = zoneRetreat.pos
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 else
                                     local unitPos = v:GetPosition()
@@ -1015,10 +1130,10 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     else
-                        if zoneRetreat then
+                        if zoneRetreat.pos then
                             for _, v in platUnits do
                                 if not v.Dead then
-                                    local movePos = aiBrain.Zones.Land.zones[zoneRetreat].pos
+                                    local movePos = zoneRetreat.pos
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 end
                             end
@@ -1035,11 +1150,11 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             end
             local zoneRetreat
             if aiBrain.GridPresence:GetInferredStatus(self.Pos) == 'Hostile' then
-                zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, avoidTargetPos, true)
+                zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, avoidTargetPos, true, nil, 'Land')
             else
-                zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestZone(aiBrain, self, false, false, true)
+                zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, false, true, nil, 'Land')
             end
-            local location = aiBrain.Zones.Land.zones[zoneRetreat].pos
+            local location = zoneRetreat.pos
             if (not location) then
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
                 if closestBase then

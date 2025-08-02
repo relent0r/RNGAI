@@ -169,7 +169,7 @@ AIBrain = Class(RNGAIBrainClass) {
         for k,v in BaseBuilderTemplates do
             if v.FirstBaseFunction then
                 local baseVal, baseType = v.FirstBaseFunction(self)
-                -- LOG('*DEBUG: testing ' .. k .. ' - Val ' .. baseVal)
+                --LOG('*DEBUG: testing ' .. k .. ' - Val ' .. baseVal)
                 if baseVal > returnVal then
                     returnVal = baseVal
                     base = k
@@ -2069,7 +2069,7 @@ AIBrain = Class(RNGAIBrainClass) {
             multiplier = 1
         end
         if self.BuilderManagers['MAIN'].ZoneID then
-            local homeZone = self.BuilderManagers['MAIN'].Zone
+            local homeZone = self.BuilderManagers['MAIN'].ZoneID
             if self.Zones.Land.zones[homeZone].resourcevalue > 0 then
                 local homeExtractors = self.Zones.Land.zones[homeZone].resourcevalue
                 local extractorPowerRequired = homeExtractors * (20 * multiplier) + (60 * multiplier)
@@ -2315,20 +2315,21 @@ AIBrain = Class(RNGAIBrainClass) {
             Position = position,
             Location = position, -- backwards compatibility for now
             Layer = baseLayer,
-            GraphArea = false,
-            BaseType = RUtils.GetBaseType(baseName) or 'MAIN',
+            Label = false,
+            AmphibLabel = false,
+            BaseType = RUtils.GetBaseType(baseName, baseLayer) or 'MAIN',
         }
         self.NumBases = self.NumBases + 1
         self:ForkThread(self.SetPathableZonesForBase, position, baseName)
         self:ForkThread(RUtils.SetCoreResources, position, baseName)
-        self:ForkThread(self.GetGraphArea, position, baseName, baseLayer)
+        self:ForkThread(self.GetLabels, position, baseName, baseLayer)
         self:ForkThread(self.GetBaseZone, position, baseName, baseLayer)
         self:ForkThread(self.GetDefensivePointTable, baseName, 'BaseRestrictedArea', position, baseLayer)
     end,
 
     GetBaseZone = function(self, position, baseName, baseLayer)
         -- This will set the zone of the factory manager so we don't need to look it up every time
-        -- Needs to wait a while for the GraphArea properties to be populated
+        -- Needs to wait a while for the Label properties to be populated
         local zoneId
         local zoneSet = false
         while not zoneSet do
@@ -2356,7 +2357,6 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                         self.Zones.Land.zones[zoneId].BuilderManager = self.BuilderManagers[baseName]
                         self.BuilderManagers[baseName].Zone = self.Zones.Land.zones[zoneId]
-                        --LOG('BuilderManager zone is set')
                     end
                     return
                 else
@@ -2397,40 +2397,38 @@ AIBrain = Class(RNGAIBrainClass) {
         import('/mods/RNGAI/lua/ai/aiaddbuildertable.lua').AddGlobalBaseTemplate(self, 'FLOATING', 'FloatingBaseTemplate')
     end,
 
-    GetGraphArea = function(self, position, baseName, baseLayer)
+    GetLabels = function(self, position, baseName, baseLayer)
         -- This will set the graph area of the factory manager so we don't need to look it up every time
-        -- Needs to wait a while for the GraphArea properties to be populated
+        -- Needs to wait a while for the Label properties to be populated
         --LOG('Get Graph Area for baseLayer '..repr(baseLayer))
         --LOG('baseName is '..repr(baseName))
-        local graphAreaSet = false
-        while not graphAreaSet do
-            local graphArea
-            local amphibGraphArea
+        local labelSet = false
+        while not labelSet do
+            local label
+            local amphibLabel
             if baseLayer then
                 if baseLayer == 'Water' then
-                    graphArea = NavUtils.GetLabel('Water', position)
-                    amphibGraphArea = NavUtils.GetLabel('Amphibious', position)
-                    --LOG('GetLabel returned the following graph area for position '..repr(position)..' on water '..repr(graphArea))
+                    label = NavUtils.GetLabel('Water', position)
+                    amphibLabel = NavUtils.GetLabel('Amphibious', position)
+                    --LOG('GetLabel returned the following graph area for position '..repr(position)..' on water '..repr(label))
                 else
-                    graphArea = NavUtils.GetLabel('Land', position)
-                    amphibGraphArea = NavUtils.GetLabel('Amphibious', position)
-                    --LOG('GetLabel returned the following graph area for position '..repr(position)..' on land '..repr(graphArea))
+                    label = NavUtils.GetLabel('Land', position)
+                    amphibLabel = NavUtils.GetLabel('Amphibious', position)
+                    --LOG('GetLabel returned the following graph area for position '..repr(position)..' on land '..repr(label))
                 end
                 
             end
-            if not graphArea then
+            if not label or not amphibLabel then
                 WARN('Missing Label for builder manager. Expansion position may be on large incline/decline')
-                
-                --LOG('baseName '..repr(baseName))
-                --LOG('Position '..repr(position))
             end
-            if graphArea then
-                --LOG('Graph Area for buildermanager is '..graphArea)
-                graphAreaSet = true
-                self.BuilderManagers[baseName].GraphArea = graphArea
-                self.BuilderManagers[baseName].AmphibGraphArea = amphibGraphArea
+            if label then
+                labelSet = true
+                self.BuilderManagers[baseName].Label = label
             end
-            if not graphAreaSet then
+            if amphibLabel then
+                self.BuilderManagers[baseName].AmphibLabel = amphibLabel
+            end
+            if not labelSet then
                 --LOG('Graph Area not set yet')
                 coroutine.yield(30)
             end
@@ -2468,21 +2466,21 @@ AIBrain = Class(RNGAIBrainClass) {
         
         for _, v in massMarkers do
             if v.type == 'Mass' then
-                if v.GraphArea and not self.GraphZones.FirstRun and not self.GraphZones.HasRun then
+                if v.Label and not self.GraphZones.FirstRun and not self.GraphZones.HasRun then
                     graphCheck = true
-                    if not self.GraphZones[v.GraphArea] then
-                        self.GraphZones[v.GraphArea] = {}
-                        self.GraphZones[v.GraphArea].MassMarkers = {}
-                        self.GraphZones[v.GraphArea].FriendlyLandAntiAirThreat = 0
-                        self.GraphZones[v.GraphArea].FriendlySurfaceDirectFireThreat = 0
-                        self.GraphZones[v.GraphArea].FriendlySurfaceInDirectFireThreat = 0
-                        self.GraphZones[v.GraphArea].FriendlyAntiNavalThreat = 0
-                        if self.GraphZones[v.GraphArea].MassMarkersInGraph == nil then
-                            self.GraphZones[v.GraphArea].MassMarkersInGraph = 0
+                    if not self.GraphZones[v.Label] then
+                        self.GraphZones[v.Label] = {}
+                        self.GraphZones[v.Label].MassMarkers = {}
+                        self.GraphZones[v.Label].FriendlyLandAntiAirThreat = 0
+                        self.GraphZones[v.Label].FriendlySurfaceDirectFireThreat = 0
+                        self.GraphZones[v.Label].FriendlySurfaceInDirectFireThreat = 0
+                        self.GraphZones[v.Label].FriendlyAntiNavalThreat = 0
+                        if self.GraphZones[v.Label].MassMarkersInGraph == nil then
+                            self.GraphZones[v.Label].MassMarkersInGraph = 0
                         end
                     end
-                    RNGINSERT(self.GraphZones[v.GraphArea].MassMarkers, v)
-                    self.GraphZones[v.GraphArea].MassMarkersInGraph = self.GraphZones[v.GraphArea].MassMarkersInGraph + 1
+                    RNGINSERT(self.GraphZones[v.Label].MassMarkers, v)
+                    self.GraphZones[v.Label].MassMarkersInGraph = self.GraphZones[v.Label].MassMarkersInGraph + 1
                     local massPointDistance = VDist3Sq(v.position, self.BrainIntel.StartPos)
                     if massPointDistance < 2500 then
                         coreMassMarkers = coreMassMarkers + 1
@@ -4209,14 +4207,17 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                         if not allyExtractors[v.zoneid] then
                             --LOG('Trying to add unit to zone')
-                            allyExtractors[v.zoneid] = {T1 = 0,T2 = 0,T3 = 0,}
+                            allyExtractors[v.zoneid] = {T1 = 0, T2 = 0, T3 = 0, zoneincome = 0}
                         end
                         if unitCat.TECH1 then
                             allyExtractors[v.zoneid].T1=allyExtractors[v.zoneid].T1+1
+                            allyExtractors[v.zoneid].zoneincome = allyExtractors[v.zoneid].zoneincome + GetProductionPerSecondMass(v)
                         elseif unitCat.TECH2 then
                             allyExtractors[v.zoneid].T2=allyExtractors[v.zoneid].T2+1
+                            allyExtractors[v.zoneid].zoneincome = allyExtractors[v.zoneid].zoneincome + GetProductionPerSecondMass(v)
                         elseif unitCat.TECH3 then
                             allyExtractors[v.zoneid].T3=allyExtractors[v.zoneid].T3+1
+                            allyExtractors[v.zoneid].zoneincome = allyExtractors[v.zoneid].zoneincome + GetProductionPerSecondMass(v)
                         end
 
                         allyExtractorthreat = allyExtractorthreat + v.Blueprint.Defense.EconomyThreatLevel
@@ -4246,6 +4247,11 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
         self.BrainIntel.SelfThreat.AllyExtractorTable = allyExtractors
+        for k, v in self.Zones.Land.zones do
+            if allyExtractors[v.id] and allyExtractors[v.id].zoneincome then
+                v.zoneincome.allyincome = allyExtractors[v.id].zoneincome
+            end
+        end
         self.BrainIntel.SelfThreat.AllyExtractorCount = allyExtractorCount + self.BrainIntel.SelfThreat.ExtractorCount
         self.BrainIntel.SelfThreat.AllyExtractor = allyExtractorthreat + self.BrainIntel.SelfThreat.Extractor
         self.BrainIntel.SelfThreat.AllyLandThreat = allyLandThreat
@@ -5148,7 +5154,7 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EcoManagerPowerStateCheck = function(self)
-        if (GetEconomyTrend(self, 'ENERGY') <= 0.0 and GetEconomyStoredRatio(self, 'ENERGY') <= 0.2) or ((self.CDRUnit.Caution or self.BrainIntel.SuicideModeActive) and (GetEconomyStored(self, 'ENERGY') <= 3500 or GetCurrentUnits(self, categories.STRUCTURE * categories.ENERGYSTORAGE) > 0 and GetEconomyStored(self, 'ENERGY') <= 7000)) then
+        if (GetEconomyTrend(self, 'ENERGY') <= 0.0 and GetEconomyStoredRatio(self, 'ENERGY') <= 0.4) or ((self.CDRUnit.Caution or self.BrainIntel.SuicideModeActive) and (GetEconomyStored(self, 'ENERGY') <= 3500 or GetCurrentUnits(self, categories.STRUCTURE * categories.ENERGYSTORAGE) > 0 and GetEconomyStored(self, 'ENERGY') <= 7000)) then
             local deficit = GetEconomyRequested(self,'ENERGY') - GetEconomyIncome(self,'ENERGY')
             return true, deficit
         end
@@ -5392,6 +5398,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         coroutine.yield(5)
                         powerStateCaution = self:EcoManagerPowerStateCheck()
                         deficit = math.max(deficit - resourcesSaved, 0)
+                        --LOG('Energy stall management for '..self.Nickname)
                         --LOG('Energy Resources saved on this loop '..tostring(resourcesSaved))
                         --LOG('Energy Deficit during loop is now '..tostring(deficit))
                         if resourcesSaved >= deficit then
@@ -5407,7 +5414,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 powerCycle = 0
                             end
                         end
-                        --RNGLOG('unitTypePaused table is :'..repr(unitTypePaused))
+                        --LOG('unitTypePaused table is :'..repr(unitTypePaused))
                     end
                     for k, v in unitTypePaused do
                         if v == 'ENGINEER' then
@@ -5616,11 +5623,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('Eco selector manager for '..priorityUnit..' is '..action..' Type is '..type)
         local engineerCats
         local totalResourceSaved = 0
-        if self.BrainIntel.MapOwnership > 50 then
-            engineerCats = categories.STRUCTURE * (categories.ENERGYPRODUCTION + categories.TACTICALMISSILEPLATFORM + (categories.TECH3 * categories.ANTIMISSILE) + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS)
-        else
-            engineerCats = categories.STRUCTURE * (categories.ENERGYPRODUCTION + categories.TACTICALMISSILEPLATFORM + (categories.TECH3 * categories.ANTIMISSILE) + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS)
-        end
+        local engineerCats = categories.STRUCTURE * (categories.ENERGYPRODUCTION + categories.TACTICALMISSILEPLATFORM + (categories.TECH3 * categories.ANTIMISSILE) + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS)
         
         for k, v in units do
             if not v.Dead then  
@@ -5633,9 +5636,11 @@ AIBrain = Class(RNGAIBrainClass) {
                         v:SetPaused(false)
                         continue
                     end
+                    if v:IsPaused() then continue end
                     if v.PlatoonHandle.PlatoonData.Construction.NoPause or v.PlatoonHandle.BuilderData.Construction.NoPause then continue end
-                    if type == 'MASS' and EntityCategoryContains( engineerCats , v.UnitBeingBuilt) then
-                        if EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingBuilt) then
+                    local unit = v.UnitBeingBuilt or v.UnitBeingAssist
+                    if type == 'MASS' and EntityCategoryContains( engineerCats , unit) then
+                        if EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, unit) then
                             if self:GetEconomyTrend('MASS') <= 0 and self:GetEconomyStored('MASS') == 0 and self:GetEconomyTrend('ENERGY') > 2 then
                                 if type == 'MASS' then
                                     totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
@@ -5653,8 +5658,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             v:SetPaused(true)
                         end
                         continue
-                    elseif type == 'ENERGY' and EntityCategoryContains( engineerCats , v.UnitBeingBuilt) then
-                        if not EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingBuilt) then
+                    elseif type == 'ENERGY' and EntityCategoryContains( engineerCats , unit) then
+                        if not EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, unit) then
                             if type == 'MASS' then
                                 totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
                             elseif type == 'ENERGY' then
@@ -5665,37 +5670,6 @@ AIBrain = Class(RNGAIBrainClass) {
                         continue
                     end
                     if not v.PlatoonHandle.PlatoonData.Assist.AssisteeType then continue end
-                    if not v.UnitBeingAssist then continue end
-                    if v:IsPaused() then continue end
-                    if type == 'ENERGY' and not EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingAssist) then
-                        --RNGLOG('Pausing Engineer')
-                        if type == 'MASS' then
-                            totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
-                        elseif type == 'ENERGY' then
-                            totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
-                        end
-                        v:SetPaused(true)
-                        continue
-                    elseif type == 'MASS' then
-                        if EntityCategoryContains(categories.STRUCTURE * categories.ENERGYPRODUCTION, v.UnitBeingAssist) then
-                            if self:GetEconomyTrend('MASS') <= 0 and self:GetEconomyStored('MASS') == 0 and self:GetEconomyTrend('ENERGY') > 2 then
-                                if type == 'MASS' then
-                                    totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
-                                elseif type == 'ENERGY' then
-                                    totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
-                                end
-                                v:SetPaused(true)
-                            end
-                        else
-                            if type == 'MASS' then
-                                totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
-                            elseif type == 'ENERGY' then
-                                totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
-                            end
-                            v:SetPaused(true)
-                        end
-                        continue
-                    end
                 elseif priorityUnit == 'STATIONPODS' then
                     --RNGLOG('Priority Unit Is STATIONPODS')
                     if action == 'unpause' then
@@ -6854,7 +6828,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         for k, v in self.Zones.Land.zones do
             if zoneIncome[v.id] then
-                v.zoneincome = zoneIncome[v.id]
+                v.zoneincome.selfincome = zoneIncome[v.id]
             end
         end
     end,
@@ -7278,6 +7252,12 @@ AIBrain = Class(RNGAIBrainClass) {
             local landBias = 0.3 -- Reduction for land allocation on naval maps
             local navalBias = 1.5 -- Boost for naval allocation on naval maps
             local threatFactorThreshold = 1.3 -- Threshold for reallocating excess
+
+            if self.EcoManager.TacticalGreedAllowed and not self.BrainIntel.PlayerRole.SpamPlayer then
+                self.EconomyUpgradeSpend = self.EconomyUpgradeSpendDefault * 1.5
+            else
+                self.EconomyUpgradeSpend = self.EconomyUpgradeSpendDefault
+            end
     
             -- Factory production capabilities
             local sm = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua').GetStructureManager(self)

@@ -89,15 +89,16 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
 
         ---@param self AINovaxBehavior
         Main = function(self)
-            --self:LogDebug(string.format('Novax DecideWhatToDo'))
+            self:LogDebug(string.format('Novax DecideWhatToDo'))
             local aiBrain = self:GetBrain()
             local targetsAssigned
+            self:LogDebug(string.format('Current novax platoon DPS is '..tostring(self['rngdata'].MaxPlatoonDPS)))
             if not targetsAssigned then
                 local novaxCount = 0
                 local targetCount = 0
                 local target = aiBrain:CheckDirectorTargetAvailable(false, false, 'SATELLITE', false, self['rngdata'].MaxPlatoonDPS, self.Home)
                 if target and not target.Dead then
-                    --self:LogDebug(string.format('Novax Director Target Found'))
+                    self:LogDebug(string.format('Novax Director Target Found'))
                     for _, v in self.NovaxUnits do
                         if not v.Unit.Dead then
                             novaxCount = novaxCount + 1
@@ -105,13 +106,20 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
                                 targetCount = targetCount + 1
                                 v.CurrentTarget = target
                                 v.CurrentTargetHealth = target:GetHealth()
+                            elseif v.CurrentTarget and not v.CurrentTarget.Dead then
+                                targetCount = targetCount + 1
+                                local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(aiBrain, v.CurrentTarget:GetPosition(), 46, 'Enemy')
+                                if totalShieldHealth > 0 and (totalShieldHealth / v.UnitDPS) > 12 then
+                                    v.CurrentTarget = target
+                                    v.CurrentTargetHealth = target:GetHealth()
+                                end
                             end
                         end
                     end
-                    --self:LogDebug(string.format('NovaxCount '..novaxCount))
-                    --self:LogDebug(string.format('targetCount '..targetCount))
+                    self:LogDebug(string.format('NovaxCount '..novaxCount))
+                    self:LogDebug(string.format('targetCount '..targetCount))
                     if novaxCount == targetCount then
-                        --self:LogDebug(string.format('Novax targetsAssgined is true'))
+                        self:LogDebug(string.format('Novax targetsAssgined is true'))
                         targetsAssigned = true
                     end
                 end
@@ -119,7 +127,7 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
             if not targetsAssigned then
                 local novaxCount = 0
                 local targetCount = 0
-                --self:LogDebug(string.format('Novax No director target, searching for prioritized at range '..self.MaxSearchRadius))
+                self:LogDebug(string.format('Novax No director target, searching for prioritized at range '..self.MaxSearchRadius))
                 local target = AIUtils.AIFindUndefendedBrainTargetInRangeRNG(aiBrain, self, 'Attack', self.MaxSearchRadius, self.atkPri)
                 if target and not target.Dead then
                     --self:LogDebug(string.format('Novax Prioritized Target Found'))
@@ -133,20 +141,20 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    --self:LogDebug(string.format('novaxCount '..novaxCount))
-                    --self:LogDebug(string.format('targetCount '..targetCount))
+                    self:LogDebug(string.format('novaxCount '..novaxCount))
+                    self:LogDebug(string.format('targetCount '..targetCount))
                     if novaxCount == targetCount then
-                        --self:LogDebug(string.format('Novax targetsAssgined is true'))
+                        self:LogDebug(string.format('Novax targetsAssgined is true'))
                         targetsAssigned = true
                     end
                 end
             end
             if targetsAssigned then
-                --self:LogDebug(string.format('Novax Attacking targets'))
+                self:LogDebug(string.format('Novax Attacking targets'))
                 self:ChangeState(self.AttackTarget)
                 return
             end
-            --self:LogDebug(string.format('Novax no target, rerunning DecideWhatToDo'))
+            self:LogDebug(string.format('Novax no target, rerunning DecideWhatToDo'))
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)
             return

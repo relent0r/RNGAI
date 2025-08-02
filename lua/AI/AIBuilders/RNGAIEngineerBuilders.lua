@@ -827,7 +827,7 @@ BuilderGroup {
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH1 * categories.LAND * categories.FACTORY }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.LAND}},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType', true }},
+                { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Land' } },
             },
         BuilderData = {
             StateMachine = 'PreAllocatedTask',
@@ -849,7 +849,7 @@ BuilderGroup {
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH2 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.TECH3 * categories.SUPPORTFACTORY * categories.LAND }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType', true }},
+                { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Land' } },
             },
         BuilderData = {
             StateMachine = 'PreAllocatedTask',
@@ -870,7 +870,7 @@ BuilderGroup {
         BuilderConditions = {
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 3, categories.TECH3 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType', true }},
+                { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Land' } },
             },
         BuilderData = {
             StateMachine = 'PreAllocatedTask',
@@ -897,7 +897,7 @@ BuilderGroup {
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH1 * categories.AIR * categories.FACTORY }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.AIR}},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.AIR * categories.FACTORY - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+                { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Air' } },
             },
         BuilderData = {
             StateMachine = 'PreAllocatedTask',
@@ -919,7 +919,7 @@ BuilderGroup {
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH2 * categories.AIR * categories.FACTORY * categories.SUPPORTFACTORY }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.TECH3 * categories.AIR }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.AIR * categories.FACTORY - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+                { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Air' } },
             },
         BuilderData = {
             StateMachine = 'PreAllocatedTask',
@@ -946,7 +946,7 @@ BuilderGroup {
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH1 * categories.NAVAL * categories.FACTORY }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.SUPPORTFACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3 )}},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.NAVAL * categories.FACTORY * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+                { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Naval' } },
             },
         BuilderData = {
             StateMachine = 'PreAllocatedTask',
@@ -968,7 +968,7 @@ BuilderGroup {
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.TECH2 * categories.NAVAL * categories.FACTORY * categories.SUPPORTFACTORY }},
                 { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.SUPPORTFACTORY * categories.NAVAL }},
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.TECH3 * categories.NAVAL * categories.FACTORY - categories.SUPPORTFACTORY }},
-                { EBC, 'LessThanMassToFactoryRatioBaseCheckRNG', { 'LocationType' }},
+                { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Naval' } },
             },
         BuilderData = {
             StateMachine = 'PreAllocatedTask',
@@ -1247,7 +1247,7 @@ BuilderGroup {
         PriorityFunction = ReclaimMassInRadiusPriority,
         InstanceCount = 16,
         BuilderConditions = {
-                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 }},
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.MOBILE }},
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },

@@ -908,7 +908,7 @@ function SetMarkerInformation(aiBrain)
                 break
             end
         end
-        if not node and not marker.GraphArea then
+        if not node and not marker.Label then
             InfectMarkersRNG(aiBrain,marker, k)
         end
         if expand then
@@ -927,7 +927,7 @@ function SetMarkerInformation(aiBrain)
         coroutine.yield(2)
     end
     local massPointCount = 0
-   --RNGLOG('Running mass spot checks for GraphArea')
+   --RNGLOG('Running mass spot checks for Label')
    --RNGLOG('Infecting mass points '..aiBrain.Nickname)
     for _, mass in AdaptiveResourceMarkerTableRNG do
         if mass.type == 'Mass' then
@@ -957,7 +957,7 @@ function InfectMarkersRNG(aiBrain,marker,nodekey)
                 WARN('No water label returned reason '..reason)
                 WARN('Water label failure position was '..repr(marker.position))
             else
-                Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].GraphArea = label
+                Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].Label = label
                 Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].RNGLayer = 'Water'
                 --RNGLOG('Infect Marker has had label added '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey]))
             end
@@ -967,7 +967,7 @@ function InfectMarkersRNG(aiBrain,marker,nodekey)
                 WARN('No land label returned reason '..reason)
                 WARN('Water label failure position was '..repr(marker.position))
             else
-                Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].GraphArea = label
+                Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].Label = label
                 Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey].RNGLayer = 'Land'
                 --RNGLOG('Infect Marker has had label added '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[nodekey]))
             end
@@ -1027,9 +1027,9 @@ function DoExpandSpotDistanceInfect(aiBrain,marker,expand)
     for k,v in marker.expanddists do
         if not marker.bestexpand or marker.expanddists[marker.bestexpand]>v then
             marker.bestexpand=k
-            -- Important. Extension to chps--LOGic to add GraphArea to expansion markers so we can tell if we own expansions on islands etc
-            if not Scenario.MasterChain._MASTERCHAIN_.Markers[k].GraphArea then
-                Scenario.MasterChain._MASTERCHAIN_.Markers[k].GraphArea = marker.GraphArea
+            -- Important. Extension to chps--LOGic to add Label to expansion markers so we can tell if we own expansions on islands etc
+            if not Scenario.MasterChain._MASTERCHAIN_.Markers[k].Label then
+                Scenario.MasterChain._MASTERCHAIN_.Markers[k].Label = marker.Label
                 --RNGLOG('ExpansionMarker '..repr(Scenario.MasterChain._MASTERCHAIN_.Markers[k]))
             end
         end
@@ -1044,36 +1044,36 @@ function DoMassPointInfect(aiBrain,masspoint)
     aiBrain.renderthreadtracker=CurrentThread()
     coroutine.yield(1)
     --DrawCircle(marker.position,4,'FF'..aiBrain.analysistablecolors[expand])
-    if not AdaptiveResourceMarkerTableRNG[masspoint].GraphArea then
+    if not AdaptiveResourceMarkerTableRNG[masspoint].Label then
         if RUtils.PositionInWater(AdaptiveResourceMarkerTableRNG[masspoint].position) then
-            local waterGraphArea, waterReason = NavUtils.GetLabel('Water', AdaptiveResourceMarkerTableRNG[masspoint].position)
-            local amphibGraphArea, amphibReason = NavUtils.GetLabel('Amphibious', AdaptiveResourceMarkerTableRNG[masspoint].position)
-            if not waterGraphArea then
+            local waterLabel, waterReason = NavUtils.GetLabel('Water', AdaptiveResourceMarkerTableRNG[masspoint].position)
+            local amphibLabel, amphibReason = NavUtils.GetLabel('Amphibious', AdaptiveResourceMarkerTableRNG[masspoint].position)
+            if not waterLabel then
                 WARN('No water label returned reason '..waterReason)
                 WARN('Water label failure position was '..tostring(AdaptiveResourceMarkerTableRNG[masspoint].position))
             else
-                AdaptiveResourceMarkerTableRNG[masspoint].GraphArea = waterGraphArea
+                AdaptiveResourceMarkerTableRNG[masspoint].Label = waterLabel
             end
-            if not amphibGraphArea then
+            if not amphibLabel then
                 WARN('No amphibious label returned reason '..amphibReason)
                 WARN('Amphibious label failure position was '..tostring(AdaptiveResourceMarkerTableRNG[masspoint].position))
             else
-                AdaptiveResourceMarkerTableRNG[masspoint].AmphibGraphArea = amphibGraphArea
+                AdaptiveResourceMarkerTableRNG[masspoint].AmphibLabel = amphibLabel
             end
         else
-            local landGraphArea, landReason = NavUtils.GetLabel('Land', AdaptiveResourceMarkerTableRNG[masspoint].position)
-            local amphibGraphArea, amphibReason = NavUtils.GetLabel('Amphibious', AdaptiveResourceMarkerTableRNG[masspoint].position)
-            if not landGraphArea then
+            local landLabel, landReason = NavUtils.GetLabel('Land', AdaptiveResourceMarkerTableRNG[masspoint].position)
+            local amphibLabel, amphibReason = NavUtils.GetLabel('Amphibious', AdaptiveResourceMarkerTableRNG[masspoint].position)
+            if not landLabel then
                 WARN('No Land label returned reason '..landReason)
                 WARN('Land label failure position was '..tostring(AdaptiveResourceMarkerTableRNG[masspoint].position))
             else
-                AdaptiveResourceMarkerTableRNG[masspoint].GraphArea = landGraphArea
+                AdaptiveResourceMarkerTableRNG[masspoint].Label = landLabel
             end
-            if not amphibGraphArea then
+            if not amphibLabel then
                 WARN('No amphibious label returned reason '..amphibReason)
                 WARN('Amphibious label failure position was '..tostring(AdaptiveResourceMarkerTableRNG[masspoint].position))
             else
-                AdaptiveResourceMarkerTableRNG[masspoint].AmphibGraphArea = amphibGraphArea
+                AdaptiveResourceMarkerTableRNG[masspoint].AmphibLabel = amphibLabel
             end
         end
     end

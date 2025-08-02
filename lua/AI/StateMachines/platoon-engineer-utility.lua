@@ -822,6 +822,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         --LOG('reference for TMD position '..tostring(repr(reference)))
                     end
                 else
+                    --LOG('Requesting structure near defensive point for '..tostring(repr(cons)))
                     reference = RUtils.GetDefensiveSpokePointRNG(aiBrain, cons.LocationType or 'MAIN', cons.Tier or 2, cons.Type)
                 end
                 if reference then
@@ -861,7 +862,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 if aiBrain.ZoneExpansionTransportRequested then
                     aiBrain.ZoneExpansionTransportRequested = nil
                 end
-                reference, refName, refZone = RUtils.AIFindZoneExpansionPointRNG(aiBrain, cons.LocationType, (cons.LocationRadius or 256))
+                reference, refName, refZone = RUtils.AIFindZoneExpansionPointRNG(aiBrain, cons.LocationType, (cons.LocationRadius or 256), nil, nil, 'Land')
                 if not reference or not refName then
                     self:ExitStateMachine()
                     return
@@ -895,24 +896,40 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             elseif cons.NearMarkerType == 'Naval Area' then
-                reference, refName = RUtils.AIFindNavalAreaNeedsEngineerRNG(aiBrain, cons.LocationType, cons.ValidateLabel,
-                        (cons.LocationRadius or 100), cons.ThreatMin, cons.ThreatMax, cons.ThreatRings, cons.ThreatType, eng, true)
-                -- didn't find a location to build at
+                if aiBrain.ZoneExpansionTransportRequested then
+                    aiBrain.ZoneExpansionTransportRequested = nil
+                end
+                reference, refName, refZone = RUtils.AIFindZoneExpansionPointRNG(aiBrain, cons.LocationType, (cons.LocationRadius or 256), nil, nil, 'Naval')
                 if not reference or not refName then
-                    --RNGLOG('No reference or refname for Naval Area Expansion')
                     self:ExitStateMachine()
                     return
                 end
-                AIBuildStructures.AINewExpansionBaseRNG(aiBrain, refName, reference, eng, cons)
-                relative = false
-                RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
-                -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
-                --buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
-                buildFunction = StateUtils.AIBuildBaseTemplateRNG
-                local guards = eng:GetGuards()
-                for _,v in guards do
-                    if not v.Dead and v.PlatoonHandle then
-                        v.PlatoonHandle:ExitStateMachine()
+                if reference and refZone and refName then
+                    aiBrain.Zones.Naval.zones[refZone].lastexpansionattempt = GetGameTimeSeconds()
+                    aiBrain.Zones.Naval.zones[refZone].engineerplatoonallocated = self
+                    --[[if aiBrain.Zones.Naval.zones[refZone].resourcevalue > 3 then
+                        local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
+                        local smInstance = StructureManagerRNG.GetStructureManager(aiBrain)
+                        if eng.Blueprint.CategoriesHash.TECH2 and smInstance.Factories.NAVAL[2].HQCount > 0 then
+                            table.insert(cons.BuildStructures, 'T2SupportNavalFactory')
+                        elseif eng.Blueprint.CategoriesHash.TECH3 and smInstance.Factories.NAVAL[3].HQCount > 0 then
+                            table.insert(cons.BuildStructures, 'T3SupportNavalFactory')
+                        else
+                            table.insert(cons.BuildStructures, 'T1NavalFactory')
+                        end
+                    end]]
+                    AIBuildStructures.AINewExpansionBaseRNG(aiBrain, refName, reference, eng, cons)
+                    self.ZoneExpansionSet = true
+                    relative = false
+                    RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
+                    -- Must use BuildBaseOrdered to start at the marker; otherwise it builds closest to the eng
+                    --buildFunction = AIBuildStructures.AIBuildBaseTemplateOrdered
+                    buildFunction = StateUtils.AIBuildBaseTemplateRNG
+                    local guards = eng:GetGuards()
+                    for _,v in guards do
+                        if not v.Dead and v.PlatoonHandle then
+                            v.PlatoonHandle:ExitStateMachine()
+                        end
                     end
                 end
             elseif cons.OrderedTemplate then
@@ -929,6 +946,28 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 
                 local baseTmplDefault = import('/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua')
                 local tmpReference = aiBrain:FindPlaceToBuild('T2EnergyProduction', 'uab1201', baseTmplDefault['BaseTemplates'][factionIndex], true, eng, nil, relativeTo[1], relativeTo[3])
+                if relativeTo and tmpReference then
+                    reference = {tmpReference[1] + relativeTo[1], GetSurfaceHeight(tmpReference[1], tmpReference[2]) + relativeTo[2], tmpReference[2] + relativeTo[3]}
+                else
+                    return
+                end
+                buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
+                RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
+                --RNGLOG('baseTmpList is :'..repr(baseTmplList))
+            elseif cons.NavalFactoryBuild then
+                local relativeTo
+                relative = true
+                if cons.BuildClose then
+                    relativeTo = RNGCOPY(eng:GetPosition())
+                elseif self.BuilderData.Position then
+                    relativeTo = self.BuilderData.Position
+                else
+                    relativeTo = aiBrain.BuilderManagers[cons.LocationType].Position
+                end
+                --RNGLOG('relativeTo is'..repr(relativeTo))
+                
+                local baseTmplDefault = import('/mods/rngai/lua/AI/AIBaseTemplates/RNGAICustomBaseTemplates.lua')
+                local tmpReference = aiBrain:FindPlaceToBuild('T3SeaFactory', 'ueb0303', baseTmplDefault['BaseTemplates'][factionIndex], true, eng, nil, relativeTo[1], relativeTo[3])
                 if relativeTo and tmpReference then
                     reference = {tmpReference[1] + relativeTo[1], GetSurfaceHeight(tmpReference[1], tmpReference[2]) + relativeTo[2], tmpReference[2] + relativeTo[3]}
                 else
@@ -1541,7 +1580,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             end
             self.AvoidZones[avoidZone] = true
             --LOG('FindAlternateZoneExpansion ZonesToAvoid '..tostring(repr(self.AvoidZones)))
-            local reference, refName, refZone = RUtils.AIFindZoneExpansionPointRNG(aiBrain, false, (cons.LocationRadius or 256), avoidZonePos, self.AvoidZones)
+            local reference, refName, refZone = RUtils.AIFindZoneExpansionPointRNG(aiBrain, false, (cons.LocationRadius or 256), avoidZonePos, self.AvoidZones, 'Land')
             if not reference or not refName then
                 self:ExitStateMachine()
                 return
