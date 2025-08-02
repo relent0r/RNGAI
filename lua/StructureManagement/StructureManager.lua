@@ -169,6 +169,7 @@ StructureManager = Class {
        --LOG('RNGAI : StructureManager Starting')
         self:ForkThread(self.FactoryDataCaptureRNG)
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG, self.Brain)
+        self:ForkThread(self.EcoTacticalThread, self.Brain) -- tbd
         self:ForkThread(self.CheckDefensiveCoverage)
         if self.Debug then
             self:ForkThread(self.StructureDebugThread)
@@ -200,6 +201,111 @@ StructureManager = Class {
         end
         return temptable
     end,
+
+    EcoTacticalThread = function(self, aiBrain)
+        while not aiBrain.ZonesInitialized do
+            coroutine.yield(20)
+        end
+    
+        local zoneTypes = {
+            'Land',
+            'Naval'
+        }
+    
+        while aiBrain.Status ~= 'Defeat' do
+            local uniqueAlliedZones = {}
+            local totalZones = 0
+            local safeZones = {}
+            local zoneUpgradeBias = {}
+            local frontlineDefenseRatio = {}
+    
+            for _, layer in zoneTypes do
+                local zoneSet = aiBrain.Zones[layer].zones
+    
+                -- Count total zones (all zones in layer)
+                totalZones = totalZones + table.getn(zoneSet)
+    
+                -- Mark unique allied zones by status
+                for _, zone in zoneSet do
+                    if zone.status == 'Allied' then
+                        uniqueAlliedZones[zone.id] = zone
+                    end
+                end
+    
+                -- Prepare list of allied zone objects for ComputeSafetyState
+                local allyZonesList = {}
+                for _, zone in pairs(uniqueAlliedZones) do
+                    table.insert(allyZonesList, zone)
+                end
+    
+                -- Call safety function with unique allied zones list and full zoneSet
+                local barrier, zoneDepths, layerSafeZones, layerUpgradeBias = RUtils.ComputeSafetyState(aiBrain, allyZonesList, zoneSet)
+    
+                -- Merge layerSafeZones into safeZones global for this tick
+                for id, _ in pairs(layerSafeZones) do
+                    safeZones[id] = true
+                end
+    
+                -- Merge upgrade bias per zone into global
+                for id, bias in pairs(layerUpgradeBias) do
+                    zoneUpgradeBias[id] = bias
+                end
+    
+                -- Frontline defense calculation
+                local defendedFrontlines = 0
+                local totalFrontlines = 0
+    
+                for _, zone in ipairs(allyZonesList) do
+                    local zoneID = zone.id
+                    if zoneDepths[zoneID] == 1 then  -- adjacent to enemy zones
+                        local defenseAllocated = zone.platoonallocations.friendlydirectfireallocatedthreat or 0
+                        local defensePresent = zone.friendlydirectfireantisurfacethreat or 0
+                        local defense = defenseAllocated + defensePresent
+                        local threat = zone.gridenemylandthreat or 0
+    
+                        if defense > threat * 1.25 then
+                            defendedFrontlines = defendedFrontlines + 1
+                        end
+                        totalFrontlines = totalFrontlines + 1
+                    end
+                end
+    
+                frontlineDefenseRatio[layer] = totalFrontlines > 0 and (defendedFrontlines / totalFrontlines) or 0
+                --LOG('Frontline Defense Ratio ('..layer..'): '..tostring(frontlineDefenseRatio[layer]))
+                --LOG('Total frontlines ('..layer..'): '..totalFrontlines..' | Defended frontlines: '..defendedFrontlines)
+            end
+    
+            -- Count unique allied zones after processing all layers
+            local alliedZonesCount = 0
+            for _, _ in pairs(uniqueAlliedZones) do
+                alliedZonesCount = alliedZonesCount + 1
+            end
+    
+            -- Count safe zones
+            local safeZoneCount = 0
+            for _ in pairs(safeZones) do
+                safeZoneCount = safeZoneCount + 1
+            end
+    
+            --LOG('Total Zones: '..tostring(totalZones))
+            --LOG('Allied Zones: '..tostring(alliedZonesCount))
+            --LOG('Safe Zones: '..tostring(safeZoneCount))
+    
+            local zoneControlRatio = alliedZonesCount / math.max(1, totalZones)
+    
+            
+            aiBrain.EcoManager.SafeMassZones = safeZones
+            aiBrain.EcoManager.ZoneUpgradeBias = zoneUpgradeBias
+            aiBrain.EcoManager.TacticalGreedAllowed = (safeZoneCount > 0 and frontlineDefenseRatio['Land'] > 0.5)
+    
+            --LOG('TacticalGreedAllowed: '..tostring(aiBrain.EcoManager.TacticalGreedAllowed))
+            --LOG('SafeMassZones: '..tostring(repr(aiBrain.EcoManager.SafeMassZones)))
+            --LOG('ZoneUpgradeBias: '..tostring(repr(aiBrain.EcoManager.ZoneUpgradeBias)))
+    
+            coroutine.yield(60)
+        end
+    end,
+
 
     RegisterZoneStructure = function(self, unit)
         if unit and not unit.Dead then

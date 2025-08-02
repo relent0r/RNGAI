@@ -398,6 +398,7 @@ end
 
 ExitConditions = function(self,aiBrain)
     if not self.path then
+        --self:LogDebug(string.format('No self.path in ExitConditions'))
         return true
     end
     if not self.dest then
@@ -2534,7 +2535,7 @@ function SearchHighestThreatFromZone(aiBrain, position, threatType)
     -- Evaluate neighboring zones through edges
     for _, edge in ipairs(currentZone.edges or {}) do
         local neighborZone = edge.zone
-        if neighborZone then
+        if neighborZone and currentZone.label == neighborZone.label then
             evaluateZone(neighborZone, position)
         end
     end

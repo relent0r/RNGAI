@@ -2357,7 +2357,6 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                         self.Zones.Land.zones[zoneId].BuilderManager = self.BuilderManagers[baseName]
                         self.BuilderManagers[baseName].Zone = self.Zones.Land.zones[zoneId]
-                        --LOG('BuilderManager zone is set')
                     end
                     return
                 else
@@ -7253,6 +7252,12 @@ AIBrain = Class(RNGAIBrainClass) {
             local landBias = 0.3 -- Reduction for land allocation on naval maps
             local navalBias = 1.5 -- Boost for naval allocation on naval maps
             local threatFactorThreshold = 1.3 -- Threshold for reallocating excess
+
+            if self.EcoManager.TacticalGreedAllowed and not self.BrainIntel.PlayerRole.SpamPlayer then
+                self.EconomyUpgradeSpend = self.EconomyUpgradeSpendDefault * 1.5
+            else
+                self.EconomyUpgradeSpend = self.EconomyUpgradeSpendDefault
+            end
     
             -- Factory production capabilities
             local sm = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua').GetStructureManager(self)

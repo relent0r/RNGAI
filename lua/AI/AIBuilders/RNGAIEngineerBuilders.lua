@@ -1247,7 +1247,7 @@ BuilderGroup {
         PriorityFunction = ReclaimMassInRadiusPriority,
         InstanceCount = 16,
         BuilderConditions = {
-                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 }},
+                { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER * categories.MOBILE }},
                 { MIBC, 'CheckIfReclaimEnabled', {}},
                 { EBC, 'LessThanEconStorageRatioRNG', { 0.80, 2.0}},
             },

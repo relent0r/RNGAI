@@ -4134,6 +4134,109 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                 --LOG('Too many enemy units for spoke point')
             end
         end
+    elseif pointType == 'AirSnipe' then
+        if aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseLocation] and aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseLocation].PositionKey then
+            local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseLocation].PositionKey
+            local zoneId = aiBrain.BuilderManagers[baseLocation].ZoneID
+            if zoneId then
+                local zone = aiBrain.Zones.Land.zones[zoneId]
+                if zone and positionKey then
+                    local aaCovered
+                    local aaCount = 0
+                    if zone.defensespokes then
+                        local layerTable = zone.defensespokes[positionKey.Spoke][positionKey.Layer]
+                        if layerTable then
+                            for k , v in layerTable.AntiAir do
+                                if v and not v.Dead then
+                                    aaCount = aaCount + 1
+                                    if aaCount < 5 then
+                                        LOG('Returning antiairsnipe position of '..tostring(repr(zone.defensespokes[positionKey.Spoke][positionKey.Layer].Position)))
+                                        return zone.defensespokes[positionKey.Spoke][positionKey.Layer].Position
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        else
+            local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
+            local recentAngle = aiBrain.BasePerimeterMonitor[baseLocation].RecentAirAngle
+            if not recentAngle then 
+                --LOG('No recent land angle for position')
+                return false 
+            end
+    
+            local closestSpokeIndex = nil
+            local smallestAngleDiff = nil
+            --LOG('Recent Air angle is '..tostring(recentAngle))
+    
+            -- Find the spoke whose direction most closely matches the recent enemy angle
+            for spokeIndex, spokePoints in ipairs(defensiveSpokes) do
+                local firstPoint = nil
+                for _, pt in ipairs(spokePoints) do
+                    if pt.Enabled then
+                        firstPoint = pt
+                        break
+                    end
+                end
+                if not firstPoint then continue end
+    
+                local spokeAngle = GetAngleToPosition(basePosition, firstPoint.Position)
+                local angleDiff = math.abs(recentAngle - spokeAngle)
+                if angleDiff > 180 then angleDiff = 360 - angleDiff end
+    
+                if not smallestAngleDiff or angleDiff < smallestAngleDiff then
+                    smallestAngleDiff = angleDiff
+                    closestSpokeIndex = spokeIndex
+                end
+            end
+    
+            if not closestSpokeIndex then 
+                --LOG('No closestSpokeIndex')
+                return false 
+            end
+    
+            local spokePoints = defensiveSpokes[closestSpokeIndex]
+            local spokeCount = table.getn(spokePoints)
+    
+            -- Determine starting index based on pointTier
+            local startIndex, endIndex, step
+            if pointTier == 2 then
+                -- Tier 2 = outermost-first (for aggressive/outer defenses)
+                startIndex = spokeCount
+                endIndex = 1
+                step = -1
+            elseif pointTier == 1 then
+                -- Tier 1 or default = innermost-first (for fallback defenses)
+                startIndex = 2
+                endIndex = 1
+                step = -1
+            else
+                -- fallback innermost-first (for fallback defenses)
+                startIndex = 1
+                endIndex = spokeCount
+                step = 1
+            end
+    
+            -- Search along the spoke, either inward or outward
+            for i = startIndex, endIndex, step do
+                local pt = spokePoints[i]
+                if not pt.Enabled then continue end
+                -- If this is the last point in the loop, accept it even if unsafe
+                if i == endIndex then
+                    defensivePoint = pt.Position
+                end
+            
+                local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
+                if enemyUnits == 0 then
+                    defensivePoint = pt.Position
+                    break
+                else
+                    --LOG('Too many enemy units for spoke point')
+                end
+            end
+        end
     elseif pointType == 'AntiAir' then
         local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
         local recentAngle = aiBrain.BasePerimeterMonitor[baseLocation].RecentAirAngle
@@ -8091,20 +8194,23 @@ function GetZoneIncomeValue(zone, zoneSelectionType, enemyStartClose, allyStartC
     local selfWeight
     local allyWeight
     local enemyWeight
+    local resourceValueWeight
     if zoneSelectionType == 'raid' then
         selfWeight = 0.0
         allyWeight = 0.0
         enemyWeight = 1.2
+        resourceValueWeight = 1.5
     else
-        selfWeight = 1.5
-        allyWeight = 0.75
-        enemyWeight = 0.5
+        selfWeight = 0.2
+        allyWeight = 0.1
+        enemyWeight = 0.2
+        resourceValueWeight = 1.5
     end
     local resourceValueBonus = (zone.resourcevalue or 0 ) * 0.5
     local incomeScore = zone.zoneincome.selfincome * selfWeight +
         zone.zoneincome.allyincome * allyWeight +
         zone.zoneincome.enemyincome * enemyWeight +
-        resourceValueBonus
+        resourceValueBonus * resourceValueWeight
 
     -- Cap incomeScore if close to enemy start and surrounded by enemy-controlled zones
     if enemyStartClose and zone.edges then
@@ -8142,7 +8248,7 @@ function GetZoneIncomeValue(zone, zoneSelectionType, enemyStartClose, allyStartC
     return math.min(math.max(incomeScore, 0), 50)
 end
 
-function GetDistanceValue(mapDiagonalSq, zone, platoonPosition, enemyPosition)
+function GetDistanceValue(mapDiagonalSq, zone, platoonPosition, enemyPosition, ownStartDistance)
     local zoneDistanceSq = math.max(1, VDist2Sq(zone.pos[1], zone.pos[3], platoonPosition[1], platoonPosition[3]))
 
     local enemyDistanceSq = 1
@@ -8152,13 +8258,15 @@ function GetDistanceValue(mapDiagonalSq, zone, platoonPosition, enemyPosition)
 
     local zoneDistanceScore = 1.0 - math.min(zoneDistanceSq / mapDiagonalSq, 1.0)
     local enemyDistanceScore = 1.0 - math.min(enemyDistanceSq / mapDiagonalSq, 1.0)
+    local homeDistanceScore = 1.0 - math.min(ownStartDistance / mapDiagonalSq, 1.0)
 
-    return zoneDistanceScore, enemyDistanceScore
+    return zoneDistanceScore, enemyDistanceScore, homeDistanceScore
 end
 
 function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
     local friendly = zone.friendlyantisurfacethreat or 0
     local enemy = zone.enemyantisurfacethreat or 0
+    local score
     if zone.platoonallocations and zone.platoonallocations.friendlydirectfireallocatedthreat and ( zone.status == 'Allied' or zone.status == 'Contested' ) and zoneSelectionType ~= 'raid' then
         friendly = friendly + zone.platoonallocations.friendlydirectfireallocatedthreat * 0.6
     end
@@ -8175,10 +8283,23 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
     local ratio = cappedFriendly / enemy
 
     if zoneSelectionType == 'raid' then
-        return math.min(math.max((ratio - 1.0), 0), 2.0)
+        score = math.min(math.max((ratio - 1.0), 0), 2.0)
     else
-        return math.min(math.max((ratio - 0.5), 0), 2.0)
+        score = math.min(math.max((ratio - 0.5), 0), 2.0)
     end
+
+    if friendly < 10 then
+        local lowThreatBonus = (10 - friendly) * 0.1  -- up to +1
+        score = score + lowThreatBonus
+    end
+
+    -- --- Penalty if grossly overcommitted ---
+    if friendly > enemy * 1.5 then
+        local excessRatio = (friendly - enemy * 1.5) / enemy
+        local overcommitPenalty = math.min(excessRatio * 0.5, 1.0) -- up to -1
+        score = score - overcommitPenalty
+    end
+    return math.max(score, -2.0)
 end
 
 GetZonePressureValue = function(enemyStartClose, zone, platoon)
@@ -8260,7 +8381,7 @@ GetAdjacencyThreatBonus = function(intelmanager, zone, statusValueTable, threatT
     if zone.edges then
         for _, adjId in zone.edges do
             local neighbor = adjId.zone
-            if neighbor then
+            if neighbor and zone.label == neighbor.label then
                 local neighborStatus = neighbor.status
                 local statusVal = GetAdaptiveStatusValue(zone, intelmanager)
 
@@ -8333,7 +8454,7 @@ GetZoneEncirclementValue = function(zone)
     -- First-hop encirclement context
     for _, adj in zone.edges do
         local neighbor = adj.zone
-        if neighbor then
+        if neighbor and zone.label == neighbor.label then
             totalAdj = totalAdj + 1
             local status = neighbor.status
             if status == 'Hostile' then
@@ -8387,6 +8508,30 @@ GetZoneEncirclementValue = function(zone)
     return finalScore
 end
 
+function GetZoneFlankRiskValue(zone)
+    local resourceValue = zone.resourcevalue or 0
+    local selfIncome = zone.zoneincome.selfincome or 0
+    local allyIncome = zone.zoneincome.allyincome or 0
+    local enemyIncome = zone.zoneincome.enemyincome or 0
+    local friendlyThreat = zone.friendlyantisurfacethreat or 0
+    local platoonAllocatedThreat = zone.friendlydirectfireallocatedthreat or 0
+    local enemyGridThreat = zone.gridenemylandthreat or 0
+    local zoneOwner = zone.status or 'Unoccupied'
+
+    -- Reject if either side already has income here
+    if (selfIncome + allyIncome) > (resourceValue - 1) then
+        return 0
+    end
+
+    -- Mild bias against zones already being targeted
+    if enemyGridThreat > 0 and (friendlyThreat + platoonAllocatedThreat) > enemyGridThreat then
+        return 0
+    end
+
+    -- Scale value based on available income potential
+    return math.min(resourceValue, 6) * 0.25  -- range: 0 to 1.5
+end
+
 function GetRaidFlankBonusValue(zone, baselineAngleDeg, flankMaxBonus)
     flankMaxBonus = flankMaxBonus or 2.0
 
@@ -8432,7 +8577,7 @@ function GetAdaptiveStatusValue(zone, intelmanager)
     if zone.edges then
         for _, adj in zone.edges do
             local neighbor = adj.zone
-            if neighbor and neighbor.status == 'Hostile' then
+            if zone.label == neighbor.label and neighbor and neighbor.status == 'Hostile' then
                 isAdjacentToHostile = true
                 break
             end
@@ -8453,4 +8598,176 @@ function GetAdaptiveStatusValue(zone, intelmanager)
     end
 
     return valueTable[status] or 1
+end
+
+function ComputeSafetyState(aiBrain, allZones, zoneLayerSet)
+    local visited = {}
+    local depths = {}
+    local barrier = {}
+    local safeZones = {}
+    local zoneUpgradeBias = {}
+
+    local frontier = {}
+
+    -- Start from zones that are Hostile or Contested
+    for zoneId, zone in pairs(zoneLayerSet) do
+        if zone.status == 'Hostile' or zone.status == 'Contested' or zone.status == 'Unoccupied' then
+            visited[zoneId] = true
+            depths[zoneId] = 0
+            barrier[zoneId] = 0
+            frontier[zoneId] = true
+            --LOG(string.format("Seeding non ally zone %d", zoneId))
+        end
+    end
+
+    -- BFS inward from enemy territory
+    while next(frontier) do
+        local nextFrontier = {}
+
+        for zoneId in pairs(frontier) do
+            local currentDepth = depths[zoneId] or 0
+            local currentZone = zoneLayerSet[zoneId]
+            local currentScore, isSafe = GetZoneGreedSafetyScore(aiBrain.Army, currentZone)
+
+            for _, edge in ipairs(currentZone.edges or {}) do
+                local neighbor = edge.zone
+                local neighborId = neighbor.id
+
+                if not visited[neighborId] then
+                    local neighborScore, isSafe = GetZoneGreedSafetyScore(aiBrain.Army, neighbor)
+                    local minBarrier = math.min(currentScore, neighborScore)
+
+                    visited[neighborId] = true
+                    depths[neighborId] = currentDepth + 1
+                    if neighbor.status == 'Allied' and depths[neighborId] >= 2 and isSafe then
+                        safeZones[neighborId] = true
+                    
+                        if neighbor.zoneincome and neighbor.zoneincome.selfincome > 1.0 then
+                            zoneUpgradeBias[neighborId] = 1.2
+                        end
+                    end
+                    barrier[neighborId] = minBarrier
+                    nextFrontier[neighborId] = true
+
+                    --LOG(string.format("Zone %d reached from %d with barrier %.2f at depth %d", neighborId, zoneId, minBarrier, depths[neighborId]))
+                end
+            end
+        end
+
+        frontier = nextFrontier
+    end
+
+    return barrier, depths, safeZones, zoneUpgradeBias
+end
+
+function IsEnemyStartClose(zone)
+    local enemyStarts = zone.enemystartdata
+    if enemyStarts then
+        for _, v in enemyStarts do
+            if v.startdistance < 100 then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function IsAllyStartClose(zone, armyIndex)
+    local allyStarts = zone.allystartdata
+    if allyStarts then
+        if armyIndex then
+            if allyStarts[armyIndex].startdistance < 100 then
+                return true
+            end
+        else
+            for k, v in allyStarts do
+                if v.startdistance < 100 then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+function GetZoneGreedSafetyScore(armyIndex, zone)
+    local score = 0
+
+    -- 1. Start position proximity
+    if IsAllyStartClose(zone, armyIndex) then
+        score = score + 1.5
+    end
+
+    -- 2. Builder presence (can reinforce or defend)
+    if zone.BuilderManager and zone.BuilderManager.FactoryManager and zone.BuilderManager.FactoryManager.LocationActive then
+     score = score + 1
+    end
+
+    -- 3. Existing defensive layout
+    if zone.defensespokes then
+        local totalAntisurfaceThreat = 0
+        local totalAntiAirThreat = 0
+        local totalShields = 0
+        local totalTMDCount = 0
+        for _, ring in ipairs(zone.defensespokes) do
+            for _, spoke in ipairs(ring) do
+                if spoke.Enabled then
+                    totalAntisurfaceThreat = totalAntisurfaceThreat + (spoke.AntiSurfaceThreat or 0)
+                    totalAntiAirThreat = (spoke.AntiAirThreat or 0)
+                    if spoke.Shields then
+                        for _, sunit in ipairs(spoke.Shields) do
+                            if shieldUnit and not shieldUnit.Dead then
+                                totalShields = totalShields + 1
+                            end
+                        end
+                    end
+                    if spoke.TMD then
+                        for _, tmdunit in ipairs(spoke.TMD) do
+                            if tmdUnit and not tmdunit.Dead then
+                                totalTMDCount = totalTMDCount + 1
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    
+        -- Apply scaled bonus based on defensive strength
+        if totalAntisurfaceThreat >= 50 then
+            score = score + 1.5
+        elseif totalAntisurfaceThreat >= 25 then
+            score = score + 1
+        elseif totalAntisurfaceThreat >= 10 then
+            score = score + 0.5
+        end
+    end
+
+    -- 4. Threat alignment (basic version: no strong enemy threat)
+    local enemySiloCount = zone.enemySilos and zone.enemySilos > 0
+    if enemySiloCount > 0 then
+        score = score - 2
+    end
+
+    local eThreat = zone.gridenemylandthreat or 0
+    if eThreat > 15 then
+        score = score - 1.5
+    end
+
+    -- 5. Friendly threat (local deterrence)
+    local fThreat = zone.friendlydirectfireantisurfacethreat or 0
+    if fThreat > eThreat * 1.25 then
+        score = score + 1
+    elseif fThreat > 0 and eThreat == 0 then
+        score = score + 1.5
+    end
+
+    -- 6. Team territory bias
+    local teamBias = math.min(zone.teamvalue or 1.0, 2.0)  -- capped
+    score = score + (teamBias - 1.0)  -- +1 if far on our side
+
+    local SAFETY_THRESHOLD = 1.75
+
+    --LOG('Zone '..tostring(zone.id)..' score '..tostring(score))
+
+    return score, score > SAFETY_THRESHOLD
 end

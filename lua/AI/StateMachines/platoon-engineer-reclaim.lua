@@ -292,13 +292,13 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                                     else
                                         self:LogDebug(string.format('We cant path to the reclaim cache spot, reclaim key'))
                                         if aiBrain.StartReclaimTable[k] then
-                                            table.insert(reclaimKeysToFlush, k)
+                                            TableInsert(reclaimKeysToFlush, k)
                                             tableRebuild = true
                                         end
                                     end
                                 end
                             elseif aiBrain.StartReclaimTable[k] then
-                                table.insert(reclaimKeysToFlush, k)
+                                TableInsert(reclaimKeysToFlush, k)
                                 tableRebuild = true
                             end
                         end
@@ -318,13 +318,13 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                                     else
                                         self:LogDebug(string.format('We cant path to the reclaim cache spot, reclaim key'))
                                         if aiBrain.StartReclaimTable[k] then
-                                            table.insert(reclaimKeysToFlush, k)
+                                            TableInsert(reclaimKeysToFlush, k)
                                             tableRebuild = true
                                         end
                                     end
                                 end
                             elseif aiBrain.StartReclaimTable[k] then
-                                table.insert(reclaimKeysToFlush, k)
+                                TableInsert(reclaimKeysToFlush, k)
                                 tableRebuild = true
                             end
                             
@@ -363,7 +363,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                             coroutine.yield(10)
                         end
                         self:LogDebug(string.format('We should be setting the following table key to nil '..tostring(closestReclaimKey)))
-                        table.insert(reclaimKeysToFlush, closestReclaimKey)
+                        TableInsert(reclaimKeysToFlush, closestReclaimKey)
                         tableRebuild = true
                     end
                     reclaimCount = reclaimCount + 1
@@ -550,6 +550,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                             if reclaimGrid and not table.empty( reclaimGrid ) then
                                 local reclaimCount = 0
                                 local engineerHasReclaimed = false
+                                local leeway = 2.0
                                 for k, square in reclaimGrid do
                                     local squarePos = {square[1], GetTerrainHeight(square[1], square[3]), square[3]}
                                     if NavUtils.CanPathTo('Amphibious', engPos, squarePos) then
@@ -563,6 +564,15 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                                         if reclaimRect then
                                             for c, b in reclaimRect do
                                                 if not IsProp(b) or self.BadReclaimables[b] then continue end
+                                                local bPos = b.CachePosition or b:GetPosition()
+                                                if not bPos[1] then
+                                                    continue
+                                                end
+                                                
+                                                if bPos[1] < (minX - leeway) or bPos[1] > (maxX + leeway)
+                                                or bPos[3] < (minZ - leeway) or bPos[3] > (maxZ + leeway) then
+                                                    continue
+                                                end
                                                 -- Start Blacklisted Props
                                                 local blacklisted = false
                                                 for _, BlackPos in RNGAIGLOBALS.PropBlacklist do
@@ -776,7 +786,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                 self.blocked = self.blocked + 1
                 if self.blocked > 3 then
                     self.blocked = 0
-                    table.insert (RNGAIGLOBALS.PropBlacklist, closestReclaim)
+                    TableInsert(RNGAIGLOBALS.PropBlacklist, closestReclaim)
                 end
             else
                 self.blocked = 0
@@ -918,16 +928,16 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                                        --RNGLOG('Border Warning on mass point marker')
                                         IssueBuildMobile({eng}, {massMarker.Position[1], massMarker.Position[3], 0}, whatToBuildM, {})
                                         local newEntry = {whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position, true, PathPoint=i}
-                                        RNGINSERT(eng.EngineerBuildQueue, newEntry)
+                                        TableInsert(eng.EngineerBuildQueue, newEntry)
                                     else
                                         aiBrain:BuildStructure(eng, whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false)
                                         local newEntry = {whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position, false, PathPoint=i}
-                                        RNGINSERT(eng.EngineerBuildQueue, newEntry)
+                                        TableInsert(eng.EngineerBuildQueue, newEntry)
                                     end
                                 end
                                 if buildQueueReset then
                                     for k, v in buildQueueReset do
-                                        RNGINSERT(eng.EngineerBuildQueue, v)
+                                        TableInsert(eng.EngineerBuildQueue, v)
                                     end
                                 end
                             end

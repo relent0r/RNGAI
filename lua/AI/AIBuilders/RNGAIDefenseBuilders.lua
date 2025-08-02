@@ -286,7 +286,7 @@ BuilderGroup {
                 BuildClose = false,
                 OrderedTemplate = true,
                 NearDefensivePoints = true,
-                Type = 'AntiAir',
+                Type = 'AirSnipe',
                 Tier = 2,
                 LocationType = 'LocationType',
                 BuildStructures = {
