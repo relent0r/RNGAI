@@ -3464,7 +3464,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
         local found = false
         if self.BaseMonitor.PlatoonReinforcementRequired == false then
-            RNGINSERT(self.BaseMonitor.PlatoonReinforcementTable, {Platoon = platoon, ThreatType = threatType, LocationType = location, PlatoonLabel = currentLabel, UnitsAssigned = {}})
+            RNGINSERT(self.BaseMonitor.PlatoonReinforcementTable, {Platoon = platoon, ThreatType = threatType, LocationType = location, PlatoonLabel = currentLabel, PlatoonsAssigned = {}, ExpireTime = GetGameTimeSeconds() + 20})
             self.BaseMonitor.PlatoonReinforcementRequired = true
         else
             for k, v in self.BaseMonitor.PlatoonReinforcementTable do

@@ -796,7 +796,7 @@ ZoneControlThreatThread = function(aiBrain, platoon)
                     local tmpDistance = rx * rx + rz * rz
                     --platoon:LogDebug(string.format('Have enemy unit, tmp distance is '..tmpDistance))
                     --platoon:LogDebug(string.format('Range check is targetRange '..targetRange))
-                    if tmpDistance < math.max(2025, targetRange * targetRange) then
+                    if tmpDistance < math.max(2025, (targetRange * targetRange * 1.3)) then
                         --platoon:LogDebug(string.format('ZoneControlThreatThread found close threat, retreating'))
                         platoon.retreat=true
                         platoon.BuilderData = { RetreatTarget = target }

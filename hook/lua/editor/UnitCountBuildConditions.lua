@@ -1746,21 +1746,66 @@ function DefensivePointShieldRequired(aiBrain, locationType)
     return false
 end
 
-function UnitBuildDemand(aiBrain, locationType, type, tier, unit)
+function UnitBuildDemand(aiBrain, locationType, unitType, tier, unit, threatBased)
+    if locationType and locationType ~= 'MAIN' then
+        if threatBased then
+            local threatWeights = {
+                T1 = 0.6,  -- example weights
+                T2 = 1.2,
+                T3 = 2.0,
+            }
+            local threatType
+            local baseData = aiBrain.BuilderManagers[locationType]
+            if not baseData or not baseData.Zone then return false end
+            local zone = baseData.Zone
+            if unit == 'aa' then
+                threatType = 'landantiair'
+            end
+            local threatKey = 'friendly' .. threatType .. 'threat'
+            local friendlyThreat = zone[threatKey] or 0
+            if zone.edges then
+                for _, edge in ipairs(zone.edges) do
+                    local adjZone = edge.zone
+                    if adjZone then
+                        friendlyThreat = friendlyThreat + (adjZone[threatKey] or 0)
+                    end
+                end
+            end
+            local weight = threatWeights[tier] or 1
+            local calculatedUnitCount
+            if friendlyThreat <= 0 then
+                calculatedUnitCount = 0
+            else
+                calculatedUnitCount = math.ceil(friendlyThreat / weight)
+            end
+            --LOG('Tier '..tier..' unit '..unit)
+            if aiBrain.amanager.Demand.Bases[locationType] and aiBrain.amanager.Demand.Bases[locationType][unitType][tier][unit] > calculatedUnitCount then
+                --LOG('Demand for base '..tostring(locationType)..' is true for unit of type '..tostring(unit)..' calcuated count at the time was '..tostring(calculatedUnitCount))
+                --LOG('Demand '..tostring(aiBrain.amanager.Demand.Bases[locationType][unitType][tier][unit]))
+                --LOG('Total current at the time was '..tostring(aiBrain.amanager.Current[unitType][tier][unit]))
+                return true
+            end
+            --LOG('Demand for base '..tostring(locationType)..' is false for unit of type '..tostring(unit)..' calcuated count at the time was '..tostring(calculatedUnitCount))
+            --LOG('Demand '..tostring(aiBrain.amanager.Demand.Bases[locationType][unitType][tier][unit]))
+            --LOG('Total current at the time was '..tostring(aiBrain.amanager.Current[unitType][tier][unit]))
+        else
+            if aiBrain.amanager.Demand.Bases[locationType] and aiBrain.amanager.Demand.Bases[locationType][unitType][tier][unit] > aiBrain.amanager.Current[unitType][tier][unit] then
+                --LOG('Demand for base '..tostring(locationType)..' is true for unit of type '..tostring(unit))
+                return true
+            end
+        end
+    else
+        if aiBrain.amanager.Demand[unitType][tier][unit] > aiBrain.amanager.Current[unitType][tier][unit] then
+            return true
+        end
+    end
 
-    if aiBrain.amanager.Demand[type][tier][unit] > aiBrain.amanager.Current[type][tier][unit] then
-        return true
-    end
-    if aiBrain.amanager.Demand.Bases[locationType] and aiBrain.amanager.Demand.Bases[locationType][type][tier][unit] > aiBrain.amanager.Current[type][tier][unit] then
-        --LOG('Demand for base '..tostring(locationType)..' is true for unit of type '..tostring(unit))
-        return true
-    end
     return false
 end
 
-function StructureBuildDemand(aiBrain, type, tier, unit)
+function StructureBuildDemand(aiBrain, unitType, tier, unit)
 
-    if aiBrain.smanager.Demand[type][tier][unit] > aiBrain.smanager.Current[type][tier][unit] then
+    if aiBrain.smanager.Demand[unitType][tier][unit] > aiBrain.smanager.Current[unitType][tier][unit] then
         return true
     end
     return false

@@ -41,7 +41,6 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.ShieldHealth = 0
     cdr.Active = false
     cdr.movetopos = false
-    cdr.Retreating = false
     cdr.AtHoldPosition = false
     cdr.HoldPosition = {}
     cdr.SnipeMode = false
@@ -284,6 +283,7 @@ function CDRThreatAssessmentRNG(cdr)
                 cdr.Position = cdr:GetPosition()
             end
             local enemyACUPresent = false
+            local friendlyACURangeAdvantage = false
             local enemyUnits = GetUnitsAroundPoint(aiBrain, UnitCategories, cdr:GetPosition(), 80, 'Enemy')
             local friendlyUnits = GetUnitsAroundPoint(aiBrain, UnitCategories, cdr:GetPosition(), 70, 'Ally')
             local enemyUnitThreat = 0
@@ -326,6 +326,9 @@ function CDRThreatAssessmentRNG(cdr)
             friendlyUnitThreat = friendlyUnitThreat + friendlyUnitThreatInner
             local enemyOverRangedPDCount = 0
             local enemyACUHealthModifier = 1.0
+            local maxEnemyWeaponRange
+            local maxEnemyWeaponRangeAnyDistance
+            local maxEnemyDistToConsider = cdr.WeaponRange * 2
             for k,v in enemyUnits do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
@@ -333,10 +336,18 @@ function CDRThreatAssessmentRNG(cdr)
                     local dy = cdr.Position[2] - unitPos[2]
                     local dz = cdr.Position[3] - unitPos[3]
                     local unitDist = dx * dx + dy * dy + dz * dz
+                    local weaponRange = StateUtils.GetUnitMaxWeaponRange(v, false, false) or 10
+                    if not maxEnemyWeaponRangeAnyDistance or weaponRange > maxEnemyWeaponRangeAnyDistance then
+                        maxEnemyWeaponRangeAnyDistance = weaponRange
+                    end
+                    if weaponRange < cdr.WeaponRange and unitDist > (weaponRange * weaponRange) and unitDist < (maxEnemyDistToConsider * maxEnemyDistToConsider) then
+                        if not maxEnemyWeaponRange or weaponRange > maxEnemyWeaponRange then
+                            maxEnemyWeaponRange = weaponRange
+                        end
+                    end
                     if unitDist < 1225 then
                         if EntityCategoryContains(CategoryT2Defense, v) then
                             if v.Blueprint.Defense.SurfaceThreatLevel then
-                                local weaponRange = StateUtils.GetUnitMaxWeaponRange(v, false, false) or 10
                                 if unitDist < (weaponRange * weaponRange) + 3 then
                                     enemyOverRangedPDCount = enemyOverRangedPDCount + 1
                                 end
@@ -369,7 +380,6 @@ function CDRThreatAssessmentRNG(cdr)
                     else
                         if EntityCategoryContains(CategoryT2Defense, v) then
                             if v.Blueprint.Defense.SurfaceThreatLevel then
-                                local weaponRange = StateUtils.GetUnitMaxWeaponRange(v, false, false) or 10
                                 if unitDist < (weaponRange * weaponRange) + 3 then
                                     enemyOverRangedPDCount = enemyOverRangedPDCount + 1
                                 end
@@ -391,6 +401,9 @@ function CDRThreatAssessmentRNG(cdr)
                         end
                     end
                 end
+            end
+            if not enemyACUPresent and maxEnemyWeaponRange and maxEnemyWeaponRange < cdr.WeaponRange then
+                friendlyACURangeAdvantage = true
             end
             enemyUnitThreat = enemyUnitThreat + enemyUnitThreatInner
             if enemyACUPresent then
@@ -527,7 +540,7 @@ function CDRThreatAssessmentRNG(cdr)
                 if ratio < 0.4 then
                     local mapped = (0.5 - ratio) / 0.5 
                     local sig = 1 / (1 + math.exp(-k * (mapped - 0.5)))
-                    local bonus = 1 + (sig * 0.5) 
+                    local bonus = 1 + (sig * 0.8) 
                     return bonus
                 elseif ratio < 0.6 then
                     return 1
@@ -567,14 +580,18 @@ function CDRThreatAssessmentRNG(cdr)
                         end
                     end
                 end
+                --LOG('--  Start of Confidence  --')
                 --LOG('Distance to enemy base '..tostring(math.sqrt(distanceToEnemyBase)))
                 local distanceFearFactor = distanceFearMultiplier(math.sqrt(cdrDistanceToBase), math.sqrt(distanceToEnemyBase))
                 --LOG('Distance fear factor '..tostring(distanceFearFactor))
                 --LOG('Friendly threat before '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
+                --LOG('Enemy threat before '..tostring(enemyThreatConfidenceModifier))
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * distanceFearFactor
                 --LOG('Friendly threat after '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
-                --LOG('Distance to enemy base scaled factor for '..tostring(aiBrain.Nickname)..' is '..tostring(distanceFearFactor))
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + weights.localEnemyThreatRatio * localEnemyThreatRatio
+                --LOG('Enemy threat after '..tostring(enemyThreatConfidenceModifier))
+                --LOG('Distance to enemy base scaled factor for '..tostring(aiBrain.Nickname)..' is '..tostring(distanceFearFactor))
+
 
                 -- Calculate confidence
                 local shieldFactor
@@ -595,14 +612,23 @@ function CDRThreatAssessmentRNG(cdr)
                     local healthScaling = math.max(0, math.min(1, cdr.HealthPercent))  -- Clamp between 0 and 1
                     overchargeFactor = weights.overchargeBoost * threatScaling * healthScaling
                 end
+                
                 --LOG('AI '..tostring(aiBrain.Nickname)..' health percent '..tostring(cdr.HealthPercent)..' friendlyThreatConfidenceModifier '..tostring(friendlyThreatConfidenceModifier)..' enemyThreatConfidenceModifier '..tostring(enemyThreatConfidenceModifier)..' ratio '..tostring(friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier)..' survivability '..tostring(survivability)..' overcharge '..tostring(overchargeFactor))
 
                 cdr.Confidence = ((friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier) * survivability) + overchargeFactor
+                if friendlyACURangeAdvantage then
+                    --LOG('ACU has a range advantage')
+                    local rangeAdvantageBonus = 1.2
+                    --LOG('Confidence before '..tostring(cdr.Confidence))
+                    cdr.Confidence = cdr.Confidence * rangeAdvantageBonus
+                    --LOG('Confidence after '..tostring(cdr.Confidence))
+                end
 
                 if aiBrain.EnemyIntel.LandPhase > 2 then
                     cdr.Confidence = cdr.Confidence * weights.phasePenalty
                 end
                 --LOG('Current ACU Confidence for '..tostring(aiBrain.Nickname)..' is '..tostring(cdr.Confidence))
+                --LOG('--  End of Confidence  --')
             end
 
             -- Example weights
@@ -614,7 +640,7 @@ function CDRThreatAssessmentRNG(cdr)
                 healthBoost = 1.3, -- higher means more confidence
                 shieldBoost = 1.1, -- higher means more confidence
                 enemyThreat = 0.7, -- higher means less confidence
-                enemyUnitThreatOuter = 0.9, -- higher means less confidence
+                enemyUnitThreatOuter = 0.8, -- higher means less confidence
                 enemyUnitThreatInner = 1.1, -- higher means less confidence
                 enemyDefenseThreat = 0.75, -- higher means less confidence
                 distanceToBase = 0.8, -- higher means less confidence

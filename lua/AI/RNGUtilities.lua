@@ -1240,7 +1240,24 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
             end
         end
     end
+
     local acuInTrouble = false
+    if aiBrain.EnemyIntel.Experimental then
+        for _, v in aiBrain.EnemyIntel.Experimental do
+            if v.object and not v.object.Dead then
+                local unitCats = v.object.Blueprint.CategoriesHash
+                if unitCats.MOBILE and unitCats.LAND then
+                    local targetPos = v.object:GetPosition()
+                    local rx = cdrPos[1] - targetPos[1]
+                    local rz = cdrPos[3] - targetPos[3]
+                    local expDistance = rx * rx + rz * rz
+                    if expDistance < 10000 then
+                        acuInTrouble = true
+                    end
+                end
+            end
+        end
+    end
 
     -- Define thresholds (you can tune these based on testing)
     local lowHealth = cdrHealthPercent < 0.35
@@ -4150,7 +4167,6 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                                 if v and not v.Dead then
                                     aaCount = aaCount + 1
                                     if aaCount < 5 then
-                                        LOG('Returning antiairsnipe position of '..tostring(repr(zone.defensespokes[positionKey.Spoke][positionKey.Layer].Position)))
                                         return zone.defensespokes[positionKey.Spoke][positionKey.Layer].Position
                                     end
                                 end
@@ -4886,6 +4902,7 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             --LOG('Have zone curve item, zone id is '..tostring(zoneCurveItem.ZoneID))
             local zone = aiBrain.Zones.Land.zones[zoneCurveItem.ZoneID]
             local ia = zone.intelassignment
+            local scoutMarker
             if not ia.ScoutUnit or ia.ScoutUnit.Dead then
                 if NavUtils.CanPathTo(platoon.MovementLayer, scoutPos, zoneCurveItem.ZonePosition) then
                     scoutMarker = { ZoneID = zoneCurveItem.ZoneID, Position = zoneCurveItem.ZonePosition }

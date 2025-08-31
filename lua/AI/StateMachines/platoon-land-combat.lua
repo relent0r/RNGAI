@@ -1079,6 +1079,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local avoidTargetPos
             local target = StateUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
+            local zoneRetreat
             if target and not target.Dead then
                 local targetRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                 local minTargetRange
@@ -1115,7 +1116,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    local zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, targetPos, true, nil, 'Land')
+                    zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, targetPos, true, nil, 'Land')
                     if attackStructure then
                         for _, v in platUnits do
                             if v['rngdata'].Role ~= 'Artillery' and v['rngdata'].Role ~= 'Silo' then
@@ -1148,11 +1149,12 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 end
                 coroutine.yield(40)
             end
-            local zoneRetreat
-            if aiBrain.GridPresence:GetInferredStatus(self.Pos) == 'Hostile' then
-                zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, avoidTargetPos, true, nil, 'Land')
-            else
-                zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, false, true, nil, 'Land')
+            if not zoneRetreat then
+                if aiBrain.GridPresence:GetInferredStatus(self.Pos) == 'Hostile' then
+                    zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, avoidTargetPos, true, nil, 'Land')
+                else
+                    zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, false, true, nil, 'Land')
+                end
             end
             local location = zoneRetreat.pos
             if (not location) then

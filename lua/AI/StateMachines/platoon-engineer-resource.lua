@@ -613,6 +613,15 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             table.remove(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers,self.CurrentMarkerIndex)
             coroutine.yield(10)
+            local aiBrain = self:GetBrain()
+            local radarRequestExists = aiBrain.IntelManager:IsExistingStructureRequestPresent(self:GetPlatoonPosition(), 45, 'RADAR')
+            if radarRequestExists then
+                local eng = self.eng
+                local radarRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(eng, self:GetPlatoonPosition(), 45, 'RADAR')
+                if radarRequestPos then
+                    import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'RadarBuild', Position = radarRequestPos, LocationType = self.LocationType} }, self, self:GetPlatoonUnits())
+                end
+            end
             self:ChangeState(self.DecideWhatToDo)
             return
         end,

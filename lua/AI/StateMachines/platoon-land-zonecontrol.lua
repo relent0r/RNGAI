@@ -136,7 +136,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
                 --self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
-                local label = NavUtils.GetLabel('Water', self.Pos)
+                local label = NavUtils.GetLabel('Land', self.Pos)
                 aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase, label)
             end
             --self:LogDebug(string.format('DecideWhatToDo threat data enemy surface '..tostring(threat.enemySurface)))
@@ -1010,6 +1010,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local avoidTargetPos
             local controlRequired = not self.Raid
             local target = StateUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
+            local zoneRetreat
             if target and not target.Dead then
                 local targetRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                 local minTargetRange
@@ -1023,7 +1024,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local rx = self.Pos[1] - targetPos[1]
                 local rz = self.Pos[3] - targetPos[3]
                 local targetDistance = rx * rx + rz * rz
-                local zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, targetPos, controlRequired, nil, 'Land')
+                zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, targetPos, controlRequired, nil, 'Land')
                 local zonePos = zoneRetreat.pos
                 local platUnits = self:GetPlatoonUnits()
                 if targetDistance < targetRange * targetRange then
@@ -1089,7 +1090,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 end
                 coroutine.yield(20)
             end
-            local zoneRetreat = IntelManagerRNG.GetIntelManager(aiBrain):GetClosestRetreatZone(aiBrain, self, false, avoidTargetPos, controlRequired, nil, 'Land')
+            if not zoneRetreat then
+                zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, avoidTargetPos, controlRequired, nil, 'Land')
+            end
             local location = zoneRetreat.pos
             if (not location) then
                 self:LogDebug(string.format('We have no zone retreat position so will retreat to the closest base'))

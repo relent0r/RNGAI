@@ -338,14 +338,14 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             --RNGLOG('* NavalAttackAIRNG Path to attack position found')
             local pathNodesCount = RNGGETN(path)
             if pathNodesCount == 0 then
-                --self:LogDebug(string.format('Number of nodes in path is zero, we are going to retreat for now'))
+                self:LogDebug(string.format('Number of nodes in path is zero, we are going to retreat for now'))
                 coroutine.yield(25)
                 self:ChangeState(self.Retreating)
             end
             
             for i=1, pathNodesCount do
-                ----self:LogDebug(string.format('Moving to destination. i: '..i..' coords '..repr(path[i])))
-                ----self:LogDebug(string.format('Current platoon pos is '..repr(self.Pos)))
+                --self:LogDebug(string.format('Moving to destination. i: '..i..' coords '..repr(path[i])))
+                --self:LogDebug(string.format('Current platoon pos is '..repr(self.Pos)))
                 if bAggroMove then
                     self:AggressiveMoveToLocation(path[i])
                 elseif i ~= pathNodesCount then
@@ -447,7 +447,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                 Position = target:GetPosition(),
                                 CutOff = 400
                             }
-                            --self:LogDebug(string.format('Target found, moving to combat loop'))
+                            self:LogDebug(string.format('Target found, moving to combat loop'))
                             self.targetcandidates = {target}
                             self:ChangeState(self.CombatLoop)
                             return
@@ -480,7 +480,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                     else
                         Stuck = Stuck + 1
                         if Stuck > 15 then
-                            --self:LogDebug(string.format('Platoon is considered stuck, stopping and deciding what to do'))
+                            self:LogDebug(string.format('Platoon is considered stuck, stopping and deciding what to do'))
                             self:Stop()
                             self:ChangeState(self.DecideWhatToDo)
                             return
@@ -509,6 +509,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                 end
             end
             --self:LogDebug(string.format('Navigation loop finished, deciding what to do, should we actually be here?'))
+            coroutine.yield(15)
             self:ChangeState(self.DecideWhatToDo)
             return
         end,

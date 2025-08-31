@@ -1156,6 +1156,15 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + 120
                     RNGINSERT(unitTable.DefenseThreat.Units, {Object = unit, Distance = distance})
                 else
+                    local unitRange = GetUnitMaxWeaponRange(unit)
+                    if experimentalRange and experimentalRange > unitRange then
+                        local rangeAdvantage = experimentalRange - unitRange
+                        -- Bigger range advantage = lower effective threat
+                        if distance > (unitRange * unitRange) then
+                            local reductionFactor = math.max(0.25, 1.0 - (rangeAdvantage / experimentalRange) * 0.6)
+                            unitThreat = unitThreat * reductionFactor
+                        end
+                    end
                     unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + unitThreat
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
                     RNGINSERT(unitTable.DefenseThreat.Units, {Object = unit, Distance = distance})
