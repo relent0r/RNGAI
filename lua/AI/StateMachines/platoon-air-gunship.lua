@@ -78,6 +78,8 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.AttackTarget)
                 return
             end
+            --LOG('Gunship current enemy air threat '..tostring(self.CurrentEnemyAirThreat))
+            --LOG('Gunship current platoon antiair threat '..tostring(self.CurrentPlatoonThreatAntiAir))
             if self.CurrentEnemyAirThreat > 0 and self.CurrentEnemyAirThreat > self.CurrentPlatoonThreatAntiAir and homeDist > 900 and not aiBrain.BrainIntel.SuicideModeActive then
                 self:LogDebug(string.format('Gunship found air threat and is a certain distance from base'))
                 local platoonHealth = 0
@@ -451,6 +453,25 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                     ----self:LogDebug(string.format('Gunship is in retreat mode, waiting until it arrives home, distance from home is '..VDist3Sq(platPos, self.Home)))
                     coroutine.yield(25)
                     platPos = self:GetPlatoonPosition()
+                end
+                if VDist3Sq(platPos, self.Home) < 2500 then
+                    for _, unit in self:GetPlatoonUnits() do
+                        if not unit.Dead then
+                            local fuel = unit:GetFuelRatio()
+                            local health = unit:GetHealthPercent()
+                            if not unit.Loading and ((fuel > -1 and fuel < 0.5) or health < 0.8) then
+                                --LOG('Gunship needs refuel')
+                                if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
+                                    aiBrain.BrainIntel.AirStagingRequired = true
+                                elseif not aiBrain.BrainIntel.AirStagingRequired and not self.BuilderData.AttackTarget or self.BuilderData.AttackTarget.Dead then
+                                    --platoon:LogDebug(string.format('Gunship is low on fuel or health and is going to refuel'))
+                                    local plat = aiBrain:MakePlatoon('', '')
+                                    aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
+                                    import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Gunship', LocationType = self.LocationType}, plat, {unit})
+                                end
+                            end
+                        end
+                    end
                 end
             end
             if IsDestroyed(self) then

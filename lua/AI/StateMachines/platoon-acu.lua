@@ -122,6 +122,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             cdr.SnipeMode = false
                             brain.BrainIntel.SuicideModeActive = false
                             brain.BrainIntel.SuicideModeTarget = nil
+                            --LOG('ACU : We are going to retreat due to enemy acu has more weapon range than us, we are in suicide mode')
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -132,6 +133,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             cdr.SnipeMode = false
                             brain.BrainIntel.SuicideModeActive = false
                             brain.BrainIntel.SuicideModeTarget = nil
+                            --LOG('ACU : We are going to retreat due to being in enemy territory and low health vs high e threat, we are in suicide mode')
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -142,6 +144,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             cdr.SnipeMode = false
                             brain.BrainIntel.SuicideModeActive = false
                             brain.BrainIntel.SuicideModeTarget = nil
+                            --LOG('ACU : We are going to retreat due to being in enemy territory and low health vs high e threat, we are in suicide mode')
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -152,6 +155,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             cdr.SnipeMode = false
                             brain.BrainIntel.SuicideModeActive = false
                             brain.BrainIntel.SuicideModeTarget = nil
+                            --LOG('ACU : We are going to retreat due to being in enemy territory and low health vs high e threat, we are in suicide mode')
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -324,23 +328,27 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if not enemyAcuOverride or enemyAcuOverride and cdr.Confidence < 2 then
                     --LOG('CDR is retreating')
                     self:LogDebug(string.format('retreating due to low confidence'))
+                    --LOG('ACU : We are going to retreat due to low confidence')
                     self:ChangeState(self.Retreating)
                     return
                 end
             end
             if cdr.Caution and cdr.EnemyNavalPresent and cdr:GetCurrentLayer() == 'Seabed' and cdr.DistanceToHome > 2500 then
                 self:LogDebug(string.format('retreating due to seabed'))
+                --LOG('ACU : We are going to retreat due to enemy sea bed')
                 self:ChangeState(self.Retreating)
                 return
             end
             if cdr.Caution and cdr.CurrentEnemyDefenseThreat > 55 and cdr.Health < 6000 and not cdr.SuicideMode and cdr.DistanceToHome > 2500 then
                 self:LogDebug(string.format('ACU is facing heavy defense units, retreat'))
+                --LOG('ACU : We are going to retreat due to defense threat and low health')
                 self:ChangeState(self.Retreating)
                 return
             end
             if cdr.EnemyFlanking and (cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat or cdr.Health < 6500) and cdr.DistanceToHome > 2500 then
                 cdr.EnemyFlanking = false
                 self:LogDebug(string.format('ACU is being flanked by enemy, retreat'))
+                --LOG('ACU : We are going to retreat due to flanking and more enemy threat plus mid health')
                 self:ChangeState(self.Retreating)
                 return
             end
@@ -350,6 +358,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     cdr.EnemyAirPresent = true
                     if not cdr.AtHoldPosition then
                         self:LogDebug(string.format('Retreating due to enemy air snipe possibility'))
+                        --LOG('ACU : We are going to retreat due to air snipe possibility')
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -646,6 +655,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     if not closestPos then
                         self:LogDebug(string.format('no close base retreat'))
                         self.BuilderData = {}
+                        --LOG('ACU : We are going to retreat due to max base range')
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -657,6 +667,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             if (realThreat.enemyStructure + realThreat.enemySurface) > 30 and (realThreat.enemyStructure + realThreat.enemySurface) > realThreat.allySurface then
                                 self:LogDebug(string.format('no close base retreat'))
                                 self.BuilderData = {}
+                                --LOG('ACU : We are going to retreat due to max base range')
                                 self:ChangeState(self.Retreating)
                                 return
                             end
@@ -665,6 +676,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 else
                     self:LogDebug(string.format('We are in caution, reset BuilderData and retreat'))
                     self.BuilderData = {}
+                    --LOG('ACU : We are going to retreat due to max base range and caution')
                     self:ChangeState(self.Retreating)
                     return
                 end
@@ -674,6 +686,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     --LOG('We are in hostile territory and should be retreating')
                     if cdr.CurrentEnemyThreat > 10 and cdr.CurrentEnemyThreat * 1.2 > cdr.CurrentFriendlyThreat then
                         self:LogDebug(string.format('Enemy is in phase 2 and we are in hostile territory and threat around us is above comfort '..cdr.CurrentEnemyThreat))
+                        --LOG('ACU : We are going to retreat due to enemy phase 2 and threat in hostile territory')
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -748,6 +761,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         if not closestPos then
                             self:LogDebug(string.format('no close base retreat'))
                             self.BuilderData = {}
+                            --LOG('ACU : We are going to retreat due to max base range')
                             self:ChangeState(self.Retreating)
                             return
                         end
@@ -760,6 +774,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 if (realThreat.enemyStructure + realThreat.enemySurface) > 35 and (realThreat.enemyStructure + realThreat.enemySurface) > realThreat.allySurface then
                                     self:LogDebug(string.format('high threat retreat'))
                                     self.BuilderData = {}
+                                    --LOG('ACU : We are going to retreat due to max base range and high threat')
                                     self:ChangeState(self.Retreating)
                                     return
                                 end
@@ -770,6 +785,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         --LOG('Wipe BuilderData in numUnits > 1')
                         self.BuilderData = {}
                         self:LogDebug(string.format('We are in caution, retreat threat is  '..cdr.CurrentEnemyThreat))
+                        --LOG('ACU : We are going to retreat due to max base range and caution')
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -798,6 +814,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     target = false
                 end
                 if closestThreatUnit and acuRisk then
+                    --LOG('ACU Risk, we should be attack retreating')
                     self.BuilderData = {
                         AttackTarget = closestThreatUnit,
                         Position = closestThreatUnit:GetPosition(), 
@@ -827,6 +844,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if (cdr.Health < 4000 and cdr.DistanceToHome > 14400 and not cdr.SuicideMode) or (cdr.Health < 6500 and cdr.Caution and not cdr.SuicideMode and cdr.DistanceToHome > 3600 ) or cdr.InFirebaseRange then
                     self:LogDebug(string.format('Emergency Retreat, low health or high danger'))
                     self.BuilderData = {}
+                    --LOG('ACU : We are going to retreat due to very loww health and danger')
                     self:ChangeState(self.Retreating)
                     return
                 end
@@ -913,6 +931,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             --LOG('ACU is more than 15 from base, we are going to retreat from a high range unit')
                             self:LogDebug(string.format('High unit threat at target and it outranges the acu, target was '..tostring(target.UnitId)))
                             self:LogDebug(string.format('Its range is '..tostring(unitRange)..' our range is '..tostring(cdr.WeaponRange)))
+                            --LOG('ACU : We are going to retreat due to high threat at target and unit range higher')
                             self:ChangeState(self.Retreating)
                             return
                         elseif targetDistance < riskRange and cdr.DistanceToHome < 225 and highThreatCount and highThreatCount > 130 and unitRange > cdr.WeaponRange and target:GetHealth() > 6000 then
@@ -924,6 +943,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             coroutine.yield(25)
                         end
                     end
+                    --LOG('About to attack target '..tostring(target.UnitId))
                     --LOG('CDR Health '..cdr.Health)
                     --LOG('Current Inner Enemy Threat '..cdr.CurrentEnemyInnerCircle)
                     --LOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
@@ -995,6 +1015,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 return
             elseif not cdr.SuicideMode and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > 6400 and cdr.Phase > 2 and brain:GetCurrentUnits(categories.TECH3 * categories.STRUCTURE * categories.FACTORY) > 0 then
                 self:LogDebug(string.format('Phase 3 and we are not close to base, retreating back'))
+                --LOG('ACU : We are going to retreat due to phase 3 and not close to base')
                 self:ChangeState(self.Retreating)
                 return
             elseif cdr.CurrentEnemyInnerCircle < 15 and cdr.CurrentEnemyThreat < 35 and not cdr.Caution then
@@ -2251,6 +2272,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 currentTargetPosition = self.BuilderData.AttackTarget:GetPosition()
             end
+            --LOG('ACU retreating')
             if cdr.Health > 5000 and distanceToHome > 6400 and not baseRetreat then
                 if cdr.GunUpgradeRequired and cdr.CurrentEnemyThreat < 15 and not cdr.EnemyCDRPresent then
                     if brain.GridPresence:GetInferredStatus(cdr.Position) ~= 'Hostile' then
@@ -2306,7 +2328,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     local AlliedPlatoons = brain:GetPlatoonsList()
                     for _,aPlat in AlliedPlatoons do
                         if aPlat.PlatoonName == 'LandAssaultBehavior' or aPlat.PlatoonName == 'LandCombatBehavior' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlatoonName == 'ZoneControlBehavior' then 
-                            --RNGLOG('Allied platoon name '..aPlat.PlanName)
+                            --LOG('Allied platoon name '..tostring(aPlat.PlanName))
                             if aPlat.UsingTransport then 
                                 continue 
                             end
@@ -2361,7 +2383,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            --RNGLOG('No platoon found, trying for base')
+            --LOG('No platoon found, trying for base')
             local closestBase
             local closestBaseDistance
             if cdr.Phase > 2 or brain.EnemyIntel.LandPhase > 2.5 then

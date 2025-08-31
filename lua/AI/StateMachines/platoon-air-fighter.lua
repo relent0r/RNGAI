@@ -133,6 +133,32 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     --LOG('Current Platoon Threat '..tostring(self.CurrentPlatoonThreatAntiAir)..' Ally Threat '..tostring((aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat))..' Enemy Threat '..tostring(aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir))
                 -- Params aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted
                     target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', self.MaxRadius, self.AttackPriorities, true, self.CurrentPlatoonThreatAntiAir * 1.2, false, false, true)
+                    if target and not target.Dead then
+                        local im = aiBrain.IntelManager
+                        local targetPos = target:GetPosition()
+                        local gridX, gridZ = im:GetIntelGrid(targetPos)
+                        local historicalThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
+                        --LOG('Historical AA thrat at target position '..tostring(historicalThreat))
+                        if historicalThreat > self.CurrentEnemyThreatAntiAir then
+                            local distanceWeight = 0.5      -- how much distance reduces risk
+                            local histWeight     = 1.0      -- historical threat multiplier
+                            local inferredWeight = 1.0      -- inferred enemy threat multiplier
+                            local supportWeight  = -0.5     -- friendly AA reduces risk
+                            local dx = platPos[1] - targetPos[1]
+                            local dz = platPos[3] - targetPos[3]
+                            local distSq = dx*dx + dz*dz
+                            local distFactor = distSq / (self.MaxRadius*self.MaxRadius)
+                            local threatScore = histWeight * historicalThreat
+                                                + inferredWeight * aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
+                                                + distanceWeight * distFactor
+                            local maxAllowableThreat = self.CurrentPlatoonThreatAntiAir * 1.5  -- tune this
+                            --LOG('Threat score is '..tostring(threatScore)..' max threat allowed is '..tostring(maxAllowableThreat))
+                            if threatScore > maxAllowableThreat then
+                                -- abort target acquisition
+                                target = nil
+                            end
+                        end
+                    end
                 end
                 if target then
                     self.BuilderData = {

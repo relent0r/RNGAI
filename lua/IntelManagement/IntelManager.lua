@@ -67,6 +67,7 @@ IntelManager = Class {
             IntelCoverage = 0,
             MustScoutArea = false,
         }
+        self.ZoneIMAPThreat = {}
         self.ZoneToGridMap = {}
         self.ScoutingCurveZones = {}
         self.CurrentFrontLineZones = {}
@@ -326,6 +327,7 @@ IntelManager = Class {
         self:ForkThread(self.GenerateZonePathDistanceCache)
         self:ForkThread(self.MaintainScoutingCurve)
         self:ForkThread(self.StructureRequestThread)
+        self:ForkThread(self.IntelGridThreatThreat, self.Brain)
         self.Brain:ForkThread(self.Brain.BuildScoutLocationsRNG)
         --self:ForkThread(self.DrawZoneArmyValue)
         if self.Debug then
@@ -987,6 +989,12 @@ IntelManager = Class {
                 if zone.status ~= 'Allied' then
                     score = score + 1
                 end
+
+                local defenseClusterDanger = StateUtils.CheckDefenseClusters(aiBrain, zone.pos, platoon['rngdata'].MaxPlatoonWeaponRange or 0, platoon.MovementLayer, platoon.CurrentPlatoonThreatAntiSurface or 0)
+                if defenseClusterDanger then
+                    score = score - 5
+                end
+
                 
                 --LOG('Score ' .. tostring(score))
             end
@@ -1450,6 +1458,9 @@ IntelManager = Class {
                         startPos = 0.3,
                         control = 0.3,
                         alliedAntiAirDeficit = 0.3,
+                        contiguityWeight = 0.5,
+                        frontlineWeight = 1.5,
+                        adjacenyWeight = 1.0,
                     }
                     local originPos
                     local maxTeamValue = 2
@@ -1492,6 +1503,7 @@ IntelManager = Class {
                                 --LOG('Maximum Allowed '..tostring(math.max(v.enemyairthreat * 2, enemyThreatRatio)))
                                 continue
                             end
+                            local frontlineBias = 1 - math.abs(v.teamvalue - 1)
                             local startPos = 1
                             local status = aiBrain.GridPresence:GetInferredStatus(v.pos)
                             local controlValue = 1
@@ -1527,6 +1539,7 @@ IntelManager = Class {
                             local normalizedControlValue = controlValue
                             local priorityScore = (
                                 normalizedTeamValue * weightageValues['teamValue'] +
+                                contiguityBonus * weightageValues['contiguityWeight'] +
                                 normalizedResourceValue * weightageValues['massValue'] -
                                 normalizedEnemyAntiSurfaceThreatValue * weightageValues['enemyAntiSurface'] -
                                 normalizedStartPosValue * weightageValues['startPos'] +
@@ -1536,7 +1549,8 @@ IntelManager = Class {
                                 normalizedFriendAirThreatValue * weightageValues['friendlylandantiairthreat'] +
                                 statusBonus +
                                 alliedAntiAirDeficit * weightageValues['alliedAntiAirDeficit'] +
-                                adjacencyBonus
+                                frontlineBias * weightageValues['frontlineWeight'] +
+                                adjacencyBonus * weightageValues['adjacenyWeight']
                             )
                             --LOG('AntiAir Defense Priority Score '..tostring(priorityScore))
                             --LOG('AntiAir Defense Current antiair allocated '..tostring(v.platoonallocations.friendlyantiairallocatedthreat))
@@ -2421,37 +2435,85 @@ IntelManager = Class {
         return teamTable
     end,
 
+    IntelGridThreatThreat = function(self, aiBrain)
+        while not self.MapIntelGrid do
+            coroutine.yield(30)
+        end
+        while aiBrain.Status ~= "Defeat" do
+            local gameTime = GetGameTimeSeconds()
+            self:UpdateThreatMemoryScan(gameTime, 'AntiAir')
+            self:UpdateThreatMemoryScan(gameTime, 'Naval')
+            self:UpdateThreatMemoryScan(gameTime, 'Air')
+            coroutine.yield(25)
+        end
+    end,
+
+    UpdateThreatMemoryScan = function(self, timeNow, threatType)
+        local gridSize = self.IMAPConfig.IMAPSize
+        local scanData = self.Brain:GetThreatsAroundPosition(
+            {ScenarioInfo.size[1]/2, 0, ScenarioInfo.size[2]/2},
+            16, true, threatType
+        )
+    
+        for _, data in scanData do
+            local gx, gz = self:GetIntelGrid({data[1], 0, data[2]})
+            local threatVal = data[3]
+    
+            local cell = self.MapIntelGrid[gx] and self.MapIntelGrid[gx][gz]
+            if cell then
+                cell.IMAPCurrentThreat[threatType] = threatVal
+                -- Keep the max between new threat and decayed memory
+                cell.IMAPHistoricalThreat[threatType] = math.max(cell.IMAPCurrentThreat[threatType], threatVal)
+                cell.LastThreatUpdate = timeNow
+            end
+        end
+    end,
+
+    GetHistoricalThreatInRings = function(self, gridX, gridZ, threatType, ringCount)
+        local intelGrid = self.MapIntelGrid
+        local totalThreat = 0
+        for x = math.max(self.MapIntelGridXMin, gridX - ringCount), math.min(self.MapIntelGridXMax, gridX + ringCount) do
+            for z = math.max(self.MapIntelGridZMin, gridZ - ringCount), math.min(self.MapIntelGridZMax, gridZ + ringCount) do
+                totalThreat = totalThreat + self.MapIntelGrid[x][z].IMAPHistoricalThreat[threatType]
+            end
+        end
+        return totalThreat
+    end,
+
     IntelGridThread = function(self, aiBrain)
         while not self.MapIntelGrid do
             coroutine.yield(30)
         end
         local aiBrain = self.Brain
+        local threatDecayRate = 5
         while aiBrain.Status ~= "Defeat" do
             coroutine.yield(20)
             local intelCoverage = 0
             local mapOwnership = 0
             local mustScoutPresent = false
+            self.ZoneIMAPThreat = {}
             for i=self.MapIntelGridXMin, self.MapIntelGridXMax do
                 local time = GetGameTimeSeconds()
                 for k=self.MapIntelGridZMin, self.MapIntelGridZMax do
-                    if self.MapIntelGrid[i][k].MustScout and (not self.MapIntelGrid[i][k].ScoutAssigned or self.MapIntelGrid[i][k].ScoutAssigned.Dead) then
+                    local cell = self.MapIntelGrid[i][k]
+                    if cell.MustScout and (not cell.ScoutAssigned or cell.ScoutAssigned.Dead) then
                         --RNGLOG('mustScoutPresent in '..i..k)
-                        --RNGLOG(repr(self.MapIntelGrid[i][k]))
+                        --RNGLOG(repr(cell))
                         mustScoutPresent = true
                     end
-                    if self.MapIntelGrid[i][k].Enabled and not self.MapIntelGrid[i][k].Water then
-                        self.MapIntelGrid[i][k].TimeScouted = time - self.MapIntelGrid[i][k].LastScouted
-                        if self.MapIntelGrid[i][k].IntelCoverage or (self.MapIntelGrid[i][k].ScoutPriority > 0 and self.MapIntelGrid[i][k].TimeScouted ~= 0 and self.MapIntelGrid[i][k].TimeScouted < 120) then
+                    if cell.Enabled and not cell.Water then
+                        cell.TimeScouted = time - cell.LastScouted
+                        if cell.IntelCoverage or (cell.ScoutPriority > 0 and cell.TimeScouted ~= 0 and cell.TimeScouted < 120) then
                             intelCoverage = intelCoverage + 1
                         end
                     end
                     local unitsToRemove = {}
-                    if not table.empty(self.MapIntelGrid[i][k].EnemyUnits) then
-                        for c,b in self.MapIntelGrid[i][k].EnemyUnits do
+                    if not table.empty(cell.EnemyUnits) then
+                        for c,b in cell.EnemyUnits do
                             if (b.object and b.object.Dead) then
                                 table.insert(unitsToRemove, c)
                             elseif time-b.time>120 or (time-b.time>15 and GetNumUnitsAroundPoint(aiBrain,categories.MOBILE,b.Position,20,'Ally')>3) then
-                                self.MapIntelGrid[i][k].EnemyUnits[c].recent=false
+                                cell.EnemyUnits[c].recent=false
                                 if time-b.time>300 then
                                     table.insert(unitsToRemove, c)
                                 end
@@ -2459,9 +2521,24 @@ IntelManager = Class {
                         end
                     end
                     for _, c in unitsToRemove do
-                        self.MapIntelGrid[i][k].EnemyUnits[c]=nil
+                        cell.EnemyUnits[c]=nil
                     end
-                    local cellStatus = aiBrain.GridPresence:GetInferredStatus(self.MapIntelGrid[i][k].Position)
+                    local secondsSinceThreatUpdate = time - cell.LastThreatUpdate
+                    local threatDecayAmount = threatDecayRate * secondsSinceThreatUpdate
+                    cell.IMAPHistoricalThreat.AntiAir = math.max(0, cell.IMAPHistoricalThreat.AntiAir - threatDecayAmount)
+                    cell.IMAPHistoricalThreat.Naval = math.max(0, cell.IMAPHistoricalThreat.Naval - threatDecayAmount)
+                    if cell.LandZoneID then
+                        if time - 30 > cell.LastThreatUpdate then
+                            if not self.ZoneIMAPThreat[cell.LandZoneID] then
+                                self.ZoneIMAPThreat[cell.LandZoneID] = {}
+                            end
+                            if not self.ZoneIMAPThreat[cell.LandZoneID].Air then
+                                self.ZoneIMAPThreat[cell.LandZoneID].Air = 0
+                            end
+                            self.ZoneIMAPThreat[cell.LandZoneID].Air = self.ZoneIMAPThreat[cell.LandZoneID].Air + (cell.IMAPCurrentThreat['Air'] or 0)
+                        end
+                    end
+                    local cellStatus = aiBrain.GridPresence:GetInferredStatus(cell.Position)
                     if cellStatus == 'Allied' then
                         mapOwnership = mapOwnership + 1
                     end
@@ -3200,6 +3277,8 @@ IntelManager = Class {
             end
             --RNGLOG('Current T2 torpcount is '..aiBrain.amanager.Demand.Air.T2.torpedo)
         elseif productiontype == 'MobileAntiAir' then
+            
+            local currentMobileAAAllocated = 0
             local selfThreat = aiBrain.BrainIntel.SelfThreat
             local enemyThreat = aiBrain.EnemyIntel.EnemyThreatCurrent
             --LOG('selfLandThreat '..tostring(selfThreat.LandNow))
@@ -3207,8 +3286,47 @@ IntelManager = Class {
             --LOG('enemyLandThreat '..tostring(enemyThreat.Land))
             local safeAntiAir = selfThreat.AntiAirNow > 0 and selfThreat.AntiAirNow or 0.1
             --LOG('Current land now threat is '..tostring(selfThreat.LandNow))
-            if selfThreat.LandNow > 20 and selfThreat.LandNow * 1.3 > enemyThreat.Land and safeAntiAir < enemyThreat.Air or enemyThreat.AirSurface > 75 and selfThreat.LandNow * 1.7 > enemyThreat.Land then
+            for baseName, base in aiBrain.BuilderManagers do
+                local zone = base.Zone
+                if baseName ~= 'MAIN' and zone and base.FactoryManager and base.FactoryManager.LocationActive and base.Layer ~= 'Water' then
+                    local baseAirThreat = (self.ZoneIMAPThreat[zone.id] and self.ZoneIMAPThreat[zone.id].Air) or 0
+                    local friendlyAntiAirThreat = zone.friendlylandantiairthreat or 0
+                    if zone.edges then
+                        for _, edge in ipairs(zone.edges or {}) do
+                            local adjZone = edge.zone
+                            if adjZone and self.ZoneIMAPThreat[adjZone.id] then
+                                baseAirThreat = baseAirThreat + (self.ZoneIMAPThreat[adjZone.id].Air or 0)
+                                friendlyAntiAirThreat = friendlyAntiAirThreat + (adjZone.friendlylandantiairthreat or 0)
+                            end
+                        end
+                    end
+                    local safeAA = math.max(friendlyAntiAirThreat or 0.1, 0.1) 
+                    local aaRequired = math.ceil(
+                        math.min(
+                            math.ceil(baseAirThreat / safeAA),      -- ceil division to whole number
+                            math.ceil(2 + (zone.teamvalue or 1))   -- ceil the teamvalue cap too
+                        )
+                    )
+                    --LOG('Current Air threat for base '..tostring(baseName)..' (zone '..tostring(zone.id)..' + adjacencies) is '..tostring(baseAirThreat))
+                    --LOG('Potential MobileAA required '..tostring(aaRequired))
+                    if safeAntiAir < enemyThreat.Air then
+                        aaRequired = math.ceil(aaRequired * 1.3)
+                    end
+                    if aaRequired > 0 then
+                        aiBrain.amanager.Demand.Bases[baseName].Land.T1.aa = aaRequired
+                        aiBrain.amanager.Demand.Bases[baseName].Land.T2.aa = aaRequired
+                        aiBrain.amanager.Demand.Bases[baseName].Land.T3.aa = aaRequired
+                    else
+                        aiBrain.amanager.Demand.Bases[baseName].Land.T1.aa = 0
+                        aiBrain.amanager.Demand.Bases[baseName].Land.T2.aa = 0
+                        aiBrain.amanager.Demand.Bases[baseName].Land.T3.aa = 0
+                    end
+                    currentMobileAAAllocated = currentMobileAAAllocated + aaRequired
+                end
+            end
+            if (selfThreat.LandNow > 20 and selfThreat.LandNow * 1.3 > enemyThreat.Land and safeAntiAir < enemyThreat.Air) or (enemyThreat.AirSurface > 75 and selfThreat.LandNow * 1.7 > enemyThreat.Land) then
                 local teamValueCount = 0
+                local totalMobileAARequired = 0
                 if aiBrain.BuilderManagers['MAIN'].PathableZones.Zones then
                     local landZones = aiBrain.Zones.Land.zones
                     for _, v in aiBrain.BuilderManagers['MAIN'].PathableZones.Zones do
@@ -3220,15 +3338,17 @@ IntelManager = Class {
                 local zoneCount = aiBrain.BuilderManagers['MAIN'].PathableZones.PathableLandZoneCount
                 -- We are going to look at the threat in the pathable zones and see which ones are in our territory and make sure we have a theoretical number of air units there
                 -- I want to do this on a per base method, but I realised I'm not keeping information.
-                local totalMobileAARequired = 0 
                 if enemyThreat.Air > 0 then
                     totalMobileAARequired = math.min(math.ceil((teamValueCount * 0.65) * (enemyThreat.Air / safeAntiAir)), teamValueCount * 1.5) or 0
+                    totalMobileAARequired = math.max(totalMobileAARequired - currentMobileAAAllocated, 1)
                 end
                 --LOG('Team Value Count '..tostring(teamValueCount))
                 --LOG('Enemy Air Threat '..tostring(enemyThreat.Air))
                 --LOG('Self AntiAir '..tostring(safeAntiAir))
                 --LOG('totalMobileAARequired '..tostring(totalMobileAARequired))
                 --LOG('EnemyThreatRatio '..tostring((enemyThreat.Air / safeAntiAir)))
+
+
                 if aiBrain.BrainIntel.LandPhase == 1 then
                     aiBrain.amanager.Demand.Bases['MAIN'].Land.T1.aa = totalMobileAARequired
                 elseif aiBrain.BrainIntel.LandPhase == 2 then
@@ -4735,6 +4855,18 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z].LandThreat = 0
             intelGrid[x][z].DefenseThreat = 0
             intelGrid[x][z].AirThreat = 0
+            intelGrid[x][z].LastThreatUpdate = 0
+            intelGrid[x][z].IMAPCurrentThreat = {
+                AntiAir = 0,
+                Naval = 0
+
+            }
+            intelGrid[x][z].IMAPHistoricalThreat = {
+                AntiAir = 0,
+                Naval = 0,
+                Air = 0
+
+            }
             intelGrid[x][z].AntiSurfaceThreat = 0
             intelGrid[x][z].ACUIndexes = { }
             intelGrid[x][z].ACUThreat = 0

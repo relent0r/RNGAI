@@ -353,7 +353,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                             if eng:IsUnitState('Reclaiming') and reclaimTimeout > 0 then
                                 reclaimTimeout = reclaimTimeout - 1
                             end
-                            brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, eng, 5)
+                            brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, eng, 1)
                             if brokenPathMovement and closestReclaim and (not IsDestroyed(closestReclaim)) then
                                 local engPos = eng:GetPosition()
                                 local reclaimDist = VDist3(engPos, closestReclaim.CachePosition)

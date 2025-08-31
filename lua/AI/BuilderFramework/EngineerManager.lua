@@ -775,7 +775,6 @@ EngineerManager = Class(BuilderManager) {
                 if self.LocationType == 'FLOATING' then
                     local radarRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 75, 'RADAR')
                     if radarRequestPos then
-                        --LOG('Radar Request found')
                         -- Fork a lightweight radar builder platoon
                         local locationPlatoon = aiBrain:MakePlatoon('RadarPlatoon', 'StateMachineAIRNG')
                         aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')

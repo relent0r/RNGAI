@@ -463,6 +463,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                 WaitTicks(1)
             end
             --self:LogDebug(string.format('Navigation loop finished, deciding what to do, should we actually be here?'))
+            coroutine.yield(15)
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
