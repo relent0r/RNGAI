@@ -506,7 +506,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) and GetEconomyIncome(brain, 'ENERGY') > (35 * ecoMultiplier)
+            local priorityUpgradeRequired = cdr.GunUpgradeRequired or cdr.GunAeonUpgradeRequired or cdr.HighThreatUpgradeRequired
+            if priorityUpgradeRequired and GetEconomyIncome(brain, 'ENERGY') > (35 * ecoMultiplier)
             or gameTime > 1500 and GetEconomyIncome(brain, 'ENERGY') > (40 * ecoMultiplier) and GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95 then
                 local inRange = false
                 local highThreat = cdr.CurrentEnemyThreat > 30 and cdr.CurrentFriendlyThreat < 15
@@ -517,7 +518,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.EnhancementBuild)
                     return
                 end
-                if (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) then
+                if priorityUpgradeRequired then
                     enhancementLocation, enhancementZone, locationDistance, movementCutOff = ACUFunc.GetACUSafeZone(brain, cdr, false)
                     if locationDistance < 2209 then
                         inRange = true
@@ -528,11 +529,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         inRange = true
                     end
                 end
-                if inRange and not highThreat and ((cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
+                if inRange and not highThreat and (priorityUpgradeRequired or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
                     self:LogDebug(string.format('We are in range and will perform enhancement'))
                     self:ChangeState(self.EnhancementBuild)
                     return
-                elseif not highThreat and ((cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
+                elseif not highThreat and (priorityUpgradeRequired or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
                     if enhancementLocation then
                         self.BuilderData = {
                             Position = enhancementLocation,
@@ -958,12 +959,28 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     ----self:LogDebug(string.format('No target found for ACU'))
                     if not cdr.SuicideMode then
                         --RNGLOG('Total highThreatCount '..highThreatCount)
-                        if cdr.Phase < 3 and not cdr.HighThreatUpgradePresent and closestThreatUnit and closestUnitPosition then
+                        if cdr.Phase < 3 and (not cdr.HighThreatUpgradePresent) and closestThreatUnit and closestUnitPosition then
                             if not IsDestroyed(closestThreatUnit) then
                                 local threatAtPos = GetThreatAtPosition(brain, closestUnitPosition, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
-                                if threatAtPos > 50 and threatAtPos > cdr.ThreatLimit * 1.3 and GetEconomyIncome(brain, 'ENERGY') > 80 then
+                                if threatAtPos > 95 and threatAtPos > cdr.ThreatLimit * 1.5 and GetEconomyIncome(brain, 'ENERGY') > 80 then
+                                    --LOG('High threat upgrade required')
+                                    --LOG('threatAtPos '..tostring(threatAtPos))
                                     ----self:LogDebug(string.format('High threat upgrade required'))
                                     cdr.HighThreatUpgradeRequired = true
+                                    local closestBase = ACUFunc.GetClosestBase(brain, cdr)
+                                    if closestBase then
+                                        self.BuilderData = {
+                                            Position = brain.BuilderManagers[closestBase].Position,
+                                            CutOff = 625,
+                                            Retreat = true
+                                        }
+                                        self:LogDebug(string.format('No target found, and high threat present at closest unit, retreat for high threat upgrade'))
+                                        self:ChangeState(self.Navigating)
+                                        return
+                                    end
+                                elseif cdr.Blueprint.FactionCategory == 'AEON' and (not cdr.GunAeonUpgradePresent) and threatAtPos > 55 and threatAtPos > cdr.ThreatLimit * 1.3 and GetEconomyIncome(brain, 'ENERGY') > 65 then
+                                    --LOG('Aeon Second gun upgrade required')
+                                    cdr.GunAeonUpgradeRequired = true
                                     local closestBase = ACUFunc.GetClosestBase(brain, cdr)
                                     if closestBase then
                                         self.BuilderData = {
@@ -2789,35 +2806,52 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
-            
+            local priorityGunUpgradeRequired = cdr.GunUpgradeRequired or cdr.GunAeonUpgradeRequired
+            local priorityThreatUpgradeRequired = cdr.HighThreatUpgradeRequired
             local upgradeMode = 'Combat'
-            if gameTime < 1500 and not brain.RNGEXP then
+            if priorityGunUpgradeRequired then
+                upgradeMode = 'PriorityGun'
+            elseif priorityThreatUpgradeRequired then
+                upgradeMode = 'PriorityThreat'
+            elseif gameTime < 1500 and not brain.RNGEXP then
                 upgradeMode = 'Combat'
-            elseif (not cdr.GunUpgradeRequired) and (not cdr.HighThreatUpgradeRequired) or brain.RNGEXP then
+            elseif (not priorityGunUpgradeRequired and not priorityThreatUpgradeRequired) or brain.RNGEXP then
                 upgradeMode = 'Engineering'
             end
 
-            if cdr:IsIdleState() or cdr.GunUpgradeRequired  or cdr.HighThreatUpgradeRequired then
-                if (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95 and brain.EconomyOverTimeCurrent.EnergyTrendOverTime > 250) or cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired then
+            if cdr:IsIdleState() or (priorityGunUpgradeRequired or priorityThreatUpgradeRequired) then
+                if (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95 and brain.EconomyOverTimeCurrent.EnergyTrendOverTime > 250) or (priorityGunUpgradeRequired or priorityThreatUpgradeRequired) then
                     cdr.Combat = false
                     cdr.Upgrading = false
                     local foundEnhancement
 
                     local ACUEnhancements = {
                         -- UEF
-                        ['uel0001'] = {Combat = {'HeavyAntiMatterCannon', 'DamageStabilization', 'Shield'},
+                        ['uel0001'] = {
+                                    PriorityGun = { 'HeavyAntiMatterCannon', 'DamageStabilization'},
+                                    PriorityThreat = { 'HeavyAntiMatterCannon', 'DamageStabilization', 'Shield' },
+                                    Combat = {'HeavyAntiMatterCannon', 'DamageStabilization', 'Shield'},
                                     Engineering = {'AdvancedEngineering', 'Shield', 'T3Engineering', 'ResourceAllocation'},
                                     },
                         -- Aeon
-                        ['ual0001'] = {Combat = {'CrysalisBeam', 'HeatSink', 'Shield', 'ShieldHeavy'},
+                        ['ual0001'] = {
+                                    PriorityGun = {'CrysalisBeam', 'HeatSink', 'FAF_CrysalisBeamAdvanced'},
+                                    PriorityThreat = {'CrysalisBeam', 'HeatSink', 'FAF_CrysalisBeamAdvanced', 'Shield'},
+                                    Combat = {'CrysalisBeam', 'HeatSink', 'FAF_CrysalisBeamAdvanced', 'Shield', 'ShieldHeavy'},
                                     Engineering = {'AdvancedEngineering', 'Shield', 'T3Engineering','ShieldHeavy'}
                                     },
                         -- Cybran
-                        ['url0001'] = {Combat = {'CoolingUpgrade', 'StealthGenerator', 'MicrowaveLaserGenerator', 'CloakingGenerator'},
+                        ['url0001'] = {
+                                    PriorityGun = {'CoolingUpgrade'},
+                                    PriorityThreat = {'CoolingUpgrade', 'StealthGenerator'},
+                                    Combat = {'CoolingUpgrade', 'StealthGenerator', 'MicrowaveLaserGenerator', 'CloakingGenerator'},
                                     Engineering = {'AdvancedEngineering', 'StealthGenerator', 'T3Engineering','CloakingGenerator'}
                                     },
                         -- Seraphim
-                        ['xsl0001'] = {Combat = {'RateOfFire', 'DamageStabilization', 'BlastAttack', 'DamageStabilizationAdvanced'},
+                        ['xsl0001'] = {
+                                    PriorityGun = {'RateOfFire'},
+                                    PriorityThreat = {'RateOfFire', 'DamageStabilization'},
+                                    Combat = {'RateOfFire', 'DamageStabilization', 'BlastAttack', 'DamageStabilizationAdvanced'},
                                     Engineering = {'AdvancedEngineering', 'T3Engineering',}
                                     },
                         -- Nomads
@@ -2841,7 +2875,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 SPEW('* RNGAI: no enhancement found for  = '..tostring(enhancement))
                             elseif cdr:HasEnhancement(enhancement) then
                                 NextEnhancement = false
-                            elseif ACUFunc.EnhancementEcoCheckRNG(brain, cdr, wantedEnhancementBP, enhancementName) then
+                            elseif ACUFunc.EnhancementEcoCheckRNG(brain, cdr, wantedEnhancementBP, enhancementName) or (priorityGunUpgradeRequired or priorityThreatUpgradeRequired) then
                                 if not NextEnhancement then
                                     NextEnhancement = enhancement
                                     HaveEcoForEnhancement = true
@@ -2857,15 +2891,19 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                     elseif NextEnhancement then
                         local wantedEnhancementBP = cdr.Blueprint.Enhancements[NextEnhancement]
-                        if ACUFunc.EnhancementEcoCheckRNG(brain, cdr, wantedEnhancementBP, NextEnhancement) or (cdr.GunUpgradeRequired or cdr.HighThreatUpgradeRequired) then
+                        if ACUFunc.EnhancementEcoCheckRNG(brain, cdr, wantedEnhancementBP, NextEnhancement) or (priorityGunUpgradeRequired or priorityThreatUpgradeRequired) then
                             HaveEcoForEnhancement = true
                         end
+                    end
+                    if not NextEnhancement then
+
                     end
 
                     if NextEnhancement and HaveEcoForEnhancement then
                         local priorityUpgrades = {
                             'HeavyAntiMatterCannon',
                             'HeatSink',
+                            'FAF_CrysalisBeamAdvanced',
                             'CrysalisBeam',
                             'CoolingUpgrade',
                             'RateOfFire',
@@ -2949,7 +2987,17 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 self:ChangeState(self.Retreating)
                                 return
                             end
-                            if GetEconomyStoredRatio(brain, 'ENERGY') < 0.2 and (not cdr.GunUpgradeRequired and not cdr.HighThreatUpgradeRequired) then
+                            if cdr.CurrentEnemyInnerCircle > 100 and cdr.CurrentEnemyThreat > (math.max(cdr.CurrentFriendlyInnerCircle, cdr.ThreatLimit) * 1.4) and math.max(0, cdr.CurrentEnemyInnerCircle - cdr.CurrentFriendlyInnerCircle) > 45 and eta > 350 then
+                                --LOG('ACU Should be aborting now')
+                                IssueStop({cdr})
+                                IssueClearCommands({cdr})
+                                cdr.Upgrading = false
+                                self.BuilderData = {}
+                                ----self:LogDebug(string.format('Cancel upgrade and emergency retreat'))
+                                self:ChangeState(self.Retreating)
+                                return
+                            end
+                            if GetEconomyStoredRatio(brain, 'ENERGY') < 0.2 and (not priorityGunUpgradeRequired and not priorityThreatUpgradeRequired) then
                                 if not enhancementPaused then
                                     if not cdr.Dead and cdr:IsUnitState('Enhancing') then
                                         cdr:SetPaused(true)
@@ -2969,6 +3017,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 if ACUFunc.CDRGunCheck(cdr) then
                                     cdr.GunUpgradeRequired = false
                                     cdr.GunUpgradePresent = true
+                                    RUtils.CDRWeaponCheckRNG(brain, cdr, true)
                                 end
                                 if not ACUFunc.CDRHpUpgradeCheck(brain, cdr) then
                                     cdr.HighThreatUpgradeRequired = false
@@ -3014,9 +3063,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local platoonUnits = self:GetPlatoonUnits()
             local eng
             --LOG('CommanderInitialize')
-            if not aiBrain.ACUData[eng.EntityId].CDRBrainThread then
-                aiBrain:CDRDataThreads(eng)
-            end
             for k, v in platoonUnits do
                 if not v.Dead and EntityCategoryContains(categories.ENGINEER, v) then
                     IssueClearCommands({v})
@@ -3024,6 +3070,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         eng = v
                     end
                 end
+            end
+            if not aiBrain.ACUData[eng.EntityId].CDRBrainThread then
+                ACUFunc.CDRDataThreads(aiBrain, eng)
             end
             eng.Initializing = true
             if factionIndex < 5 then
@@ -3788,7 +3837,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 for _, unit in supportUnits do
                     cache[1] = unit
                     if not brain.ACUData[unit.EntityId].CDRBrainThread then
-                        brain:CDRDataThreads(unit)
+                        ACUFunc.CDRDataThreads(brain, unit)
                     end
                 end
             end
@@ -3812,7 +3861,7 @@ AssignToUnitsMachine = function(data, platoon, units)
             for _, unit in squadUnits do
                 unit.PlatoonHandle = platoon
                 if not brain.ACUData[unit.EntityId].CDRBrainThread then
-                    brain:CDRDataThreads(unit)
+                    ACUFunc.CDRDataThreads(brain, unit)
                 end
                 IssueClearCommands({unit})
             end

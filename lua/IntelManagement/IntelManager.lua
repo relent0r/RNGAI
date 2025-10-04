@@ -14,8 +14,6 @@ local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
 local GetProductionPerSecondMass = moho.unit_methods.GetProductionPerSecondMass
-local MapIntelGridSize = 32
-
 
 -- pre-compute categories for performance
 local CategoriesStructuresNotMex = categories.STRUCTURE - categories.WALL - categories.MASSEXTRACTION
@@ -71,6 +69,9 @@ IntelManager = Class {
         self.ZoneToGridMap = {}
         self.ScoutingCurveZones = {}
         self.CurrentFrontLineZones = {}
+        self.UnpathableExpansionZoneCount = 0
+        self.InitialTransportRequested = false
+        self.NavalFocusSafe = false
         self.StructureRequests = {
             RADAR = {},
             TMD = {},
@@ -318,16 +319,18 @@ IntelManager = Class {
         self:ForkThread(self.ZoneFriendlyIntelMonitorRNG)
         self:ForkThread(self.ConfigureResourcePointZoneID)
         self:ForkThread(self.ZoneIntelAssignment)
+        self:ForkThread(self.MonitorEnemyThreatOnBaseLabels)
         self:ForkThread(self.EnemyPositionAngleAssignment)
         self:ForkThread(self.ZoneDistanceValue)
         self:ForkThread(self.ZoneLabelAssignment)
         self:ForkThread(self.IntelGridThread, self.Brain)
         self:ForkThread(self.ZoneExpansionThreadRNG)
         self:ForkThread(self.TacticalIntelCheck)
+        self:ForkThread(self.ZoneTransportRequirementCheck)
         self:ForkThread(self.GenerateZonePathDistanceCache)
         self:ForkThread(self.MaintainScoutingCurve)
         self:ForkThread(self.StructureRequestThread)
-        self:ForkThread(self.IntelGridThreatThreat, self.Brain)
+        self:ForkThread(self.IntelGridThreatThread, self.Brain)
         self.Brain:ForkThread(self.Brain.BuildScoutLocationsRNG)
         --self:ForkThread(self.DrawZoneArmyValue)
         if self.Debug then
@@ -1857,7 +1860,7 @@ IntelManager = Class {
             else
                 WARN('No ZoneID for Radar, unable to set coverage area')
             end
-            local gridSearch = math.floor(unit.Blueprint.Intel.RadarRadius / MapIntelGridSize)
+            local gridSearch = math.floor(unit.Blueprint.Intel.RadarRadius / self.MapIntelGridSize)
             --RNGLOG('GridSearch for IntelCoverage is '..gridSearch)
             self:InfectGridPosition(radarPosition, gridSearch, 'Radar', 'IntelCoverage', true, unit)
             self:FlushExistingStructureRequest(radarPosition, math.ceil(intelRadius * 0.7), 'RADAR')
@@ -1884,7 +1887,7 @@ IntelManager = Class {
                     end
                 end
             end
-            local gridSearch = math.floor(unit.Blueprint.Intel.RadarRadius / MapIntelGridSize)
+            local gridSearch = math.floor(unit.Blueprint.Intel.RadarRadius / self.MapIntelGridSize)
             self:DisinfectGridPosition(radarPosition, gridSearch, 'Radar', 'IntelCoverage', false, unit)
         end
     end,
@@ -1996,6 +1999,8 @@ IntelManager = Class {
         local aiBrain = self.Brain
         while aiBrain.Status ~= "Defeat" do
             coroutine.yield(35)
+            self:ForkThread(self.AdaptiveProductionThread, 'AirTransport')
+            coroutine.yield(1)
             self:ForkThread(self.AdaptiveProductionThread, 'AirAntiSurface',{ MaxThreat = 20})
             coroutine.yield(1)
             self:ForkThread(self.AdaptiveProductionThread, 'DefensiveAntiSurface')
@@ -2062,6 +2067,56 @@ IntelManager = Class {
         end
     end,
 
+    ZoneTransportRequirementCheck = function(self)
+        -- Sets a flag to determine is a transport should be required as early as possible
+
+        self:WaitForZoneInitialization()
+        self:WaitForNavmeshGeneration()
+        local aiBrain = self.Brain
+        while not self.MapIntelStats.ScoutLocationsBuilt do
+            LOG('*AI:RNG NavalAttackCheck is waiting for ScoutLocations to be built')
+            coroutine.yield(20)
+        end
+        coroutine.yield(Random(5,20))
+        local Zones = {
+            'Land'
+        }
+        local scenarioMapSizeX, scenarioMapSizeZ = GetMapSize()
+        local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+        local mapSizeX, mapSizeZ
+
+        if not playableArea then
+            mapSizeX = scenarioMapSizeX
+            mapSizeZ = scenarioMapSizeZ
+        else
+            mapSizeX = playableArea[3]
+            mapSizeZ = playableArea[4]
+        end
+        local startPos = aiBrain.BrainIntel.StartPos
+        local unpathableZones = 0
+        local mapDimension = math.max(mapSizeX, mapSizeZ)
+        local expansionSize = math.min((mapDimension * 0.7), 384)
+        --LOG('Expansion size '..tostring(expansionSize))
+        for _, v in Zones do
+            for _, v1 in aiBrain.Zones[v].zones do
+                if not NavUtils.CanPathTo('Amphibious', startPos, v1.pos) then
+                    local rx = startPos[1] - v1.pos[1]
+                    local rz = startPos[3] - v1.pos[3]
+                    local zoneDist = rx * rx + rz * rz
+                    if zoneDist < (expansionSize * expansionSize) then
+                        unpathableZones = unpathableZones + 1
+                    end
+                end
+            end
+        end
+        --LOG('Best Armies are set')
+        --LOG('Unpathable Expansion Zone Count = '..tostring(unpathableZones))
+        self.UnpathableExpansionZoneCount = unpathableZones
+        if unpathableZones > 0 then
+            self.InitialTransportRequested = true
+        end
+    end,
+
     ZoneIntelAssignment = function(self)
         -- Will setup table for scout assignment to zones
         -- I did this because I didn't want to assign units directly to the zones since it makes it hard to troubleshoot
@@ -2106,6 +2161,67 @@ IntelManager = Class {
         end
         --LOG('Best Armies are set')
         self.MapMaximumValues.MaximumResourceValue = maximumResourceValue
+    end,
+
+    MonitorEnemyThreatOnBaseLabels = function(self)
+        self:WaitForZoneInitialization()
+        self:WaitForNavmeshGeneration()
+        local aiBrain = self.Brain
+        while not self.MapIntelStats.ScoutLocationsBuilt do
+            LOG('*AI:RNG NavalAttackCheck is waiting for ScoutLocations to be built')
+            coroutine.yield(20)
+        end
+        coroutine.yield(Random(5,20))
+        local sm = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua').GetStructureManager(aiBrain)
+        while aiBrain.Status ~= "Defeat" do
+            coroutine.yield(35)
+            local labelsTable = {}
+            local smFactories = sm.Factories
+            local hasNavalProduction = smFactories.NAVAL[1].Total > 0 or smFactories.NAVAL[2].Total > 0 or smFactories.NAVAL[3].Total > 0
+            if hasNavalProduction then
+                for k, v in aiBrain.BuilderManagers do
+                    if v.FactoryManager and v.FactoryManager.LocationActive then
+                        if v.Layer ~= 'Water' and not labelsTable[v.Label] then
+                            labelsTable[v.Label] = {}
+                            for i=self.MapIntelGridXMin, self.MapIntelGridXMax do
+                                for j=self.MapIntelGridZMin, self.MapIntelGridZMax do
+                                    if self.MapIntelGrid[i][j] then
+                                        local gridCell = self.MapIntelGrid[i][j]
+                                        if gridCell.LandLabel == v.Label then
+                                            if not labelsTable[v.Label].LandThreat then
+                                                labelsTable[v.Label].LandThreat = 0
+                                            end
+                                            if gridCell.IMAPHistoricalThreat['Land'] then
+                                                labelsTable[v.Label].LandThreat = labelsTable[v.Label].LandThreat + gridCell.IMAPHistoricalThreat['Land']
+                                            end
+                                        end
+
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                --LOG('This is the base label threat')
+                local enemyThreatPresent = false
+                for k, v in labelsTable do
+                    if v.LandThreat then
+                        local selfFriendlySurfaceThreat = aiBrain.GraphZones[k].FriendlySurfaceDirectFireThreat
+                        if v.LandThreat and v.LandThreat > 0 and selfFriendlySurfaceThreat and v.LandThreat * 1.5 > selfFriendlySurfaceThreat then
+                            enemyThreatPresent = true
+                        end
+                    end
+                    --LOG('Label is '..tostring(k))
+                    --LOG('Land threat is '..tostring(v.LandThreat))
+                end
+                if enemyThreatPresent then
+                    self.NavalFocusSafe = false
+                else
+                    self.NavalFocusSafe = true
+                end
+                --LOG('Is enemy threat present '..tostring(enemyThreatPresent))
+            end
+        end
     end,
 
     GenerateZonePathDistanceCache = function(self)
@@ -2435,7 +2551,7 @@ IntelManager = Class {
         return teamTable
     end,
 
-    IntelGridThreatThreat = function(self, aiBrain)
+    IntelGridThreatThread = function(self, aiBrain)
         while not self.MapIntelGrid do
             coroutine.yield(30)
         end
@@ -2444,6 +2560,7 @@ IntelManager = Class {
             self:UpdateThreatMemoryScan(gameTime, 'AntiAir')
             self:UpdateThreatMemoryScan(gameTime, 'Naval')
             self:UpdateThreatMemoryScan(gameTime, 'Air')
+            self:UpdateThreatMemoryScan(gameTime, 'Land')
             coroutine.yield(25)
         end
     end,
@@ -2527,6 +2644,8 @@ IntelManager = Class {
                     local threatDecayAmount = threatDecayRate * secondsSinceThreatUpdate
                     cell.IMAPHistoricalThreat.AntiAir = math.max(0, cell.IMAPHistoricalThreat.AntiAir - threatDecayAmount)
                     cell.IMAPHistoricalThreat.Naval = math.max(0, cell.IMAPHistoricalThreat.Naval - threatDecayAmount)
+                    cell.IMAPHistoricalThreat.Air = math.max(0, cell.IMAPHistoricalThreat.Air - threatDecayAmount)
+                    cell.IMAPHistoricalThreat.Land = math.max(0, cell.IMAPHistoricalThreat.Land - threatDecayAmount)
                     if cell.LandZoneID then
                         if time - 30 > cell.LastThreatUpdate then
                             if not self.ZoneIMAPThreat[cell.LandZoneID] then
@@ -2683,13 +2802,13 @@ IntelManager = Class {
             --LOG('Temp log for GetPathingSegmentFromPosition: tPosition='..repru((tPosition or {'nil'}))..'; rPlayableArea='..repru((rPlayableArea or {'nil'})))
             --LOG('iBaseSegmentSize='..(iBaseSegmentSize or 'nil'))
             --RNGLOG('Grid Size '..MapIntelGridSize)
-            local gridx = math.floor((Position[1] - playableArea[1]) / MapIntelGridSize) + 1
-            local gridy = math.floor((Position[3] - playableArea[2]) / MapIntelGridSize) + 1
+            local gridx = math.floor((Position[1] - playableArea[1]) / self.MapIntelGridSize) + 1
+            local gridy = math.floor((Position[3] - playableArea[2]) / self.MapIntelGridSize) + 1
             --RNGLOG('Grid return X '..gridx..' Y '..gridy)
             --RNGLOG('Unit Position '..repr(Position))
             --RNGLOG('Attempt to return grid location '..repr(self.MapIntelGrid[gridx][gridy]))
     
-            return math.floor( (Position[1] - playableArea[1]) / MapIntelGridSize) + self.MapIntelGridXMin, math.floor((Position[3] - playableArea[2]) / MapIntelGridSize) + self.MapIntelGridZMin
+            return math.floor( (Position[1] - playableArea[1]) / self.MapIntelGridSize) + self.MapIntelGridXMin, math.floor((Position[3] - playableArea[2]) / self.MapIntelGridSize) + self.MapIntelGridZMin
         end
         return false, false
     end,
@@ -2863,6 +2982,31 @@ IntelManager = Class {
             else
                 minThreatRisk = 5
             end
+            --LOG('AI : '..tostring(aiBrain.Nickname))
+            local gridSize = self.MapIntelGridSize
+            local desiredRadius = 180
+            local rings = math.ceil(desiredRadius / gridSize)
+            local baseX, baseZ = self:GetIntelGrid(aiBrain.BrainIntel.StartPos)
+
+            local localAirThreat = self:GetHistoricalThreatInRings(baseX, baseZ, 'Air', rings)
+            --LOG('Local Air threat '..tostring(localAirThreat))
+
+            -- normalize local threat against global
+            local globalAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+            local localFactor = 1.0
+
+            if globalAirThreat > 0 then
+                localFactor = localAirThreat / globalAirThreat
+            end
+
+            -- If enemy air is far away (local << global), reduce minThreatRisk
+            -- Scale reduction so that we don't drop too low if we are badly outnumbered globally
+            if localFactor < 0.25 then  -- less than 25% of enemy air nearby
+                minThreatRisk = minThreatRisk * 0.5  -- halve the risk
+            elseif localFactor < 0.5 then
+                minThreatRisk = minThreatRisk * 0.75
+            end
+            --LOG('minThreatRisk for AirAntiNaval '..tostring(minThreatRisk))
             
             if minThreatRisk > 0 and aiBrain.BrainIntel.SelfThreat.AirNow > 10 then
                 --LOG('threat risk is '..tostring(minThreatRisk))
@@ -2978,7 +3122,15 @@ IntelManager = Class {
         
         --RNGLOG('CheckStrikPotential')
         --RNGLOG('ThreatRisk is '..minThreatRisk)
-        if productiontype == 'AirAntiSurface' then
+        if productiontype == 'AirTransport' then
+            if self.UnpathableExpansionZoneCount > 0 and self.InitialTransportRequested then
+                local t1TransportsBuilt = aiBrain:GetBlueprintStat("Units_History", categories.AIR * categories.TRANSPORTFOCUS * categories.TECH1)
+                if t1TransportsBuilt < 1 then
+                    --LOG('Transport Required has been set to 1')
+                    aiBrain.amanager.Demand.Air.T1.transport = 1
+                end
+            end
+        elseif productiontype == 'AirAntiSurface' then
             if not self.StrategyFlags.T3BomberRushActivated then
                 if aiBrain.BrainIntel.AirPhase == 3 and aiBrain.EnemyIntel.AirPhase < 3 then
                     aiBrain.amanager.Demand.Air.T3.bomber = 1
@@ -3251,8 +3403,8 @@ IntelManager = Class {
                     aiBrain.EngineerAssistManagerFocusSnipe = true
                 end
                 if navalAttack then
-                    --RNGLOG(aiBrain.Nickname)
-                    --RNGLOG('numer of navalAttack torps required '..count)
+                    --LOG(aiBrain.Nickname)
+                    --LOG('numer of navalAttack torps required '..count)
                     aiBrain.amanager.Demand.Air.T2.torpedo = count
                     aiBrain.amanager.Demand.Air.T3.torpedo = math.ceil(count / 2)
                 end
@@ -4544,7 +4696,7 @@ function InitialNavalAttackCheck(aiBrain)
                     if label and not validNavalLabels[label] then
                         validNavalLabels[label] = {
                             State = 'Unconfirmed',
-                            AllyPlayerCount = 0,
+                            AllyPlayerCount = 1,
                             EnemyPlayerCount = 0
                         }
                     end
@@ -4555,20 +4707,51 @@ function InitialNavalAttackCheck(aiBrain)
                     if enemyNavalPositions then
                         for _, v in enemyNavalPositions do
                             local label = NavUtils.GetLabel('Water', {v[1], v[2], v[3]})
-                            if label and validNavalLabels[label] then
-                                validNavalLabels[label].State = 'Confirmed'
-                                if not enemyStartAdded[label] then
-                                    validNavalLabels[label].EnemyPlayerCount = validNavalLabels[label].EnemyPlayerCount + 1
-                                    enemyStartAdded[label] = true
+                            local labelMeta = NavUtils.GetLabelMetadata(label)
+                            if labelMeta.Area and labelMeta.Area > 5 then
+                                if label and validNavalLabels[label] then
+                                    validNavalLabels[label].State = 'Confirmed'
+                                    if not enemyStartAdded[label] then
+                                        validNavalLabels[label].EnemyPlayerCount = validNavalLabels[label].EnemyPlayerCount + 1
+                                        enemyStartAdded[label] = true
+                                    end
+                                    if not b.WaterLabels[label] then
+                                        b.WaterLabels[label] = true
+                                    end
+                                    local dx = b.Position[1] - v[1]
+                                    local dz = b.Position[3] - v[3]
+                                    local posDist = dx * dx + dz * dz
+                                    if not maxNavalStartRange or posDist < maxNavalStartRange then
+                                        maxNavalStartRange = posDist
+                                    end
                                 end
-                                if not b.WaterLabels[label] then
-                                    b.WaterLabels[label] = true
-                                end
-                                local dx = b.Position[1] - v[1]
-                                local dz = b.Position[3] - v[3]
-                                local posDist = dx * dx + dz * dz
-                                if not maxNavalStartRange or posDist < maxNavalStartRange then
-                                    maxNavalStartRange = posDist
+                            end
+                        end
+                    end
+                end
+                for _, b in aiBrain.BrainIntel.AllyStartLocations do
+                    local allyStartAdded = {}
+                    local allyNavalPositions = NavUtils.GetPositionsInRadius('Water', b.Position, 256, 10)
+                    if allyNavalPositions then
+                        for _, v in allyNavalPositions do
+                            local label = NavUtils.GetLabel('Water', {v[1], v[2], v[3]})
+                            local labelMeta = NavUtils.GetLabelMetadata(label)
+                            if labelMeta.Area and labelMeta.Area > 5 then
+                                if label and validNavalLabels[label] then
+                                    validNavalLabels[label].State = 'Confirmed'
+                                    if not allyStartAdded[label] then
+                                        validNavalLabels[label].AllyPlayerCount = validNavalLabels[label].AllyPlayerCount + 1
+                                        allyStartAdded[label] = true
+                                    end
+                                    if not b.WaterLabels[label] then
+                                        b.WaterLabels[label] = true
+                                    end
+                                    local dx = b.Position[1] - v[1]
+                                    local dz = b.Position[3] - v[3]
+                                    local posDist = dx * dx + dz * dz
+                                    if not maxNavalStartRange or posDist < maxNavalStartRange then
+                                        maxNavalStartRange = posDist
+                                    end
                                 end
                             end
                         end
@@ -4579,7 +4762,10 @@ function InitialNavalAttackCheck(aiBrain)
                 aiBrain.BrainIntel.NavalBaseLabels = validNavalLabels
                 local labelCount = 0
                 for _, v in validNavalLabels do
-                    labelCount = labelCount + 1
+                    --LOG('Label State '..tostring(v.State))
+                    if v.State == 'Confirmed' then
+                        labelCount = labelCount + 1
+                    end
                 end
                 aiBrain.BrainIntel.NavalBaseLabelCount = labelCount
             end
@@ -4604,28 +4790,32 @@ function InitialNavalAttackCheck(aiBrain)
                         local valueInrange = false
                         local valueValidated = false
                         for _, m in frigateCheckPoints do
-                            local dx = v.position[1] - m[1]
-                            local dz = v.position[3] - m[3]
-                            local posDist = dx * dx + dz * dz
-                            --aiBrain:ForkThread(DrawTargetRadius, m, 'cc0000', 1)
-                            if not valueValidated then
-                                if posDist <= frigateRange * frigateRange then
-                                    valueInrange = true
+                            local label = NavUtils.GetLabel('Water', {m[1], m[2], m[3]})
+                            local labelMeta = NavUtils.GetLabelMetadata(label)
+                            if labelMeta.Area and labelMeta.Area > 5 then
+                                local dx = v.position[1] - m[1]
+                                local dz = v.position[3] - m[3]
+                                local posDist = dx * dx + dz * dz
+                                --aiBrain:ForkThread(DrawTargetRadius, m, 'cc0000', 1)
+                                if not valueValidated then
+                                    if posDist <= frigateRange * frigateRange then
+                                        valueInrange = true
+                                    end
                                 end
-                            end
-                            if valueInrange then
-                                local markerValue = 1000 / 28
-                                if not aiBrain:CheckBlockingTerrain({m[1], (GetSurfaceHeight(m[1], m[3]) + 1.1), m[3]}, v.position, 'low') then
-                                    markerCountNotBlocked = markerCountNotBlocked + 1
-                                    frigateRaidMarkers = frigateRaidMarkers + 1
-                                    table.insert( frigateMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], m[2], m[3]}, Distance = posDist, MarkerValue = markerValue, LastRaidTime = 0 } )
-                                    valueValidated = true
-                                    totalMarkerValue = totalMarkerValue + markerValue
-                                else
-                                    markerCountBlocked = markerCountBlocked + 1
-                                end
-                                if valueValidated then
-                                    break
+                                if valueInrange then
+                                    local markerValue = 1000 / 28
+                                    if not aiBrain:CheckBlockingTerrain({m[1], (GetSurfaceHeight(m[1], m[3]) + 1.1), m[3]}, v.position, 'low') then
+                                        markerCountNotBlocked = markerCountNotBlocked + 1
+                                        frigateRaidMarkers = frigateRaidMarkers + 1
+                                        table.insert( frigateMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], m[2], m[3]}, Distance = posDist, MarkerValue = markerValue, LastRaidTime = 0 } )
+                                        valueValidated = true
+                                        totalMarkerValue = totalMarkerValue + markerValue
+                                    else
+                                        markerCountBlocked = markerCountBlocked + 1
+                                    end
+                                    if valueValidated then
+                                        break
+                                    end
                                 end
                             end
                         end
@@ -4633,28 +4823,32 @@ function InitialNavalAttackCheck(aiBrain)
                     if navalCheckPoints then
                         local valueValidated = false
                         for _, m in navalCheckPoints do
-                            local dx = v.position[1] - m[1]
-                            local dz = v.position[3] - m[3]
-                            local posDist = dx * dx + dz * dz
-                            --aiBrain:ForkThread(DrawTargetRadius, m, 'FFFF00')
-                            if not valueValidated then
-                                for _, b in unitTable do
-                                    if b.Range > 0 and posDist <= b.Range * b.Range then
-                                        markerValue = markerValue + 1000 / b.Range
-                                        valueValidated = true
+                            local label = NavUtils.GetLabel('Water', {m[1], m[2], m[3]})
+                            local labelMeta = NavUtils.GetLabelMetadata(label)
+                            if labelMeta.Area and labelMeta.Area > 5 then
+                                local dx = v.position[1] - m[1]
+                                local dz = v.position[3] - m[3]
+                                local posDist = dx * dx + dz * dz
+                                --aiBrain:ForkThread(DrawTargetRadius, m, 'FFFF00')
+                                if not valueValidated then
+                                    for _, b in unitTable do
+                                        if b.Range > 0 and posDist <= b.Range * b.Range then
+                                            markerValue = markerValue + 1000 / b.Range
+                                            valueValidated = true
+                                        end
                                     end
                                 end
-                            end
-                            if valueValidated then
-                                if not aiBrain:CheckBlockingTerrain({m[1], (GetSurfaceHeight(m[1], m[3]) + 2.0), m[3]}, v.position, 'low') then
-                                    markerCountNotBlocked = markerCountNotBlocked + 1
-                                    table.insert( navalMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], m[2], m[3]}, Distance = posDist, MarkerValue = markerValue } )
-                                    totalMarkerValue = totalMarkerValue + markerValue
-                                else
-                                    markerCountBlocked = markerCountBlocked + 1
-                                end
                                 if valueValidated then
-                                    break
+                                    if not aiBrain:CheckBlockingTerrain({m[1], (GetSurfaceHeight(m[1], m[3]) + 2.0), m[3]}, v.position, 'low') then
+                                        markerCountNotBlocked = markerCountNotBlocked + 1
+                                        table.insert( navalMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], m[2], m[3]}, Distance = posDist, MarkerValue = markerValue } )
+                                        totalMarkerValue = totalMarkerValue + markerValue
+                                    else
+                                        markerCountBlocked = markerCountBlocked + 1
+                                    end
+                                    if valueValidated then
+                                        break
+                                    end
                                 end
                             end
                         end
@@ -4674,6 +4868,7 @@ function InitialNavalAttackCheck(aiBrain)
             --LOG('Naval Value = '..totalMarkerValue)
             --LOG('Max total marker value '..tostring(maxValue * markerCount))
             --LOG('Potential priority '..totalMarkerValue/markerCount*1000)
+            --LOG('Naval base label count '..tostring(aiBrain.BrainIntel.NavalBaseLabelCount))
             if frigateRaidMarkers > 0 then
                 aiBrain.EnemyIntel.FrigateRaidMarkers = frigateMarkers
             end
@@ -4836,7 +5031,7 @@ CreateIntelGrid = function(aiBrain)
     local endingGridz = 1
     for x = 1, n do 
         intelGrid[x] = {}
-        for z = 1, n do 
+        for z = 1, n do
             intelGrid[x][z] = { }
             intelGrid[x][z].Position = { }
             intelGrid[x][z].Radars = setmetatable({}, WeakValueTable)
@@ -4858,13 +5053,16 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z].LastThreatUpdate = 0
             intelGrid[x][z].IMAPCurrentThreat = {
                 AntiAir = 0,
-                Naval = 0
+                Naval = 0,
+                Air = 0,
+                Land = 0
 
             }
             intelGrid[x][z].IMAPHistoricalThreat = {
                 AntiAir = 0,
                 Naval = 0,
-                Air = 0
+                Air = 0,
+                Land = 0
 
             }
             intelGrid[x][z].AntiSurfaceThreat = 0
@@ -4880,16 +5078,17 @@ CreateIntelGrid = function(aiBrain)
             if cx < playableArea[1] or cz < playableArea[2] or cx > playableArea[3] or cz > playableArea[4] then
                 continue
             end
+            local gridPos = {cx, GetTerrainHeight(cx, cz), cz}
             cellCount = cellCount + 1
             startingGridx = math.min(x, startingGridx)
             startingGridz = math.min(z, startingGridz)
             endingGridx = math.max(x, endingGridx)
             endingGridz = math.max(z, endingGridz)
-            intelGrid[x][z].Position = {cx, GetTerrainHeight(cx, cz), cz}
+            intelGrid[x][z].Position = gridPos
             intelGrid[x][z].DistanceToMain = VDist3(intelGrid[x][z].Position, aiBrain.BrainIntel.StartPos) 
             intelGrid[x][z].Water = GetTerrainHeight(cx, cz) < GetSurfaceHeight(cx, cz)
             intelGrid[x][z].Size = { sx = fx, sz = fz}
-            local zoneId = MAP:GetZoneID({cx, GetTerrainHeight(cx, cz), cz},aiBrain.Zones.Land.index) or 0
+            local zoneId = MAP:GetZoneID(gridPos,aiBrain.Zones.Land.index) or 0
             if not zoneToGridMap[zoneId] then
                 zoneToGridMap[zoneId] = {}
             end
@@ -4897,11 +5096,12 @@ CreateIntelGrid = function(aiBrain)
                 table.insert(zoneToGridMap[zoneId], intelGrid[x][z])
             end
             intelGrid[x][z].LandZoneID = zoneId
+            intelGrid[x][z].LandLabel = NavUtils.GetLabel('Land', gridPos)
             intelGrid[x][z].Enabled = true
         end
     end
     aiBrain.IntelManager.MapIntelGrid = intelGrid
-    MapIntelGridSize = fx
+    aiBrain.IntelManager.MapIntelGridSize = fx
     aiBrain.IntelManager.CellCount = cellCount
     aiBrain.IntelManager.MapIntelGridXMin = startingGridx
     aiBrain.IntelManager.MapIntelGridXMax = endingGridx

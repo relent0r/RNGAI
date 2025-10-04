@@ -1369,7 +1369,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND', true } },
             { TBC, 'ThreatPresentOnLabelRNG', {'LocationType', 'StructuresNotMex'} },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '<', 'Land' } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 4, categories.FACTORY * categories.LAND }},

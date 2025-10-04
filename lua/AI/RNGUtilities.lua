@@ -155,7 +155,7 @@ function EngFindReclaimCell(aiBrain, eng, movementLayer, searchType)
         for k = 1, count do
             local cell = cells[k] --[[@as AIGridReclaimCell]]
             local centerOfCell = reclaimGridInstance:ToWorldSpace(cell.X, cell.Z)
-            local maxEngineers = math.min(math.ceil(cell.TotalMass / 500), 8)
+            local maxEngineers = math.min(math.ceil(cell.TotalMass / 500), 5)
             -- make sure we can path to it and it doesnt have high threat e.g Point Defense
             if CanPathTo(movementLayer, engPos, centerOfCell) and aiBrain:GetThreatAtPosition(centerOfCell, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 10 then
                 local brainCell = brainGridInstance:ToCellFromGridSpace(cell.X, cell.Z)
@@ -5438,8 +5438,9 @@ end
 
 CDRWeaponCheckRNG = function (aiBrain, cdr, selfThreat)
 
-    local factionIndex = aiBrain:GetFactionIndex()
+    local factionCategory = cdr.Blueprint.FactionCategory
     local gunUpgradePresent = false
+    local aeonAdvancedGunUpgradePresent = false
     local weaponRange
     local threatLimit
 
@@ -5453,52 +5454,66 @@ CDRWeaponCheckRNG = function (aiBrain, cdr, selfThreat)
     else
         weaponRange = 22
     end
+    --LOG('CDRWeaponCheck Faction Category '..tostring(factionCategory)..' cdr.GunUpgradePresent '..tostring(cdr.GunUpgradePresent)..' cdr.GunAeonUpgradePresent '..tostring(cdr.GunAeonUpgradePresent))
 
         -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-    if not cdr.GunUpgradePresent then
-        if factionIndex == 1 then
+    if not cdr.GunUpgradePresent or (factionCategory == 'AEON' and not cdr.GunAeonUpgradePresent) then
+        if factionCategory == 'UEF' then
             if cdr:HasEnhancement('HeavyAntiMatterCannon') then
                 local enhancement = cdr.Blueprint.Enhancements
-                cdr.GunUpgradePresent = true
+                gunUpgradePresent = true
                 weaponRange = enhancement.HeavyAntiMatterCannon.NewMaxRadius or 30
                 threatLimit = 48
             end
-        elseif factionIndex == 2 then
+        elseif factionCategory == 'AEON' then
             if cdr:HasEnhancement('HeatSink') then
-                cdr.GunUpgradePresent = true
+                gunUpgradePresent = true
                 threatLimit = 43
             end
             if cdr:HasEnhancement('CrysalisBeam') then
                 local enhancement = cdr.Blueprint.Enhancements
-                cdr.GunUpgradePresent = true
+                gunUpgradePresent = true
                 weaponRange = enhancement.CrysalisBeam.NewMaxRadius or 30
                 threatLimit = 48
             end
             if cdr:HasEnhancement('FAF_CrysalisBeamAdvanced') then
                 local enhancement = cdr.Blueprint.Enhancements
-                cdr.GunUpgradePresent = true
+                gunUpgradePresent = true
+                aeonAdvancedGunUpgradePresent = true
                 weaponRange = enhancement.FAF_CrysalisBeamAdvanced.NewMaxRadius or 35
                 threatLimit = 50
             end
-        elseif factionIndex == 3 then
+        elseif factionCategory == 'CYBRAN' then
             if cdr:HasEnhancement('CoolingUpgrade') then
                 local enhancement = cdr.Blueprint.Enhancements
-                cdr.GunUpgradePresent = true
+                gunUpgradePresent = true
                 weaponRange = enhancement.CoolingUpgrade.NewMaxRadius or 30
                 threatLimit = 48
             end
-        elseif factionIndex == 4 then
+        elseif factionCategory == 'SERAPHIM' then
             if cdr:HasEnhancement('RateOfFire') then
-                cdr.GunUpgradePresent = true
+                gunUpgradePresent = true
                 weaponRange = enhancement.RateOfFire.NewMaxRadius or 30
                 threatLimit = 48
             end
         end
     end
     if selfThreat then
+        --LOG('Self threat check')
+        --LOG('Gun present '..tostring(gunUpgradePresent))
+        --LOG('WeaponRange '..tostring(weaponRange))
+        --LOG('ThreatLimit  '..tostring(threatLimit))
         cdr.GunUpgradePresent = gunUpgradePresent
-        cdr.WeaponRange = weaponRange
-        cdr.ThreatLimit = threatLimit
+        if weaponRange then
+            cdr.WeaponRange = weaponRange
+        end
+        if threatLimit then
+            cdr.ThreatLimit = threatLimit
+        end
+        if aeonAdvancedGunUpgradePresent then
+            cdr.GunAeonUpgradeRequired = false
+            cdr.GunAeonUpgradePresent = true
+        end
     end
 end
 
@@ -6459,7 +6474,7 @@ ConfigurePlatoon = function(platoon)
                 elseif EntityCategoryContains(categories.SHIELD,v) then
                     v['rngdata'].Role='Shield'
                 end
-                local callBacks = aiBrain:GetCallBackCheck(v)
+                local callBacks = StateUtils.GetCallBackCheck(v)
                 local primaryWeaponDamage = 0
                 for _, weapon in v.Blueprint.Weapon or {} do
                     -- unit can have MaxWeaponRange entry from the last platoon

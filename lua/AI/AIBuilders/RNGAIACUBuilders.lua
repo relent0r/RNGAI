@@ -179,6 +179,7 @@ BuilderGroup {
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.5, 5.0}},
             --{ UCBC, 'IsAcuBuilder', {'RNGAI ACU T1 Land Factory Higher Pri'}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.09, 0.80}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
@@ -232,7 +233,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.04, 0.30, 'FACTORY'}},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.09, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Land' } },
             { UCBC, 'PlayerRoleCheck', {'LocationType', 2, categories.FACTORY * categories.LAND, {'AIR', 'EXPERIMENTAL'}, 1 } },
@@ -289,6 +290,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'GreaterThanEconIncomeCombinedRNG',  { 0.7, 18.0}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.95 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * ( categories.TECH1 + categories.TECH2 + categories.TECH3 ) }},
             { UCBC, 'IsEngineerNotBuilding', { categories.FACTORY * categories.AIR * categories.TECH1 }},
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
@@ -395,6 +397,7 @@ BuilderGroup {
         BuilderConditions = {
             { EBC, 'LessThanEnergyEfficiencyOverTimeRNG', { 1.3 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.90, 0.1 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION - categories.HYDROCARBON } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) }}, -- Don't build after 1 T3 Pgen Exist
         },
@@ -573,7 +576,7 @@ BuilderGroup {
         Priority = 850,
         DelayEqualBuildPlattons = {'ACUAssist', 3},
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.2}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.2}},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENGINEER * categories.MOBILE - categories.COMMAND } },
         },
         BuilderType = 'Any',
@@ -619,7 +622,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderAssistRNG',
         Priority = 700,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 0.9}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.0}},
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.STRUCTURE }},
         },
         BuilderType = 'Any',

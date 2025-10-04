@@ -28,12 +28,13 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T1 Ratio',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Air Scout',
+        BuilderName = 'RNGAI T1 Air Scout Demand',
         PlatoonTemplate = 'T1AirScout',
         Priority = 750, -- After second engie group
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T1', 'scout'} },
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Air',
     },
@@ -66,11 +67,25 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI T1 Gunship',
+        BuilderName = 'RNGAI T1 Gunship Demand',
         PlatoonTemplate = 'T1Gunship',
         Priority = 881,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType','Air', 'T1', 'gunship'} },
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
+        },
+        BuilderType = 'Air',
+        BuilderData = {
+            TechLevel = 1
+        },
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Transport Demand',
+        PlatoonTemplate = 'T1AirTransport',
+        Priority = 950,
+        BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', {'LocationType','Air', 'T1', 'transport'} },
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },

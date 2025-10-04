@@ -108,7 +108,9 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'StructureBuildDemand', { 'Structure', 'intel', 'Optics'} },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.AEON * categories.OPTICS * categories.STRUCTURE}},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.3 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.05, 1.3 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
+            { EBC, 'GreaterThanEconIncomeCombinedRNG', { 5.5, 650.0 }},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
@@ -226,7 +228,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 600 } },
             { EBC, 'GreaterThanEconTrendCombinedRNG', { 0.0, 0.0 } }, -- relative income
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.80 } },             -- Ratio from 0 to 1. (1=100%)
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80 } },             -- Ratio from 0 to 1. (1=100%)
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.STRUCTURE * categories.TECH1 * categories.SONAR }},
         },
         BuilderType = 'Any',

@@ -38,6 +38,9 @@ local NavalExpansionAdjust = function(self, aiBrain, builderManager)
         return 0
     elseif aiBrain.MapWaterRatio < 0.30 then
         local priority = 200
+        if aiBrain.BrainIntel.NavalBaseLabelCount == 0 then
+            priority = priority - 200
+        end
         local EnemyIndex = currentEnemy:GetArmyIndex()
         local OwnIndex = aiBrain:GetArmyIndex()
         if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] ~= 'LAND' then

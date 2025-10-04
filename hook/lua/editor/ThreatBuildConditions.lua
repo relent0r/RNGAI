@@ -123,6 +123,7 @@ function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType, ratioRequired)
         WARN('Missing label for expansion land node or no path markers')
         return false
     end
+    --LOG('Threat present on label')
     local gameTime = GetGameTimeSeconds()
     if not table.empty(aiBrain.EnemyIntel.EnemyThreatLocations) then
         local threatTotal = 0
@@ -144,6 +145,10 @@ function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType, ratioRequired)
         if tType == 'Land' and aiBrain.GraphZones and aiBrain.GraphZones[label].FriendlySurfaceDirectFireThreat < threatTotal then
             return true
         end
+        --if tType == 'StructuresNotMex' then
+        --    LOG('Structures not mex threat '..tostring(threatTotal))
+        --    LOG('Threat graph friendly direct fire '..tostring(aiBrain.GraphZones[label].FriendlySurfaceInDirectFireThreat))
+        --end
         if tType == 'StructuresNotMex' and aiBrain.GraphZones and aiBrain.GraphZones[label].FriendlySurfaceInDirectFireThreat < threatTotal then
             return true
         end

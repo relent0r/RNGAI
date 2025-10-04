@@ -73,7 +73,7 @@ FactoryBuilderManager = Class(BuilderManager) {
             if self.LocationActive and self.RallyPoint then
                 --LOG('*AI DEBUG: Checking Active Rally Point')
                 local newRally = false
-                local bestDist = 99999
+                local bestDist = 999999999
                 local rallyheight = GetTerrainHeight(self.RallyPoint[1], self.RallyPoint[3])
                 if self.Brain:GetNumUnitsAroundPoint(categories.STRUCTURE, self.RallyPoint, 15, 'Ally') > 0 then
                     --LOG('*AI DEBUG: Searching for a new Rally Point Location')
@@ -555,6 +555,12 @@ FactoryBuilderManager = Class(BuilderManager) {
             --if self.Brain.ZoneExpansionTransportRequested then
             --    finishedUnit:ForkThread( import('/lua/ai/transportutilities.lua').FindEngineerToTransport, finishedUnit:GetAIBrain() )
             --end
+            if self.InitialTransportRequested and self.Brain.amanager.Demand.Air.T1.transport and self.Brain.amanager.Demand.Air.T1.transport > 0 then
+                self.Brain.amanager.Demand.Air.T1.transport = 0
+                factory:SetPaused(true)
+                coroutine.yield(1)
+                factory:SetPaused(false)
+            end
 		elseif finishedUnit.Blueprint.CategoriesHash.AIR then
             local unitStats = self.Brain.IntelManager.UnitStats
             local unitValue = finishedUnit.Blueprint.Economy.BuildCostMass or 0

@@ -184,6 +184,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     unit:RemoveCommandCap('RULEUCC_Reclaim')
                     unit:RemoveCommandCap('RULEUCC_Repair')
                 end
+                local callBacks = StateUtils.GetCallBackCheck(unit)
             end
         end
         if maxPlatoonStrikeDamage > 0 then

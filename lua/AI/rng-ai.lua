@@ -797,7 +797,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerFocusHighValue = false
         self.EngineerAssistManagerFocusLandUpgrade = false
         self.EngineerAssistManagerPriorityTable = {}
-        self.EngineerDistributionTable = {
+        self.EngineerSpendDistributionTable = {
             BuildPower = 0,
             BuildStructure = 0,
             Assist = 0,
@@ -1377,7 +1377,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         scout=0,
                         interceptor=0,
                         bomber=0,
-                        gunship=0
+                        gunship=0,
+                        transport=0,
                     },
                     T2 = {
                         bomber=0,
@@ -1385,6 +1386,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         fighter=0,
                         mercy=0,
                         torpedo=0,
+                        transport=0,
                     },
                     T3 = {
                         scout=0,
@@ -2129,6 +2131,26 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         if not self.amanager.Demand.Bases[baseName] then
             self.amanager.Demand.Bases[baseName] = {
+                Air = {
+                    T1 = {
+                        transport = 0,
+                        bomber = 0,
+                        gunship = 0,
+                    },
+                    T2 = {
+                        transport = 0,
+                        bomber = 0,
+                        gunship = 0,
+                    },
+                    T3 = {
+                        transport = 0,
+                        bomber = 0,
+                        gunship = 0,
+                    },
+                    T4 = {
+                        experimentalair = 0
+                    }
+                },
                 Land = {
                     T1 = {
                         arty = 0,
@@ -2718,7 +2740,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                 end
                 local maxEngineersRequired = math.max(math.ceil(totalMassRequired / 300), math.ceil(totalEnergyRequired / 700))
-                --LOG('Base Reclaim Check for '..tostring(k)..' : Engineers Required '..tostring(maxEngineersRequired )..' current reclaim engineers '..tostring(currentReclaimPlatoonCount))
+                --LOG('Base Reclaim Check for '..tostring(k)..' Total mass required '..tostring(totalMassRequired)..' : Engineers Required '..tostring(maxEngineersRequired)..' current reclaim engineers '..tostring(currentReclaimPlatoonCount))
                 if totalMassRequired > 500 or totalEnergyRequired > 1500 then
                     v.ReclaimData.ReclaimAvailable = true
                     v.ReclaimData.EngineersRequired = math.max(12, (maxEngineersRequired - currentReclaimPlatoonCount))
@@ -4862,7 +4884,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             massPriorityTable.LAND_TECH2 = nil
                             massPriorityTable.LAND_TECH3 = nil
                         end
-                        if (self.BrainIntel.SelfThreat.AirNow + self.BrainIntel.SelfThreat.AllyAirThreat) > (self.EnemyIntel.EnemyThreatCurrent.Air * 1.1) or self.CDRUnit.Caution then
+                        if (self.BrainIntel.SelfThreat.AirNow + self.BrainIntel.SelfThreat.AllyAirThreat) > (self.EnemyIntel.EnemyThreatCurrent.Air * 1.1) and not self.CDRUnit.Caution then
                             massPriorityTable.AIR_TECH1 = 13
                             massPriorityTable.AIR_TECH2 = 10
                             massPriorityTable.AIR_TECH3 = 7
@@ -6474,9 +6496,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             if not engineerDistribution[unit.JobType] then
                                 engineerDistribution[unit.JobType] = 0
                             end
+                            engineerDistribution[unit.JobType] = engineerDistribution[unit.JobType] + spendm
                             --LOG('Engineer Job Type '..unit.JobType)
-                            engineerDistribution[unit.JobType] = engineerDistribution[unit.JobType] + 1
-                            engineerDistribution.Total = engineerDistribution.Total + 1
                         end
                         if unitCat.TECH1 then
                             engspend.T1=engspend.T1+spendm
@@ -6814,7 +6835,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SelfThreat.NavalSubNow = totalNavalSubThreat
         self.BrainIntel.SelfThreat.ExtractorCount = totalExtractorCount
         self.BrainIntel.SelfThreat.Extractor = totalEconomyThreat
-        self.EngineerDistributionTable = engineerDistribution
+        self.EngineerSpendDistributionTable = engineerDistribution
         self.smanager.Current.Structure={fact=factories,mex=extractors,silo=silo,fabs=fabs,pgen=pgens,hydrocarbon=hydros, intel=intels, radar=radars}
         local totalCoreExtractors = mainBaseExtractors.T1 + mainBaseExtractors.T2 + mainBaseExtractors.T3
         if totalCoreExtractors > 0 then
@@ -6923,130 +6944,6 @@ AIBrain = Class(RNGAIBrainClass) {
     ---@param overkillRatio number
     OnUnitKilled = function(self, unit, instigator, damageType, overkillRatio)
         IntelManagerRNG.ProcessSourceOnDeath(self, unit, instigator, damageType)
-    end,
-
-    GetCallBackCheck = function(self, unit)
-        local function AntiNavalRetreat(unit, instigator)
-                --RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy))
-                if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTINAVY 
-                and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy == 0 and (not unit.PlatoonHandle.RetreatOrdered) then
-                    --RNGLOG('Naval Callback AntiNavy We want to retreat '..unit.UnitId)
-                    unit.PlatoonHandle.RetreatOrdered = true
-                end
-            end
-        local function AntiNavalRetreatState(unit, instigator)
-            --RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy))
-            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTINAVY 
-            and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy == 0 and unit.PlatoonHandle.StateName ~= 'Retreating' then
-                unit.PlatoonHandle:LogDebug(string.format('Naval retreat callback fired'))
-                unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.Retreating)
-            end
-        end
-        local function AntiAirRetreat(unit, instigator)
-            --RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiAir))
-            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTINAVY and instigator.Blueprint.CategoriesHash.AIR
-            and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiAir == 0 and (not unit.PlatoonHandle.RetreatOrdered) then
-                --RNGLOG('Naval Callback AntiAir We want to retreat '..unit.UnitId)
-                unit.PlatoonHandle.RetreatOrdered = true
-            end
-        end
-        local function AntiAirRetreatState(unit, instigator)
-            --RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiAir))
-            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and (instigator.Blueprint.CategoriesHash.ANTINAVY or instigator.Blueprint.CategoriesHash.BOMBER or instigator.Blueprint.CategoriesHash.GROUNDATTACK) and instigator.Blueprint.CategoriesHash.AIR and not instigator.Blueprint.CategoriesHash.TRANSPORTFOCUS
-            and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiAir == 0 and unit.PlatoonHandle.StateName ~= 'Retreating' then
-                unit.PlatoonHandle:LogDebug(string.format('Naval retreat callback fired'))
-                unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.Retreating)
-            end
-        end
-        local function ACUDamageDetail(unit, instigator)
-            --RNGLOG('ACU Damaged by unit '..repr(instigator.UnitId))
-            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) then
-                if instigator.Blueprint.Defense.SurfaceThreatLevel 
-                and instigator.Blueprint.Defense.SurfaceThreatLevel > 0 and instigator.Blueprint.CategoriesHash.AIR
-                and (not unit.EnemyAirPresent) then
-                --RNGLOG('ACU EnemyAir is now present '..instigator.UnitId)
-                    unit.EnemyAirPresent = true
-                elseif instigator.Blueprint.Defense.SubThreatLevel 
-                and instigator.Blueprint.Defense.SubThreatLevel > 0 and instigator.Blueprint.CategoriesHash.ANTINAVY
-                and (not unit.EnemyNavalPresent) then
-                    unit.EnemyNavalPresent = true
-                end
-            end
-        end
-        local function AntiAirTransport(unit, instigator)
-            --RNGLOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiAir))
-            if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTIAIR
-            and unit.PlatoonHandle and (not unit.PlatoonHandle.DistressCall) then
-                --RNGLOG('Naval Callback AntiAir We want to retreat '..unit.UnitId)
-                unit.PlatoonHandle.DistressCall = true
-            end
-        end
-        if unit.Blueprint.CategoriesHash.TECH1 and unit.Blueprint.CategoriesHash.FRIGATE then
-            --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
-            if unit.AIPlatoonReference then
-                unit:AddOnDamagedCallback( AntiNavalRetreatState, nil, 100)
-            else
-                unit:AddOnDamagedCallback( AntiNavalRetreat, nil, 100)
-            end
-            if not unit.Blueprint.CategoriesHash.ANTIAIR then
-                if unit.AIPlatoonReference then
-                    unit:AddOnDamagedCallback( AntiAirRetreatState, nil, 100)
-                else
-                    unit:AddOnDamagedCallback( AntiAirRetreat, nil, 100)
-                end
-            end
-        end
-        if unit.Blueprint.CategoriesHash.TECH2 and unit.Blueprint.CategoriesHash.CRUISER then
-            --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
-            if unit.AIPlatoonReference then
-                unit:AddOnDamagedCallback( AntiNavalRetreatState, nil, 100)
-            else
-                unit:AddOnDamagedCallback( AntiNavalRetreat, nil, 100)
-            end
-        end
-        if unit.Blueprint.CategoriesHash.TECH2 and unit.Blueprint.CategoriesHash.DESTROYER then
-            --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
-            if unit.AIPlatoonReference then
-                unit:AddOnDamagedCallback( AntiAirRetreatState, nil, 100)
-            else
-                unit:AddOnDamagedCallback( AntiAirRetreat, nil, 100)
-            end
-        end
-        if unit.Blueprint.CategoriesHash.TECH3 and unit.Blueprint.CategoriesHash.BATTLESHIP then
-            --RNGLOG('Naval Callback Setting up callback '..unit.UnitId)
-            if unit.AIPlatoonReference then
-                unit:AddOnDamagedCallback( AntiAirRetreatState, nil, 100)
-                unit:AddOnDamagedCallback( AntiNavalRetreatState, nil, 100)
-            else
-                unit:AddOnDamagedCallback( AntiAirRetreat, nil, 100)
-                unit:AddOnDamagedCallback( AntiNavalRetreat, nil, 100)
-            end
-        end
-        if unit.Blueprint.CategoriesHash.COMMAND then
-            unit:AddOnDamagedCallback( ACUDamageDetail, nil, 100)
-        end
-    end,
-
-    CDRDataThreads = function(self, unit)
-        local ACUFunc = import('/mods/RNGAI/lua/AI/RNGACUFunctions.lua')
-        local im = IntelManagerRNG.GetIntelManager(self)
-        local acuUnits = GetListOfUnits(self, categories.COMMAND, false)
-        for _, v in acuUnits do
-            if not IsDestroyed(v) then
-                self:GetCallBackCheck(v)
-                if not self.CDRUnit or self.CDRUnit.Dead then
-                    self.CDRUnit = v
-                end
-                if  not self.ACUData[v.EntityId] then
-                    self.ACUData[v.EntityId] = {}
-                    self.ACUData[v.EntityId].CDRHealthThread = v:ForkThread(ACUFunc.CDRHealthThread)
-                    self.ACUData[v.EntityId].CDRBrainThread = v:ForkThread(ACUFunc.CDRBrainThread)
-                    self.ACUData[v.EntityId].CDRThreatAssessment = v:ForkThread(ACUFunc.CDRThreatAssessmentRNG)
-                    self.ACUData[v.EntityId].CDRUnit = v
-                end
-            end
-        end
-        --RUtils.GenerateChokePointLines(self)
     end,
 
         ---@deprecated
@@ -7265,6 +7162,10 @@ AIBrain = Class(RNGAIBrainClass) {
             local hasLandProduction = smFactories.LAND[1].Total > 0 or smFactories.LAND[2].Total > 0 or smFactories.LAND[3].Total > 0
             local hasAirProduction = smFactories.AIR[1].Total > 0 or smFactories.AIR[2].Total > 0 or smFactories.AIR[3].Total > 0
             local hasNavalProduction = smFactories.NAVAL[1].Total > 0 or smFactories.NAVAL[2].Total > 0 or smFactories.NAVAL[3].Total > 0
+            local navalBiasMultiplier = 1.0
+            if self.IntelManager.NavalFocusSafe then
+                navalBiasMultiplier = 1.75  -- double naval weighting
+            end
     
             -- Total Income
             local totalIncome = self.cmanager.income.r.m
@@ -7368,6 +7269,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         (enemyThreat.Naval > myThreat.NavalNow and (enemyThreat.Naval - (myThreat.NavalNow + myThreat.AllyNavalThreat)) / totalThreatRatio or 0)
                         * maxShiftNavalRatio
                         * currentBias.Naval
+                        * navalBiasMultiplier
                     ),
                     maxShiftNavalRatio
                 )
@@ -7421,6 +7323,23 @@ AIBrain = Class(RNGAIBrainClass) {
                 -- Nudge downward toward default or min if no excess
                 engineerAssistRatio = math.max(newAssistRatio, engineerAssistRatioMin)
             end
+            local massTrend = self.EconomyOverTimeCurrent.MassTrendOverTime or 0
+            local storageMass = GetEconomyStored(self, 'MASS') or 0
+
+            local trendRatio = massTrend / (totalIncome > 0 and totalIncome or 1)
+            local trendFactor = math.max(0.3, math.min(1.5, 1 + trendRatio))
+            
+            -- Storage safety factor based on drain time
+            local drainTime = (massTrend < 0 and storageMass > 0) and storageMass / -massTrend or 999999
+            local storageFactor = 1.0
+            if drainTime < 60 then
+                storageFactor = math.max(0.3, 0.5 + (drainTime / 120))
+            end
+
+            -- Combine them into a scaling multiplier
+            local ecoHealthMultiplier = trendFactor * storageFactor
+            local ecoHealthMultiplier = math.max(0.3, math.min(1.5, ecoHealthMultiplier))
+            engineerAssistRatio = engineerAssistRatio * ecoHealthMultiplier
 
             -- Assign the final production ratios
             self.ProductionRatios.Land = newLandRatio
@@ -7430,53 +7349,38 @@ AIBrain = Class(RNGAIBrainClass) {
     
             -- Logging
             --[[
-            LOG('AI Name '..tostring(self.Nickname))
+            LOG('AI Name : '..tostring(self.Nickname)..' Current game time : '..tostring(GetGameTimeSeconds()))
             LOG('Current Best Army ownership is '..tostring(brainIntel.PlayerZoneControl))
-            LOG('Current game time '..tostring(GetGameTimeSeconds()))
-            LOG('Are we a naval map '..tostring(isNavalMap))
-            LOG('Has Land Production: '..tostring(hasLandProduction))
-            LOG('Has Air Production: '..tostring(hasAirProduction))
-            LOG('Has Naval Production: '..tostring(hasNavalProduction))
-            LOG('Map water ratio '..tostring(self.MapWaterRatio))
+            LOG('Are we a naval map '..tostring(isNavalMap)..' Map water ratio '..tostring(self.MapWaterRatio))
+            LOG('Has Land Production: '..tostring(hasLandProduction)..' Has Air Production: '..tostring(hasAirProduction)..' Has Naval Production: '..tostring(hasNavalProduction))
             LOG('----- Threat Metrics -----')
-            LOG('self.EnemyIntel.EnemyThreatCurrent.Land '..tostring(enemyThreat.Land))
-            LOG('self.EnemyIntel.EnemyThreatCurrent.AntiAir '..tostring(enemyThreat.AntiAir))
-            LOG('self.EnemyIntel.EnemyThreatCurrent.Naval '..tostring(enemyThreat.Naval))
-            LOG('self.BrainIntel.SelfThreat.LandNow '..tostring(myThreat.LandNow))
-            LOG('self.BrainIntel.SelfThreat.AllyLandThreat '..tostring(myThreat.AllyLandThreat))
-            LOG('self.BrainIntel.SelfThreat.AntiAirNow '..tostring(myThreat.AntiAirNow))
-            LOG('self.BrainIntel.SelfThreat.AllyAntiAirThreat '..tostring(myThreat.AllyAntiAirThreat))
-            LOG('self.BrainIntel.SelfThreat.NavalNow '..tostring(myThreat.NavalNow))
-            LOG('self.BrainIntel.SelfThreat.AllyNavalThreat '..tostring(myThreat.AllyNavalThreat))
+            LOG('EnemyThreatCurrent.Land '..tostring(enemyThreat.Land)..' EnemyThreatCurrent.AntiAir '..tostring(enemyThreat.AntiAir)..' EnemyThreatCurrent.Naval '..tostring(enemyThreat.Naval))
+            LOG('SelfThreat.LandNow '..tostring(myThreat.LandNow)..' SelfThreat.AllyLandThreat '..tostring(myThreat.AllyLandThreat))
+            LOG('SelfThreat.AntiAirNow '..tostring(myThreat.AntiAirNow)..' SelfThreat.AllyAntiAirThreat '..tostring(myThreat.AllyAntiAirThreat))
+            LOG('SelfThreat.NavalNow '..tostring(myThreat.NavalNow)..' SelfThreat.AllyNavalThreat '..tostring(myThreat.AllyNavalThreat))
             LOG('----- Production Metrics -----')
-            LOG('Default Land Ratio '..tostring(self.DefaultProductionRatios['Land']))
-            LOG('Default Air Ratio '..tostring(self.DefaultProductionRatios['Air']))
-            LOG('Default Naval Ratio '..tostring(self.DefaultProductionRatios['Naval']))
-            LOG('ECOLOG: GameTime: '..tostring(GetGameTimeSeconds()))
-            LOG('ECOLOG: ProductionRatiosLand: '..tostring(self.ProductionRatios.Land))
-            LOG('ECOLOG: ProductionRatiosAir: '..tostring(self.ProductionRatios.Air))
-            LOG('ECOLOG: ProductionRatiosNaval: '..tostring(self.ProductionRatios.Naval))
+            LOG('Default Land Ratio '..tostring(self.DefaultProductionRatios['Land'])..' Default Air Ratio '..tostring(self.DefaultProductionRatios['Air'])..' Default Naval Ratio '..tostring(self.DefaultProductionRatios['Naval']))
+            LOG('Current Land Ratio: '..tostring(self.ProductionRatios.Land)..' Current Air Ratio: '..tostring(self.ProductionRatios.Air)..' Current Naval Ratio: '..tostring(self.ProductionRatios.Naval))
             LOG('----- Economy Metrics -----')
-            LOG('self.EcoManager.TotalExtractors.TECH1 '..tostring(self.EcoManager.TotalExtractors.TECH1))
-            LOG('self.EcoManager.TotalExtractors.TECH2 '..tostring(self.EcoManager.TotalExtractors.TECH2))
-            LOG('self.EcoManager.ExtractorsUpgrading.TECH1 '..tostring(self.EcoManager.ExtractorsUpgrading.TECH1))
-            LOG('self.EcoManager.ExtractorsUpgrading.TECH2 '..tostring(self.EcoManager.ExtractorsUpgrading.TECH2))
-            LOG('self.EcoManager.TotalMexSpend '..tostring(self.EcoManager.TotalMexSpend))
-            LOG('In theory we can allocate this much spend max '..tostring((self.EcoManager.ExtractorValues.TECH1.TeamValue * self.EcoManager.ExtractorValues.TECH1.ConsumptionValue) + (self.EcoManager.ExtractorValues.TECH2.TeamValue * self.EcoManager.ExtractorValues.TECH2.ConsumptionValue)))
+            LOG('TotalExtractors.TECH1 : '..tostring(self.EcoManager.TotalExtractors.TECH1)..' TotalExtractors.TECH2 : '..tostring(self.EcoManager.TotalExtractors.TECH2))
+            LOG('ExtractorsUpgrading.TECH1 : '..tostring(self.EcoManager.ExtractorsUpgrading.TECH1)..' ExtractorsUpgrading.TECH2 : '..tostring(self.EcoManager.ExtractorsUpgrading.TECH2))
+            LOG('TotalMexSpend : '..tostring(self.EcoManager.TotalMexSpend)..' In theory we can allocate this much spend max : '..tostring((self.EcoManager.ExtractorValues.TECH1.TeamValue * self.EcoManager.ExtractorValues.TECH1.ConsumptionValue) + (self.EcoManager.ExtractorValues.TECH2.TeamValue * self.EcoManager.ExtractorValues.TECH2.ConsumptionValue)))
             LOG('EconomyUpdate Spend Max Ratio is '..tostring(economyUpgradeSpendMax))
             LOG('----- Spend Metrics ------')
-            LOG('ECOLOG: RequestedSpendLand * totalIncome: '..tostring(self.ProductionRatios.Land * totalIncome))
-            LOG('ECOLOG: RequestedSpendAir * totalIncome: '..tostring(self.ProductionRatios.Air * totalIncome))
-            LOG('ECOLOG: RequestedSpendNaval * totalIncome: '..tostring(self.ProductionRatios.Naval * totalIncome))
-            LOG('ECOLOG: Economy Spend Ratio: '..tostring(economyUpgradeSpend))
-            LOG('ECOLOG: Current Spend desired: '..tostring(self.cmanager.income.r.m*self.EconomyUpgradeSpend))
-            LOG('ECOLOG: Current Extractor upgrade Spend to allocate: '..tostring(economyUpgradeSpend * totalIncome))
-            LOG('ECOLOG: Current Extractor upgrade Spend actual: '..tostring(self.EcoManager.TotalMexSpend))
-            LOG('ECOLOG: Assist Ratio: '..tostring(engineerAssistRatio))
-            LOG('Assist Economy allocation: '..tostring(engineerAssistRatio * totalIncome))
-            LOG('Builder Power '..tostring(self.EngineerAssistManagerBuildPower))
-            LOG('Required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
+            LOG('RequestedSpendLand * totalIncome: '..tostring(self.ProductionRatios.Land * totalIncome))
+            LOG('RequestedSpendAir * totalIncome: '..tostring(self.ProductionRatios.Air * totalIncome))
+            LOG('RequestedSpendNaval * totalIncome: '..tostring(self.ProductionRatios.Naval * totalIncome))
+            LOG('Economy Spend Ratio: '..tostring(economyUpgradeSpend))
+            LOG('Current Spend desired: '..tostring(self.cmanager.income.r.m*self.EconomyUpgradeSpend))
+            LOG('Current Extractor upgrade Spend to allocate: '..tostring(economyUpgradeSpend * totalIncome))
+            LOG('Current Extractor upgrade Spend actual: '..tostring(self.EcoManager.TotalMexSpend))
+            LOG('Assist Ratio : '..tostring(engineerAssistRatio)..' Assist Economy allocation : '..tostring(engineerAssistRatio * totalIncome))
+            LOG('Eco Health assist multiplier '..tostring(ecoHealthMultiplier))
+            LOG('EngineerAssist Builder Power '..tostring(self.EngineerAssistManagerBuildPower)..' EngineerAssist Required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
+            LOG('Current Engineer Spend T1 : '..tostring(self.cmanager.categoryspend.eng.T1)..' Current Engineer Spend T2 : '..tostring(self.cmanager.categoryspend.eng.T2)..' Current Engineer Spend T3 : '..tostring(self.cmanager.categoryspend.eng.T3)..' Current Engineer Spend COM : '..tostring(self.cmanager.categoryspend.eng.com))
+            LOG('Current Engineer Spend Distribution '..tostring(repr(self.EngineerSpendDistributionTable)))
             LOG('Excess Allocation at the end of loop was '..tostring(excessAllocation))
+            LOG('Current Trend '..tostring(self:GetEconomyTrend('MASS')))
             LOG('Current Bias '..tostring(repr(currentBias)))
             ]]
         end

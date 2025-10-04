@@ -301,6 +301,7 @@ function UnitEnhancementCreate(unit, enh)
             StateUtils.GetUnitMaxWeaponRange(unit, false, true)
             local isCombatType = enhancementBp.NewRoF or enhancementBp.NewMaxRadius or enhancementBp.NewRateOfFire or enhancementBp.NewRadius 
             or enhancementBp.NewDamage or enhancementBp.DamageMod or enhancementBp.ZephyrDamageMod
+            local isSurvivalType = (enhancementBp.NewRegenRate and enhancementBp.NewRegenRate > 20) or enhancementBp.ShieldMaxHealth
             if isCombatType then
                 if not unit['rngdata'] then
                     unit['rngdata'] = {}
@@ -308,6 +309,16 @@ function UnitEnhancementCreate(unit, enh)
                 unit['rngdata']['HasGunUpgrade'] = true
                 if unit['rngdata']['IsUpgradingGun'] then
                     unit['rngdata']['IsUpgradingGun'] = false
+                end
+                --LOG('GunUpgrade is set to true '..tostring(enh))
+            end
+            if isSurvivalType then
+                if not unit['rngdata'] then
+                    unit['rngdata'] = {}
+                end
+                unit['rngdata']['HasSurvivalUpgrade'] = true
+                if unit['rngdata']['IsUpgradingSurvival'] then
+                    unit['rngdata']['IsUpgradingSurvival'] = false
                 end
                 --LOG('GunUpgrade is set to true '..tostring(enh))
             end

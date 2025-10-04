@@ -24,6 +24,8 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.MovementLayer = 'Amphibious'
     cdr.GunUpgradeRequired = false
     cdr.GunUpgradePresent = false
+    cdr.GunAeonUpgradeRequired = false
+    cdr.GunAeonUpgradePresent = false
     cdr.WeaponRange = false
     cdr.DefaultRange = 320
     cdr.MaxBaseRange = 80
@@ -1378,6 +1380,28 @@ GetACUSafeZone = function(aiBrain, cdr, baseOnly)
     else
         WARN('Mapping Zones are not initialized, unable to query zone information')
     end
+end
+
+CDRDataThreads = function(aiBrain, unit)
+    local ACUFunc = import('/mods/RNGAI/lua/AI/RNGACUFunctions.lua')
+    local im = aiBrain.IntelManager
+    local acuUnits = aiBrain:GetListOfUnits(categories.COMMAND, false)
+    for _, v in acuUnits do
+        if not IsDestroyed(v) then
+            StateUtils.GetCallBackCheck(v)
+            if not aiBrain.CDRUnit or aiBrain.CDRUnit.Dead then
+                aiBrain.CDRUnit = v
+            end
+            if  not aiBrain.ACUData[v.EntityId] then
+                aiBrain.ACUData[v.EntityId] = {}
+                aiBrain.ACUData[v.EntityId].CDRHealthThread = v:ForkThread(ACUFunc.CDRHealthThread)
+                aiBrain.ACUData[v.EntityId].CDRBrainThread = v:ForkThread(ACUFunc.CDRBrainThread)
+                aiBrain.ACUData[v.EntityId].CDRThreatAssessment = v:ForkThread(ACUFunc.CDRThreatAssessmentRNG)
+                aiBrain.ACUData[v.EntityId].CDRUnit = v
+            end
+        end
+    end
+    --RUtils.GenerateChokePointLines(self)
 end
 
 function FindRadarPosition(aiBrain, cdr)

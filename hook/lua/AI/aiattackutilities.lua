@@ -235,7 +235,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     -- These are the values that are used to weight the two types of "threats"
     -- primary by default is weighed most heavily, while a secondary threat is
     -- weighed less heavily
-    local PrimaryThreatWeight = 20
+    local PrimaryThreatWeight = 15
     local SecondaryThreatWeight = 0.5
 
     -- After being sorted by those two types of threats, the places to attack are then
@@ -260,10 +260,10 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     local VeryNearThreatWeight = 20000
     local VeryNearThreatRadius = 125
 
-    local NearThreatWeight = 2500
+    local NearThreatWeight = 3000
     local NearThreatRadius = 250
 
-    local MidThreatWeight = 500
+    local MidThreatWeight = 750
     local MidThreatRadius = 350
 
     local FarThreatWeight = 100
@@ -299,11 +299,17 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
     local platoonPosition = platoon.Pos or platoon:GetPlatoonPosition()
     local selectedWeaponArc = 'None'
+    local baseMilitaryArea = math.min(aiBrain.OperatingAreas['BaseMilitaryArea'] , 256)
 
     if not platoonPosition then
         --Platoon no longer exists.
         --RNGLOG('GetBestNavalTarget platoon position is nil returned false ')
         return false
+    end
+
+    local basePosition = false
+    if platoon.PlatoonData.LocationType and aiBrain.BuilderManagers[platoon.PlatoonData.LocationType] then
+        basePosition = aiBrain.BuilderManagers[platoon.PlatoonData.LocationType].Position
     end
 
     -- get overrides in platoon data
@@ -456,30 +462,40 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
         -- only add distance if there's a threat at all
         local threatDistNorm = -1
         if targetThreat > 0 then
-            threatDist = math.sqrt(VDist2Sq(threat[1], threat[2], platoonPosition[1], platoonPosition[3]))
+            local distFromPlatoon = math.sqrt(VDist2Sq(threat[1], threat[2], platoonPosition[1], platoonPosition[3]))
+            local distFromBase = basePosition and math.sqrt(VDist2Sq(threat[1], threat[2], basePosition[1], basePosition[3])) or distFromPlatoon
             --distance is 1-100 of the max map length, distance function weights are split by the distance radius
+            local effectiveDist = (distFromPlatoon * 0.6) + (distFromBase * 0.4)
+            if distFromBase < baseMilitaryArea then
+                -- heavily reward targets near base even if raw threat is low
+                local bonus = (baseMilitaryArea - distFromBase) * 15
+                threat[3] = threat[3] + bonus
+            end
 
-            threatDistNorm = 100 * threatDist / maxMapLengthSq
+            threatDistNorm = 100 * effectiveDist / maxMapLengthSq
             if threatDistNorm < 1 then
                 threatDistNorm = 1
             end
             -- farther away is less threatening, so divide
-            if threatDist <= VeryNearThreatRadius then
+            if effectiveDist <= VeryNearThreatRadius then
                 threat[3] = threat[3] + VeryNearThreatWeight / threatDistNorm
                 distThreat = VeryNearThreatWeight / threatDistNorm
-            elseif threatDist <= NearThreatRadius then
+            elseif effectiveDist <= NearThreatRadius then
                 threat[3] = threat[3] + MidThreatWeight / threatDistNorm
                 distThreat = MidThreatWeight / threatDistNorm
-            elseif threatDist <= MidThreatRadius then
+            elseif effectiveDist <= MidThreatRadius then
                 threat[3] = threat[3] + NearThreatWeight / threatDistNorm
                 distThreat = NearThreatWeight / threatDistNorm
-            elseif threatDist <= FarThreatRadius then
+            elseif effectiveDist <= FarThreatRadius then
                 threat[3] = threat[3] + FarThreatWeight / threatDistNorm
                 distThreat = FarThreatWeight / threatDistNorm
             else
                 threat[3] = threat[3] + VeryFarThreatWeight / threatDistNorm
                 distThreat = VeryFarThreatWeight / threatDistNorm
             end
+            --LOG('threat[3] '..tostring(threat[3]))
+            --LOG('dstThreat '..tostring(distThreat))
+
 
             -- store max value
             if threat[3] > curMaxThreat then
@@ -489,6 +505,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
             foundPathableThreat = true
             table.insert(finalTargetSelectionTable, threat)
        end --ignoreThreat
+       
     end --threatTable loop
 
     --no pathable threat found (or no threats at all)

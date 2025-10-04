@@ -1007,6 +1007,7 @@ StructureManager = Class {
                         if (distanceByPass or MassEfficiency >= 1.015 or aiBrain.EnemyIntel.LandPhase > 1 and MassEfficiency >= 0.7) and (EnergyEfficiency >= 0.8 or ((distanceByPass or aiBrain.EnemyIntel.LandPhase > 1) and EnergyEfficiency >= 0.6)) then
                             local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
+                                --LOG('AI '..tostring(aiBrain.Nickname)..' is upgrading its land factory mass efficiency at the time is '..tostring(MassEfficiency)..' over time is '..tostring(massEfficiencyOverTime))
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                                 t2LandPass = true
                                 coroutine.yield(20)
@@ -1050,15 +1051,22 @@ StructureManager = Class {
             end
         end
         local t2AirRush = (aiBrain.amanager.Demand.Air.T2.torpedo > 0 or aiBrain.RNGEXP or aiBrain.BrainIntel.PlayerRole.AirPlayer or (factionIndex == 2 and actualMexIncome > (25 * multiplier)) or ((teamReference and RNGAIGLOBALS.HighestTeamAirPhase[teamReference] < 1.5 or not teamReference and aiBrain.BrainIntel.AirPhase < 1.5) and aiBrain.EnemyIntel.AirPhase > 1))
+        --LOG('AI '..tostring(aiBrain.Nickname))
+        --LOG('Is t2 AirRush true?'..tostring(t2AirRush))
         if t2AirRush and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 then
+            local navalRiskOverride = false
+            local hasNavalProduction = self.Factories.NAVAL[1].Total > 0 or self.Factories.NAVAL[2].Total > 0 or self.Factories.NAVAL[3].Total > 0
+            if not hasNavalProduction and aiBrain.amanager.Demand.Air.T2.torpedo > 0 then
+                navalRiskOverride = true
+            end
             --LOG('Air Player T2 factory upgrade checking if massEfficiencyOverTime '..tostring(massEfficiencyOverTime)..' energyEfficiencyOverTime '..tostring(energyEfficiencyOverTime))
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
-                if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 32.0 and massEfficiencyOverTime >= 0.8 and (t2AirRush and energyEfficiencyOverTime >= 0.85 or energyEfficiencyOverTime >= 1.05) then
+                if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 32.0 and (massEfficiencyOverTime >= 0.8 or (navalRiskOverride and massEfficiencyOverTime >= 0.6)) and (t2AirRush and energyEfficiencyOverTime >= 0.85 or energyEfficiencyOverTime >= 1.05) then
                     --LOG('Factory Upgrade efficiency over time check passed for air upgrade')
                     local EnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
                     local MassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
                     --LOG('Air Player first factory upgrade checking if massEfficiency '..tostring(MassEfficiency)..' energyEfficiency '..tostring(EnergyEfficiency))
-                    if MassEfficiency >= 0.8 and (t2AirRush and EnergyEfficiency >= 0.85 or EnergyEfficiency >= 1.05)  then
+                    if (MassEfficiency >= 0.8 or (navalRiskOverride and MassEfficiency >= 0.6)) and (t2AirRush and EnergyEfficiency >= 0.85 or EnergyEfficiency >= 1.05)  then
                         local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
                         if factoryToUpgrade and not factoryToUpgrade.Dead then
                             self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
