@@ -176,6 +176,7 @@ BuilderGroup {
         PriorityFunction = FrigateRaid,
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'IsCategoryNotRestricted', {'NAVAL'}},
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
@@ -212,6 +213,7 @@ BuilderGroup {
         PriorityFunction = NavalExpansionAdjust,
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'IsCategoryNotRestricted', {'NAVAL'}},
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'NavalBaseLimitRNG', { 2 } }, -- Forces limit to the number of naval expansions
             { UCBC, 'ExistingNavalExpansionFactoryGreaterRNG', { 3,  categories.FACTORY * categories.STRUCTURE }},
@@ -256,6 +258,7 @@ BuilderGroup {
         PriorityFunction = FrigateRaid,
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'IsCategoryNotRestricted', {'NAVAL'}},
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
@@ -292,6 +295,7 @@ BuilderGroup {
         Priority = 750,
         InstanceCount = 1,
         BuilderConditions = {
+            { MIBC, 'IsCategoryNotRestricted', {'NAVAL'}},
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'NavalBaseLimitRNG', { 3 } }, -- Forces limit to the number of naval expansions

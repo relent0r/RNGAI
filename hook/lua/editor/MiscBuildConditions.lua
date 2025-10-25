@@ -359,3 +359,15 @@ function DisableOnRole(aiBrain, roleTable)
     end
     return true
 end
+
+function IsCategoryNotRestricted(aiBrain, category)
+    local restricted = true
+    if not table.empty(ScenarioInfo.Options.RestrictedCategories) then
+        for _, v in ScenarioInfo.Options.RestrictedCategories do
+            if v == category then
+                return false
+            end
+        end
+    end
+    return restricted
+end

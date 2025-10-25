@@ -428,6 +428,36 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T3 Base AA Snipe Risk',
+        PlatoonTemplate = 'EngineerStateT3RNG',
+        Priority = 900,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 8, categories.DEFENSE * categories.TECH3 * categories.ANTIAIR}},
+            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 } },
+            { UCBC, 'EnemyAirSurfaceThreatHigh', { } },
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.2 }},
+            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.9}},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            NumAssistees = 1,
+            Construction = {
+                BuildClose = true,
+                NearDefensivePoints = false,
+                maxUnits = 1,
+                AdjacencyPriority = {categories.STRUCTURE * (categories.SHIELD + categories.FACTORY + categories.ENERGYPRODUCTION)},
+                BuildStructures = {
+                    { Unit = 'T3AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH3 },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T3 Base D Engineer AA',
         PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 900,

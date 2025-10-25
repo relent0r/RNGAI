@@ -323,6 +323,10 @@ StructureManager = Class {
                     rngData.ZoneID = MAP:GetZoneID(unitPos,self.Brain.Zones.Land.index)
                     rngData.ZoneType = 'Land'
                 end
+                if not rngData.ZoneID then
+                    WARN('RegisterZoneStructure: MAP:GetZoneID returned nil for '..repr(unit.UnitId))
+                    return
+                end
                 --LOG('zone id was set to '..tostring(rngData.ZoneID))
             end
             rngData.StructureType = self:GetStructureType(unit)
@@ -403,9 +407,9 @@ StructureManager = Class {
             self:ForkThread(function()
                 local timeout = 0
                 while not self.Initialized or not RNGAIGLOBALS.ZoneGenerationComplete do
-                    coroutine.yield(5)
+                    coroutine.yield(10)
                     timeout = timeout + 1
-                    if timeout > 100 then
+                    if timeout > 50 then
                         WARN("AI-RNG: Deferred AddZoneStructure timed out.")
                         return
                     end

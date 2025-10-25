@@ -132,30 +132,33 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     --LOG('FighterBehavior DecideWhatToDo Check targets at max radius '..tostring(self.MaxRadius))
                     --LOG('Current Platoon Threat '..tostring(self.CurrentPlatoonThreatAntiAir)..' Ally Threat '..tostring((aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat))..' Enemy Threat '..tostring(aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir))
                 -- Params aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted
-                    target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', self.MaxRadius, self.AttackPriorities, true, self.CurrentPlatoonThreatAntiAir * 1.2, false, false, true)
-                    if target and not target.Dead then
-                        local im = aiBrain.IntelManager
-                        local targetPos = target:GetPosition()
-                        local gridX, gridZ = im:GetIntelGrid(targetPos)
-                        local historicalThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
-                        --LOG('Historical AA thrat at target position '..tostring(historicalThreat))
-                        if historicalThreat > self.CurrentEnemyThreatAntiAir then
-                            local distanceWeight = 0.5      -- how much distance reduces risk
-                            local histWeight     = 1.0      -- historical threat multiplier
-                            local inferredWeight = 1.0      -- inferred enemy threat multiplier
-                            local supportWeight  = -0.5     -- friendly AA reduces risk
-                            local dx = platPos[1] - targetPos[1]
-                            local dz = platPos[3] - targetPos[3]
-                            local distSq = dx*dx + dz*dz
-                            local distFactor = distSq / (self.MaxRadius*self.MaxRadius)
-                            local threatScore = histWeight * historicalThreat
-                                                + inferredWeight * aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
-                                                + distanceWeight * distFactor
-                            local maxAllowableThreat = self.CurrentPlatoonThreatAntiAir * 1.5  -- tune this
-                            --LOG('Threat score is '..tostring(threatScore)..' max threat allowed is '..tostring(maxAllowableThreat))
-                            if threatScore > maxAllowableThreat then
-                                -- abort target acquisition
-                                target = nil
+                    if self.CurrentPlatoonThreatAntiAir > 0 then
+                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', self.MaxRadius, self.AttackPriorities, true, self.CurrentPlatoonThreatAntiAir * 1.2, false, false, true)
+                        if target and not target.Dead then
+                            local im = aiBrain.IntelManager
+                            local targetPos = target:GetPosition()
+                            local gridX, gridZ = im:GetIntelGrid(targetPos)
+                            local historicalThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
+                            --LOG('Historical AA thrat at target position '..tostring(historicalThreat))
+                            if historicalThreat > self.CurrentEnemyThreatAntiAir then
+                                local distanceWeight = 0.5      -- how much distance reduces risk
+                                local histWeight     = 1.0      -- historical threat multiplier
+                                local inferredWeight = 1.0      -- inferred enemy threat multiplier
+                                local supportWeight  = -0.5     -- friendly AA reduces risk
+                                local dx = platPos[1] - targetPos[1]
+                                local dz = platPos[3] - targetPos[3]
+                                local distSq = dx*dx + dz*dz
+                                local distFactor = distSq / (self.MaxRadius*self.MaxRadius)
+                                local threatScore = histWeight * historicalThreat
+                                                    + inferredWeight * aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
+                                                    + distanceWeight * distFactor
+                                local maxAllowableThreat = self.CurrentPlatoonThreatAntiAir * 1.5  -- tune this
+                                --LOG('Threat score is '..tostring(threatScore)..' max threat allowed is '..tostring(maxAllowableThreat))
+                                if threatScore > maxAllowableThreat then
+                                    --LOG('Aborting target')
+                                    -- abort target acquisition
+                                    target = nil
+                                end
                             end
                         end
                     end
@@ -605,15 +608,22 @@ FighterThreatThreads = function(aiBrain, platoon)
         if platoon.CurrentPlatoonThreatAntiAir < 15 and (aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat) < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
             platoon.MaxRadius = platoon.BaseRestrictedArea * 1.5
             --LOG('Air Fighter Max Radius is set to BaseRestricted')
-        elseif (aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat) * 1.3 < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
-            platoon.MaxRadius = platoon.BaseMilitaryArea
-            --LOG('Air Fighter Max Radius is set to BaseMilitary')
-        elseif (aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat) < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
-            platoon.MaxRadius = platoon.BaseDMZArea
-            --LOG('Air Fighter Max Radius is set to BaseDMZ')
         else
             --LOG('Air Fighter Max Radius is set to BaseEnemy')
-            platoon.MaxRadius = platoon.BaseEnemyArea
+            if not aiBrain.IntelManager.SafeAirThreatRadius or aiBrain.IntelManager.SafeAirThreatRadius == 0 then
+                if (aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat) * 1.3 < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+                    platoon.MaxRadius = platoon.BaseMilitaryArea
+                    --LOG('Air Fighter Max Radius is set to BaseMilitary')
+                elseif (aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat) < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
+                    platoon.MaxRadius = platoon.BaseDMZArea
+                    --LOG('Air Fighter Max Radius is set to BaseDMZ')
+                else
+                    --LOG('Air Fighter Max Radius is set to BaseEnemy')
+                    platoon.MaxRadius = platoon.BaseEnemyArea
+                end
+            else
+                platoon.MaxRadius = aiBrain.IntelManager.SafeAirThreatRadius
+            end
         end
         if not aiBrain.BrainIntel.SuicideModeActive then
             for _, unit in GetPlatoonUnits(platoon) do

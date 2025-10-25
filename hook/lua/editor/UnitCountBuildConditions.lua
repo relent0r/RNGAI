@@ -39,6 +39,13 @@ function EnemyAirSnipeIsRiskActive(aiBrain)
     return false
 end
 
+function EnemyAirSurfaceThreatHigh(aiBrain)
+    if aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat and aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface > 250 then
+        return true
+    end
+    return false
+end
+
 function EnemyAirSnipeDefenceRequired(aiBrain, locationType)
     if aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat and aiBrain.BrainIntel.SelfThreat.AntiAirNow < aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir then
         if aiBrain.BrainIntel.ACUDefensivePositionKeyTable[locationType] and aiBrain.BrainIntel.ACUDefensivePositionKeyTable[locationType].PositionKey then
@@ -1747,7 +1754,7 @@ function DefensivePointShieldRequired(aiBrain, locationType)
 end
 
 function UnitBuildDemand(aiBrain, locationType, unitType, tier, unit, threatBased)
-    if locationType and locationType ~= 'MAIN' then
+    if locationType then
         if threatBased then
             local threatWeights = {
                 T1 = 0.6,  -- example weights
@@ -1794,7 +1801,8 @@ function UnitBuildDemand(aiBrain, locationType, unitType, tier, unit, threatBase
                 return true
             end
         end
-    else
+    end
+    if locationType and locationType == 'MAIN' then
         if aiBrain.amanager.Demand[unitType][tier][unit] > aiBrain.amanager.Current[unitType][tier][unit] then
             return true
         end

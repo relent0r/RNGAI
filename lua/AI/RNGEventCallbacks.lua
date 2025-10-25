@@ -278,6 +278,31 @@ function OnKilled(self, instigator, type, overkillRatio)
     end
 end
 
+function OnKilledUnit(self, unitKilled, massKilled)
+
+    local sourceUnit
+    --LOG('OnKilledUnit Fired for '..self.UnitId..' unit killed was '..tostring(unitKilled.UnitId))
+    if self then
+        if IsUnit(self) then
+            sourceUnit = self
+        elseif IsProjectile(self) or IsCollisionBeam(self) then
+            sourceUnit = self.unit
+        end
+        if sourceUnit and sourceUnit.GetAIBrain then
+            IntelManager.ProcessSourceOnKilled(unitKilled, self)
+        end
+    end
+    if unitKilled.GetAIBrain then
+        local brain = unitKilled:GetAIBrain()
+        if brain.RNG then
+            local unitCats = unitKilled.Blueprint.CategoriesHash
+            if unitCats.STRUCTURE then
+                brain.StructureManager:RemoveZoneStructure(unitKilled)
+            end
+        end
+    end
+end
+
 function OnDestroy(self)
     if self then
         --IntelManager.ProcessSourceOnDeath(self)

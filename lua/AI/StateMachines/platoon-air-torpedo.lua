@@ -178,9 +178,15 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.AttackTarget)
                         return
                     else
-                        ----self:LogDebug(string.format('Bomber navigating to snipe ACU'))
-                        self:ChangeState(self.Navigating)
-                        return
+                        local im = aiBrain.IntelManager
+                        local gridX, gridZ = im:GetIntelGrid(targetPosition)
+                        local historicalThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
+                        self:LogDebug(string.format('Torpedo bomber historical threat at high priority position '..tostring(historicalThreat)))
+                        if self.CurrentPlatoonThreatAntiNavy > math.min(historicalThreat, 60) then
+                            ----self:LogDebug(string.format('Bomber navigating to snipe ACU'))
+                            self:ChangeState(self.Navigating)
+                            return
+                        end
                     end
                 end
             end
@@ -206,8 +212,14 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                                 return
                             else
                                 ----self:LogDebug(string.format('Torp Bomber navigating to target'))
-                                self:ChangeState(self.Navigating)
-                                return
+                                local im = aiBrain.IntelManager
+                                local gridX, gridZ = im:GetIntelGrid(targetPosition)
+                                local historicalThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
+                                self:LogDebug(string.format('Torpedo bomber historical threat at target position '..tostring(historicalThreat)))
+                                if self.CurrentPlatoonThreatAntiNavy > math.min(historicalThreat, 60) then
+                                    self:ChangeState(self.Navigating)
+                                    return
+                                end
                             end
                         end
                     end
@@ -221,11 +233,11 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Navigating)
                 return
             end
-            if not target and VDist3Sq(platPos, self.Home) < 900 then
+            if not target and VDist3Sq(platPos, self.Home) < 2500 then
                 ----self:LogDebug(string.format('trying to merge with another platoon'))
                 if self.PlatoonCount < 10 then
                     local plat = StateUtils.GetClosestPlatoonRNG(self, 'TorpedoBehavior', false, 60)
-                    if plat and plat.PlatoonCount and plat.PlatoonCount < 10 then
+                    if plat and plat.PlatoonCount and plat.PlatoonCount < 15 then
                         ----self:LogDebug(string.format('Bomber platoon is merging with another'))
                         local platUnits = plat:GetPlatoonUnits()
                         aiBrain:AssignUnitsToPlatoon(self, platUnits, 'Attack', 'None')

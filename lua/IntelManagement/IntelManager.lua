@@ -67,6 +67,7 @@ IntelManager = Class {
         }
         self.ZoneIMAPThreat = {}
         self.ZoneToGridMap = {}
+        self.SafeAirThreatRadius = 0
         self.ScoutingCurveZones = {}
         self.CurrentFrontLineZones = {}
         self.UnpathableExpansionZoneCount = 0
@@ -308,6 +309,32 @@ IntelManager = Class {
                 AirPower = 0,
                 LandPower = 0,
                 BuildPower = 0
+            }
+        }
+        self.EnemyPerformance = {
+            Air = {
+                KillsAgainst = { Land = 0, Naval = 0, Structure = 0, Experimental = 0, Total = 0 },
+                TotalMassKilled = 0,
+            },
+            Bomber = {
+                KillsAgainst = { Land = 0, Naval = 0, Structure = 0, Experimental = 0, Total = 0 },
+                TotalMassKilled = 0,
+            },
+            Gunship = {
+                KillsAgainst = { Land = 0, Naval = 0, Structure = 0, Experimental = 0, Total = 0 },
+                TotalMassKilled = 0,
+            },
+            Land = {
+                KillsAgainst = { Land = 0, Naval = 0, Structure = 0, Experimental = 0, Total = 0 },
+                TotalMassKilled = 0,
+            },
+            Naval = {
+                KillsAgainst = { Land = 0, Naval = 0, Structure = 0, Experimental = 0, Total = 0 },
+                TotalMassKilled = 0,
+            },
+            Experimental = {
+                KillsAgainst = { Land = 0, Naval = 0, Structure = 0, Experimental = 0, Total = 0 },
+                TotalMassKilled = 0,
             }
         }
     end,
@@ -1998,6 +2025,9 @@ IntelManager = Class {
         coroutine.yield(300)
         local aiBrain = self.Brain
         while aiBrain.Status ~= "Defeat" do
+            --LOG('Units Stats')
+            --LOG(tostring(repr(self.UnitStats)))
+            --LOG(tostring(repr(self.EnemyPerformance)))
             coroutine.yield(35)
             self:ForkThread(self.AdaptiveProductionThread, 'AirTransport')
             coroutine.yield(1)
@@ -2609,61 +2639,98 @@ IntelManager = Class {
             local mapOwnership = 0
             local mustScoutPresent = false
             self.ZoneIMAPThreat = {}
+            local threatSamples = {}
+            local totalAAThreat = 0
+            local totalCells = 0
             for i=self.MapIntelGridXMin, self.MapIntelGridXMax do
                 local time = GetGameTimeSeconds()
                 for k=self.MapIntelGridZMin, self.MapIntelGridZMax do
                     local cell = self.MapIntelGrid[i][k]
-                    if cell.MustScout and (not cell.ScoutAssigned or cell.ScoutAssigned.Dead) then
-                        --RNGLOG('mustScoutPresent in '..i..k)
-                        --RNGLOG(repr(cell))
-                        mustScoutPresent = true
-                    end
-                    if cell.Enabled and not cell.Water then
-                        cell.TimeScouted = time - cell.LastScouted
-                        if cell.IntelCoverage or (cell.ScoutPriority > 0 and cell.TimeScouted ~= 0 and cell.TimeScouted < 120) then
-                            intelCoverage = intelCoverage + 1
+                    if cell.Enabled then
+                        if cell.MustScout and (not cell.ScoutAssigned or cell.ScoutAssigned.Dead) then
+                            --RNGLOG('mustScoutPresent in '..i..k)
+                            --RNGLOG(repr(cell))
+                            mustScoutPresent = true
                         end
-                    end
-                    local unitsToRemove = {}
-                    if not table.empty(cell.EnemyUnits) then
-                        for c,b in cell.EnemyUnits do
-                            if (b.object and b.object.Dead) then
-                                table.insert(unitsToRemove, c)
-                            elseif time-b.time>120 or (time-b.time>15 and GetNumUnitsAroundPoint(aiBrain,categories.MOBILE,b.Position,20,'Ally')>3) then
-                                cell.EnemyUnits[c].recent=false
-                                if time-b.time>300 then
+                        if cell.Enabled and not cell.Water then
+                            cell.TimeScouted = time - cell.LastScouted
+                            if cell.IntelCoverage or (cell.ScoutPriority > 0 and cell.TimeScouted ~= 0 and cell.TimeScouted < 120) then
+                                intelCoverage = intelCoverage + 1
+                            end
+                        end
+                        local unitsToRemove = {}
+                        if not table.empty(cell.EnemyUnits) then
+                            for c,b in cell.EnemyUnits do
+                                if (b.object and b.object.Dead) then
                                     table.insert(unitsToRemove, c)
+                                elseif time-b.time>120 or (time-b.time>15 and GetNumUnitsAroundPoint(aiBrain,categories.MOBILE,b.Position,20,'Ally')>3) then
+                                    cell.EnemyUnits[c].recent=false
+                                    if time-b.time>300 then
+                                        table.insert(unitsToRemove, c)
+                                    end
                                 end
                             end
                         end
-                    end
-                    for _, c in unitsToRemove do
-                        cell.EnemyUnits[c]=nil
-                    end
-                    local secondsSinceThreatUpdate = time - cell.LastThreatUpdate
-                    local threatDecayAmount = threatDecayRate * secondsSinceThreatUpdate
-                    cell.IMAPHistoricalThreat.AntiAir = math.max(0, cell.IMAPHistoricalThreat.AntiAir - threatDecayAmount)
-                    cell.IMAPHistoricalThreat.Naval = math.max(0, cell.IMAPHistoricalThreat.Naval - threatDecayAmount)
-                    cell.IMAPHistoricalThreat.Air = math.max(0, cell.IMAPHistoricalThreat.Air - threatDecayAmount)
-                    cell.IMAPHistoricalThreat.Land = math.max(0, cell.IMAPHistoricalThreat.Land - threatDecayAmount)
-                    if cell.LandZoneID then
-                        if time - 30 > cell.LastThreatUpdate then
-                            if not self.ZoneIMAPThreat[cell.LandZoneID] then
-                                self.ZoneIMAPThreat[cell.LandZoneID] = {}
-                            end
-                            if not self.ZoneIMAPThreat[cell.LandZoneID].Air then
-                                self.ZoneIMAPThreat[cell.LandZoneID].Air = 0
-                            end
-                            self.ZoneIMAPThreat[cell.LandZoneID].Air = self.ZoneIMAPThreat[cell.LandZoneID].Air + (cell.IMAPCurrentThreat['Air'] or 0)
+                        for _, c in unitsToRemove do
+                            cell.EnemyUnits[c]=nil
                         end
-                    end
-                    local cellStatus = aiBrain.GridPresence:GetInferredStatus(cell.Position)
-                    if cellStatus == 'Allied' then
-                        mapOwnership = mapOwnership + 1
+                        local secondsSinceThreatUpdate = time - cell.LastThreatUpdate
+                        local threatDecayAmount = threatDecayRate * secondsSinceThreatUpdate
+                        cell.IMAPHistoricalThreat.AntiAir = math.max(0, cell.IMAPHistoricalThreat.AntiAir - threatDecayAmount)
+                        cell.IMAPHistoricalThreat.Naval = math.max(0, cell.IMAPHistoricalThreat.Naval - threatDecayAmount)
+                        cell.IMAPHistoricalThreat.Air = math.max(0, cell.IMAPHistoricalThreat.Air - threatDecayAmount)
+                        cell.IMAPHistoricalThreat.Land = math.max(0, cell.IMAPHistoricalThreat.Land - threatDecayAmount)
+                        if cell.LandZoneID then
+                            if time - 30 > cell.LastThreatUpdate then
+                                if not self.ZoneIMAPThreat[cell.LandZoneID] then
+                                    self.ZoneIMAPThreat[cell.LandZoneID] = {}
+                                end
+                                if not self.ZoneIMAPThreat[cell.LandZoneID].Air then
+                                    self.ZoneIMAPThreat[cell.LandZoneID].Air = 0
+                                end
+                                self.ZoneIMAPThreat[cell.LandZoneID].Air = self.ZoneIMAPThreat[cell.LandZoneID].Air + (cell.IMAPCurrentThreat['Air'] or 0)
+                            end
+                        end
+                        if cell.IMAPHistoricalThreat.AntiAir > 0 then
+                            local dist = cell.DistanceToMain
+                            local aaThreat = cell.IMAPHistoricalThreat.AntiAir
+                            table.insert(threatSamples, {dist = dist, threat = aaThreat})
+                            totalAAThreat = totalAAThreat + aaThreat
+                        end
+                        local cellStatus = aiBrain.GridPresence:GetInferredStatus(cell.Position)
+                        if cellStatus == 'Allied' then
+                            mapOwnership = mapOwnership + 1
+                        end
+                        totalCells = totalCells + 1
                     end
                 end
                 coroutine.yield(1)
             end
+            -- AA Safe Radius Calculation
+            table.sort(threatSamples, function(a, b) return a.dist < b.dist end)
+            local cumulativeThreat = 0
+            local safeRadius = 0
+            local ownAA = aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat
+            local enemyAA = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
+            local safetyFactor = math.max(1, enemyAA / math.max(ownAA, 1))  -- >1 if enemy stronger
+            local minSafeDistance = aiBrain.OperatingAreas['BaseRestrictedArea'] * 1.5
+
+            for _, sample in threatSamples do
+                cumulativeThreat = cumulativeThreat + sample.threat
+                local threatPerKm = cumulativeThreat / sample.dist
+
+                -- Tunable: how much AA threat is acceptable per distance band
+                if threatPerKm * safetyFactor < 0.4 then
+                    safeRadius = sample.dist
+                else
+                    break
+                end
+            end
+            safeRadius = math.max(minSafeDistance, math.min(safeRadius, aiBrain.OperatingAreas['BaseEnemyArea']))
+            self.SafeAirThreatRadius = safeRadius
+            --LOG('Safe Radius on calculation is '..tostring(safeRadius))
+
+            -- End AA Safe Radius Calcuation
             self.MapIntelStats.IntelCoverage = intelCoverage / (self.MapIntelGridXRes * self.MapIntelGridZRes) * 100
             self.MapIntelStats.MustScoutArea = mustScoutPresent
             aiBrain.BrainIntel.MapOwnership = mapOwnership / aiBrain.IntelManager.CellCount * 100
@@ -3393,7 +3460,7 @@ IntelManager = Class {
                     end
 
                 end
-                --RNGLOG('Number of T2 pos wanted '..count)
+                --LOG('Number of T2 torpedo bombers wanted '..count)
                 if acuSnipe then
                     --RNGLOG('Setting acuSnipe mission for air torpedo units')
                     --RNGLOG('Set game time '..gameTime)
@@ -3408,7 +3475,7 @@ IntelManager = Class {
                     aiBrain.amanager.Demand.Air.T2.torpedo = count
                     aiBrain.amanager.Demand.Air.T3.torpedo = math.ceil(count / 2)
                 end
-                --LOG('Current T2 torp demand is '..tostring(aiBrain.amanager.Demand.Air.T2.torpedo))
+                LOG('Current T2 torp demand for '..tostring(aiBrain.Nickname)..' is '..tostring(aiBrain.amanager.Demand.Air.T2.torpedo))
                 --LOG('Current T3 torp demand is '..tostring(aiBrain.amanager.Demand.Air.T3.torpedo))
             else
                 --RNGLOG('Disabling AntiNavy potential strikes ')
@@ -3744,6 +3811,8 @@ IntelManager = Class {
             --LOG('MapWaterRatio '..tostring(aiBrain.MapWaterRatio))
             local rangedThreatRequested = 0
             local antiairThreatRequested = 0
+            local airAntiNavalThreatRatio = 0
+            local navalAirDeathRatio = 0
             if minThreatRisk > 60 and aiBrain.BrainIntel.SelfThreat.NavalNow > 10 and aiBrain.MapWaterRatio > 0.20 then
                 if aiBrain.EnemyIntel.DirectorData.Defense and not table.empty(aiBrain.EnemyIntel.DirectorData.Defense) then
                     for _, v in aiBrain.EnemyIntel.DirectorData.Defense do
@@ -3773,8 +3842,21 @@ IntelManager = Class {
                 end
             end
             if minThreatRisk > 0 and aiBrain.BrainIntel.SelfThreat.NavalNow > 10 and aiBrain.MapWaterRatio > 0.20 then
+                local navalAAUrgency = aiBrain.EnemyIntel.EnemyThreatCurrent.AirAntiNavy or 0
+                local teamAirThreat = aiBrain.BrainIntel.SelfThreat.AirNow + (aiBrain.BrainIntel.SelfThreat.AllyAirThreat / 2)
+                navalAAUrgency = navalAAUrgency * math.min(1.5, teamAirThreat)
+                local currentCruisers = self.Naval.T2.cruiser
+                local currentCarriers = self.Naval.T3.carrier
+                local currentAAValue = ((aiBrain.amanager.Current['Naval']['T2']['cruiser'] or 0) * 75) + ((aiBrain.amanager.Current['Naval']['T3']['carrier'] or 0) * 100)
+                local enemyAirKillsMass = self.EnemyPerformance.Air.KillsAgainst.Naval
+                local totalNavalKillsMass = self.EnemyPerformance.Naval.KillsAgainst.Naval
+                navalAirDeathRatio = totalNavalKillsMass > 0 and (enemyAirKillsMass / totalNavalKillsMass) or 0
+                airAntiNavalThreatRatio = navalAAUrgency / math.max(currentAAValue, 1)
                 antiairThreatRequested = antiairThreatRequested + aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+                --LOG('airAntiNavalThreatRatio '..tostring(airAntiNavalThreatRatio))
+                --LOG('navalAirDeathRatio '..tostring(navalAirDeathRatio))
             end
+            --LOG('Naval antiair threat requested '..tostring(antiairThreatRequested))
             --LOG('ThreatRequested is '..tostring(threatRequested))
             if rangedThreatRequested > 1 or antiairThreatRequested > 0 then
                 local disableMissileShip = true
@@ -3812,7 +3894,8 @@ IntelManager = Class {
                             end
                             if antiairThreatRequested > 0 and v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.NAVAL * categories.TECH2) > 0 then
                                 local maxCruisers = math.max(1, antiairThreatRequested / 75)
-                                if cruiserBuilt < 1 or (cruiserMassKilled > 0 and cruiserBuilt > 0 and math.min(cruiserMassKilled / cruiserBuilt, 2) > 1.2) then
+                                --LOG('antiairThreatRequested is greater than zero, cruisers built '..tostring(cruiserBuilt)..' cruisers mass killed '..tostring(cruiserMassKilled)..' max cruisers '..tostring(maxCruisers))
+                                if cruiserBuilt < 1 or (cruiserMassKilled > 0 and cruiserBuilt > 0 and math.min(cruiserMassKilled / cruiserBuilt, 2) > 1.2) or (airAntiNavalThreatRatio > 1.2  and navalAirDeathRatio > 0.5) then
                                     --LOG('Current Cruiser + Carrier Demand '..tostring(aiBrain.amanager.Current['Naval']['T2']['cruiser'] + aiBrain.amanager.Demand.Bases[k].Naval.T3.carrier))
                                     if maxCruisers > aiBrain.amanager.Demand.Bases[k].Naval.T2.cruiser and maxCruisers > (aiBrain.amanager.Current['Naval']['T2']['cruiser'] + aiBrain.amanager.Demand.Bases[k].Naval.T3.carrier) then
                                         --LOG('Base '..tostring(k)..' requesting '..tostring(maxCruisers)..' maxCruisers')
@@ -3843,7 +3926,7 @@ IntelManager = Class {
                             end
                             if antiairThreatRequested > 0 and v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.NAVAL * categories.TECH3 - categories.UEF) > 0 then
                                 local maxCarriers = math.max(1, antiairThreatRequested / 100)
-                                if carrierBuilt < 1 or (carrierMassKilled > 0 and carrierBuilt > 0 and math.min(carrierMassKilled / carrierBuilt, 2) > 1.2) then
+                                if carrierBuilt < 1 or (carrierMassKilled > 0 and carrierBuilt > 0 and math.min(carrierMassKilled / carrierBuilt, 2) > 1.2) or (airAntiNavalThreatRatio > 1.2  and navalAirDeathRatio > 0.5) then
                                     --LOG('Current carriers '..tostring(aiBrain.amanager.Current['Naval']['T3']['carrier']))
                                     if maxCarriers > aiBrain.amanager.Demand.Bases[k].Naval.T3.carrier and maxCarriers > (aiBrain.amanager.Current['Naval']['T3']['carrier']) then
                                         --LOG('Base '..tostring(k)..' requesting '..tostring(maxCarriers)..' maxCarriers')
@@ -3865,6 +3948,7 @@ IntelManager = Class {
                                 aiBrain.amanager.Demand.Bases[k].Naval.T2.cruiser = 0
                             end
                         end
+                        --LOG('Current t2 cruiser demand for location is '..tostring(aiBrain.amanager.Demand.Bases[k].Naval.T2.cruiser))
                     end
                 end
             else
@@ -4408,207 +4492,162 @@ function GetIntelManager(brain)
     return brain.IntelManager
 end
 
-function ProcessSourceOnKilled(targetUnit, sourceUnit)
-    --RNGLOG('We are going to do stuff here')
-    --RNGLOG('Target '..targetUnit.UnitId)
-    --RNGLOG('Source '..sourceUnit.UnitId)
-    local data = {
-        targetcat = false,
-        sourcecat = false
-    }
-    
-    if sourceUnit.GetAIBrain then
-        local sourceBrain = sourceUnit:GetAIBrain()
-        if sourceBrain.RNG then
-            local valueGained
-            local sourceCat = sourceUnit.Blueprint.CategoriesHash
-            if sourceCat.EXPERIMENTAL then
-                if sourceCat.MOBILE and sourceCat.LAND and sourceCat.EXPERIMENTAL and not sourceCat.ARTILLERY then
-                    data.sourcecat = 'ExperimentalLand'
-                    if targetUnit.Blueprint.Economy.BuildCostMass then
-                        valueGained = targetUnit.Blueprint.Economy.BuildCostMass or 0
-                    end
-                end
-            elseif sourceCat.AIR then
-                if sourceCat.GROUNDATTACK then
-                    data.sourcecat = 'Gunship'
-                    if targetUnit.Blueprint.Economy.BuildCostMass then
-                        valueGained = targetUnit.Blueprint.Economy.BuildCostMass or 0
-                    end
-                elseif sourceCat.BOMBER then
-                    data.sourcecat = 'Bomber'
-                    if targetUnit.Blueprint.Economy.BuildCostMass then
-                        valueGained = targetUnit.Blueprint.Economy.BuildCostMass or 0
-                    end
-                    if sourceUnit.PlatoonHandle.UnitTarget == 'ENGINEER' then
+function ClassifyUnit(unit)
+    if not unit or not unit.Blueprint or not unit.Blueprint.CategoriesHash then
+        return nil
+    end
 
-                    end
-                else
-                    data.sourcecat = 'Air'
-                end
-            elseif sourceCat.LAND then
-                if ( sourceCat.UEF or sourceCat.CYBRAN ) and sourceCat.BOT and sourceCat.TECH2 and sourceCat.DIRECTFIRE or sourceCat.SNIPER and sourceCat.TECH3 then
-                    data.sourcecat = 'RangedBot'
-                    if targetUnit.Blueprint.Economy.BuildCostMass then
-                        valueGained = targetUnit.Blueprint.Economy.BuildCostMass or 0
-                    end
-                end
-            elseif sourceCat.STRUCTURE then
-                data.sourcecat = 'Structure'
-            elseif sourceCat.NAVAL then
-                if sourceCat.MISSILESHIP then
-                    data.sourcecat = 'MissileShip'
-                    if targetUnit.Blueprint.Economy.BuildCostMass then
-                        valueGained = targetUnit.Blueprint.Economy.BuildCostMass or 0
-                    end
-                elseif sourceCat.NUKESUB then
-                    data.sourcecat = 'NukeSub'
-                    if targetUnit.Blueprint.Economy.BuildCostMass then
-                        valueGained = targetUnit.Blueprint.Economy.BuildCostMass or 0
-                    end
-                elseif sourceCat.CRUISER then
-                    data.sourcecat = 'Cruiser'
-                    if targetUnit.Blueprint.Economy.BuildCostMass then
-                        valueGained = targetUnit.Blueprint.Economy.BuildCostMass or 0
-                    end
-                elseif sourceCat.CARRIER then
-                    data.sourcecat = 'Carrier'
-                    if targetUnit.Blueprint.Economy.BuildCostMass then
-                        valueGained = targetUnit.Blueprint.Economy.BuildCostMass or 0
-                    end
-                end
-            end
-            if valueGained then
-                local unitStats = sourceBrain.IntelManager.UnitStats
-                unitStats[data.sourcecat].Kills.Mass = unitStats[data.sourcecat].Kills.Mass + valueGained
-                if valueGained then
-                    --LOG('Gunship killed')
-                    --LOG('Target Unit '..targetUnit.UnitId)
-                    local gained
-                    local built
-                    if unitStats[data.sourcecat].Kills.Mass > 0 then
-                        gained = unitStats[data.sourcecat].Kills.Mass
-                    else
-                        gained = 0.1
-                    end
-                    if unitStats[data.sourcecat].Built.Mass > 0 then
-                        built = unitStats[data.sourcecat].Built.Mass
-                    else
-                        built = 0.1
-                    end
-                    --LOG('Current Gunship Efficiency '..(math.min(gained / built, 2)))
-                end
-            end
+    local cat = unit.Blueprint.CategoriesHash
+    local unitType
+
+    if cat.EXPERIMENTAL then
+        if cat.MOBILE and cat.LAND and not cat.ARTILLERY then
+            unitType = 'ExperimentalLand'
+        else
+            unitType = 'Experimental'
         end
+    elseif cat.AIR then
+        if cat.BOMBER then
+            unitType = 'Bomber'
+        elseif cat.GROUNDATTACK then
+            unitType = 'Gunship'
+        elseif cat.SCOUT then
+            unitType = 'Scout'
+        else
+            unitType = 'Air'
+        end
+    elseif cat.LAND then
+        if (cat.UEF or cat.CYBRAN) and cat.BOT and cat.TECH2 and cat.DIRECTFIRE or cat.SNIPER and cat.TECH3 then
+            unitType = 'RangedBot'
+        else
+            unitType = 'Land'
+        end
+    elseif cat.STRUCTURE then
+        unitType = 'Structure'
+    elseif cat.NAVAL then
+        if cat.MISSILESHIP then
+            unitType = 'MissileShip'
+        elseif cat.NUKESUB then
+            unitType = 'NukeSub'
+        elseif cat.CRUISER then
+            unitType = 'Cruiser'
+        elseif cat.CARRIER then
+            unitType = 'Carrier'
+        else
+            unitType = 'Naval'
+        end
+    end
+
+    return unitType
+end
+
+function ProcessSourceOnKilled(targetUnit, sourceUnit)
+    if not (sourceUnit and sourceUnit.GetAIBrain) then return end
+    local sourceBrain = sourceUnit:GetAIBrain()
+    if not sourceBrain.RNG then return end
+    if not targetUnit['RNGKilledCallbackRun'] then
+        targetUnit['RNGKilledCallbackRun'] = true
+
+        local targetBP = targetUnit.Blueprint
+        local valueGained = targetBP and targetBP.Economy.BuildCostMass or 0
+        if valueGained <= 0 then return end
+
+        local sourceType = ClassifyUnit(sourceUnit)
+        --LOG('ProcessSourceOnKilled triggered for source unit '..tostring(sourceUnit.UnitId)..' and target unit '..tostring(targetUnit.UnitId)..' sourceType was set as '..tostring(sourceType))
+        if not sourceType then return end
+
+        local unitStats = sourceBrain.IntelManager.UnitStats
+        if not unitStats[sourceType] then return end
+
+        unitStats[sourceType].Kills.Mass = (unitStats[sourceType].Kills.Mass or 0) + valueGained
+
+        -- Optional efficiency calculation (unchanged)
+        local gained = math.max(unitStats[sourceType].Kills.Mass, 0.1)
+        local built  = math.max(unitStats[sourceType].Built.Mass or 0, 0.1)
+        --LOG('Efficiency '..(math.min(gained / built, 2)))
     end
 end
 
 function ProcessSourceOnDeath(targetBrain, targetUnit, sourceUnit, damageType)
-    local data = {
-        targetcat = false,
-        sourcecat = false
-    }
+    if not targetBrain.RNG then
+        return
+    end
 
-    if targetBrain.RNG then
-        local valueLost
-        local targetCat = targetUnit.Blueprint.CategoriesHash
-        local sourceCat = sourceUnit.Blueprint.CategoriesHash
-        if targetCat.EXPERIMENTAL then
-            if sourceCat.MOBILE and sourceCat.LAND and sourceCat.EXPERIMENTAL and not sourceCat.ARTILLERY then
-                data.targetcat = 'ExperimentalLand'
-                if targetUnit.Blueprint.Economy.BuildCostMass then
-                    valueLost = targetUnit.Blueprint.Economy.BuildCostMass
-                end
-            end
-        elseif targetCat.AIR then
-            if targetCat.SCOUT then
-                RecordUnitDeath(targetUnit, 'SCOUT')
-            elseif targetCat.GROUNDATTACK then
-                data.targetcat = 'Gunship'
-                if targetUnit.Blueprint.Economy.BuildCostMass then
-                    valueLost = targetUnit.Blueprint.Economy.BuildCostMass
-                end
-            elseif targetCat.BOMBER then
-                data.targetcat = 'Bomber'
-                if targetUnit.Blueprint.Economy.BuildCostMass then
-                    valueLost = targetUnit.Blueprint.Economy.BuildCostMass
-                end
+    local valueLost = targetUnit.Blueprint.Economy.BuildCostMass or 0
+    if valueLost <= 0 then
+        return
+    end
+
+    local targetCat = targetUnit.Blueprint.CategoriesHash
+    local sourceCat = (sourceUnit and sourceUnit.Blueprint and sourceUnit.Blueprint.CategoriesHash) or {}
+
+    local sourceType = ClassifyUnit(sourceUnit)
+    local targetType = ClassifyUnit(targetUnit)
+    if not targetType or not sourceType then
+        return
+    end
+
+    -- Handle special target cases
+    if targetType == 'Scout' then
+        RecordUnitDeath(targetUnit, 'SCOUT')
+    end
+
+    -- Structure-specific cleanup
+    if targetType == 'Structure' then
+        if targetCat.DEFENSE and not targetCat.WALL then
+            local locationType = targetUnit.BuilderManagerData.LocationType
+            if locationType then
+                RUtils.RemoveDefenseUnitFromSpoke(targetBrain, locationType, targetUnit)
             else
-                data.targetcat = 'Air'
-            end
-        elseif targetCat.LAND then
-            data.targetcat = 'Land'
-        elseif targetCat.STRUCTURE then
-            data.targetcat = 'Structure'
-            if targetCat.DEFENSE and not targetCat.WALL then
-                local locationType = targetUnit.BuilderManagerData.LocationType
-                if locationType then
-                    RUtils.RemoveDefenseUnitFromSpoke(targetBrain, locationType, targetUnit)
-                else
-                    WARN('AI RNG : No location type in defensive unit on death, may have been gifted. Unit is '..targetUnit.UnitId)
-                end
-            end
-            if sourceCat.TACTICALMISSILEPLATFORM then
-                local tmlPos = sourceUnit:GetPosition()
-                if targetBrain.EnemyIntel.TML and not targetBrain.EnemyIntel.TML[sourceUnit.EntityId] then
-                    targetBrain.EnemyIntel.TML[sourceUnit.EntityId] = {object = sourceUnit, position=tmlPos, validated=false, range=sourceUnit.Blueprint.Weapon[1].MaxRadius }
-                    local sm = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua').GetStructureManager(targetBrain)
-                    ForkThread(sm.ValidateTML, sm, targetBrain, targetBrain.EnemyIntel.TML[sourceUnit.EntityId])
-                end
-            end
-            if targetCat.RADAR or targetCat.OMNI or targetCat.SONAR then
-                --LOG('Intel unit died, tried unassign')
-                if targetBrain.IntelManager then
-                    ForkThread(targetBrain.IntelManager.UnassignIntelUnit, targetBrain.IntelManager, targetUnit)
-                end
-            end
-        elseif targetCat.NAVAL then
-            if targetCat.MISSILESHIP then
-                data.targetcat = 'MissileShip'
-                if targetUnit.Blueprint.Economy.BuildCostMass then
-                    valueLost = targetUnit.Blueprint.Economy.BuildCostMass or 0
-                end
-            elseif targetCat.NUKESUB then
-                data.targetcat = 'NukeSub'
-                if targetUnit.Blueprint.Economy.BuildCostMass then
-                    valueLost = targetUnit.Blueprint.Economy.BuildCostMass or 0
-                end
-            elseif targetCat.CRUISER then
-                data.targetcat = 'Cruiser'
-                if targetUnit.Blueprint.Economy.BuildCostMass then
-                    valueLost = targetUnit.Blueprint.Economy.BuildCostMass or 0
-                end
-            elseif targetCat.CARRIER then
-                data.targetcat = 'Carrier'
-                if targetUnit.Blueprint.Economy.BuildCostMass then
-                    valueLost = targetUnit.Blueprint.Economy.BuildCostMass or 0
-                end
+                WARN('AI RNG: Missing locationType on defensive structure death for unit ' .. targetUnit.UnitId)
             end
         end
-        if valueLost then
-            local unitStats = targetBrain.IntelManager.UnitStats
-            unitStats[data.targetcat].Deaths.Mass = unitStats[data.targetcat].Deaths.Mass + valueLost
-            if valueLost then
-                --LOG('Unit type '..data.targetcat..' died')
-                --LOG('Target Unit '..targetUnit.UnitId)
-                local gained
-                local lost
-                if unitStats[data.targetcat].Kills.Mass > 0 then
-                    gained = unitStats[data.targetcat].Kills.Mass
-                else
-                    gained = 0.1
-                end
-                if unitStats[data.targetcat].Deaths.Mass > 0 then
-                    lost = unitStats[data.targetcat].Deaths.Mass
-                else
-                    lost = 0.1
-                end
-                --LOG('Current Unit Efficiency '..(math.min(gained / lost, 2)))
+
+        -- Track tactical missile launchers
+        if sourceCat.TACTICALMISSILEPLATFORM and sourceUnit then
+            local tmlPos = sourceUnit:GetPosition()
+            if targetBrain.EnemyIntel.TML and not targetBrain.EnemyIntel.TML[sourceUnit.EntityId] then
+                targetBrain.EnemyIntel.TML[sourceUnit.EntityId] = {
+                    object = sourceUnit,
+                    position = tmlPos,
+                    validated = false,
+                    range = sourceUnit.Blueprint.Weapon[1].MaxRadius
+                }
+                local sm = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua').GetStructureManager(targetBrain)
+                ForkThread(sm.ValidateTML, sm, targetBrain, targetBrain.EnemyIntel.TML[sourceUnit.EntityId])
             end
+        end
+
+        -- Radar / Omni / Sonar cleanup
+        if (targetCat.RADAR or targetCat.OMNI or targetCat.SONAR) and targetBrain.IntelManager then
+            ForkThread(targetBrain.IntelManager.UnassignIntelUnit, targetBrain.IntelManager, targetUnit)
         end
     end
 
+    -- Record enemy performance
+    if sourceType and targetType then
+        local enemyPerf = targetBrain.IntelManager.EnemyPerformance  -- or targetBrain.IntelManager.EnemyPerformance
+        if enemyPerf and enemyPerf[sourceType] then
+            enemyPerf[sourceType].KillsAgainst[targetType] = (enemyPerf[sourceType].KillsAgainst[targetType] or 0) + valueLost
+            enemyPerf[sourceType].KillsAgainst.Total = (enemyPerf[sourceType].KillsAgainst.Total or 0) + valueLost
+            enemyPerf[sourceType].TotalMassKilled = (enemyPerf[sourceType].TotalMassKilled or 0) + valueLost
+        end
+    end
+
+    -- Record own unit loss
+    local unitStats = targetBrain.IntelManager.UnitStats
+    if unitStats[targetType] and unitStats[targetType].Deaths then
+        unitStats[targetType].Deaths.Mass = (unitStats[targetType].Deaths.Mass or 0) + valueLost
+    end
+
+    -- Update efficiency ratio
+    if unitStats[targetType] then
+        local killsMass = (unitStats[targetType].Kills.Mass or 0) + 0.1
+        local deathsMass = (unitStats[targetType].Deaths.Mass or 0) + 0.1
+        unitStats[targetType].Efficiency = math.min(killsMass / deathsMass, 2)
+    end
 end
+
 
 RebuildTable = function(oldtable)
     local temptable = {}

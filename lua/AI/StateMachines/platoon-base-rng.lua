@@ -150,6 +150,12 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                 elseif unitCats.NAVAL then
                     if unitCats.TECH2 and unitCats.INDIRECTFIRE and unitCats.CRUISER or unitCats.INDIRECTFIRE and unitCats.NAVAL and unitCats.BATTLESHIP and not unitCats.SERAPHIM then
                         unit['rngdata'].Role='MissileShip'
+                    elseif unitCats.TECH2 and unitCats.CRUISER then
+                        unit['rngdata'].Role='Cruiser'
+                    elseif unitCats.TECH2 and unitCats.SHIELD then
+                        unit['rngdata'].Role='Shield'
+                    elseif unitCats.TECH2 and unitCats.STEALTHFIELD then
+                        unit['rngdata'].Role='Stealth'
                     end
                 elseif unitCats.SILO then
                     unit['rngdata'].Role='Silo'

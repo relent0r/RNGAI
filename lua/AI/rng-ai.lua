@@ -4105,6 +4105,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyAirThreat = 0
         local enemyAntiAirThreat = 0
         local enemyAirSurfaceThreat = 0
+        local enemyAirAntiNavy = 0
         local enemyNavalThreat = 0
         local enemyLandThreat = 0
         local enemyNavalSubThreat = 0
@@ -4136,6 +4137,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.AirThreatLevel + v.Blueprint.Defense.SubThreatLevel + v.Blueprint.Defense.SurfaceThreatLevel
                         enemyAntiAirThreat = enemyAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
                         enemyAirSurfaceThreat = enemyAirSurfaceThreat + v.Blueprint.Defense.SurfaceThreatLevel
+                        enemyAirAntiNavy = enemyAirAntiNavy + v.Blueprint.Defense.SubThreatLevel
                     end
                     coroutine.yield(1)
                     local enemyExtractors = GetListOfUnits( enemy, categories.STRUCTURE * categories.MASSEXTRACTION, false, false)
@@ -4176,6 +4178,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EnemyIntel.EnemyThreatCurrent.Air = enemyAirThreat
         self.EnemyIntel.EnemyThreatCurrent.AntiAir = enemyAntiAirThreat
         self.EnemyIntel.EnemyThreatCurrent.AirSurface = enemyAirSurfaceThreat
+        self.EnemyIntel.EnemyThreatCurrent.AirAntiNavy = enemyAirAntiNavy
         self.EnemyIntel.EnemyThreatCurrent.Extractor = enemyExtractorthreat
         self.EnemyIntel.EnemyThreatCurrent.ExtractorCount = enemyExtractorCount
         self.EnemyIntel.EnemyThreatCurrent.Naval = enemyNavalThreat

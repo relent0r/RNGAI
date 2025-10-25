@@ -339,8 +339,8 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                 local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object) or 10
                                 --LOG('Artillery Range is greater than Experimental')
                                 if unitRange > self['rngdata'].MaxPlatoonWeaponRange then
-                                    overRangedCount = overRangedCount + 1
-                                    overRangedThreat = overRangedThreat + (enemyUnit.Blueprint.Defense.SurfaceThreatLevel or 35)
+                                    overRangedCount = overRangedCount + 0.5
+                                    overRangedThreat = overRangedThreat + ((enemyUnit.Blueprint.Defense.SurfaceThreatLevel or 35) * 0.75)
                                 end
                                 if overRangedThreat > 450 then
                                     self.BuilderData = {
@@ -415,7 +415,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                 if unitRange > self['rngdata'].MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 1
                                 end
-                                if overRangedCount > 2 then
+                                if overRangedCount > 5 and overRangedThreat > 120 then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'NavalThreat',

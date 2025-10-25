@@ -17,6 +17,11 @@ Unit = Class(RNGUnitClass) {
         RNGUnitClass.OnKilled(self, instigator, type, overkillRatio)
     end,
 
+    OnKilledUnit = function(self, unitKilled, experience)
+        RNGEventCallbacks.OnKilledUnit(self, unitKilled, experience)
+        RNGUnitClass.OnKilledUnit(self, unitKilled, experience)
+    end,
+
     OnDestroy = function(self)
         RNGEventCallbacks.OnDestroy(self)
         RNGUnitClass.OnDestroy(self)

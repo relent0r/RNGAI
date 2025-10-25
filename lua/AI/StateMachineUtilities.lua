@@ -2746,7 +2746,7 @@ end
 
 GetCallBackCheck = function(unit)
     local function AntiNavalRetreat(unit, instigator)
-            LOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy))
+            --LOG('AntiNavy Threat is '..repr(unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy))
             if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) and instigator.Blueprint.CategoriesHash.ANTINAVY 
             and unit.PlatoonHandle and unit.PlatoonHandle.CurrentPlatoonThreatAntiNavy == 0 and (not unit.PlatoonHandle.RetreatOrdered) then
                 --LOG('Naval Callback AntiNavy We want to retreat '..unit.UnitId)
