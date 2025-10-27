@@ -312,30 +312,137 @@ IntelManager = Class {
             }
         }
         self.EnemyPerformance = {
+            --=== AIR DOMAIN ===--
             Air = {
-                KillsAgainst = { Land = 0, Naval = 0, Structure = 0, Experimental = 0, Total = 0 },
                 TotalMassKilled = 0,
+                TotalMassLost = 0,
+                KillsAgainst = {
+                    Air = 0,
+                    Land = 0,
+                    Naval = 0,
+                    Experimental = 0,
+                    Structure = 0,
+                },
+                LossesAgainst = {
+                    Air = 0,
+                    Land = 0,
+                    Naval = 0,
+                    Experimental = 0,
+                    Structure = 0,
+                },
+                Subtypes = {
+                    Bomber = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    Gunship = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    TorpedoBomber = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    Interceptor = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    Scout = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                }
             },
-            Bomber = {
-                KillsAgainst = { Land = 0, Naval = 0, Structure = 0, Experimental = 0, Total = 0 },
-                TotalMassKilled = 0,
-            },
-            Gunship = {
-                KillsAgainst = { Land = 0, Naval = 0, Structure = 0, Experimental = 0, Total = 0 },
-                TotalMassKilled = 0,
-            },
+        
+            --=== LAND DOMAIN ===--
             Land = {
-                KillsAgainst = { Land = 0, Naval = 0, Structure = 0, Experimental = 0, Total = 0 },
                 TotalMassKilled = 0,
+                TotalMassLost = 0,
+                KillsAgainst = {
+                    Air = 0,
+                    Land = 0,
+                    Naval = 0,
+                    Experimental = 0,
+                    Structure = 0,
+                },
+                LossesAgainst = {
+                    Air = 0,
+                    Land = 0,
+                    Naval = 0,
+                    Experimental = 0,
+                    Structure = 0,
+                },
+                Subtypes = {
+                    Tank = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    Bot = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    Artillery = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    MobileAA = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                }
             },
+        
+            --=== NAVAL DOMAIN ===--
             Naval = {
-                KillsAgainst = { Land = 0, Naval = 0, Structure = 0, Experimental = 0, Total = 0 },
                 TotalMassKilled = 0,
+                TotalMassLost = 0,
+                KillsAgainst = {
+                    Air = 0,
+                    Land = 0,
+                    Naval = 0,
+                    Experimental = 0,
+                    Structure = 0,
+                },
+                LossesAgainst = {
+                    Air = 0,
+                    Land = 0,
+                    Naval = 0,
+                    Experimental = 0,
+                    Structure = 0,
+                },
+                Subtypes = {
+                    Frigate = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    Destroyer = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    Cruiser = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    Battleship = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    Submarine = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                }
             },
+        
+            --=== EXPERIMENTALS ===--
             Experimental = {
-                KillsAgainst = { Land = 0, Naval = 0, Structure = 0, Experimental = 0, Total = 0 },
                 TotalMassKilled = 0,
-            }
+                TotalMassLost = 0,
+                KillsAgainst = {
+                    Air = 0,
+                    Land = 0,
+                    Naval = 0,
+                    Experimental = 0,
+                    Structure = 0,
+                },
+                LossesAgainst = {
+                    Air = 0,
+                    Land = 0,
+                    Naval = 0,
+                    Experimental = 0,
+                    Structure = 0,
+                },
+                Subtypes = {
+                    ExperimentalLand = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    ExperimentalAir = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    ExperimentalNaval = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                }
+            },
+        
+            --=== STRUCTURES (STATIC DEFENSES, ECONOMY, ETC.) ===--
+            Structure = {
+                TotalMassKilled = 0,
+                TotalMassLost = 0,
+                KillsAgainst = {
+                    Air = 0,
+                    Land = 0,
+                    Naval = 0,
+                    Experimental = 0,
+                    Structure = 0,
+                },
+                LossesAgainst = {
+                    Air = 0,
+                    Land = 0,
+                    Naval = 0,
+                    Experimental = 0,
+                    Structure = 0,
+                },
+                Subtypes = {
+                    PD = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    AA = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    TML = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    SAM = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                    Shield = { TotalMassKilled = 0, KillsAgainst = {}, TotalMassLost = 0, LossesAgainst = {} },
+                }
+            },
         }
     end,
 
@@ -759,6 +866,7 @@ IntelManager = Class {
             if not table.empty(filteredNavalList) then
                 table.sort(filteredNavalList, function(a, b) return a.Priority > b.Priority end)
                 self.ZoneExpansions.Naval = filteredNavalList
+                --LOG('ZoneExpansionsNaval '..tostring(aiBrain.Nicknacm)..' is '..tostring(repr(filteredNavalList)))
                 --aiBrain:ForkThread(self.DrawInfection, filteredNavalList[1].Position)
             end
             coroutine.yield(50)
@@ -3040,15 +3148,53 @@ IntelManager = Class {
             --RNGLOG('aiBrain.BrainIntel.SelfThreat.AirNow '..aiBrain.BrainIntel.SelfThreat.AirNow)
             --RNGLOG('ally air threat is '..aiBrain.BrainIntel.SelfThreat.AllyAirThreat)
             --RNGLOG('aiBrain.EnemyIntel.EnemyThreatCurrent.Air '..aiBrain.EnemyIntel.EnemyThreatCurrent.Air)
-            if aiBrain.BrainIntel.SelfThreat.AirNow + (aiBrain.BrainIntel.SelfThreat.AllyAirThreat / 2) > aiBrain.EnemyIntel.EnemyThreatCurrent.Air * 1.5 then
+            local friendlyAir = aiBrain.BrainIntel.SelfThreat.AirNow + (aiBrain.BrainIntel.SelfThreat.AllyAirThreat / 2)
+            local enemyAir = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+            local enemyNaval = aiBrain.EnemyIntel.EnemyThreatCurrent.Naval
+        
+            -- Base air-vs-air risk logic
+            if friendlyAir > enemyAir * 1.5 then
                 minThreatRisk = 80
-            elseif aiBrain.BrainIntel.SelfThreat.AirNow + (aiBrain.BrainIntel.SelfThreat.AllyAirThreat / 2) > aiBrain.EnemyIntel.EnemyThreatCurrent.Air then
+            elseif friendlyAir > enemyAir then
                 minThreatRisk = 50
-            elseif aiBrain.BrainIntel.SelfThreat.AirNow + (aiBrain.BrainIntel.SelfThreat.AllyAirThreat / 2) * 1.5 > aiBrain.EnemyIntel.EnemyThreatCurrent.Air then
+            elseif friendlyAir * 1.5 > enemyAir then
                 minThreatRisk = 25
             else
                 minThreatRisk = 5
             end
+            --LOG('friendlyAir for '..tostring(aiBrain.Nickname)..' : '..tostring(friendlyAir))
+            --LOG('enemyAir for '..tostring(aiBrain.Nickname)..' : '..tostring(enemyAir))
+            --LOG('enemyNaval for '..tostring(aiBrain.Nickname)..' : '..tostring(enemyNaval))
+        
+            -- === Performance Adjustment ===
+            local airVsNavalEff = self.EnemyPerformance.Air.KillsAgainst.Naval / math.max(self.EnemyPerformance.Air.TotalMassKilled, 1)
+            local navalVsNavalEff = self.EnemyPerformance.Air.KillsAgainst.Naval / math.max(self.EnemyPerformance.Naval.TotalMassKilled, 1)
+            local navalVsAirEff = self.EnemyPerformance.Naval.KillsAgainst.Air / math.max(self.EnemyPerformance.Naval.TotalMassKilled, 1)
+            --LOG('Enemy Air Kills against Stats '..tostring(repr(self.EnemyPerformance.Air.KillsAgainst)))
+            --LOG('Air.KillsAgainst.Naval '..tostring(aiBrain.Nickname)..' : '..tostring(self.EnemyPerformance.Air.KillsAgainst.Naval))
+            --LOG('Air.KillsAgainst.Naval '..tostring(aiBrain.Nickname)..' : '..tostring(self.EnemyPerformance.Air.KillsAgainst.Naval))
+            --LOG('Naval.KillsAgainst.Air '..tostring(aiBrain.Nickname)..' : '..tostring(self.EnemyPerformance.Naval.KillsAgainst.Air))
+
+            --LOG('airVsNavalEff for '..tostring(aiBrain.Nickname)..' : '..tostring(airVsNavalEff))
+            --LOG('navalVsNavalEff '..tostring(aiBrain.Nickname)..' : '..tostring(navalVsNavalEff))
+            --LOG('navalVsAirEff '..tostring(aiBrain.Nickname)..' : '..tostring(navalVsAirEff))
+        
+            -- Amplify perceived risk if air dominance is lethal to navy
+            if airVsNavalEff > 0.25 then  -- e.g. 25%+ of air’s damage is against navy
+                minThreatRisk = minThreatRisk * (1 + airVsNavalEff)
+            end
+        
+            -- If enemy navy is performing well, boost anti-naval urgency
+            if navalVsNavalEff > 0.2 then
+                minThreatRisk = minThreatRisk + 10
+            end
+        
+            -- If enemy navy is good at killing air units (AA heavy), reduce willingness to use torp bombers
+            if navalVsAirEff > 0.15 then
+                minThreatRisk = minThreatRisk * 0.6
+            end
+        
+            minThreatRisk = math.min(100, math.max(5, minThreatRisk))
             --LOG('AI : '..tostring(aiBrain.Nickname))
             local gridSize = self.MapIntelGridSize
             local desiredRadius = 180
@@ -3056,24 +3202,17 @@ IntelManager = Class {
             local baseX, baseZ = self:GetIntelGrid(aiBrain.BrainIntel.StartPos)
 
             local localAirThreat = self:GetHistoricalThreatInRings(baseX, baseZ, 'Air', rings)
-            --LOG('Local Air threat '..tostring(localAirThreat))
+            --LOG('localAirThreat '..tostring(aiBrain.Nickname)..' : '..tostring(localAirThreat))
 
-            -- normalize local threat against global
-            local globalAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
             local localFactor = 1.0
 
-            if globalAirThreat > 0 then
-                localFactor = localAirThreat / globalAirThreat
+            if enemyAir > 0 then
+                localFactor = math.min(2.0, localAirThreat / enemyAir)
             end
 
-            -- If enemy air is far away (local << global), reduce minThreatRisk
-            -- Scale reduction so that we don't drop too low if we are badly outnumbered globally
-            if localFactor < 0.25 then  -- less than 25% of enemy air nearby
-                minThreatRisk = minThreatRisk * 0.5  -- halve the risk
-            elseif localFactor < 0.5 then
-                minThreatRisk = minThreatRisk * 0.75
-            end
-            --LOG('minThreatRisk for AirAntiNaval '..tostring(minThreatRisk))
+            -- You can even scale minThreatRisk slightly:
+            minThreatRisk = minThreatRisk * math.min(1.5, 0.5 + localFactor)
+            --LOG('minThreatRisk for '..tostring(aiBrain.Nickname)..' is '..tostring(minThreatRisk))
             
             if minThreatRisk > 0 and aiBrain.BrainIntel.SelfThreat.AirNow > 10 then
                 --LOG('threat risk is '..tostring(minThreatRisk))
@@ -3475,7 +3614,7 @@ IntelManager = Class {
                     aiBrain.amanager.Demand.Air.T2.torpedo = count
                     aiBrain.amanager.Demand.Air.T3.torpedo = math.ceil(count / 2)
                 end
-                LOG('Current T2 torp demand for '..tostring(aiBrain.Nickname)..' is '..tostring(aiBrain.amanager.Demand.Air.T2.torpedo))
+                --LOG('Current T2 torp demand for '..tostring(aiBrain.Nickname)..' is '..tostring(aiBrain.amanager.Demand.Air.T2.torpedo))
                 --LOG('Current T3 torp demand is '..tostring(aiBrain.amanager.Demand.Air.T3.torpedo))
             else
                 --RNGLOG('Disabling AntiNavy potential strikes ')
@@ -4498,15 +4637,18 @@ function ClassifyUnit(unit)
     end
 
     local cat = unit.Blueprint.CategoriesHash
+    local unitClassification
     local unitType
 
     if cat.EXPERIMENTAL then
+        unitClassification = 'Experimental'
         if cat.MOBILE and cat.LAND and not cat.ARTILLERY then
             unitType = 'ExperimentalLand'
         else
             unitType = 'Experimental'
         end
     elseif cat.AIR then
+        unitClassification = 'Air'
         if cat.BOMBER then
             unitType = 'Bomber'
         elseif cat.GROUNDATTACK then
@@ -4517,14 +4659,17 @@ function ClassifyUnit(unit)
             unitType = 'Air'
         end
     elseif cat.LAND then
+        unitClassification = 'Land'
         if (cat.UEF or cat.CYBRAN) and cat.BOT and cat.TECH2 and cat.DIRECTFIRE or cat.SNIPER and cat.TECH3 then
             unitType = 'RangedBot'
         else
             unitType = 'Land'
         end
     elseif cat.STRUCTURE then
+        unitClassification = 'Structure'
         unitType = 'Structure'
     elseif cat.NAVAL then
+        unitClassification = 'Naval'
         if cat.MISSILESHIP then
             unitType = 'MissileShip'
         elseif cat.NUKESUB then
@@ -4538,7 +4683,7 @@ function ClassifyUnit(unit)
         end
     end
 
-    return unitType
+    return unitClassification, unitType
 end
 
 function ProcessSourceOnKilled(targetUnit, sourceUnit)
@@ -4552,7 +4697,7 @@ function ProcessSourceOnKilled(targetUnit, sourceUnit)
         local valueGained = targetBP and targetBP.Economy.BuildCostMass or 0
         if valueGained <= 0 then return end
 
-        local sourceType = ClassifyUnit(sourceUnit)
+        local sourceClassification, sourceType = ClassifyUnit(sourceUnit)
         --LOG('ProcessSourceOnKilled triggered for source unit '..tostring(sourceUnit.UnitId)..' and target unit '..tostring(targetUnit.UnitId)..' sourceType was set as '..tostring(sourceType))
         if not sourceType then return end
 
@@ -4581,8 +4726,8 @@ function ProcessSourceOnDeath(targetBrain, targetUnit, sourceUnit, damageType)
     local targetCat = targetUnit.Blueprint.CategoriesHash
     local sourceCat = (sourceUnit and sourceUnit.Blueprint and sourceUnit.Blueprint.CategoriesHash) or {}
 
-    local sourceType = ClassifyUnit(sourceUnit)
-    local targetType = ClassifyUnit(targetUnit)
+    local sourceClassification, sourceType = ClassifyUnit(sourceUnit)
+    local targetClassification, targetType = ClassifyUnit(targetUnit)
     if not targetType or not sourceType then
         return
     end
@@ -4627,10 +4772,10 @@ function ProcessSourceOnDeath(targetBrain, targetUnit, sourceUnit, damageType)
     -- Record enemy performance
     if sourceType and targetType then
         local enemyPerf = targetBrain.IntelManager.EnemyPerformance  -- or targetBrain.IntelManager.EnemyPerformance
-        if enemyPerf and enemyPerf[sourceType] then
-            enemyPerf[sourceType].KillsAgainst[targetType] = (enemyPerf[sourceType].KillsAgainst[targetType] or 0) + valueLost
-            enemyPerf[sourceType].KillsAgainst.Total = (enemyPerf[sourceType].KillsAgainst.Total or 0) + valueLost
-            enemyPerf[sourceType].TotalMassKilled = (enemyPerf[sourceType].TotalMassKilled or 0) + valueLost
+        if enemyPerf and enemyPerf[sourceClassification] then
+            enemyPerf[sourceClassification].KillsAgainst[targetType] = (enemyPerf[sourceClassification].KillsAgainst[targetType] or 0) + valueLost
+            enemyPerf[sourceClassification].KillsAgainst.Total = (enemyPerf[sourceClassification].KillsAgainst.Total or 0) + valueLost
+            enemyPerf[sourceClassification].TotalMassKilled = (enemyPerf[sourceClassification].TotalMassKilled or 0) + valueLost
         end
     end
 
