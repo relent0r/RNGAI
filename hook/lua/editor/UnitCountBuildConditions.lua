@@ -1787,9 +1787,6 @@ function UnitBuildDemand(aiBrain, locationType, unitType, tier, unit, threatBase
             end
             --LOG('Tier '..tier..' unit '..unit)
             if aiBrain.amanager.Demand.Bases[locationType] and aiBrain.amanager.Demand.Bases[locationType][unitType][tier][unit] > calculatedUnitCount then
-                --LOG('Demand for base '..tostring(locationType)..' is true for unit of type '..tostring(unit)..' calcuated count at the time was '..tostring(calculatedUnitCount))
-                --LOG('Demand '..tostring(aiBrain.amanager.Demand.Bases[locationType][unitType][tier][unit]))
-                --LOG('Total current at the time was '..tostring(aiBrain.amanager.Current[unitType][tier][unit]))
                 return true
             end
             --LOG('Demand for base '..tostring(locationType)..' is false for unit of type '..tostring(unit)..' calcuated count at the time was '..tostring(calculatedUnitCount))
@@ -1804,6 +1801,9 @@ function UnitBuildDemand(aiBrain, locationType, unitType, tier, unit, threatBase
     end
     if locationType and locationType == 'MAIN' then
         if aiBrain.amanager.Demand[unitType][tier][unit] > aiBrain.amanager.Current[unitType][tier][unit] then
+            --LOG('Demand MAIN for base '..tostring(locationType)..' is true for unit of type '..tostring(unit))
+            --LOG('Demand '..tostring(aiBrain.amanager.Demand[unitType][tier][unit]))
+            --LOG('Total current at the time was '..tostring(aiBrain.amanager.Current[unitType][tier][unit]))
             return true
         end
     end

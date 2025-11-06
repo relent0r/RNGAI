@@ -1317,7 +1317,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         if not eng.Dead then
                             --LOG('Try to get unitids for '..tostring(v.Unit))
                             local blueprints = StateUtils.GetBuildableUnitId(aiBrain, eng, v.Categories)
-                            local whatToBuild = blueprints[1]
+                            local whatToBuild
+                            if cons.RandomizeSelection and table.getn(blueprints) > 0 then
+                                whatToBuild = blueprints[math.random(1, table.getn(blueprints))]
+                            else
+                                whatToBuild = blueprints[1]
+                            end
                             --self:LogDebug(string.format('Engineer is going to build '..tostring(whatToBuild)..' from unit '..tostring(v.Unit)))
                             buildFunction(aiBrain, eng, v.Unit, whatToBuild, closeToBuilder, relative, buildingTmpl, baseListData, reference, cons)
                         else

@@ -117,6 +117,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                             Position = suicideTargetPos
                         }
                         ----self:LogDebug(string.format('Bomber Attacking suicide target'))
+                        --LOG('Torpedo Bomber using suicide target')
                         self:ChangeState(self.AttackTarget)
                         return
                     end
@@ -125,7 +126,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
             if self.BuilderData.AttackTarget then
                 local target = self.BuilderData.AttackTarget
                 if not target.Dead and not target.Tractored and self:CanAttackTarget('attack', target) then
-                    --LOG('Bomber attacking target ')
+                    --LOG('Torpedo Bomber using  AttackTarget unit ')
                     ----self:LogDebug(string.format('Bomber Attacking existing target'))
                     self:ChangeState(self.AttackTarget)
                     return
@@ -150,6 +151,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                         local targetDistance = tx * tx + tz * tz
                         if targetDistance < 22500 then
                             ----self:LogDebug(string.format('Bomber AttackTarget on ACU Snipe'))
+                            --LOG('Torpedo Bomber using  acu snipe ')
                             self:ChangeState(self.AttackTarget)
                             return
                         else
@@ -175,6 +177,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                     local targetDistance = tx * tx + tz * tz
                     if targetDistance < 22500 then
                         ----self:LogDebug(string.format('Bomber AttackTarget on ACU Snipe'))
+                        --LOG('Torpedo Bomber using  high priority target')
                         self:ChangeState(self.AttackTarget)
                         return
                     else
@@ -208,6 +211,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                             local targetDistance = tx * tx + tz * tz
                             if targetDistance < 22500 then
                                 ----self:LogDebug(string.format('Torp Bomber AttackTarget'))
+                                --LOG('Torpedo Bomber using AIFindBrainTargetInRangeRNG unit ')
                                 self:ChangeState(self.AttackTarget)
                                 return
                             else
@@ -575,7 +579,8 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                 while not target.Dead do
                     if target then
                         if not self:CanAttackTarget('attack', target) then
-                            ----self:LogDebug(string.format('Can no longer attack target, could have been picked up by transport or gone on land'))
+                            --self:LogDebug(string.format('Can no longer attack target, could have been picked up by transport or gone on land'))
+                            --LOG('Torpedo bomber cannot attach target '..tostring(target.UnitId)..' units current position is '..tostring(repr(target:GetPosition())))
                             self.BuilderData = {}
                             self:ChangeState(self.DecideWhatToDo)
                             return
@@ -589,12 +594,14 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                         local targetDistance = tx * tx + tz * tz
                         ----self:LogDebug(string.format('Target current distance is '..targetDistance))
                     else
+                        --LOG('There was an Attack Target but now no target'..tostring(repr(self.BuilderData)))
                         ----self:LogDebug(string.format('target is no longer known'))
                     end
                     coroutine.yield(25)
                 end
                 coroutine.yield(5)
             else
+                --LOG('No Attack Target '..tostring(repr(self.BuilderData)))
                 self.BuilderData = {}
             end
             self:ChangeState(self.DecideWhatToDo)
@@ -670,7 +677,7 @@ TorpedoThreatThreads = function(aiBrain, platoon)
                             platoon:LogDebug(string.format('Bomber is low on fuel or health and is going to refuel'))
                             local plat = aiBrain:MakePlatoon('', '')
                             aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
-                            import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Bomber', LocationType = platoon.LocationType}, plat, {unit})
+                            import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'TorpedoBomber', LocationType = platoon.LocationType}, plat, {unit})
                         end
                     end
                     if unit['rngdata'].StrikeDamage > 0 then

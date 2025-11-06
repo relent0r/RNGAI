@@ -92,6 +92,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             NumAssistees = 30,
             Construction = {
+                RandomizeSelection = true,
                 DesiresAssist = true,
                 BuildClose = true,
                 HighValue = true,
@@ -125,6 +126,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             NumAssistees = 30,
             Construction = {
+                RandomizeSelection = true,
                 DesiresAssist = true,
                 BuildClose = true,
                 HighValue = true,
@@ -157,6 +159,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             NumAssistees = 10,
             Construction = {
+                RandomizeSelection = true,
                 DesiresAssist = true,
                 BuildClose = true,
                 HighValue = true,
@@ -222,6 +225,7 @@ BuilderGroup {
             JobType = 'BuildStructure',
             NumAssistees = 25,
             Construction = {
+                RandomizeSelection = true,
                 DesiresAssist = true,
                 BuildClose = true,
                 HighValue = true,

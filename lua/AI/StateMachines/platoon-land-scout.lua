@@ -395,43 +395,45 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     local zone = aiBrain.Zones.Land.zones[builderData.ZoneID]
                     local edges = zone.edges
                     local probeTargets = {}
-                    for _, edge in edges do
-                        local neighbor = edge.zone
-                        if not aiBrain.IntelManager:IsZoneSafeToScout(nil, neighbor) then
-                            table.insert(probeTargets, neighbor)
+                    if edges then
+                        for _, edge in edges do
+                            local neighbor = edge.zone
+                            if not aiBrain.IntelManager:IsZoneSafeToScout(nil, neighbor) then
+                                table.insert(probeTargets, neighbor)
+                            end
                         end
-                    end
-                    if table.getn(probeTargets) > 0 then
-                        local targetZone = probeTargets[Random(1, table.getn(probeTargets))]
-                        local currentPos = scout:GetPosition()
-                        local targetPos = targetZone.pos
-                        local dx = targetPos[1] - currentPos[1]
-                        local dz = targetPos[3] - currentPos[3]
-                        local dist = math.sqrt(dx * dx + dz * dz)
-                        local probeDist = math.min(dist * 0.5, 100)
-                        local waypoint, length = NavUtils.DirectionTo(self.MovementLayer, currentPos, targetPos, probeDist)
-                        --LOG('Probing zone '..tostring(repr(targetPos)))
-                    
-                        -- Issue move toward edge
-                        StateUtils.IssueNavigationMove(scout, waypoint)
-                        coroutine.yield(60) -- allow time to scout before returning
-                        -- Return to original holdPos
-                        StateUtils.IssueNavigationMove(scout, self.holdpos)
-                        coroutine.yield(60)
-                        if aiBrain.IntelManager.ScoutingCurveZones then
-                            local shiftZone = true
-                            for _, v in aiBrain.IntelManager.ScoutingCurveZones do
-                                if v == builderData.ZoneID then
-                                    shiftZone = false
+                        if table.getn(probeTargets) > 0 then
+                            local targetZone = probeTargets[Random(1, table.getn(probeTargets))]
+                            local currentPos = scout:GetPosition()
+                            local targetPos = targetZone.pos
+                            local dx = targetPos[1] - currentPos[1]
+                            local dz = targetPos[3] - currentPos[3]
+                            local dist = math.sqrt(dx * dx + dz * dz)
+                            local probeDist = math.min(dist * 0.5, 100)
+                            local waypoint, length = NavUtils.DirectionTo(self.MovementLayer, currentPos, targetPos, probeDist)
+                            --LOG('Probing zone '..tostring(repr(targetPos)))
+                        
+                            -- Issue move toward edge
+                            StateUtils.IssueNavigationMove(scout, waypoint)
+                            coroutine.yield(60) -- allow time to scout before returning
+                            -- Return to original holdPos
+                            StateUtils.IssueNavigationMove(scout, self.holdpos)
+                            coroutine.yield(60)
+                            if aiBrain.IntelManager.ScoutingCurveZones then
+                                local shiftZone = true
+                                for _, v in aiBrain.IntelManager.ScoutingCurveZones do
+                                    if v == builderData.ZoneID then
+                                        shiftZone = false
+                                        break
+                                    end
+                                end
+                                if shiftZone then
+                                    --LOG('shiftZone for scout unit')
+                                    if zone.intelassignment.ScoutUnit and zone.intelassignment.ScoutUnit.EntityId == scout.EntityId then
+                                        zone.intelassignment.ScoutUnit = nil
+                                    end
                                     break
                                 end
-                            end
-                            if shiftZone then
-                                --LOG('shiftZone for scout unit')
-                                if zone.intelassignment.ScoutUnit and zone.intelassignment.ScoutUnit.EntityId == scout.EntityId then
-                                    zone.intelassignment.ScoutUnit = nil
-                                end
-                                break
                             end
                         end
                     end

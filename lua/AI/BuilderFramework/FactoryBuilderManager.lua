@@ -242,6 +242,7 @@ FactoryBuilderManager = Class(BuilderManager) {
                     end
                 end
                 unit.LocationType = self.LocationType
+                unit.Zone = zone
             end
         end
     end,

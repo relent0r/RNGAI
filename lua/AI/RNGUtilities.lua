@@ -5693,6 +5693,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                             end
                             if naval then
                                 if (not unitCats.HOVER or unitCats.HOVER and platoon.CurrentPlatoonThreatAntiSurface > 0) and (not unitCats.AIR or unitCats.AIR and platoon.CurrentPlatoonThreatAntiAir > 0) and PositionInWater(v.Position) then
+                                    --LOG('High priority naval target is available position is '..tostring(repr(v.Position))..' is position in water? '..tostring(PositionInWater(v.Position))..' Entity '..tostring(v.unit.EntityId))
                                     local targetDistance = VDist3Sq(v.Position, aiBrain.BrainIntel.StartPos)
                                     local tempPoint = (v.priority + (v.danger or 0))/RNGMAX(targetDistance,30*30)
                                     if tempPoint > highestPriority then

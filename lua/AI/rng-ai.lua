@@ -1575,7 +1575,7 @@ AIBrain = Class(RNGAIBrainClass) {
             STATIONPODS = 17,
             ENGINEER = 18,
             NUKE = 16,
-            INTEL = 15,
+            RADAR = 15,
         }
 
         self.DefensiveSupport = {}
@@ -4868,7 +4868,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 
                 if massStateCaution then
                     --LOG('Mass Deficit at start is '..tostring(deficit))
-                    --RNGLOG('massStateCaution State Caution is true')
+                    --LOG('massStateCaution State Caution is true')
                     local massCycle = 0
                     local unitTypePaused = {}
                     local resourcesSaved = 0
@@ -4878,7 +4878,8 @@ AIBrain = Class(RNGAIBrainClass) {
                         local priorityUnit = false
                         --RNGLOG('Threat Stats Self + ally :'..self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat..'Enemy : '..self.EnemyIntel.EnemyThreatCurrent.Land)
                         massPriorityTable = self.EcoManager.MassPriorityTable
-                        if (self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat) > (self.EnemyIntel.EnemyThreatCurrent.Land * 1.1) and self.BasePerimeterMonitor['MAIN'].LandUnits < 1 then
+                        if (self.BrainIntel.SelfThreat.LandNow + self.BrainIntel.SelfThreat.AllyLandThreat) > (self.EnemyIntel.EnemyThreatCurrent.Land * 1.05) then
+                            --LOG('Land Factories will be included in possible pause selection')
                             massPriorityTable.LAND_TECH1 = 12
                             massPriorityTable.LAND_TECH2 = 9
                             massPriorityTable.LAND_TECH3 = 6
@@ -4887,7 +4888,8 @@ AIBrain = Class(RNGAIBrainClass) {
                             massPriorityTable.LAND_TECH2 = nil
                             massPriorityTable.LAND_TECH3 = nil
                         end
-                        if (self.BrainIntel.SelfThreat.AirNow + self.BrainIntel.SelfThreat.AllyAirThreat) > (self.EnemyIntel.EnemyThreatCurrent.Air * 1.1) and not self.CDRUnit.Caution then
+                        if (self.BrainIntel.SelfThreat.AirNow + self.BrainIntel.SelfThreat.AllyAirThreat) > (self.EnemyIntel.EnemyThreatCurrent.Air * 1.05) and not self.CDRUnit.Caution then
+                            --LOG('Air Factories will be included in possible pause selection')
                             massPriorityTable.AIR_TECH1 = 13
                             massPriorityTable.AIR_TECH2 = 10
                             massPriorityTable.AIR_TECH3 = 7
@@ -4896,7 +4898,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             massPriorityTable.AIR_TECH2 = nil
                             massPriorityTable.AIR_TECH3 = nil
                         end
-                        if (self.BrainIntel.SelfThreat.NavalNow + self.BrainIntel.SelfThreat.AllyNavalThreat) > (self.EnemyIntel.EnemyThreatCurrent.Naval * 1.1) then
+                        if (self.BrainIntel.SelfThreat.NavalNow + self.BrainIntel.SelfThreat.AllyNavalThreat) > (self.EnemyIntel.EnemyThreatCurrent.Naval * 1.05) then
                             --LOG('My naval threat is higher so well pause naval factories mine is :'..tostring(self.BrainIntel.SelfThreat.NavalNow))
                             --LOG('Allies is '..tostring(self.BrainIntel.SelfThreat.AllyNavalThreat))
                             --LOG('enemies is :'..tostring((self.EnemyIntel.EnemyThreatCurrent.Naval * 1.1)))
@@ -4925,6 +4927,7 @@ AIBrain = Class(RNGAIBrainClass) {
                                 priorityUnit = k
                             end
                         end
+                        --LOG('Mass Deficit during loop is '..tostring(deficit)..' priority unit is '..tostring(priorityUnit))
                         if priorityUnit == 'ENGINEER' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5083,6 +5086,18 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                             local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'MASS')
+                        elseif priorityUnit == 'RADAR' then
+                            local unitAlreadySet = false
+                            for k, v in unitTypePaused do
+                                if priorityUnit == v then
+                                    unitAlreadySet = true
+                                end
+                            end
+                            if not unitAlreadySet then
+                                RNGINSERT(unitTypePaused, priorityUnit)
+                            end
+                            local Radars = GetListOfUnits(self, categories.STRUCTURE * (categories.RADAR + categories.SONAR), false, false)
+                            resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, Radars, 'pause', 'MASS')
                         elseif priorityUnit == 'TML' then
                             local unitAlreadySet = false
                             for k, v in unitTypePaused do
@@ -5158,6 +5173,9 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif v == 'NUKE' then
                             local Nukes = GetListOfUnits(self, categories.STRUCTURE * categories.NUKE * (categories.TECH3 + categories.EXPERIMENTAL), false, false)
                             self:EcoSelectorManagerRNG(v, Nukes, 'unpause', 'MASS')
+                        elseif v == 'RADAR' then
+                            local Radars = GetListOfUnits(self, categories.STRUCTURE * (categories.RADAR + categories.SONAR), false, false)
+                            self:EcoSelectorManagerRNG(v, Radars, 'unpause', 'MASS')
                         elseif v == 'TML' then
                             local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(v, TMLs, 'unpause', 'MASS')
@@ -5724,6 +5742,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         continue
                     end
                     if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirThreat > 0 then
+                        --LOG('Air Factory has nearby threat')
                         continue
                     end
                     if not v.UnitBeingBuilt then continue end
@@ -5731,6 +5750,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     if v.UnitBeingBuilt.Blueprint.CategoriesHash.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
                     --if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
+                    if (v.Zone and self.IntelManager.CurrentFrontLineZones and self.IntelManager.CurrentFrontLineZones[v.Zone]) or (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirUnits > 0) then
+                        --LOG('Air Factory is in frontline zone or air units detected '..tostring(v.Zone))
+                        continue
+                    end
                     --RNGLOG('pausing AIR')
                     if type == 'MASS' then
                         totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
@@ -5749,12 +5772,17 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if not v.UnitBeingBuilt then continue end
                     if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirThreat > 0 then
+                        --LOG('Air Factory has nearby threat')
                         continue
                     end
                     if v.UnitBeingBuilt.Blueprint.CategoriesHash.ENGINEER then continue end
                     if v.UnitBeingBuilt.Blueprint.CategoriesHash.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
                     --if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
+                    if (v.Zone and self.IntelManager.CurrentFrontLineZones and self.IntelManager.CurrentFrontLineZones[v.Zone]) or (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirUnits > 0) then
+                        --LOG('Air Factory is in frontline zone or units detected '..tostring(v.Zone))
+                        continue
+                    end
                     --RNGLOG('pausing AIR')
                     if type == 'MASS' then
                         totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
@@ -5773,12 +5801,17 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if not v.UnitBeingBuilt then continue end
                     if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirThreat > 0 then
+                        --LOG('Air Factory has nearby threat')
                         continue
                     end
                     if v.UnitBeingBuilt.Blueprint.CategoriesHash.ENGINEER then continue end
                     if v.UnitBeingBuilt.Blueprint.CategoriesHash.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
                     --if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
+                    if (v.Zone and self.IntelManager.CurrentFrontLineZones and self.IntelManager.CurrentFrontLineZones[v.Zone]) or (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirUnits > 0) then
+                        --LOG('Air Factory is in frontline zone or units detected '..tostring(v.Zone))
+                        continue
+                    end
                     --RNGLOG('pausing AIR')
                     if type == 'MASS' then
                         totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
@@ -5802,6 +5835,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
                     if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
+                    if (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].NavalUnits > 0) then
+                        --LOG('Naval Perimeter Monitor is triggered '..tostring(v.Zone))
+                        continue
+                    end
                     --RNGLOG('pausing NAVAL')
                     if type == 'MASS' then
                         totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
@@ -5825,6 +5862,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
                     if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
+                    if (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].NavalUnits > 0) then
+                       --'Naval Perimeter Monitor is triggered '..tostring(v.Zone))
+                        continue
+                    end
                     --RNGLOG('pausing NAVAL')
                     if type == 'MASS' then
                         totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
@@ -5848,6 +5889,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
                     if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
+                    if (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].NavalUnits > 0) then
+                        --LOG('Naval Perimeter Monitor is triggered '..tostring(v.Zone))
+                        continue
+                    end
                     --RNGLOG('pausing NAVAL')
                     if type == 'MASS' then
                         totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
@@ -5866,11 +5911,16 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if not v.UnitBeingBuilt then continue end
                     if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].LandThreat > 0 then
+                        --LOG('Land Threat detected')
                         continue
                     end
                     if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
                     if RNGGETN(units) <= 2 then continue end
                     if v:IsPaused() then continue end
+                    if (v.Zone and self.IntelManager.CurrentFrontLineZones and self.IntelManager.CurrentFrontLineZones[v.Zone]) or (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].LandUnits > 0) then
+                        --LOG('Land Factory is in frontline zone or land units detected '..tostring(v.Zone))
+                        continue
+                    end
                     --RNGLOG('pausing LAND')
                     if type == 'MASS' then
                         totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
@@ -5889,11 +5939,16 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if not v.UnitBeingBuilt then continue end
                     if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].LandThreat > 0 then
+                        --LOG('Land Threat detected')
                         continue
                     end
                     if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
                     if RNGGETN(units) <= 2 then continue end
                     if v:IsPaused() then continue end
+                    if (v.Zone and self.IntelManager.CurrentFrontLineZones and self.IntelManager.CurrentFrontLineZones[v.Zone]) or (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].LandUnits > 0) then
+                        --LOG('Land Factory is in frontline zone or land units detected '..tostring(v.Zone))
+                        continue
+                    end
                     --RNGLOG('pausing LAND')
                     if type == 'MASS' then
                         totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
@@ -5912,11 +5967,16 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     if not v.UnitBeingBuilt then continue end
                     if v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].LandThreat > 0 then
+                        --LOG('Land Threat detected')
                         continue
                     end
                     if EntityCategoryContains(categories.ENGINEER, v.UnitBeingBuilt) then continue end
                     if RNGGETN(units) <= 2 then continue end
                     if v:IsPaused() then continue end
+                    if (v.Zone and self.IntelManager.CurrentFrontLineZones and self.IntelManager.CurrentFrontLineZones[v.Zone]) or (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].LandUnits > 0) then
+                        --LOG('Land Factory is in frontline zone or land units detected '..tostring(v.Zone))
+                        continue
+                    end
                     --RNGLOG('pausing LAND')
                     if type == 'MASS' then
                         totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
@@ -5944,8 +6004,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 elseif priorityUnit == 'RADAR' then
                     --RNGLOG('Priority Unit Is MASSFABRICATION or SHIELD')
                     if action == 'unpause' then
-                        if v.MaintenanceConsumption then continue end
                         --RNGLOG('Unpausing MASSFABRICATION or SHIELD')
+                        if v.MaintenanceConsumption then continue end
                         v:SetPaused(false)
                         v:OnScriptBitClear(3)
                         continue
@@ -5958,8 +6018,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     elseif type == 'ENERGY' then
                         totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
                     end
-                    v:SetPaused(true)
-                    v:OnScriptBitSet(3)
+                    if totalResourceSaved > 0 then
+                        v:SetPaused(true)
+                        v:OnScriptBitSet(3)
+                    end
                 elseif priorityUnit == 'SHIELD' then
                     --RNGLOG('Priority Unit Is MASSFABRICATION or SHIELD')
                     if v.MyShield and v.MyShield:GetMaxHealth() > 0 then
@@ -5986,8 +6048,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     elseif type == 'ENERGY' then
                         totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
                     end
-                    v:SetPaused(true)
-                    continue
+                    if totalResourceSaved > 0 then
+                        v:SetPaused(true)
+                    end
                 elseif priorityUnit == 'TML' then
                     --RNGLOG('Priority Unit Is TML')
                     if action == 'unpause' then

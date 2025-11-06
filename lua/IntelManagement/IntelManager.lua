@@ -448,7 +448,7 @@ IntelManager = Class {
 
     Run = function(self)
         --LOG('RNGAI : IntelManager Starting')
-        self:ForkThread(self.ZoneEnemyIntelMonitorRNG)
+        --self:ForkThread(self.ZoneEnemyIntelMonitorRNG)
         self:ForkThread(self.ZoneAlertThreadRNG)
         self:ForkThread(self.ZoneFriendlyIntelMonitorRNG)
         self:ForkThread(self.ConfigureResourcePointZoneID)
@@ -1923,7 +1923,7 @@ IntelManager = Class {
                     end
                     for k3, v3 in friendlyThreatAntiAir do
                         if k2 == k3 then
-                            aiBrain.Zones[v].zones[k2].friendlyThreatAntiAir = v3
+                            aiBrain.Zones[v].zones[k2].friendlylandantiairthreat = v3
                             if v2.label > 0 and not labelThreat[v2.label] then
                                 labelThreat[v2.label] = {
                                     friendlydirectfireantisurfacethreat = 0,
@@ -2693,13 +2693,29 @@ IntelManager = Class {
         while not self.MapIntelGrid do
             coroutine.yield(30)
         end
+        local threatTypes = {
+            'Naval',
+            'AntiAir',
+            'Air',
+            'Land',
+            'AntiSurface',
+            'StructuresNotMex',
+            'Land',
+            'Naval'
+        }
         while aiBrain.Status ~= "Defeat" do
             local gameTime = GetGameTimeSeconds()
-            self:UpdateThreatMemoryScan(gameTime, 'AntiAir')
-            self:UpdateThreatMemoryScan(gameTime, 'Naval')
-            self:UpdateThreatMemoryScan(gameTime, 'Air')
-            self:UpdateThreatMemoryScan(gameTime, 'Land')
-            coroutine.yield(25)
+            for _, ttype in threatTypes do
+                self:UpdateThreatMemoryScan(gameTime, ttype)
+                coroutine.yield(2)
+            end
+            self:AssignIMAPThreatToZones(aiBrain, 'Land')
+            self:AssignIMAPThreatToZones(aiBrain, 'Naval')
+            self:AssignThreatToFactories(aiBrain.Zones['Land'].zones, 'Land')
+            for _, zone in aiBrain.Zones['Land'].zones do
+                zone.status = aiBrain.GridPresence:GetInferredStatus(zone.pos)
+            end
+            coroutine.yield(20)
         end
     end,
 
@@ -2733,6 +2749,120 @@ IntelManager = Class {
             end
         end
         return totalThreat
+    end,
+
+    AssignIMAPThreatToZones = function(self, aiBrain, zoneType)
+        -- Get the relevant zone list (Land or Naval)
+        local zoneTable = aiBrain.Zones[zoneType].zones
+        local zoneToGridMap = self.ZoneToGridMap
+        local currentTime = GetGameTimeSeconds()
+        local STALE_TIME = 5  -- seconds before we treat data as outdated
+    
+        for _, zone in zoneTable do
+            local cells = zoneToGridMap[zone.id]
+            if not cells or table.getn(cells) == 0 then
+                -- No cells mapped to this zone
+                continue
+            end
+    
+            -- Accumulate total threat per type
+            local total = {
+                Land = 0,
+                Air = 0,
+                Naval = 0,
+                AntiAir = 0,
+                AntiSurface = 0,
+                count = 0
+            }
+    
+            for _, cell in cells do
+                if not cell.Enabled then continue end
+            
+                local age = currentTime - (cell.LastThreatUpdate or 0)
+                local useHistorical = age > STALE_TIME
+                local current = cell.IMAPCurrentThreat
+                local hist = cell.IMAPHistoricalThreat
+            
+                -- LAND
+                local landThreat
+                if useHistorical then
+                    landThreat = hist.Land or 0
+                elseif current.Land == 0 and hist.Land > 0 then
+                    landThreat = hist.Land
+                else
+                    landThreat = current.Land or 0
+                end
+                total.Land = total.Land + landThreat
+            
+                -- AIR
+                local airThreat
+                if useHistorical then
+                    airThreat = hist.Air or 0
+                elseif current.Air == 0 and hist.Air > 0 then
+                    airThreat = hist.Air
+                else
+                    airThreat = current.Air or 0
+                end
+                total.Air = total.Air + airThreat
+            
+                -- ANTIAIR
+                local aaThreat
+                if useHistorical then
+                    aaThreat = hist.AntiAir or 0
+                elseif current.AntiAir == 0 and hist.AntiAir > 0 then
+                    aaThreat = hist.AntiAir
+                else
+                    aaThreat = current.AntiAir or 0
+                end
+                total.AntiAir = total.AntiAir + aaThreat
+            
+                -- NAVAL (optional)
+                local navalThreat
+                if useHistorical then
+                    navalThreat = hist.Naval or 0
+                elseif current.Naval == 0 and hist.Naval > 0 then
+                    navalThreat = hist.Naval
+                else
+                    navalThreat = current.Naval or 0
+                end
+                total.Naval = total.Naval + navalThreat
+
+                -- ANTISURFACE (optional)
+                local antisurfaceThreat
+                if useHistorical then
+                    antisurfaceThreat = hist.AntiSurface or 0
+                elseif current.AntiSurface == 0 and hist.AntiSurface > 0 then
+                    antisurfaceThreat = hist.AntiSurface
+                else
+                    antisurfaceThreat = current.AntiSurface or 0
+                end
+                total.AntiSurface = total.AntiSurface + antisurfaceThreat
+            
+                total.count = total.count + 1
+            end
+    
+            if total.count > 0 then
+                --LOG('Zone being checked is '..tostring(zone.id)..' zone type is '..tostring(zoneType))
+                zone.enemylandthreat        = total.Land
+                --LOG('Current Zone Land threat via original means is '..tostring(zone.enemylandthreat))
+                zone.enemyairthreat         = total.Air
+                --LOG('Current Zone Air threat via original means is '..tostring(zone.enemyairthreat))
+                zone.enemyantiairthreat     = total.AntiAir
+                --LOG('Current Zone AntiAir threat via original means is '..tostring(zone.enemyantiairthreat))
+                zone.enemyantisurfacethreat = total.AntiSurface
+                --LOG('Current Zone AntiSurface threat via original means is '..tostring(zone.enemyantisurfacethreat))
+                zone.enemynavalthreat = total.Naval
+                --LOG('Current Zone Naval threat via original means is '..tostring(zone.enemynavalthreat))
+            else
+                -- All cells disabled? fall back to last known (rare)
+                --LOG('All Cells are disabled')
+                zone.enemylandthreat        = zone.enemylandthreat or 0
+                zone.enemyairthreat         = zone.enemyairthreat or 0
+                zone.enemyantiairthreat     = zone.enemyantiairthreat or 0
+                zone.enemyantisurfacethreat = zone.enemyantisurfacethreat or 0
+                zone.enemynavalthreat = zone.enemynavalthreat or 0
+            end
+        end
     end,
 
     IntelGridThread = function(self, aiBrain)
@@ -3658,7 +3788,7 @@ IntelManager = Class {
                             end
                         end
                     end
-                    local safeAA = math.max(friendlyAntiAirThreat or 0.1, 0.1) 
+                    local safeAA = math.max(friendlyAntiAirThreat or 0.1, 3) 
                     local aaRequired = math.ceil(
                         math.min(
                             math.ceil(baseAirThreat / safeAA),      -- ceil division to whole number
@@ -5239,17 +5369,18 @@ CreateIntelGrid = function(aiBrain)
                 AntiAir = 0,
                 Naval = 0,
                 Air = 0,
-                Land = 0
-
+                Land = 0,
+                AntiSurface = 0,
+                StructuresNotMex = 0
             }
             intelGrid[x][z].IMAPHistoricalThreat = {
                 AntiAir = 0,
                 Naval = 0,
                 Air = 0,
-                Land = 0
-
+                Land = 0,
+                AntiSurface = 0,
+                StructuresNotMex = 0
             }
-            intelGrid[x][z].AntiSurfaceThreat = 0
             intelGrid[x][z].ACUIndexes = { }
             intelGrid[x][z].ACUThreat = 0
             intelGrid[x][z].AdjacentGrids = {}
@@ -5285,6 +5416,7 @@ CreateIntelGrid = function(aiBrain)
         end
     end
     aiBrain.IntelManager.MapIntelGrid = intelGrid
+    aiBrain.IntelManager.ZoneToGridMap = zoneToGridMap
     aiBrain.IntelManager.MapIntelGridSize = fx
     aiBrain.IntelManager.CellCount = cellCount
     aiBrain.IntelManager.MapIntelGridXMin = startingGridx
