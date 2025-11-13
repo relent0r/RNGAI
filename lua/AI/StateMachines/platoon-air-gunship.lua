@@ -94,11 +94,13 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 local newTarget
                 for _, e in enemyUnits do
                     if e and not e.Dead then
-                        local bp = e.Blueprint
-                        totalEnemyAntiAirThreat = totalEnemyAntiAirThreat + bp.Defense.AirThreatLevel
-                        totalEnemyAntiAirHealth = totalEnemyAntiAirHealth + e:GetHealth()
-                        if not newTarget and not e.Blueprint.CategoriesHash.AIR then
-                            newTarget = e
+                        if e.Layer ~= 'Sub' then
+                            local bp = e.Blueprint
+                            totalEnemyAntiAirThreat = totalEnemyAntiAirThreat + bp.Defense.AirThreatLevel
+                            totalEnemyAntiAirHealth = totalEnemyAntiAirHealth + e:GetHealth()
+                            if not newTarget and not e.Blueprint.CategoriesHash.AIR then
+                                newTarget = e
+                            end
                         end
                     end
                 end
@@ -123,7 +125,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 local checkPos = self.BuilderData.RecheckPosition
                 if StateUtils.SimpleTarget(self,aiBrain,checkPos) then
                     for k,unit in self.targetcandidates do
-                        if not unit or unit.Dead or not unit['rngdata'].machineworth then 
+                        if not unit or unit.Dead or not unit['rngdata'].machineworth or unit.Layer == 'Sub' then 
                             --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
                             table.remove(self.targetcandidates,k) 
                         end
@@ -201,7 +203,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                         local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.LAND + categories.STRUCTURE) * categories.ANTIAIR, targetPos, 20, 'Enemy')
                         for _, v in enemyUnits do
                             if v and not v.Dead then
-                                if not newTarget then
+                                if not newTarget and v.Layer ~= 'Sub' then
                                     newTarget = v
                                     break
                                 end
@@ -223,6 +225,9 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 local target = RUtils.CheckACUSnipe(aiBrain, 'Land')
+                if target.Layer == 'Sub' then
+                    LOG('ACU Snipe target was a submarine')
+                end
                 if target and self['rngdata'].MaxPlatoonDPS > 250 then
                     self.BuilderData = {
                         AttackTarget = target,
@@ -248,8 +253,9 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not target then
+                local maxThreat = math.max(self.CurrentPlatoonThreatAntiSurface, 12)
                 if not table.empty(aiBrain.prioritypoints) then
-                    local point = RUtils.CheckPriorityTarget(aiBrain, false, self, 'AntiAir', 12, 'Allied')
+                    local point = RUtils.CheckPriorityTarget(aiBrain, false, self, 'AntiAir', 12, 'Allied', false, false, 'Sub')
                     if point then
                         if not self.retreat then
                             self.BuilderData = {

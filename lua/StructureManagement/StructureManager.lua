@@ -1331,11 +1331,11 @@ StructureManager = Class {
         local t2NavalPass = false
         if totalNavalT2HQCount < 1 and totalNavalT3HQCount < 1 and self.Factories.NAVAL[1].UpgradingCount < 1 and self.Factories.NAVAL[1].Total > 0 then
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
-                if (actualMexIncome > (30 * multiplier) or aiBrain.EnemyIntel.NavalPhase > 1 and actualMexIncome > (23 * multiplier)) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 50.0 then
+                if (actualMexIncome > (30 * multiplier) or (aiBrain.BrainIntel.PlayerRole.NavalPlayer or aiBrain.EnemyIntel.NavalPhase > 1) and actualMexIncome > (23 * multiplier)) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 50.0 then
                     if massEfficiencyOverTime >= 1.015 and energyEfficiencyOverTime >= 1.0 or aiBrain.EnemyIntel.NavalPhase > 1 and massEfficiencyOverTime >= 0.8 and energyEfficiencyOverTime >= 1.0 then
                         local EnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
                         local MassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
-                        if MassEfficiency >= 1.015 and EnergyEfficiency >= 1.0 or aiBrain.EnemyIntel.NavalPhase > 1 and MassEfficiency >= 0.8 and EnergyEfficiency >= 1.0 then
+                        if MassEfficiency >= 1.015 and EnergyEfficiency >= 1.0 or (aiBrain.BrainIntel.PlayerRole.NavalPlayer or aiBrain.EnemyIntel.NavalPhase > 1) and MassEfficiency >= 0.8 and EnergyEfficiency >= 1.0 then
                             local factoryToUpgrade = self:GetClosestFactory('NAVAL', 'NAVAL', 'TECH1')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'NAVAL')
@@ -1385,18 +1385,16 @@ StructureManager = Class {
         local t3NavalPass = false
         if totalNavalT3HQCount < 1 and totalNavalT2HQCount > 0 and self.Factories.NAVAL[2].UpgradingCount < 1 and self.Factories.NAVAL[2].Total > 1 then
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH2) > 2 then
-                if aiBrain.EconomyOverTimeCurrent.MassIncome > (8.0 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 150.0 then
-                    if GetEconomyIncome(aiBrain,'MASS') >= (8.0 * multiplier) and GetEconomyIncome(aiBrain,'ENERGY') >= 150.0 then
-                        if massEfficiencyOverTime >= 1.025 and energyEfficiencyOverTime >= 1.05 then
-                            local EnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
-                            local MassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
-                            if MassEfficiency >= 1.05 and EnergyEfficiency >= 1.05 then
-                                local factoryToUpgrade = self:GetClosestFactory('NAVAL', 'NAVAL', 'TECH2', true)
-                                if factoryToUpgrade and not factoryToUpgrade.Dead then
-                                    self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'NAVAL')
-                                    t3NavalPass = true
-                                    coroutine.yield(20)
-                                end
+                if (actualMexIncome > (80 * multiplier) or (aiBrain.BrainIntel.PlayerRole.NavalPlayer or aiBrain.EnemyIntel.NavalPhase > 2) and actualMexIncome > (60 * multiplier)) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 150.0 then
+                    if massEfficiencyOverTime >= 1.025 and energyEfficiencyOverTime >= 1.05 or aiBrain.EnemyIntel.NavalPhase > 2 and massEfficiencyOverTime >= 0.8 and energyEfficiencyOverTime >= 1.0 then
+                        local EnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
+                        local MassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
+                        if MassEfficiency >= 1.05 and EnergyEfficiency >= 1.05 or (aiBrain.BrainIntel.PlayerRole.NavalPlayer or aiBrain.EnemyIntel.NavalPhase > 2) and MassEfficiency >= 0.8 and EnergyEfficiency >= 1.0 then
+                            local factoryToUpgrade = self:GetClosestFactory('NAVAL', 'NAVAL', 'TECH2', true)
+                            if factoryToUpgrade and not factoryToUpgrade.Dead then
+                                self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'NAVAL')
+                                t3NavalPass = true
+                                coroutine.yield(20)
                             end
                         end
                     end

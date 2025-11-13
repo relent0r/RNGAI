@@ -124,7 +124,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if self.BuilderData.AttackTarget then
-                local target = self.BuilderData.AttackTarget
+                target = self.BuilderData.AttackTarget
                 if not target.Dead and not target.Tractored and self:CanAttackTarget('attack', target) then
                     --LOG('Torpedo Bomber using  AttackTarget unit ')
                     ----self:LogDebug(string.format('Bomber Attacking existing target'))
@@ -136,7 +136,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 ----self:LogDebug(string.format('Checking for Naval ACU Snipe'))
-                local target, _, acuIndex = RUtils.CheckACUSnipe(aiBrain, 'AirAntiNavy')
+                target, _, acuIndex = RUtils.CheckACUSnipe(aiBrain, 'AirAntiNavy')
                 if target then
                     local enemyAcuHealth = aiBrain.EnemyIntel.ACU[acuIndex].HP
                     if self['rngdata'].PlatoonStrikeDamage > enemyAcuHealth * 0.80 or enemyAcuHealth < 2500 then
@@ -164,7 +164,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 ----self:LogDebug(string.format('Checking for High Priority Target'))
-                local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, false, true)
+                target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, false, true)
                 if target then
                     --LOG('Bomber high Priority Target Found '..target.UnitId)
                     self.BuilderData = {
@@ -184,11 +184,27 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                         local im = aiBrain.IntelManager
                         local gridX, gridZ = im:GetIntelGrid(targetPosition)
                         local historicalThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
-                        self:LogDebug(string.format('Torpedo bomber historical threat at high priority position '..tostring(historicalThreat)))
-                        if self.CurrentPlatoonThreatAntiNavy > math.min(historicalThreat, 60) then
+                        local threat = aiBrain:GetThreatAtPosition(targetPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+                        local maxThreat = math.max(historicalThreat, threat)
+                        --LOG('Torpedo bomber high priority target found, historical antiair threat at grid position is '..tostring(maxThreat)..' current platoon threat is '..tostring(self.CurrentPlatoonThreatAntiNavy))
+                        --self:LogDebug(string.format('Torpedo bomber historical threat at high priority position '..tostring(historicalThreat)))
+                        if self.CurrentPlatoonThreatAntiNavy > math.min(maxThreat, 60) or target.Blueprint.CategoriesHash.EXPERIMENTAL and self.CurrentPlatoonThreatAntiNavy > 65 then
                             ----self:LogDebug(string.format('Bomber navigating to snipe ACU'))
+                            --LOG('Attacking high priority unit because')
                             self:ChangeState(self.Navigating)
                             return
+                        else
+                            local enemyWeaponRange = StateUtils.GetUnitMaxWeaponRange(target, false, false)
+                            local hx = self.Home[1] - targetPosition[1]
+                            local hz = self.Home[3] - targetPosition[3]
+                            local targetDistanceToHome = hx * hx + hz * hz
+                            if targetDistanceToHome < (enemyWeaponRange * enemyWeaponRange) * 1.2 and self.CurrentPlatoonThreatAntiNavy > 35 then
+                                self:ChangeState(self.AttackTarget)
+                                return
+                            end
+                            target = nil
+                            self.BuilderData = {}
+                            --LOG('We are not going to attack him because hes too strong')
                         end
                     end
                 end
@@ -219,10 +235,17 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                                 local im = aiBrain.IntelManager
                                 local gridX, gridZ = im:GetIntelGrid(targetPosition)
                                 local historicalThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
-                                self:LogDebug(string.format('Torpedo bomber historical threat at target position '..tostring(historicalThreat)))
-                                if self.CurrentPlatoonThreatAntiNavy > math.min(historicalThreat, 60) then
+                                local threat = aiBrain:GetThreatAtPosition(targetPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+                                local maxThreat = math.max(historicalThreat, threat)
+                                --LOG('Torpedo bomber target found, historical antiair threat at grid position is '..tostring(maxThreat)..' current platoon threat is '..tostring(self.CurrentPlatoonThreatAntiNavy))
+                                --self:LogDebug(string.format('Torpedo bomber historical threat at target position '..tostring(maxThreat)))
+                                if self.CurrentPlatoonThreatAntiNavy > math.min(maxThreat, 60) then
+                                    --LOG('Attacking high priority unit because')
                                     self:ChangeState(self.Navigating)
                                     return
+                                else
+                                    target = nil
+                                    self.BuilderData = {}
                                 end
                             end
                         end
@@ -241,7 +264,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                 ----self:LogDebug(string.format('trying to merge with another platoon'))
                 if self.PlatoonCount < 10 then
                     local plat = StateUtils.GetClosestPlatoonRNG(self, 'TorpedoBehavior', false, 60)
-                    if plat and plat.PlatoonCount and plat.PlatoonCount < 15 then
+                    if plat and plat.PlatoonCount and plat.PlatoonCount < 25 then
                         ----self:LogDebug(string.format('Bomber platoon is merging with another'))
                         local platUnits = plat:GetPlatoonUnits()
                         aiBrain:AssignUnitsToPlatoon(self, platUnits, 'Attack', 'None')
@@ -252,6 +275,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
             end
             coroutine.yield(25)
             ----self:LogDebug(string.format('Torp Bomber has nothing to do'))
+            --LOG('torp bomber is at end of decide what to do')
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -288,6 +312,7 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                         IssueAggressiveMove(platoonUnits, path[i].pos)
                         --self:MoveToLocation(path[i], false)
                         while not IsDestroyed(self) do
+                            --LOG('Navigation Loop')
                             coroutine.yield(1)
                             local platoonPosition = self:GetPlatoonPosition()
                             if not platoonPosition then
@@ -427,8 +452,12 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             else
+                local platoonPosition = self:GetPlatoonPosition()
+                if not platoonPosition[1] then
+                    return
+                end
                 IssueClearCommands(platoonUnits)
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, destination, 15 , 80)
+                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoonPosition, destination, 15 , 80)
                 if path then 
                     local pathLength = RNGGETN(path)
                     if pathLength and pathLength > 1 then
@@ -444,8 +473,8 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                             end
                             while not IsDestroyed(self) do
                                 coroutine.yield(1)
-                                local platoonPosition = self:GetPlatoonPosition()
-                                if not platoonPosition then
+                                platoonPosition = self:GetPlatoonPosition()
+                                if not platoonPosition[1] then
                                     return
                                 end
                                 if self.UnitTarget == 'ENGINEER' then
@@ -457,6 +486,28 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                                                 Position = target:GetPosition()
                                             }
                                             ----self:LogDebug(string.format('Bomber on raid has spotted engineer'))
+                                            self:ChangeState(self.AttackTarget)
+                                            return
+                                        end
+                                    end
+                                end
+                                if platoonPosition[1] then
+                                    local gridX, gridZ = aiBrain.IntelManager:GetIntelGrid(platoonPosition)
+                                    local aaThreat = aiBrain.IntelManager:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', 3)
+                                    --LOG('AA Threat during navigation '..tostring(aaThreat))
+                                    --LOG('Self AntiNavy threat during navigation '..tostring(self.CurrentPlatoonThreatAntiNavy))
+                        
+                                    if aaThreat > 60 and self.CurrentPlatoonThreatAntiNavy < aaThreat * 0.8 then
+                                        --LOG('Torpedo bombers aborting, detected dangerous AA zone ('..aaThreat..')')
+                                        self:ChangeState(self.Retreating)
+                                        return
+                                    end
+                        
+                                    if aaThreat > 15 and self.CurrentPlatoonThreatAntiNavy > aaThreat * 0.8 then
+                                        local aaTarget = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 100, categories.NAVAL, {categories.NAVAL * categories.ANTIAIR, categories.NAVAL * categories.ANTINAVY, categories.NAVAL}, false, true)
+                                        if aaTarget and not aaTarget.Dead then
+                                            self.BuilderData = { AttackTarget = aaTarget, Position = aaTarget:GetPosition() }
+                                            --LOG('Torpedo bombers switching to nearby AA cruiser engagement')
                                             self:ChangeState(self.AttackTarget)
                                             return
                                         end

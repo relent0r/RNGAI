@@ -3403,6 +3403,19 @@ IntelManager = Class {
                         table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = self.MapIntelGrid[gridX][gridZ].Position, Type = 'AntiNavy'} )
                     end
                 end
+                if aiBrain.EnemyIntel.Experimental then
+                    for _, v in aiBrain.EnemyIntel.Experimental do
+                        if v.object and not v.object.Dead then
+                            local unitCats = v.object.Blueprint.CategoriesHash
+                            if unitCats.NAVAL then
+                                local targetPos = v.object:GetPosition()
+                                local gridX, gridZ = self:GetIntelGrid(targetPos)
+                                desiredStrikeDamage = desiredStrikeDamage + (150 * 120)
+                                table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = targetPos, Type = 'AntiNavy'} )
+                            end
+                        end
+                    end
+                end
                 if minThreatRisk > 25 and aiBrain.MapWaterRatio > 0.10 then
                     --LOG('minThreat risk is greater than 25 and mapwaterratio is greater than 10')
                     --LOG('Current MilitaryArea is '..tostring(baseMilitaryArea))
@@ -6004,6 +6017,12 @@ LastKnownThread = function(aiBrain)
                                             if not aiBrain.EnemyIntel.NavalSML[id] then
                                                 aiBrain.EnemyIntel.NavalSML[id] = {object = v, Position=unitPosition, Detected=time }
                                             end
+                                        end
+                                        if unitCat.EXPERIMENTAL and not unitCat.UNTARGETABLE then
+                                            if not aiBrain.EnemyIntel.Experimental[id] then
+                                                aiBrain.EnemyIntel.Experimental[id] = {object = v, position=unitPosition }
+                                            end
+                                            im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='exp'
                                         end
                                         if unitCat.SILO and unitCat.INDIRECTFIRE then
                                             im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='silo'

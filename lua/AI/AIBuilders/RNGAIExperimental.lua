@@ -48,6 +48,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'HighValueGateRNG', {}},
+            { UCBC, 'DisableOnPlayerRoleCheck', {{'AIR', 'NAVAL'}}},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'NOPATH', true } },
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.EXPERIMENTAL * categories.LAND } },
@@ -80,6 +81,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { EBC, 'HighValueGateRNG', {}},
+            { UCBC, 'DisableOnPlayerRoleCheck', {{'AIR', 'NAVAL'}}},
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { UCBC, 'IsEngineerNotBuilding', { categories.EXPERIMENTAL * categories.LAND}},
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T4', 'experimentalland'} },

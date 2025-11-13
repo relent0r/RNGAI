@@ -266,6 +266,7 @@ BuilderGroup {
             SearchRadius = 'BaseEnemyArea',
             StateMachine = 'TorpedoBomber',
             UnitType = 'TORPEDO',
+            LocationType = 'LocationType',
             PrioritizedCategories = {
                 categories.COMMAND,
                 categories.EXPERIMENTAL,

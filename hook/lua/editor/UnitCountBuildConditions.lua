@@ -2035,6 +2035,18 @@ function UnfinishedUnitsAtLocationRNG(aiBrain, locationType, category)
     return false
 end
 
+function DisableOnPlayerRoleCheck(aiBrain, checkType)
+    for _, v in checkType do
+        if aiBrain.BrainIntel.PlayerRole.AirPlayer and v == 'AIR' and aiBrain.BrainIntel.AllyCount > 1 then
+            return false
+        end
+        if aiBrain.BrainIntel.PlayerRole.NavalPlayer and v == 'NAVAL' and aiBrain.BrainIntel.AllyCount > 1 then
+            return false
+        end
+    end
+    return true
+end
+
 function PlayerRoleCheck(aiBrain, locationType, unitCount, unitCategory, checkType, strategyOverride)
     for _, v in checkType do
         if aiBrain.BrainIntel.PlayerRole.AirPlayer and v == 'AIR' and aiBrain.BrainIntel.AllyCount > 1 then

@@ -5755,12 +5755,15 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
     return false
 end
 
-CheckPriorityTarget = function(aiBrain, im, platoon, threatType, threatAmount, presenceCheck, ignoreScouts, airOnly)
+CheckPriorityTarget = function(aiBrain, im, platoon, threatType, threatAmount, presenceCheck, ignoreScouts, airOnly, avoidLayer)
 
     local pointHighest = 0
     local point = false
     local platPos = platoon.Pos or platoon:GetPlatoonPosition()
     for _, v in aiBrain.prioritypoints do
+        if avoidLayer and v.unit.Layer == avoidLayer then
+            continue
+        end
         local dx = platPos[1] - v.Position[1]
         local dz = platPos[3] - v.Position[3]
         local distance = dx * dx + dz * dz

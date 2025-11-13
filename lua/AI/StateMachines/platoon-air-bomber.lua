@@ -182,7 +182,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                         local targetValidated = true
                         local targetThreat = aiBrain:GetThreatAtPosition(targetPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
                         if targetThreat > self.CurrentPlatoonThreatAntiSurface * 2 then
-                            local potentialThreat = self:CalculatePlatoonThreatAroundPosition('Surface', categories.AIR, self.Pos, 30)
+                            local potentialThreat = self:CalculatePlatoonThreatAroundPosition('Surface', categories.AIR, platPos, 30)
                             if targetThreat > potentialThreat then
                                 local closestBase, closestBaseDistance = StateUtils.GetClosestBaseRNG(aiBrain, self, targetPosition)
                                 if closestBase and closestBaseDistance > 14400 then 
@@ -509,8 +509,12 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             else
+                local platoonPosition = self:GetPlatoonPosition()
+                if not platoonPosition[1] then
+                    return
+                end
                 IssueClearCommands(platoonUnits)
-                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, destination, 15, 80)
+                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoonPosition, destination, 15, 80)
                 
                 if path then
                     local pathLength = RNGGETN(path)
