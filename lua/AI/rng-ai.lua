@@ -1039,8 +1039,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=5,
-                            interceptor=95,
+                            scout=0,
+                            interceptor=100,
                             bomber=0,
                             total=0
                         },
@@ -1103,8 +1103,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=5,
-                            interceptor=95,
+                            scout=0,
+                            interceptor=100,
                             bomber=0,
                             total=0
                         },
@@ -1170,8 +1170,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=5,
-                            interceptor=85,
+                            scout=0,
+                            interceptor=90,
                             bomber=0,
                             gunship=10,
                             total=0
@@ -1234,8 +1234,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=5,
-                            interceptor=95,
+                            scout=0,
+                            interceptor=100,
                             bomber=0,
                             total=0
                         },
@@ -1299,8 +1299,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     },
                     Air = {
                         T1 = {
-                            scout=5,
-                            interceptor=95,
+                            scout=0,
+                            interceptor=100,
                             bomber=0,
                             total=0
                         },

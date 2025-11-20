@@ -109,6 +109,18 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                                 unit.Loading = true
                             elseif not closest and noSpaceAvailable then
                                 aiBrain.BrainIntel.AirStagingRequired = true
+                                local platPos = self:GetPlatoonPosition()
+                                local basePos = aiBrain.BuilderManagers['MAIN'].Position
+                                local dx = platPos[1] - basePos[1]
+                                local dz = platPos[3] - basePos[3]
+                                local posDist = dx * dx + dz * dz
+                                if posDist > 3600 then
+                                    self.BuilderData = {
+                                        Position = basePos,
+                                    }
+                                    self:ChangeState(self.Navigating)
+                                    return
+                                end
                             end
                             ----self:LogDebug(string.format('Air Refuel we have an air staging platform but we didnt use it'))
                         else

@@ -145,10 +145,6 @@ function ThreatPresentOnLabelRNG(aiBrain, locationtype, tType, ratioRequired)
         if tType == 'Land' and aiBrain.GraphZones and aiBrain.GraphZones[label].FriendlySurfaceDirectFireThreat < threatTotal then
             return true
         end
-        --if tType == 'StructuresNotMex' then
-        --    LOG('Structures not mex threat '..tostring(threatTotal))
-        --    LOG('Threat graph friendly direct fire '..tostring(aiBrain.GraphZones[label].FriendlySurfaceInDirectFireThreat))
-        --end
         if tType == 'StructuresNotMex' and aiBrain.GraphZones and aiBrain.GraphZones[label].FriendlySurfaceInDirectFireThreat < threatTotal then
             return true
         end

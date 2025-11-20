@@ -1550,10 +1550,6 @@ function GetBuildableUnitId(aiBrain, unit, category)
             end
         end
     end
-    --LOG('Returning number of blueprint options '..table.getn(blueprintOptions))
-    --for k, v in blueprintOptions do
-    --    LOG('Item '..k..' : '..tostring(v))
-    --end
     return blueprintOptions
 end
 

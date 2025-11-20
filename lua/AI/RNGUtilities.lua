@@ -5113,6 +5113,7 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
     local currentGameTime = GetGameTimeSeconds()
     local scoutPos = scout:GetPosition()
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
+    local scoutDeathPenalityFactor = 3.0
     if not im.MapIntelGrid then
         WARN('MapIntelGrid is not initialized')
     end
@@ -5145,12 +5146,7 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
                         if im.MapIntelGrid[i][k].TimeScouted == 0 then
                             im.MapIntelGrid[i][k].TimeScouted = 1
                         end
-                        local mustScoutPriority
-                        if im.MapIntelGrid[i][k].ScoutPriority == 0 then
-                            mustScoutPriority = 100
-                        else
-                            mustScoutPriority = im.MapIntelGrid[i][k].ScoutPriority
-                        end
+                        local mustScoutPriority = im.MapIntelGrid[i][k].ScoutPriority > 0 and im.MapIntelGrid[i][k].ScoutPriority or 100
                         currentGrid = {x = i, z = k, Priority = (mustScoutPriority * mustScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain }
                         if currentGrid.Priority > highestGrid.Priority then
                             highestGrid = currentGrid
@@ -5202,7 +5198,9 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
                         if im.MapIntelGrid[i][k].TimeScouted == 0 then
                             im.MapIntelGrid[i][k].TimeScouted = 1
                         end
-                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].ScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain }
+                        local deathCount = im.MapIntelGrid[i][k].RecentScoutDeaths or 0
+                        local deathPenaltyDivisor = 1.0 + (deathCount * scoutDeathPenalityFactor)
+                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].ScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain / deathPenaltyDivisor }
                         --RNGLOG('AirScouting CurrentGrid Priority is '..currentGrid.Priority)
                         --RNGLOG('AirScouting TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
                         if currentGrid.Priority > highestGrid.Priority then
@@ -5239,7 +5237,9 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
                         if im.MapIntelGrid[i][k].DistanceToMain == 0 then
                             im.MapIntelGrid[i][k].DistanceToMain = 1
                         end
-                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].ScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain }
+                        local deathCount = im.MapIntelGrid[i][k].RecentScoutDeaths or 0
+                        local deathPenaltyDivisor = 1.0 + (deathCount * scoutDeathPenalityFactor)
+                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].ScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain / deathPenaltyDivisor }
                         --RNGLOG('CurrentGrid Priority is '..currentGrid.Priority)
                         --RNGLOG(im.MapIntelGrid[i][k].ScoutPriority..','..im.MapIntelGrid[i][k].LastScouted..','..im.MapIntelGrid[i][k].DistanceToMain..','..im.MapIntelGrid[i][k].TimeScouted..','..currentGrid.Priority)
                         --RNGLOG('TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
@@ -7474,10 +7474,6 @@ GetStartRaidPositions = function(aiBrain, startPos, enemyIndex)
     end)
     local filteredPositions = filterPositions(startPos[1], startPos[3], selectedPos.pos[1], selectedPos.pos[3], filteredZoneTable, tolerance)
     table.sort(filteredPositions, function(a, b) return a.startDist > b.startDist end)
-    --for _, v in filteredPositions do
-    --    aiBrain:ForkThread(DrawTargetRadius, v.pos, 'cc0000')
-    --    LOG('Positions returned '..repr(v.pos))
-    --end
     return selectedPos, shortList, filteredPositions
 end
 
@@ -7870,15 +7866,6 @@ function CalculateThreatWithDynamicDecay(aiBrain, baseName, layer, baseZoneId, m
             end
         end
     end
-    --if threatData.land > 0 then
-    --    LOG('Total Land threat returned '..tostring(repr(threatData.landthreat)))
-    --end
-    --if threatData.air > 0 then
-    --    LOG('Total Land threat returned '..tostring(repr(threatData.airthreat)))
-    --end
-    --if threatData.naval > 0 then
-    --    LOG('Total Land threat returned '..tostring(repr(threatData.navalthreat)))
-    --end
     return threatData
 end
 

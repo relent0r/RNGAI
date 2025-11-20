@@ -81,6 +81,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             --LOG('Gunship current enemy air threat '..tostring(self.CurrentEnemyAirThreat))
             --LOG('Gunship current platoon antiair threat '..tostring(self.CurrentPlatoonThreatAntiAir))
             if self.CurrentEnemyAirThreat > 0 and self.CurrentEnemyAirThreat > self.CurrentPlatoonThreatAntiAir and homeDist > 900 and not aiBrain.BrainIntel.SuicideModeActive then
+                --LOG('Gunship Platoon has enemy threat around its current position')
                 self:LogDebug(string.format('Gunship found air threat and is a certain distance from base'))
                 local platoonHealth = 0
                 for _, unit in self:GetPlatoonUnits() do
@@ -199,8 +200,8 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 if not self.BuilderData.AttackTarget.Dead then
                     local targetPos = self.BuilderData.AttackTarget:GetPosition()
                     local newTarget
-                    if VDist3Sq(platPos, targetPos) < 625 then
-                        local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.LAND + categories.STRUCTURE) * categories.ANTIAIR, targetPos, 20, 'Enemy')
+                    if VDist3Sq(platPos, targetPos) < 1225 then
+                        local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.LAND + categories.STRUCTURE) * categories.ANTIAIR, targetPos, 35, 'Enemy')
                         for _, v in enemyUnits do
                             if v and not v.Dead then
                                 if not newTarget and v.Layer ~= 'Sub' then
@@ -225,17 +226,24 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 local target = RUtils.CheckACUSnipe(aiBrain, 'Land')
-                if target.Layer == 'Sub' then
-                    LOG('ACU Snipe target was a submarine')
-                end
-                if target and self['rngdata'].MaxPlatoonDPS > 250 then
-                    self.BuilderData = {
-                        AttackTarget = target,
-                        Position = table.copy(target:GetPosition())
-                    }
-                    ----self:LogDebug(string.format('Gunship navigating to snipe ACU'))
-                    self:ChangeState(self.Navigating)
-                    return
+                if target then
+                    local targetPos = target:GetPosition()
+                    local im = aiBrain.IntelManager
+                    local gridX, gridZ = im:GetIntelGrid(targetPos)
+                    local historicalThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
+                    local threat = aiBrain:GetThreatAtPosition(targetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+                    local maxThreat = math.max(historicalThreat, threat)
+                    --LOG('Torpedo bomber high priority target found, historical antiair threat at grid position is '..tostring(maxThreat)..' current platoon threat is '..tostring(self.CurrentPlatoonThreatAntiNavy))
+                    --self:LogDebug(string.format('Torpedo bomber historical threat at high priority position '..tostring(historicalThreat)))
+                    if self.CurrentPlatoonThreatAntiSurface > math.min((maxThreat * 1.5), 90) then
+                        self.BuilderData = {
+                            AttackTarget = target,
+                            Position = table.copy(target:GetPosition())
+                        }
+                        ----self:LogDebug(string.format('Gunship navigating to snipe ACU'))
+                        self:ChangeState(self.Navigating)
+                        return
+                    end
                 end
             end
             if not target then
@@ -276,6 +284,23 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 ----self:LogDebug(string.format('Gunship has no target and is navigating back home'))
                 self:ChangeState(self.Navigating)
                 return
+            elseif not target then
+                for _, unit in self:GetPlatoonUnits() do
+                    if not unit.Dead then
+                        local health = unit:GetHealthPercent()
+                        if not unit.Loading and health < 0.90 then
+                            --LOG('Gunship needs refuel')
+                            if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
+                                aiBrain.BrainIntel.AirStagingRequired = true
+                            elseif not aiBrain.BrainIntel.AirStagingRequired and not self.BuilderData.AttackTarget or self.BuilderData.AttackTarget.Dead then
+                                --platoon:LogDebug(string.format('Gunship is low on fuel or health and is going to refuel'))
+                                local plat = aiBrain:MakePlatoon('', '')
+                                aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
+                                import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Gunship', LocationType = self.LocationType}, plat, {unit})
+                            end
+                        end
+                    end
+                end
             end
             if not target and VDist3Sq(platPos, self.Home) < 900 then
                 if self.PlatoonCount < 10 then
@@ -423,58 +448,34 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             self.BuilderData = {
                 Retreat = false
             }
-            local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.ANTIAIR, self:GetPlatoonPosition(), 100, 'Enemy')
-            local enemyAirThreat = 0
-            local platoonThreat = self:CalculatePlatoonThreatAroundPosition('Surface', categories.GROUNDATTACK, self:GetPlatoonPosition(), 35)
-            ----self:LogDebug(string.format('Gunship is retreating'))
-            for _, v in enemyUnits do
-                if v and not v.Dead then
-                    local cats = v.Blueprint.CategoriesHash
-                    if cats.AIR then
-                        IssueClearCommands(platoonUnits)
-                        IssueMove(platoonUnits, self.Home)
-                        self.BuilderData.Retreat = true
-                        break
-                    elseif cats.LAND or cats.STRUCTURE then
-                        enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.AirThreatLevel
-                    end
-                end
-                if platoonThreat > 15 then
-                    if enemyAirThreat > 25 then
-                        IssueClearCommands(platoonUnits)
-                        IssueMove(platoonUnits, self.Home)
-                        self.BuilderData.Retreat = true
-                        break
-                    end
-                elseif enemyAirThreat > 14 then
-                    IssueClearCommands(platoonUnits)
-                    IssueMove(platoonUnits, self.Home)
-                    self.BuilderData.Retreat = true
-                    break
-                end
+            --LOG('Gunship platoon is trying to retreat, number of units in platoon is '..tostring(table.getn(platoonUnits)))
+            IssueClearCommands(platoonUnits)
+            IssueMove(platoonUnits, self.Home)
+            coroutine.yield(2)
+            self.BuilderData.Retreat = true
+            --LOG('Issue move order for platoon units to home position of '..tostring(repr(self.Home))..' retreat is set as '..tostring(self.BuilderData.Retreat))
+            local platPos = self:GetPlatoonPosition()
+            --LOG('Ordered to retreat, current distance from base is '..tostring(VDist3Sq(platPos, self.Home)))
+            while not IsDestroyed(self) and platPos and VDist3Sq(platPos, self.Home) > 2500 do
+                --LOG('Waiting inside retreat loop, we should be moving home right now, distance to home is '..tostring(VDist3Sq(platPos, self.Home)))
+                ----self:LogDebug(string.format('Gunship is in retreat mode, waiting until it arrives home, distance from home is '..VDist3Sq(platPos, self.Home)))
+                coroutine.yield(25)
+                platPos = self:GetPlatoonPosition()
             end
-            if self.BuilderData.Retreat then
-                local platPos = self:GetPlatoonPosition()
-                while not IsDestroyed(self) and platPos and VDist3Sq(platPos, self.Home) > 2500 do
-                    ----self:LogDebug(string.format('Gunship is in retreat mode, waiting until it arrives home, distance from home is '..VDist3Sq(platPos, self.Home)))
-                    coroutine.yield(25)
-                    platPos = self:GetPlatoonPosition()
-                end
-                if VDist3Sq(platPos, self.Home) < 2500 then
-                    for _, unit in self:GetPlatoonUnits() do
-                        if not unit.Dead then
-                            local fuel = unit:GetFuelRatio()
-                            local health = unit:GetHealthPercent()
-                            if not unit.Loading and ((fuel > -1 and fuel < 0.5) or health < 0.8) then
-                                --LOG('Gunship needs refuel')
-                                if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
-                                    aiBrain.BrainIntel.AirStagingRequired = true
-                                elseif not aiBrain.BrainIntel.AirStagingRequired and not self.BuilderData.AttackTarget or self.BuilderData.AttackTarget.Dead then
-                                    --platoon:LogDebug(string.format('Gunship is low on fuel or health and is going to refuel'))
-                                    local plat = aiBrain:MakePlatoon('', '')
-                                    aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
-                                    import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Gunship', LocationType = self.LocationType}, plat, {unit})
-                                end
+            if VDist3Sq(platPos, self.Home) < 2500 then
+                for _, unit in self:GetPlatoonUnits() do
+                    if not unit.Dead then
+                        local fuel = unit:GetFuelRatio()
+                        local health = unit:GetHealthPercent()
+                        if not unit.Loading and ((fuel > -1 and fuel < 0.5) or health < 0.8) then
+                            --LOG('Gunship needs refuel')
+                            if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
+                                aiBrain.BrainIntel.AirStagingRequired = true
+                            elseif not aiBrain.BrainIntel.AirStagingRequired and not self.BuilderData.AttackTarget or self.BuilderData.AttackTarget.Dead then
+                                --platoon:LogDebug(string.format('Gunship is low on fuel or health and is going to refuel'))
+                                local plat = aiBrain:MakePlatoon('', '')
+                                aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
+                                import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Gunship', LocationType = self.LocationType}, plat, {unit})
                             end
                         end
                     end

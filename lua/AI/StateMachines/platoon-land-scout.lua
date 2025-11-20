@@ -649,7 +649,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
             local platPos = scout:GetPosition()
             local movePos = RUtils.AvoidLocation(builderData.Position, platPos, self['rngdata'].IntelRange - 2)
             StateUtils.IssueNavigationMove(scout, movePos)
-            coroutine.yield(20)
+            coroutine.yield(15)
             if builderData.RetreatFrom and not builderData.RetreatFrom.Dead then
                 if IsDestroyed(self) then
                     return
@@ -850,7 +850,7 @@ end
 ---@param aiBrain AIBrain
 ---@param platoon AIPlatoon
 LandScoutThreatThread = function(aiBrain, platoon)
-    local checkRadius = platoon['rngdata'].IntelRange + 8
+    local checkRadius = platoon['rngdata'].IntelRange + 10
     local unitCatCheck
     local scout = platoon.ScoutUnit
     if scout.UnitId == 'xsl0101' then
@@ -950,7 +950,7 @@ LandScoutThreatThread = function(aiBrain, platoon)
                                     SupportUnit = supportUnit or nil,
                                     SupportPlatoon = supportPlatoon or nil
                                 }
-                                coroutine.yield(2)
+                                coroutine.yield(1)
                                 break
                             end
                         end
@@ -1001,7 +1001,7 @@ LandScoutThreatThread = function(aiBrain, platoon)
                                         SupportUnit = supportUnit or nil,
                                         SupportPlatoon = supportPlatoon or nil
                                     }
-                                    coroutine.yield(2)
+                                    coroutine.yield(1)
                                     platoon:ChangeState(platoon.Retreating)
                                     coroutine.yield(10)
                                     break
@@ -1037,7 +1037,7 @@ LandScoutThreatThread = function(aiBrain, platoon)
                                     SupportUnit = supportUnit or nil,
                                     SupportPlatoon = supportPlatoon or nil
                                 }
-                                coroutine.yield(2)
+                                coroutine.yield(1)
                                 platoon:ChangeState(platoon.Retreating)
                                 coroutine.yield(10)
                                 break

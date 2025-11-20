@@ -35,7 +35,7 @@ BuilderGroup {
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading'}},
             { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 20}},
-            { UCBC, 'UnitCapCheckLess', { .80 } },
+            { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Air',
     },

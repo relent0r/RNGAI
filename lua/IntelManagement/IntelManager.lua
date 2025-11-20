@@ -2890,6 +2890,11 @@ IntelManager = Class {
             local intelCoverage = 0
             local mapOwnership = 0
             local mustScoutPresent = false
+            local coveredByRadarCount = 0
+            local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()        
+            local realMapSizeX = playableArea[3] - playableArea[1]
+            local realMapSizeZ = playableArea[4] - playableArea[2]
+            local recommendedAirScouts = math.floor((realMapSizeX + realMapSizeZ) / 250)
             self.ZoneIMAPThreat = {}
             local threatSamples = {}
             local totalAAThreat = 0
@@ -2958,6 +2963,10 @@ IntelManager = Class {
                 end
                 coroutine.yield(1)
             end
+            local radarCoverageRatio = 0.0
+            if totalCells > 0 then
+                radarCoverageRatio = intelCoverage / totalCells
+            end
             -- AA Safe Radius Calculation
             table.sort(threatSamples, function(a, b) return a.dist < b.dist end)
             local cumulativeThreat = 0
@@ -2983,16 +2992,25 @@ IntelManager = Class {
             --LOG('Safe Radius on calculation is '..tostring(safeRadius))
 
             -- End AA Safe Radius Calcuation
+            local radarCoverageDeficiency = 1.0 - radarCoverageRatio
+            local stealthDetected = (self.EnemyIntel and self.EnemyIntel.StealthUnitsDetected) or false
+            local stealthMultiplier = stealthDetected and 1.5 or 1.0
+            local airScoutDemand
+            if mustScoutPresent then
+                airScoutDemand = recommendedAirScouts
+            else
+                airScoutDemand = math.ceil(recommendedAirScouts * radarCoverageDeficiency * stealthMultiplier)
+            end
+            airScoutDemand = math.max(1, airScoutDemand)
+            if self.amanager.Demand.Air.T1.scout then
+                self.amanager.Demand.Air.T1.scout = airScoutDemand
+            end
+            if self.amanager.Demand.Air.T3.scout then
+                self.amanager.Demand.Air.T3.scout = airScoutDemand
+            end
             self.MapIntelStats.IntelCoverage = intelCoverage / (self.MapIntelGridXRes * self.MapIntelGridZRes) * 100
             self.MapIntelStats.MustScoutArea = mustScoutPresent
             aiBrain.BrainIntel.MapOwnership = mapOwnership / aiBrain.IntelManager.CellCount * 100
-            if aiBrain.RNGDEBUG then
-                if mustScoutPresent then
-                    RNGLOG('mustScoutPresent is true after loop')
-                else
-                    RNGLOG('mustScoutPresent is false after loop')
-                end
-            end
             --LOG('Current Map ownership '..aiBrain.BrainIntel.MapOwnership)
         end
     end,
@@ -3956,8 +3974,9 @@ IntelManager = Class {
                 aiBrain.smanager.Demand.Structure.intel.Optics = 0
             end
         elseif productiontype == 'LandIndirectFire' then
-            local threatDillutionRatio = 25
+            local threatDillutionRatio = 15
             local threatDefenseDillutionRatio = 8
+            local threatToUnitConversion = 5
             local enemyDefenseThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.DefenseSurface or 0
             local cellSize = aiBrain.BrainIntel.IMAPConfig.IMAPSize
         
@@ -3976,9 +3995,7 @@ IntelManager = Class {
         
             for k, v in aiBrain.BuilderManagers do
                 local totalEnemyStructureThreat = 0
-                local totalEnemyLandThreat = 0
-                local totalFriendlyDirectFireThreat = 0
-                local totalFriendlyIndirectFireThreat = 0
+                local allocationRequired = false
         
                 if v.FactoryManager and v.FactoryManager.LocationActive then
                     local baseZone = aiBrain.Zones.Land.zones[v.ZoneID]
@@ -3988,17 +4005,18 @@ IntelManager = Class {
                     local closestDefenseClusterLayer
                     local closestZoneLandDistance
                     local closestZoneLandThreat = 0
+                    local localEnemyLandThreat = baseZone.enemylandthreat or 0
+                    local localFriendlyDirectFireThreat = baseZone.friendlydirectfireantisurfacethreat or 0
+                    local localFriendlyIndirectFireThreat = baseZone.friendlyindirectfireantisurfacethreat or 0
         
                     if v.PathableZones and v.PathableZones.PathableLandZoneCount > 0 and not table.empty(v.PathableZones.Zones) then
-                        totalEnemyLandThreat = baseZone.enemylandthreat or 0
-                        totalFriendlyDirectFireThreat = baseZone.friendlydirectfireantisurfacethreat or 0
-                        totalFriendlyIndirectFireThreat = baseZone.friendlyindirectfireantisurfacethreat or 0
 
                         for _, cluster in aiBrain.EnemyIntel.DirectorData.DefenseCluster do
                             local dx = cluster.aggx - v.Position[1]
                             local dz = cluster.aggz - v.Position[3]
                             local clusterDist = dx * dx + dz * dz
                             if not closestDefenseClusterDistance or clusterDist < closestDefenseClusterDistance then
+                                allocationRequired = true
                                 closestDefenseClusterDistance = clusterDist
                                 closestDefenseClusterThreat = cluster.AntiSurfaceThreat
                                 if cluster.ZoneID and cluster.FireBaseLayer then
@@ -4023,14 +4041,15 @@ IntelManager = Class {
                                     local dz = v.Position[3] - zone.pos[3]
                                     local posDist = dx * dx + dz * dz
                                     if posDist < 262144 then
-                                        totalEnemyLandThreat = totalEnemyLandThreat + (zone.enemylandthreat or 0)
+                                        allocationRequired = true
                                         local structureThreat = zone.enemystructurethreat or 0
-                                        if zone.enemyantisurfacethreat <= 0 then
-                                            structureThreat = structureThreat * 0.7
+                                        local structureDefenseThreat = zone.enemydefensestructurethreat or 0
+
+                                        if structureDefenseThreat <= 0 then
+                                            structureThreat = math.min(structureThreat * 0.1, 30)
+                                        else
+                                            structureThreat = structureDefenseThreat + (structureThreat * 0.05)
                                         end
-                                        totalEnemyStructureThreat = totalEnemyStructureThreat + structureThreat
-                                        totalFriendlyDirectFireThreat = totalFriendlyDirectFireThreat + (zone.friendlydirectfireantisurfacethreat or 0)
-                                        totalFriendlyIndirectFireThreat = totalFriendlyIndirectFireThreat + (baseZone.friendlyindirectfireantisurfacethreat or 0)
                                         if not closestZoneLandDistance or posDist < closestZoneLandDistance then
                                             closestZoneLandThreat = zone.enemylandthreat
                                             closestZoneLandDistance = posDist
@@ -4043,14 +4062,14 @@ IntelManager = Class {
                                             clusterDefenseThreat = closestDefenseClusterThreat
                                         end
 
+
                                         if not zoneAllocations[z.ZoneID] then
+                                            --LOG('Modified structure threat for zone '..tostring(z.ZoneID)..' is '..tostring(structureThreat))
                                             zoneAllocations[z.ZoneID] = {
-                                                TotalStructureThreat = zone.enemystructurethreat,
+                                                TotalStructureThreat = structureThreat,
                                                 DefenseClusterThreat = clusterDefenseThreat,
                                                 Bases = {}
                                             }
-                                        else
-                                            zoneAllocations[z.ZoneID].TotalStructureThreat = zoneAllocations[z.ZoneID].TotalStructureThreat + zone.enemystructurethreat
                                         end
                                     end
                                 end
@@ -4058,8 +4077,8 @@ IntelManager = Class {
                         end
                     end
         
-                    -- 1️⃣ Build candidate data for this base
-                    if totalEnemyStructureThreat > 0 then
+                    -- Build candidate data for this base
+                    if allocationRequired then
                         local highestTier = 0
                         if v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH3) > 0 then
                             highestTier = 3
@@ -4068,6 +4087,14 @@ IntelManager = Class {
                         elseif v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH1) > 0 then
                             highestTier = 1
                         end
+                        local localDefensePenalty = 0
+                        
+                
+                        if localEnemyLandThreat > localFriendlyDirectFireThreat * 1.5 then
+                            local threatDifferential = localEnemyLandThreat - (localFriendlyDirectFireThreat * 1.5)
+                            localDefensePenalty = threatDifferential * 0.5
+                            --LOG('Base '..tostring(k)..' is under high local ground threat. Applying penalty: '..tostring(localDefensePenalty))
+                        end
         
                         table.insert(baseCandidates, {
                             ID = k,
@@ -4075,18 +4102,53 @@ IntelManager = Class {
                             Tier = highestTier,
                             NumFactories = v.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND),
                             ClosestZoneDistance = closestZoneLandDistance or 99999999,
-                            ClosestClusterDistance = closestDefenseClusterDistance or 99999999
+                            ClosestClusterDistance = closestDefenseClusterDistance or 99999999,
+                            LocalDefensePenalty = localDefensePenalty,
+                            LocalIndirectThreatBuffer = localFriendlyIndirectFireThreat
                         })
                     end
                 end
             end
         
-            -- 2️⃣ Stage 2: Allocate per zone based on reachability
+            -- Stage 2: Allocate per zone based on reachability
             for zoneID, zoneData in zoneAllocations do
-                local totalNeeded = math.min(math.max(2, zoneData.TotalStructureThreat / threatDillutionRatio), 25)
+                local originalTotalNeeded = math.min(math.max(1, zoneData.TotalStructureThreat / threatDillutionRatio), 25)
                 if zoneData.DefenseClusterThreat > 0 then
-                    totalNeeded = totalNeeded + math.max(2, zoneData.DefenseClusterThreat / threatDefenseDillutionRatio)
+                    originalTotalNeeded = originalTotalNeeded + math.max(2, zoneData.DefenseClusterThreat / threatDefenseDillutionRatio)
                 end
+                
+                local totalNeeded = originalTotalNeeded
+                
+                local localCoverageThreat = 0
+            
+                -- Check the target zone itself
+                local targetZone = aiBrain.Zones.Land.zones[zoneID]
+                local targetThreat = targetZone.friendlyindirectfireantisurfacethreat or 0
+                localCoverageThreat = targetThreat
+                
+                -- Check all ADJACENT zones (Edges)
+                if targetZone.edges then
+                    for _, adjEdge in ipairs(targetZone.edges) do
+                        local adjZone = adjEdge.zone
+                        local adjZoneID = adjZone.id
+                        local adjThreat = adjZone.friendlyindirectfireantisurfacethreat or 0
+                        localCoverageThreat = localCoverageThreat + adjThreat
+                    end
+                end
+                
+                if localCoverageThreat > 0 then
+                    -- Convert the TOTAL coverage threat to an equivalent unit count
+                    local unitsAlreadyFulfilling = math.ceil(localCoverageThreat / threatToUnitConversion) 
+                    
+                    -- Deduct the fulfillment count from the total units needed
+                    local finalNeeded = math.max(0, originalTotalNeeded - unitsAlreadyFulfilling)
+                    
+                    --LOG('Zone '..tostring(zoneID)..' Total Fulfilling Units: '..tostring(unitsAlreadyFulfilling)..' Demand reduced from '..tostring(originalTotalNeeded)..' to '..tostring(finalNeeded))
+                    
+                    totalNeeded = finalNeeded
+                end
+                
+                local remaining = math.ceil(totalNeeded)
                 local candidates = {}
         
                 -- Filter candidates that can reach this zone
@@ -4104,31 +4166,50 @@ IntelManager = Class {
                     local capacityScore = math.sqrt(c.NumFactories) * 20
                     local bucket = math.floor(distance / (cellSize * cellSize))
                     local distancePenalty = bucket * 10
-                    c.Score = tierScore + capacityScore - distancePenalty
+                    c.Score = tierScore + capacityScore - distancePenalty - c.LocalDefensePenalty
                 end
         
                 table.sort(candidates, function(a,b) return a.Score > b.Score end)
         
-                -- 3️⃣ Stage 3: Distribute totalNeeded based on capacity
-                local remaining = totalNeeded
+                -- Stage 3: Distribute totalNeeded based on capacity
                 --LOG('Total units needed for zone '..tostring(zoneID)..' is '..tostring(totalNeeded)..' threat for the zone is '..tostring(zoneData.TotalStructureThreat)..' cluster threat was '..tostring(zoneData.DefenseClusterThreat))
                 for _, c in candidates do
                     if remaining <= 0 then break end
         
                     local capacity = c.NumFactories * 3 -- per-factory production estimate
-                    local allocation = math.min(capacity, remaining)
-                    remaining = remaining - allocation
-                    --LOG('Allocation for '..tostring(c.ID)..' is '..tostring(allocation)..' remaining is '..tostring(remaining))
+                    local localAllocation = math.min(capacity, remaining)
+                    local unitsToBeMetByBase = math.ceil(localAllocation)
+                    local finalAllocation = localAllocation
+                    local baseBufferThreat = c.LocalIndirectThreatBuffer
+                    if baseBufferThreat > 0 then
+                        -- Convert threat buffer to equivalent units (rounded up)
+                        local unitsFromBuffer = math.ceil(baseBufferThreat / threatToUnitConversion) 
+                        
+                        -- The amount of the current allocation the buffer can satisfy
+                        local bufferCovers = math.min(localAllocation, unitsFromBuffer)
+                        
+                        -- Reduce the allocation by the covered amount
+                        finalAllocation = localAllocation - bufferCovers
+                        
+                        -- Crucial step: Reduce the stored buffer threat globally so it's not used again 
+                        -- by the next zone requesting units from this base.
+                        c.LocalIndirectThreatBuffer = math.max(0, baseBufferThreat - (bufferCovers * threatToUnitConversion))
+                        
+                        --LOG('Base '..tostring(c.ID)..' buffer used: '..tostring(bufferCovers)..' units. Allocation reduced from '..tostring(localAllocation)..' to '..tostring(finalAllocation))
+                    end
+                    finalAllocation = math.ceil(finalAllocation)
+                    remaining = remaining - unitsToBeMetByBase
+                    --LOG('Allocation for '..tostring(c.ID)..' is '..tostring(finalAllocation)..' remaining is '..tostring(remaining))
         
                     -- Assign to the correct tier
                     local baseDemand = aiBrain.amanager.Demand.Bases[c.ID].Land
                     if c.Tier == 3 then
-                        baseDemand.T3.arty = math.ceil(allocation)
-                        baseDemand.T3.mml = math.ceil(allocation * 1.3)
+                        baseDemand.T3.arty = baseDemand.T3.arty + finalAllocation
+                        baseDemand.T3.mml = baseDemand.T3.mml + math.ceil(finalAllocation * 1.3)
                     elseif c.Tier == 2 then
-                        baseDemand.T2.mml = math.ceil(allocation * 1.3)
+                        baseDemand.T2.mml = baseDemand.T2.mml + math.ceil(finalAllocation * 1.3)
                     elseif c.Tier == 1 then
-                        baseDemand.T1.arty = math.ceil(allocation * 1.5)
+                        baseDemand.T1.arty = baseDemand.T1.arty + math.ceil(finalAllocation * 1.5)
                     end
                 end
             end
@@ -5016,7 +5097,6 @@ function RecordUnitDeath(targetUnit, type)
             end
         end
     end
-
 end
 
 DrawTargetRadius = function(self, position, colour, radius)
@@ -5892,7 +5972,6 @@ TacticalThreatAnalysisRNG = function(aiBrain)
 end
 
 LastKnownThread = function(aiBrain)
-    local unitCat
     local im = GetIntelManager(aiBrain)
     
     local enemyBuildStrength = {
@@ -5918,6 +5997,7 @@ LastKnownThread = function(aiBrain)
         local time=GetGameTimeSeconds()
         for _=0,10 do
             local enemyMexes = {}
+            local enemyZoneThreats = {}
             local mexcount = 0
             local eunits=aiBrain:GetUnitsAroundPoint((categories.NAVAL + categories.AIR + categories.LAND + categories.STRUCTURE) - categories.INSIGNIFICANTUNIT, {0,0,0}, math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])*1.5, 'Enemy')
             for _,v in eunits do
@@ -5926,7 +6006,8 @@ LastKnownThread = function(aiBrain)
                 if v.Army and not enemyBuildStrength[v.Army] then
                     enemyBuildStrength[v.Army] = {}
                 end
-                unitCat = v.Blueprint.CategoriesHash
+                local unitCat = v.Blueprint.CategoriesHash
+                local unitDef = v.Blueprint.Defense
                 local id=v.EntityId
                 local unitPosition = table.copy(v:GetPosition())
                 local gridXID, gridZID = im:GetIntelGrid(unitPosition)
@@ -6039,8 +6120,15 @@ LastKnownThread = function(aiBrain)
                                         end
                                     elseif unitCat.RADAR then
                                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='radar'
-                                    elseif unitCat.DEFENSE and unitCat.DIRECTFIRE then
-                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='pointdefense'
+                                    elseif unitCat.DEFENSE and (unitCat.DIRECTFIRE or unitCat.INDIRECTFIRE) then
+                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='defense'
+                                        if im.MapIntelGrid[gridXID][gridZID].LandZoneID then
+                                            local landZoneID = im.MapIntelGrid[gridXID][gridZID].LandZoneID
+                                            if not enemyZoneThreats[landZoneID] then
+                                                enemyZoneThreats[landZoneID] = 0
+                                            end
+                                            enemyZoneThreats[landZoneID] = enemyZoneThreats[landZoneID] + unitDef.SurfaceThreatLevel
+                                        end
                                     elseif unitCat.TACTICALMISSILEPLATFORM then
                                         im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type='tml'
                                         if not aiBrain.EnemyIntel.TML[id] then
@@ -6111,6 +6199,11 @@ LastKnownThread = function(aiBrain)
             for k, v in aiBrain.Zones.Land.zones do
                 if enemyMexes[v.id] and enemyMexes[v.id].zoneincome then
                     v.zoneincome.enemyincome = enemyMexes[v.id].zoneincome
+                end
+                if enemyZoneThreats[v.id] then
+                    v.enemydefensestructurethreat = enemyZoneThreats[v.id]
+                else
+                    v.enemydefensestructurethreat = 0
                 end
             end
             im.EnemyBuildStrength = enemyBuildStrength
