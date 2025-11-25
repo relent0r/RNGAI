@@ -8794,3 +8794,169 @@ function GetZoneGreedSafetyScore(armyIndex, zone)
 
     return score, score > SAFETY_THRESHOLD
 end
+
+function CalculateTeamCentroidAndSpread(aiBrain, allyStartLocations)
+    local totalX, totalZ = 0, 0
+    local validCount = 0
+    local positions = {}
+
+    -- 1. Include Self
+    local selfPos = aiBrain.BuilderManagers['MAIN'].Position or aiBrain.BrainIntel.StartPos
+    if selfPos then 
+        table.insert(positions, selfPos)
+        totalX = totalX + selfPos[1]
+        totalZ = totalZ + selfPos[3]
+        validCount = validCount + 1
+    end
+
+    -- 2. Include Allies
+    for _, allyData in allyStartLocations do
+        if allyData.Active and allyData.Position then
+            table.insert(positions, allyData.Position)
+            totalX = totalX + allyData.Position[1]
+            totalZ = totalZ + allyData.Position[3]
+            validCount = validCount + 1
+        end
+    end
+
+    if validCount == 0 then return nil, 0, false end
+
+    -- 3. Calculate Centroid
+    local avgX = totalX / validCount
+    local avgZ = totalZ / validCount
+    local centroid = {x = avgX, z = avgZ}
+
+    -- 4. Calculate Spread (Distance from Centroid to furthest member)
+    local maxDistSq = 0
+    for _, pos in ipairs(positions) do
+        local dx = pos[1] - avgX
+        local dz = pos[3] - avgZ
+        local dSq = dx*dx + dz*dz
+        if dSq > maxDistSq then
+            maxDistSq = dSq
+        end
+    end
+    local maxDist = math.sqrt(maxDistSq)
+
+    -- 5. Determine Cohesion (The "Line Map" Check)
+    -- If the spread covers > 45% of the map, we are likely in a line or corners.
+    -- In this case, a unified radius would be too big/dangerous.
+    local mapSize = math.max(ScenarioInfo.size[1], ScenarioInfo.size[2])
+    local cohesionThreshold = mapSize * 0.45
+    local isCohesive = maxDist <= cohesionThreshold
+
+    return centroid, maxDist, isCohesive
+end
+
+function FindAirTargetForTeamRNG(aiBrain, position, platoon, maxRange, platoonThreat, priorityList)
+    if not position then return nil end
+    
+    local armyIndex = aiBrain:GetArmyIndex()
+    local emergencyDefensePos = aiBrain.BrainIntel.StartPos
+    local intelManager = aiBrain.IntelManager
+    local maxRangeSq = maxRange * maxRange
+    
+    -- 1. Define Search Nodes (Centers of Defense)
+    local searchNodes = {}
+    
+    -- A. Self (Always check)
+    if aiBrain.BuilderManagers['MAIN'] then
+        table.insert(searchNodes, aiBrain.BuilderManagers['MAIN'].Position)
+    end
+
+    -- B. Allies (The "Fallback" check)
+    -- We ALWAYS add ally bases as search nodes if they are within mechanical range.
+    -- This ensures that even if Cohesion is FALSE (and our SafeRadius is small),
+    -- we still check the ally's base for bombers.
+    local brainIntel = aiBrain.BrainIntel
+    if brainIntel and brainIntel.AllyCount > 1 then
+        if brainIntel.AllyStartLocations then
+            for _, allyData in brainIntel.AllyStartLocations do
+                if allyData.Index ~= armyIndex then
+                    -- Mechanical Range Check: Can I physically fly there?
+                    if VDist2Sq(position[1], position[3], allyData.Position[1], allyData.Position[3]) <= maxRangeSq then
+                        table.insert(searchNodes, allyData.Position)
+                    end
+                end
+            end
+        end
+    end
+    -- C. Current Position (Self-Defense)
+    table.insert(searchNodes, position)
+    local bestTarget = nil
+    local RangeList
+    if maxRange > 512 then
+        RangeList = {
+            [1] = 64,
+            [2] = 128,
+            [3] = 256,
+            [4] = 512,
+            [5] = maxRange,
+        }
+    elseif maxRange > 256 then
+        RangeList = {
+            [1] = 64,
+            [2] = 128,
+            [3] = 256,
+            [4] = maxRange,
+        }
+    elseif maxRange > 64 then
+        RangeList = {
+            [1] = 64,
+            [2] = 128,
+            [3] = maxRange,
+        }
+    end
+    for _, searchPos in searchNodes do
+        for _, range in RangeList do
+            -- Efficient local scan at the node
+            local enemies = aiBrain:GetUnitsAroundPoint(categories.AIR - categories.INSIGNIFICANTUNIT, searchPos, range, 'Enemy')
+            for _, category in priorityList do
+                for _, unit in enemies do
+                    if not unit.Dead and unit:GetFractionComplete() == 1 then
+                        if EntityCategoryContains(category, unit) then
+                            local unitPos = unit:GetPosition()
+                            local isSafe = true
+                            local currentThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+                            if currentThreat > platoonThreat then
+                                local distanceWeight = 0.5      -- how much distance reduces risk
+                                local threatWeight     = 1.0      -- historical threat multiplier
+                                local inferredWeight = 1.0      -- inferred enemy threat multiplier
+                                local supportWeight  = -0.5     -- friendly AA reduces risk
+                                local dx = position[1] - unitPos[1]
+                                local dz = position[3] - unitPos[3]
+                                local distSq = dx*dx + dz*dz
+                                local distFactor = distSq / (platoon.MaxRadius*platoon.MaxRadius)
+                                local threatScore = threatWeight * currentThreat
+                                                    + inferredWeight * aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
+                                                    + distanceWeight * distFactor
+                                local maxAllowableThreat = platoon.CurrentPlatoonThreatAntiAir * 1.5  -- tune this
+                                --LOG('Threat score is '..tostring(threatScore)..' max threat allowed is '..tostring(maxAllowableThreat))
+                                if threatScore > maxAllowableThreat then
+                                    local hx = emergencyDefensePos[1] - unitPos[1]
+                                    local hz = emergencyDefensePos[3] - unitPos[3]
+                                    local homeDistSq = hx*hx + hz*hz
+                                    -- abort target acquisition
+                                    if homeDistSq > 6400 then
+                                        --LOG('Threat score is '..tostring(threatScore)..' max threat allowed is '..tostring(maxAllowableThreat)..' platoon threat was '..tostring(platoon.CurrentPlatoonThreatAntiAir))
+                                        --LOG('Aborting target during find air target')
+                                        isSafe = false
+                                    end
+                                end
+                            end
+                            if isSafe then
+                                bestTarget = unit
+                            end
+                        end
+                    end
+                end
+                if bestTarget then
+                    return bestTarget
+                end
+            end
+            coroutine.yield(1)
+        end
+        coroutine.yield(1)
+    end
+    return nil
+end

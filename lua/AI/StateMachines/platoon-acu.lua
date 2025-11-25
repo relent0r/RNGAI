@@ -2952,7 +2952,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             local tick = GetGameTick()
                             local seconds = GetGameTimeSeconds()
                             local progress = cdr:GetWorkProgress()
-                            --LOG('progress '..repr(progress))
                             if lastTick then
                                 if progress > lastProgress then
                                     eta = seconds + ((tick - lastTick) / 10) * ((1-progress)/(progress-lastProgress))
@@ -2968,34 +2967,47 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 --LOG('cdr.CurrentFriendlyThreat '..tostring(cdr.CurrentFriendlyThreat))
                                 --LOG('cdr.Confidence '..tostring(cdr.Confidence))
                             end
-                            if (cdr.HealthPercent < 0.40 and eta > 30 and cdr.CurrentEnemyThreat > 10 and cdr.DistanceToHome > 225) or (cdr.CurrentEnemyThreat > 30 and eta > 450 and cdr.CurrentFriendlyThreat < 15) then
-                                IssueStop({cdr})
-                                IssueClearCommands({cdr})
-                                cdr.Upgrading = false
-                                self.BuilderData = {}
-                                ----self:LogDebug(string.format('Cancel upgrade and emergency retreat'))
-                                self:ChangeState(self.Retreating)
-                                return
+                            local maxNetThreatForUpgrade = 225
+                            local netEnemyThreat = math.max(0, cdr.CurrentEnemyThreat - cdr.CurrentFriendlyThreat)
+                            
+                            local isNearHomeButSafeToUpgrade = false
+                            if priorityGunUpgradeRequired and progress > 0.8 and cdr.DistanceToHome < 700 and netEnemyThreat < maxNetThreatForUpgrade then
+                                isNearHomeButSafeToUpgrade = true
+                            end
+                            if (cdr.HealthPercent < 0.40 and eta > 30 and cdr.CurrentEnemyThreat > 10 and cdr.DistanceToHome > 625) or (cdr.CurrentEnemyThreat > 30 and eta > 625 and cdr.CurrentFriendlyThreat < 15 ) then
+                                if not isNearHomeButSafeToUpgrade then
+                                    IssueStop({cdr})
+                                    IssueClearCommands({cdr})
+                                    cdr.Upgrading = false
+                                    self.BuilderData = {}
+                                    self:LogDebug(string.format('Cancel upgrade and emergency retreat, enemy threat was '..tostring(cdr.CurrentEnemyThreat)..' distance to home was '..tostring(cdr.DistanceToHome)..' eta was '..tostring(eta)..' confidence was '..tostring(cdr.Confidence)))
+                                    self:ChangeState(self.Retreating)
+                                    return
+                                end
                             end
                             if ((cdr.CurrentEnemyThreat > 60 and cdr.Confidence < 2.5) or (cdr.CurrentEnemyThreat > 140 and cdr.Confidence < 3.8)) and math.max(0, cdr.CurrentEnemyThreat - cdr.CurrentFriendlyThreat) > 45 and eta > 450 then
                                 --LOG('ACU Should be aborting now')
-                                IssueStop({cdr})
-                                IssueClearCommands({cdr})
-                                cdr.Upgrading = false
-                                self.BuilderData = {}
-                                ----self:LogDebug(string.format('Cancel upgrade and emergency retreat'))
-                                self:ChangeState(self.Retreating)
-                                return
+                                if not isNearHomeButSafeToUpgrade then
+                                    IssueStop({cdr})
+                                    IssueClearCommands({cdr})
+                                    cdr.Upgrading = false
+                                    self.BuilderData = {}
+                                    self:LogDebug(string.format('Cancel upgrade and emergency retreat, enemy threat was '..tostring(cdr.CurrentEnemyThreat)..' distance to home was '..tostring(cdr.DistanceToHome)..' eta was '..tostring(eta)..' confidence was '..tostring(cdr.Confidence)))
+                                    self:ChangeState(self.Retreating)
+                                    return
+                                end
                             end
                             if cdr.CurrentEnemyInnerCircle > 100 and cdr.CurrentEnemyThreat > (math.max(cdr.CurrentFriendlyInnerCircle, cdr.ThreatLimit) * 1.4) and math.max(0, cdr.CurrentEnemyInnerCircle - cdr.CurrentFriendlyInnerCircle) > 45 and eta > 350 then
                                 --LOG('ACU Should be aborting now')
-                                IssueStop({cdr})
-                                IssueClearCommands({cdr})
-                                cdr.Upgrading = false
-                                self.BuilderData = {}
-                                ----self:LogDebug(string.format('Cancel upgrade and emergency retreat'))
-                                self:ChangeState(self.Retreating)
-                                return
+                                if not isNearHomeButSafeToUpgrade then
+                                    IssueStop({cdr})
+                                    IssueClearCommands({cdr})
+                                    cdr.Upgrading = false
+                                    self.BuilderData = {}
+                                    self:LogDebug(string.format('Cancel upgrade and emergency retreat, enemy threat was '..tostring(cdr.CurrentEnemyThreat)..' distance to home was '..tostring(cdr.DistanceToHome)..' eta was '..tostring(eta)..' confidence was '..tostring(cdr.Confidence)))
+                                    self:ChangeState(self.Retreating)
+                                    return
+                                end
                             end
                             if GetEconomyStoredRatio(brain, 'ENERGY') < 0.2 and (not priorityGunUpgradeRequired and not priorityThreatUpgradeRequired) then
                                 if not enhancementPaused then

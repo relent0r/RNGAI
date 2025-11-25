@@ -29,6 +29,7 @@ local AirDefenseMode = function(self, aiBrain, builderManager, builderData)
         elseif builderData.BuilderData.TechLevel == 2 then
             return 885
         elseif builderData.BuilderData.TechLevel == 3 then
+
             return 890
         end
         return 890

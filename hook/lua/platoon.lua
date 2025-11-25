@@ -582,23 +582,38 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             --LOG('EngineerAssistPlatoon total build rate is '..totalBuildRate)
 
-            local assistDesc = false
-            --RNGLOG('aiBrain Engineer Assist Manager '..aiBrain.Nickname)
-            --RNGLOG('EngineerAssistManager current priority table '..repr(aiBrain.EngineerAssistManagerPriorityTable))
+            local availableEngineers = {}
+            local platUnits = GetPlatoonUnits(self)
+
+            for _, eng in platUnits do
+                if eng and not eng.Dead and not eng.UnitBeingAssist then
+                    RNGINSERT(availableEngineers, eng)
+                end
+            end
+            -- note we sort in reverse order so that when we loop through the table we can iterate backwards.
+            table.sort(availableEngineers, function(engA, engB) 
+                local rateA = engA.Blueprint.Economy.BuildRate or 0
+                local rateB = engB.Blueprint.Economy.BuildRate or 0
+                return rateA < rateB 
+            end)
+            
             local assistFound = false
 
             for k, assistData in aiBrain.EngineerAssistManagerPriorityTable do
-                --LOG('Manager Priority Table type is '..tostring(assistData.type))
+                -- If we run out of available engineers break loop.
+                if RNGGETN(availableEngineers) == 0 then break end
+
+                local maxBP = assistData.maxbp or 999999
+                local buildRateToCommit = maxBP * buildMultiplier
+                local currentBuildRateCommited = 0
+                local bestUnit = false
+
                 if assistData.type == 'Upgrade' then
-                    --LOG('Trying to find upgrade')
-                    assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
+                    local assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
                     if assistDesc then
                         local low = false
-                        local bestUnit = false
-                        local numBuilding = 0
                         for _, unit in assistDesc do
                             if not IsDestroyed(unit) and unit:IsUnitState('Upgrading') and unit:GetAIBrain():GetArmyIndex() == armyIndex then
-                                numBuilding = numBuilding + 1
                                 local unitPos = unit:GetPosition()
                                 local NumAssist = RNGGETN(unit:GetGuards())
                                 local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
@@ -608,130 +623,68 @@ Platoon = Class(RNGAIPlatoonClass) {
                                 end
                             end
                         end
-                        if bestUnit then
-                            --LOG('Best assist unit found for upgrade '..tostring(aiBrain.Nickname))
-                            --LOG('Unit ID is '..tostring(bestUnit.UnitId))
-                            assistFound = true
-                            for _, eng in GetPlatoonUnits(self) do
-                                if eng and not IsDestroyed(eng) then
-                                    if not eng.UnitBeingAssist and not IsDestroyed(bestUnit) then
-                                        eng.UnitBeingAssist = bestUnit
-                                        --if aiBrain.RNGDEBUG then
-                                        --    RNGLOG('Unit being asked to assist is '..eng.UnitBeingAssist.UnitId..' at position '..repr(eng.UnitBeingAssist:GetPosition()))
-                                        --end
-                                        IssueClearCommands({eng})
-                                        IssueGuard({eng}, eng.UnitBeingAssist)
-                                        coroutine.yield(1)
-                                        --RNGLOG('Forking Engineer Assist Thread for Upgrade')
-                                        self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit, assistData.type)
-                                    end
-                                end
-                            end
-                            break
-                        else
-                           --RNGLOG('No best unit found, looping to next in priority list')
-                        end
-                    else
-                        --RNGLOG('No assiestDesc for Upgrades')
                     end
                 elseif assistData.type == 'AssistFactory' then
-                   --LOG('Trying to find factory assist')
-                    assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
+                    local assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
                     if assistDesc then
                         local low = false
-                        local bestUnit = false
-                        local numBuilding = 0
                         for _, unit in assistDesc do
                             if not unit.Dead and not unit:BeenDestroyed() and unit:IsUnitState('Building') and unit:GetAIBrain():GetArmyIndex() == armyIndex then
-                                --RNGLOG('Factory Needing Assist')
-                                numBuilding = numBuilding + 1
                                 local unitPos = unit:GetPosition()
                                 local NumAssist = RNGGETN(unit:GetGuards())
                                 local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
                                 if (not low or dist < low) and NumAssist < 20 and dist < (engineerRadius * engineerRadius) then
                                     low = dist
                                     bestUnit = unit
-                                    --LOG('EngineerAssistManager has best unit')
                                 end
                             end
                         end
-                        if bestUnit then
-                            --LOG('Best assist unit found for assistfactory for '..tostring(aiBrain.Nickname))
-                            --LOG('Unit ID is '..tostring(bestUnit.UnitId))
-                            assistFound = true
-                           --RNGLOG('Factory Assist Best unit is true looking through platoon units')
-                            for _, eng in GetPlatoonUnits(self) do
-                                if eng and not IsDestroyed(eng) then
-                                    if not eng.UnitBeingAssist and not IsDestroyed(bestUnit) then
-                                        eng.UnitBeingAssist = bestUnit
-                                        --RNGLOG('Engineer Assist issuing guard')
-                                        IssueClearCommands({eng})
-                                        IssueGuard({eng}, eng.UnitBeingAssist)
-                                        --eng:SetCustomName('Ive been ordered to guard')
-                                        coroutine.yield(1)
-                                        --LOG('Forking Engineer Assist Thread for Factory')
-                                        self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit, assistData.type)
-                                    end
-                                end
-                            end
-                            break
-                        else
-                           --RNGLOG('No best unit found, looping to next in priority list')
-                        end
-                    else
-                        --RNGLOG('No assiestDesc for Factories')
                     end
                 elseif assistData.type == 'Completion' then
-                    --RNGLOG('Completion Assist happening')
-                    assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
+                    local assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
                     if assistDesc then
-                        local low = false
                         local completion = false
-                        local bestUnit = false
-                        local numBuilding = 0
                         for _, unit in assistDesc do
                             if not unit.Dead and not unit.ReclaimInProgress and not unit:BeenDestroyed() and unit:GetAIBrain():GetArmyIndex() == armyIndex then
                                 local unitCompletion = unit:GetFractionComplete()
                                 if unitCompletion < 1 then
-                                --RNGLOG('Completion Unit Assist '..unit.UnitId)
-                                    numBuilding = numBuilding + 1
                                     local unitPos = unit:GetPosition()
                                     local NumAssist = RNGGETN(unit:GetGuards())
                                     local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
                                     if (not completion or unitCompletion > completion) and NumAssist < 30 and dist < (engineerRadius * engineerRadius) then
                                         completion = unitCompletion
                                         bestUnit = unit
-                                        --RNGLOG('EngineerAssistManager has best unit')
                                     end
                                 end
                             end
                         end
-                        if bestUnit then
-                            assistFound = true
-                            --RNGLOG('Completion Assist Best unit is true looking through platoon units '..bestUnit.UnitId)
-                            --RNGLOG('Number of platoon units is '..RNGGETN(platoonUnits))
-                            for _, eng in GetPlatoonUnits(self) do
-                                if eng and not IsDestroyed(eng) then
-                                    if not eng.UnitBeingAssist and not IsDestroyed(bestUnit) then
-                                        eng.UnitBeingAssist = bestUnit
-                                        --RNGLOG('Engineer Assist issuing guard')
-                                        IssueClearCommands({eng})
-                                        IssueGuard({eng}, eng.UnitBeingAssist)
-                                        --eng:SetCustomName('Ive been ordered to guard')
-                                        coroutine.yield(1)
-                                        --LOG('Forking Engineer Assist Thread for Completion')
-                                        self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit, assistData.type)
-                                    end
-                                end
-                            end
-                            break
-                        else
-                           --RNGLOG('No best unit found, looping to next in priority list')
-                        end
-                    else
-                        --RNGLOG('No assiestDesc for Completion')
                     end
                 end
+                
+                if bestUnit and not IsDestroyed(bestUnit) then
+                    assistFound = true
+                    
+                    for i = RNGGETN(availableEngineers), 1, -1 do
+                        local eng = availableEngineers[i]
+                        local engBuildRate = (eng.Blueprint.Economy.BuildRate * buildMultiplier)
+
+                        if (currentBuildRateCommited + engBuildRate) <= buildRateToCommit then
+                            eng.UnitBeingAssist = bestUnit
+                            IssueClearCommands({eng})
+                            IssueGuard({eng}, eng.UnitBeingAssist)
+                            self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit, assistData.type)
+                            
+                            currentBuildRateCommited = currentBuildRateCommited + engBuildRate
+                            
+                            table.remove(availableEngineers, i) 
+                            coroutine.yield(1)
+                            
+                        else
+                            break
+                        end
+                    end
+                end
+                --LOG('Build Power Commited on loop '..tostring(currentBuildRateCommited)..' available engineers '..tostring(RNGGETN(availableEngineers)))
             end
             if not assistFound then
                 --LOG('No unit to assist found')

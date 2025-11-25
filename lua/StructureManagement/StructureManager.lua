@@ -2002,7 +2002,7 @@ StructureManager = Class {
         end
         return defended
     end,
-
+--[[
     ValidateExtractorUpgradeRNG = function(self, aiBrain, extractorTable, allTiers)
         local bestZone, bestExtractor, lowestDist
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position
@@ -2068,6 +2068,134 @@ StructureManager = Class {
             --LOG('Added Extractor')
         else
             --LOG('No valid extractor found for upgrade.')
+        end
+    end,
+]]
+    ValidateExtractorUpgradeRNG = function(self, aiBrain, extractorTable, allTiers)
+        local bestZone, bestExtractor
+        local highestScore
+        local basePosition = aiBrain.BuilderManagers['MAIN'].Position
+        local ecoManager = aiBrain.EcoManager
+        local intelManager = aiBrain.IntelManager
+        
+        -- Data derived from EcoTacticalThread
+        local safeZones = ecoManager.SafeMassZones or {} 
+        local zoneBias = ecoManager.ZoneUpgradeBias or {}
+        
+        -- Data derived from IntelManager.ComputeContainmentState
+        local frontLineZones = intelManager.CurrentFrontLineZones or {}
+        
+        local zoneExtractors = {
+            Land = {},
+            Naval = {},
+        }
+        
+        -- Flatten the extractor table based on tier criteria
+        for tier, extractors in extractorTable do
+            if allTiers or tier == "TECH1" then
+                for _, c in extractors do
+                    if c and not c.Dead and c.InitialDelayCompleted and not c:IsPaused() then
+                        local zoneID = c.zoneid
+                        local layer = c.Water and 'Naval' or 'Land'
+                        if zoneID and layer then
+                            zoneExtractors[layer][zoneID] = zoneExtractors[layer][zoneID] or {}
+                            table.insert(zoneExtractors[layer][zoneID], c)
+                        end
+                    end
+                end
+            end
+        end
+        
+        -- Evaluate zones
+        for layer, zones in zoneExtractors do
+            local zoneGroup = aiBrain.Zones[layer]
+            for zoneID, extractors in zones do
+                local zone = zoneGroup.zones[zoneID]
+                local zoneScore = 0
+
+                if zone then
+                    -- 1. Base Safety Score (Highest Priority)
+                    if safeZones[zoneID] then
+                        zoneScore = 2000
+                    elseif frontLineZones[zoneID] then
+                        -- Frontlines are valuable but risky
+                        zoneScore = 500
+                    else
+                        -- Behind lines (not safe yet) or unsecured
+                        if zone.status == 'Allied' then
+                            zoneScore = 0
+                        else
+                            zoneScore = -2000
+                        end
+                    end
+
+                    -- 2. Threat Assessment (Local + Adjacent)
+                    -- Heavy penalty for threat in the specific zone
+                    local localThreat = (zone.enemylandthreat or 0) + (zone.enemystructurethreat or 0) + ((zone.enemyairthreat or 0) * 0.5)
+                    
+                    -- Check adjacent zones (Edges) to prevent upgrading right next to a massive enemy push
+                    local adjacentThreat = 0
+                    if zone.edges then
+                        for _, edge in ipairs(zone.edges) do
+                            local adjZone = edge.zone
+                            if adjZone then
+                                adjacentThreat = adjacentThreat + (adjZone.enemylandthreat or 0) + (adjZone.enemystructurethreat or 0)
+                            end
+                        end
+                    end
+                    
+                    local threatPenalty = (localThreat * 10) + (adjacentThreat * 2)
+                    zoneScore = zoneScore - threatPenalty
+
+                    -- 3. Upgrade Bias (Strategic Priority from EcoManager)
+                    -- This leverages your existing logic that determines where the AI wants to focus
+                    if zoneBias[zoneID] then
+                        zoneScore = zoneScore + (zoneBias[zoneID] * 100)
+                    end
+
+                    -- 4. Resource Density Bonus 
+                    -- Prefer zones with multiple mexes (cluster protection efficiency)
+                    if zone.resourcevalue then
+                        zoneScore = zoneScore + (zone.resourcevalue * 50)
+                    end
+
+                    -- 5. Distance Penalty (Tie-breaker)
+                    -- Prefer closer to main base if all else is equal (easier to defend/rebuild)
+                    local zoneDist = VDist2Sq(basePosition[1], basePosition[3], zone.pos[1], zone.pos[3])
+                    zoneScore = zoneScore - (math.sqrt(zoneDist) * 0.5)
+
+                elseif zoneID == -1 then
+                    -- Handle extractors with no valid zone (rare/error case)
+                    zoneScore = -5000
+                end
+
+                -- Select the best extractor from this zone
+                for _, ex in extractors do
+                    -- If the zone score is good, pick this extractor.
+                    -- We iterate all to ensure we process the whole list, but the score is primarily zone-based.
+                    if not highestScore or zoneScore > highestScore then
+                        highestScore = zoneScore
+                        bestExtractor = ex
+                        bestZone = zoneID
+                    end
+                end
+            end
+        end
+    
+        -- Upgrade the selected extractor if one was found
+        if bestExtractor then
+            local extractorPos = bestExtractor:GetPosition()
+            local distanceToBase = VDist2Sq(basePosition[1], basePosition[3], extractorPos[1],extractorPos[3])
+            bestExtractor.DistanceToBase = distanceToBase
+            if not aiBrain.ExtractorUpgradeThread then
+                aiBrain.ExtractorUpgradeThread = self:ForkThread(self.UpgradeManagementThread, aiBrain)
+            end
+            aiBrain.CentralBrainExtractorUnitUpgradeClosest = bestExtractor
+            -- Trigger the upgrade process
+            self:ForkThread(self.AddExtractorToUpgradeQueue, aiBrain, bestExtractor, distanceToBase)
+            -- RNGLOG('Added Extractor for upgrade in Zone '..tostring(bestZone)..' with Score: '..tostring(highestScore))
+        else
+            -- RNGLOG('No valid extractor found for upgrade.')
         end
     end,
 

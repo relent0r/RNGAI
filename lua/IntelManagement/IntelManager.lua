@@ -681,12 +681,7 @@ IntelManager = Class {
             end
             maxDistance = math.max(playableArea[3],playableArea[4])
             maxDistance = maxDistance * maxDistance
-            local skipDistance
-            if maxDistance > 262144 then
-                skipDistance = 10000
-            else
-                skipDistance = 8100
-            end
+            local skipDistance = 8100
             local zoneSet = aiBrain.Zones.Land.zones
             local zonePriorityList = {}
             local gameTime = GetGameTimeSeconds()
@@ -727,13 +722,12 @@ IntelManager = Class {
                                     break
                                 end
                             end
-                            for _, a in  v.allystartdata do
-                                if a.startdistance < skipDistance then
+                            for index, a in  v.allystartdata do
+                                if index ~= OwnIndex and a.startdistance < skipDistance then
                                     closeAllyStart = true
                                     break
                                 end
                             end
-                            
                             if not closeEnemyStart and not closeAllyStart then
                                 if mainBaseDistance > skipDistance then
                                     if not edgeSkip then
@@ -2563,7 +2557,7 @@ IntelManager = Class {
                                     furthestPlayer = true
                                     aiBrain.BrainIntel.PlayerRole.AirPlayer = true
                                     aiBrain.BrainIntel.PlayerStrategy.T3AirRush = true
-                                    --LOG('Player set to Air Role '..aiBrain.Nickname)
+                                    LOG('Player set to Air Role '..aiBrain.Nickname)
                                     RNGAIGLOBALS.PlayerRoles[teamReference][selfIndex] = 'AirPlayer'
                                     aiBrain:EvaluateDefaultProductionRatios()
                                     return
@@ -2588,7 +2582,7 @@ IntelManager = Class {
                                 aiBrain.BrainIntel.PlayerRole.SpamPlayer = true
                                 RNGAIGLOBALS.PlayerRoles[teamReference][selfIndex] = 'SpamPlayer'
                                 self:ForkThread(self.SpamTriggerDurationThread, 480)
-                                --LOG('Assigned SpamPlayer to '..aiBrain.Nickname)
+                                LOG('Assigned SpamPlayer to '..aiBrain.Nickname)
                                 return
                             end
                         end
@@ -2632,7 +2626,7 @@ IntelManager = Class {
             
                             if navalPlayer then
                                 aiBrain.BrainIntel.PlayerRole.NavalPlayer = true
-                                --LOG('Player set to Naval Role '..aiBrain.Nickname)
+                                LOG('Player set to Naval Role '..aiBrain.Nickname)
                                 RNGAIGLOBALS.PlayerRoles[teamReference][selfIndex] = 'NavalPlayer'
                                 aiBrain:EvaluateDefaultProductionRatios()
                                 return
@@ -2971,10 +2965,30 @@ IntelManager = Class {
             table.sort(threatSamples, function(a, b) return a.dist < b.dist end)
             local cumulativeThreat = 0
             local safeRadius = 0
+            local centroid, teamSpreadDist, isCohesive = RUtils.CalculateTeamCentroidAndSpread(aiBrain, aiBrain.BrainIntel.AllyStartLocations)
+            local searchOrigin
+            local minimumSafeRadius = 0
+            local minSafeDistance = aiBrain.OperatingAreas['BaseRestrictedArea'] * 1.5
+
+            if isCohesive and centroid then
+                -- CASE A: Team is Clustered
+                -- Center logic on the group. Enforce coverage of all bases.
+                searchOrigin = {centroid.x, 0, centroid.z}
+                minimumSafeRadius = math.max(minSafeDistance, teamSpreadDist + 150)
+                
+                self.TeamCenterPosition = centroid
+            else
+                -- CASE B: Team is Split (Line/Corners)
+                -- Center logic on Self to avoid overextending into the gap.
+                searchOrigin = aiBrain.BrainIntel.StartPos
+                minimumSafeRadius = minSafeDistance
+                
+                self.TeamCenterPosition = nil -- Flags fighters to use Local Radius logic
+            end
             local ownAA = aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat
             local enemyAA = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
             local safetyFactor = math.max(1, enemyAA / math.max(ownAA, 1))  -- >1 if enemy stronger
-            local minSafeDistance = aiBrain.OperatingAreas['BaseRestrictedArea'] * 1.5
+            
 
             for _, sample in threatSamples do
                 cumulativeThreat = cumulativeThreat + sample.threat
@@ -2987,7 +3001,7 @@ IntelManager = Class {
                     break
                 end
             end
-            safeRadius = math.max(minSafeDistance, math.min(safeRadius, aiBrain.OperatingAreas['BaseEnemyArea']))
+            safeRadius = math.max(minimumSafeRadius, math.min(safeRadius, aiBrain.OperatingAreas['BaseEnemyArea']))
             self.SafeAirThreatRadius = safeRadius
             --LOG('Safe Radius on calculation is '..tostring(safeRadius))
 
@@ -3810,101 +3824,217 @@ IntelManager = Class {
             end
             --RNGLOG('Current T2 torpcount is '..aiBrain.amanager.Demand.Air.T2.torpedo)
         elseif productiontype == 'MobileAntiAir' then
-            
-            local currentMobileAAAllocated = 0
-            local selfThreat = aiBrain.BrainIntel.SelfThreat
-            local enemyThreat = aiBrain.EnemyIntel.EnemyThreatCurrent
-            --LOG('selfLandThreat '..tostring(selfThreat.LandNow))
-            --LOG('selfLandThreatMultiplied '..tostring(selfThreat.LandNow * 1.4))
-            --LOG('enemyLandThreat '..tostring(enemyThreat.Land))
-            local safeAntiAir = selfThreat.AntiAirNow > 0 and selfThreat.AntiAirNow or 0.1
-            --LOG('Current land now threat is '..tostring(selfThreat.LandNow))
-            for baseName, base in aiBrain.BuilderManagers do
-                local zone = base.Zone
-                if baseName ~= 'MAIN' and zone and base.FactoryManager and base.FactoryManager.LocationActive and base.Layer ~= 'Water' then
-                    local baseAirThreat = (self.ZoneIMAPThreat[zone.id] and self.ZoneIMAPThreat[zone.id].Air) or 0
-                    local friendlyAntiAirThreat = zone.friendlylandantiairthreat or 0
-                    if zone.edges then
-                        for _, edge in ipairs(zone.edges or {}) do
+            -- Tunables
+            local airThreatToUnitRatio = 9       
+            local threatToUnitConversion = 5     
+            local airThreatMultiplier 
+            local cellSize = aiBrain.BrainIntel.IMAPConfig.IMAPSize
+            local maxDistanceSq = 250 * 250      
+            local globalEnemyAirSurface = aiBrain.EnemyIntel.EnemyThreatCurrent.AirSurface or 0
+
+            local armyEscortRatio = 0
+
+            if globalEnemyAirSurface > 25 then
+                armyEscortRatio = 0.08
+                if globalEnemyAirSurface > 150 then
+                    armyEscortRatio = 0.15
+                end
+            end
+
+            -- Tables
+            local baseCandidates = {}
+            local zoneRequirements = {}
+
+            -- NEW: A ledger to prevent double-counting shared neighbors
+            local enemyThreatClaims = {} 
+
+            -- 1. RESET DEMAND
+            for baseName, baseData in aiBrain.BuilderManagers do
+                if aiBrain.amanager.Demand.Bases[baseName] then
+                    local demand = aiBrain.amanager.Demand.Bases[baseName].Land
+                    demand.T1.aa = 0; demand.T2.aa = 0; demand.T3.aa = 0
+                end
+            end
+
+            -- 2. IDENTIFY CANDIDATES
+            for baseName, baseData in aiBrain.BuilderManagers do
+                if baseData.FactoryManager and baseData.FactoryManager.LocationActive and baseData.Layer ~= 'Water' then
+                    
+                    local baseZone = aiBrain.Zones.Land.zones[baseData.ZoneID]
+                    
+                    local highestTier = 0
+                    if baseData.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH3) > 0 then
+                        highestTier = 3
+                    elseif baseData.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH2) > 0 then
+                        highestTier = 2
+                    elseif baseData.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND * categories.TECH1) > 0 then
+                        highestTier = 1
+                    end
+
+                    local localAAThreat = baseZone.friendlylandantiairthreat or 0
+                    
+                    if highestTier > 0 then
+                        table.insert(baseCandidates, {
+                            ID = baseName,
+                            Base = baseData,
+                            Tier = highestTier,
+                            NumFactories = baseData.FactoryManager:GetNumCategoryFactories(categories.FACTORY * categories.LAND),
+                            Position = baseData.Position,
+                            LocalAABuffer = localAAThreat
+                        })
+                    end
+                end
+            end
+
+            -- 3. IDENTIFY DEMAND
+            -- To make the claiming fair, we ideally want to process High Value zones first.
+            -- However, for performance, a standard loop with the claim system is usually sufficient.
+            for zoneID, zoneData in aiBrain.Zones.Land.zones do
+                
+                local isDefensiveZone = (zoneData.teamvalue and zoneData.teamvalue > 0)
+                local myLandThreat = zoneData.friendlylandthreat or 0
+                local isActiveFront = (myLandThreat > 30) 
+                
+                if isDefensiveZone or isActiveFront then
+                    
+                    -- A. DIRECT THREAT (Always unique to this zone, no claiming needed)
+                    local directAirThreat = zoneData.enemyairthreat or 0
+                    
+                    -- B. PROXIMITY THREAT (Shared Neighbors)
+                    local adjacentAirThreat = 0
+                    if zoneData.edges then
+                        for _, edge in ipairs(zoneData.edges) do
                             local adjZone = edge.zone
-                            if adjZone and self.ZoneIMAPThreat[adjZone.id] then
-                                baseAirThreat = baseAirThreat + (self.ZoneIMAPThreat[adjZone.id].Air or 0)
-                                friendlyAntiAirThreat = friendlyAntiAirThreat + (adjZone.friendlylandantiairthreat or 0)
+                            
+                            -- Only check if there is actual threat
+                            if adjZone and adjZone.enemyairthreat and adjZone.enemyairthreat > 0 then
+                                
+                                local totalThreatInNeighbor = adjZone.enemyairthreat
+                                local alreadyClaimed = enemyThreatClaims[adjZone.id] or 0
+                                
+                                -- Determine how much of this threat is "fresh" and unaccounted for
+                                local claimableThreat = math.max(0, totalThreatInNeighbor - alreadyClaimed)
+                                
+                                if claimableThreat > 0 then
+                                    adjacentAirThreat = adjacentAirThreat + claimableThreat
+                                    
+                                    -- Mark this threat as claimed so the next zone doesn't count it
+                                    enemyThreatClaims[adjZone.id] = alreadyClaimed + claimableThreat
+                                end
                             end
                         end
                     end
-                    local safeAA = math.max(friendlyAntiAirThreat or 0.1, 3) 
-                    local aaRequired = math.ceil(
-                        math.min(
-                            math.ceil(baseAirThreat / safeAA),      -- ceil division to whole number
-                            math.ceil(2 + (zone.teamvalue or 1))   -- ceil the teamvalue cap too
-                        )
-                    )
-                    --LOG('Current Air threat for base '..tostring(baseName)..' (zone '..tostring(zone.id)..' + adjacencies) is '..tostring(baseAirThreat))
-                    --LOG('Potential MobileAA required '..tostring(aaRequired))
-                    if safeAntiAir < enemyThreat.Air then
-                        aaRequired = math.ceil(aaRequired * 1.3)
+                    
+                    local totalReactiveThreat = directAirThreat + adjacentAirThreat
+                    --LOG('ZoneID '..tostring(zoneID)..' directAirThreat is '..tostring(directAirThreat)..' adjacentAirThreat is '..tostring(adjacentAirThreat))
+
+                    -- C. PROACTIVE THREAT
+                    local umbrellaThreatNeed = 0
+                    if isActiveFront then
+                        umbrellaThreatNeed = myLandThreat * armyEscortRatio
                     end
-                    if aaRequired > 0 then
-                        aiBrain.amanager.Demand.Bases[baseName].Land.T1.aa = aaRequired
-                        aiBrain.amanager.Demand.Bases[baseName].Land.T2.aa = aaRequired
-                        aiBrain.amanager.Demand.Bases[baseName].Land.T3.aa = aaRequired
-                    else
-                        aiBrain.amanager.Demand.Bases[baseName].Land.T1.aa = 0
-                        aiBrain.amanager.Demand.Bases[baseName].Land.T2.aa = 0
-                        aiBrain.amanager.Demand.Bases[baseName].Land.T3.aa = 0
-                    end
-                    currentMobileAAAllocated = currentMobileAAAllocated + aaRequired
-                end
-            end
-            if (selfThreat.LandNow > 20 and selfThreat.LandNow * 1.3 > enemyThreat.Land and safeAntiAir < enemyThreat.Air) or (enemyThreat.AirSurface > 75 and selfThreat.LandNow * 1.7 > enemyThreat.Land) then
-                local teamValueCount = 0
-                local totalMobileAARequired = 0
-                if aiBrain.BuilderManagers['MAIN'].PathableZones.Zones then
-                    local landZones = aiBrain.Zones.Land.zones
-                    for _, v in aiBrain.BuilderManagers['MAIN'].PathableZones.Zones do
-                        if landZones[v.ZoneID].teamvalue and landZones[v.ZoneID].teamvalue >= 1.0 then
-                            teamValueCount = teamValueCount + 1
+
+                    -- D. DETERMINE FINAL REQUIREMENT
+                    local finalThreatNeed = math.max(totalReactiveThreat, umbrellaThreatNeed)
+                    
+                    if finalThreatNeed > 5 then 
+                        local rawUnitsNeeded = math.ceil(finalThreatNeed / airThreatToUnitRatio)
+                        
+                        local cap = 60 
+                        if isDefensiveZone and not isActiveFront then
+                            cap = math.max(10, (zoneData.teamvalue or 1) * 8)
+                        end
+                        rawUnitsNeeded = math.min(rawUnitsNeeded, cap)
+
+                        -- E. GAP ANALYSIS
+                        local currentFriendlyAA = zoneData.friendlylandantiairthreat or 0
+                        local unitsAlreadyThere = math.ceil(currentFriendlyAA / threatToUnitConversion)
+                        
+                        local netNeeded = math.max(0, rawUnitsNeeded - unitsAlreadyThere)
+                        --LOG('netNeeded is '..tostring(netNeeded))
+
+                        if netNeeded > 0 then
+                            table.insert(zoneRequirements, {
+                                ZoneID = zoneID,
+                                Needed = netNeeded,
+                                Position = zoneData.pos,
+                                Threat = totalReactiveThreat + (umbrellaThreatNeed * 0.5) 
+                            })
                         end
                     end
                 end
-                local zoneCount = aiBrain.BuilderManagers['MAIN'].PathableZones.PathableLandZoneCount
-                -- We are going to look at the threat in the pathable zones and see which ones are in our territory and make sure we have a theoretical number of air units there
-                -- I want to do this on a per base method, but I realised I'm not keeping information.
-                if enemyThreat.Air > 0 then
-                    totalMobileAARequired = math.min(math.ceil((teamValueCount * 0.65) * (enemyThreat.Air / safeAntiAir)), teamValueCount * 1.5) or 0
-                    totalMobileAARequired = math.max(totalMobileAARequired - currentMobileAAAllocated, 1)
-                end
-                --LOG('Team Value Count '..tostring(teamValueCount))
-                --LOG('Enemy Air Threat '..tostring(enemyThreat.Air))
-                --LOG('Self AntiAir '..tostring(safeAntiAir))
-                --LOG('totalMobileAARequired '..tostring(totalMobileAARequired))
-                --LOG('EnemyThreatRatio '..tostring((enemyThreat.Air / safeAntiAir)))
+            end
 
+            -- Sort Zones by Threat
+            table.sort(zoneRequirements, function(a,b) return a.Threat > b.Threat end)
 
-                if aiBrain.BrainIntel.LandPhase == 1 then
-                    aiBrain.amanager.Demand.Bases['MAIN'].Land.T1.aa = totalMobileAARequired
-                elseif aiBrain.BrainIntel.LandPhase == 2 then
-                    aiBrain.amanager.Demand.Bases['MAIN'].Land.T2.aa = totalMobileAARequired
-                elseif aiBrain.BrainIntel.LandPhase == 3 then
-                    aiBrain.amanager.Demand.Bases['MAIN'].Land.T3.aa = totalMobileAARequired
-                end
+            -- 4. ALLOCATION (Match Candidates to Zones)
+            for _, req in ipairs(zoneRequirements) do
+                
+                local potentialBases = {}
 
-                --[[
-                -- I thought I could set requirements per base but I don't have the structure yet.
-                for k, v in aiBrain.BuilderManagers do
-                    if v.PathableZones > 0 then
+                for _, cand in ipairs(baseCandidates) do
+                    if cand.Base.PathableZones.Zones[req.ZoneID] then
+                        local dx = cand.Position[1] - req.Position[1]
+                        local dz = cand.Position[3] - req.Position[3]
+                        local distSq = dx*dx + dz*dz
                         
+                        if distSq < maxDistanceSq then
+                            cand.DistSq = distSq
+                            table.insert(potentialBases, cand)
+                        end
                     end
                 end
-                ]]
-                --for k, v in aiBrain.EnemyIntel.EnemyStartLocations
-                --b.enemystartdata[v.Index].startangle
-                --b.enemystartdata[v.Index].startdistance
-            else
-                aiBrain.amanager.Demand.Bases['MAIN'].Land.T1.aa = 0
-                aiBrain.amanager.Demand.Bases['MAIN'].Land.T2.aa = 0
-                aiBrain.amanager.Demand.Bases['MAIN'].Land.T3.aa = 0
+
+                for _, cand in ipairs(potentialBases) do
+                    local bucket = math.floor(math.sqrt(cand.DistSq) / cellSize)
+                    local distPenalty = bucket * 25 
+                    local tierScore = cand.Tier * 50
+                    cand.Score = tierScore - distPenalty
+                end
+
+                table.sort(potentialBases, function(a,b) return a.Score > b.Score end)
+
+                local remainingNeed = req.Needed
+
+                for _, bestBase in ipairs(potentialBases) do
+                    if remainingNeed <= 0 then break end
+
+                    local techEfficiency = 1
+                    if bestBase.Tier == 3 then techEfficiency = 4
+                    elseif bestBase.Tier == 2 then techEfficiency = 2 end
+
+                    local baseCapacity = bestBase.NumFactories * 4 
+                    local allocation = math.min(remainingNeed, baseCapacity)
+                    
+                    -- Buffer Logic
+                    local bufferValue = math.ceil(bestBase.LocalAABuffer / threatToUnitConversion)
+                    local filledByBuffer = math.min(allocation, bufferValue)
+                    
+                    if filledByBuffer > 0 then
+                        bestBase.LocalAABuffer = math.max(0, bestBase.LocalAABuffer - (filledByBuffer * threatToUnitConversion))
+                        allocation = allocation - filledByBuffer
+                        remainingNeed = remainingNeed - filledByBuffer
+                    end
+
+                    if allocation > 0 then
+                        local actualBuildCount = math.ceil(allocation / techEfficiency)
+                        local demandTable = aiBrain.amanager.Demand.Bases[bestBase.ID].Land
+                        
+                        if bestBase.Tier == 3 then
+                            demandTable.T3.aa = (demandTable.T3.aa or 0) + actualBuildCount
+                            --LOG('demandTable.T3.aa is '..tostring(demandTable.T3.aa)..' for base '..tostring(bestBase.ID))
+                        elseif bestBase.Tier == 2 then
+                            demandTable.T2.aa = (demandTable.T2.aa or 0) + actualBuildCount
+                            --LOG('demandTable.T2.aa is '..tostring(demandTable.T2.aa)..' for base '..tostring(bestBase.ID))
+                        else
+                            demandTable.T1.aa = (demandTable.T1.aa or 0) + actualBuildCount
+                            --LOG('demandTable.T1.aa is '..tostring(demandTable.T1.aa)..' for base '..tostring(bestBase.ID))
+                        end
+                        
+                        remainingNeed = remainingNeed - (actualBuildCount * techEfficiency)
+                    end
+                end
             end
         elseif productiontype == 'ExperimentalArtillery' then
             local t3ArtilleryCount = 0

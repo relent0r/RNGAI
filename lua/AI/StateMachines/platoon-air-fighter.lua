@@ -127,13 +127,19 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 end
                 if not target or target.Dead then
                     target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, true, false, false, false, false, true)
+                    if target then
+                        --LOG('High priority target returned, distance is '..tostring(VDist3(target:GetPosition(), platPos)))
+                    end
                 end
                 if not target or target.Dead then
                     --LOG('FighterBehavior DecideWhatToDo Check targets at max radius '..tostring(self.MaxRadius))
                     --LOG('Current Platoon Threat '..tostring(self.CurrentPlatoonThreatAntiAir)..' Ally Threat '..tostring((aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat))..' Enemy Threat '..tostring(aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir))
                 -- Params aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted
                     if self.CurrentPlatoonThreatAntiAir > 0 then
-                        target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', self.MaxRadius, self.AttackPriorities, true, self.CurrentPlatoonThreatAntiAir * 1.2, false, false, true)
+                        --LOG('Current platoon threat for fighters is '..tostring(self.CurrentPlatoonThreatAntiAir))
+                        target = RUtils.FindAirTargetForTeamRNG(aiBrain, platPos, self, self.MaxRadius, self.CurrentPlatoonThreatAntiAir, self.AttackPriorities)
+                        --LOG('Target returned is '..tostring(target.UnitId))
+                        --target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self.MaxRadius, self.AttackPriorities, self.CurrentPlatoonThreatAntiAir * 1.2)
                         if target and not target.Dead then
                             local im = aiBrain.IntelManager
                             local targetPos = target:GetPosition()
@@ -141,6 +147,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                             local historicalThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
                             --LOG('Historical AA thrat at target position '..tostring(historicalThreat))
                             if historicalThreat > self.CurrentEnemyThreatAntiAir then
+                                local emergencyDefensePos = aiBrain.BrainIntel.StartPos
                                 local distanceWeight = 0.5      -- how much distance reduces risk
                                 local histWeight     = 1.0      -- historical threat multiplier
                                 local inferredWeight = 1.0      -- inferred enemy threat multiplier
@@ -157,7 +164,13 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                                 if threatScore > maxAllowableThreat then
                                     --LOG('Aborting target')
                                     -- abort target acquisition
-                                    target = nil
+                                    local hx = emergencyDefensePos[1] - targetPos[1]
+                                    local hz = emergencyDefensePos[3] - targetPos[3]
+                                    local homeDistSq = hx*hx + hz*hz
+                                    -- abort target acquisition
+                                    if homeDistSq > 6400 then
+                                        target = nil
+                                    end
                                 end
                             end
                         end
