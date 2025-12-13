@@ -115,6 +115,7 @@ BuilderGroup {
             Construction = {
                 RepeatBuild = true,
                 Type = 'Mass',
+                CheckCivUnits = true,
                 MaxDistance = 240,
                 MinDistance = 60,
                 ThreatMin = -500,
@@ -148,6 +149,7 @@ BuilderGroup {
                 RepeatBuild = true,
                 MexThreat = true,
                 Type = 'Mass',
+                CheckCivUnits = true,
                 MaxDistance = 480,
                 MinDistance = 0,
                 ThreatMin = -500,
@@ -186,6 +188,7 @@ BuilderGroup {
                 MaxDistance = 2000,
                 MinDistance = 0,
                 ThreatMin = -500,
+                CheckCivUnits = true,
                 ThreatMax = 4,
                 ThreatType = 'AntiSurface',
                 BuildStructures = {
@@ -380,6 +383,7 @@ BuilderGroup {
                 ThreatMin = -500,
                 ThreatMax = 30,
                 ThreatType = 'AntiSurface',
+                CheckCivUnits = true,
                 BuildStructures = {
                     { Unit = 'T1Resource', Categories = categories.STRUCTURE * categories.MASSEXTRACTION * categories.TECH1 },
                 }

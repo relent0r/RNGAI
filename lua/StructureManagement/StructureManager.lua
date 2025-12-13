@@ -2075,8 +2075,10 @@ StructureManager = Class {
         local bestZone, bestExtractor
         local highestScore
         local basePosition = aiBrain.BuilderManagers['MAIN'].Position
+        local homeZone = self.BuilderManagers['MAIN'].ZoneID
         local ecoManager = aiBrain.EcoManager
         local intelManager = aiBrain.IntelManager
+        local myArmyIndex = aiBrain:GetArmyIndex()
         
         -- Data derived from EcoTacticalThread
         local safeZones = ecoManager.SafeMassZones or {} 
@@ -2112,16 +2114,28 @@ StructureManager = Class {
             for zoneID, extractors in zones do
                 local zone = zoneGroup.zones[zoneID]
                 local zoneScore = 0
+                local isFrontline = frontLineZones[zoneID]
 
                 if zone then
-                    -- 1. Base Safety Score (Highest Priority)
-                    if safeZones[zoneID] then
+                    -- The order of this is important. Since it can otherwise skip the frontlinezones check.
+                    -- 1. Check for the absolute Safest (highest score)
+                    if homeZone and zoneID == homeZone and not isFrontline then
+                        zoneScore = 2500
+                    elseif safeZones[zoneID] then
                         zoneScore = 2000
+
+                    -- 2. Check for Active Danger (must be done before rewarding base proximity)
                     elseif frontLineZones[zoneID] then
-                        -- Frontlines are valuable but risky
+                        -- If it's a frontline, the maximum score it gets is 500, regardless of proximity.
                         zoneScore = 500
+
+                    -- 3. Check for Safe Base Proximity (The NEW logic - only if not a frontline)
+                    elseif zone.startpositionclose and zone.bestarmy == myArmyIndex and not isFrontline then
+                        -- This zone is safe (passed the frontline check) AND is part of our core cluster.
+                        zoneScore = 1800
+
+                    -- 4. Default/Unsecured cases
                     else
-                        -- Behind lines (not safe yet) or unsecured
                         if zone.status == 'Allied' then
                             zoneScore = 0
                         else
@@ -2143,10 +2157,13 @@ StructureManager = Class {
                             end
                         end
                     end
-                    
-                    local threatPenalty = (localThreat * 10) + (adjacentThreat * 2)
-                    zoneScore = zoneScore - threatPenalty
+                    -- Didn't know this was a thing, thanks gemini for explaining it.
+                    -- In Lua, the and and or operators do not return true or false like in many other languages; they return one of their operands. This behavior allows them to be used for conditional assignment
+                    local adjacentMultiplier = (zone.startpositionclose and zone.bestarmy == myArmyIndex) and 5 or 2
 
+                    local threatPenalty = (localThreat * 10) + (adjacentThreat * adjacentMultiplier)
+                    zoneScore = zoneScore - threatPenalty
+                    
                     -- 3. Upgrade Bias (Strategic Priority from EcoManager)
                     -- This leverages your existing logic that determines where the AI wants to focus
                     if zoneBias[zoneID] then

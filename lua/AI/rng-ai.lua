@@ -3976,7 +3976,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                     if not acuTable[index].Range or acuTable[index].LastSpotted + 15 < currentGameTime then
-                        if CDRGunCheck(unit) then
+                        if CDRGunCheck(unit, true) then
                             acuTable[index].Range = unit.Blueprint.Weapon[1].MaxRadius + 8
                             acuTable[index].Gun = true
                         else

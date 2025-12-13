@@ -6,6 +6,8 @@ local NavUtils = import("/lua/sim/navutils.lua")
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
+local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local GetEconomyIncome = moho.aibrain_methods.GetEconomyIncome
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
@@ -23,9 +25,7 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.Initialized = false
     cdr.MovementLayer = 'Amphibious'
     cdr.GunUpgradeRequired = false
-    cdr.GunUpgradePresent = false
     cdr.GunAeonUpgradeRequired = false
-    cdr.GunAeonUpgradePresent = false
     cdr.WeaponRange = false
     cdr.DefaultRange = 320
     cdr.MaxBaseRange = 80
@@ -126,24 +126,38 @@ function CDRBrainThread(cdr)
                     enemyGunPresent = true
                 end
             end
-            if enemyGunPresent and not CDRGunCheck(cdr) then
-                cdr.GunUpgradeRequired = true
+            if enemyGunPresent then
+                if cdr.Blueprint.FactionCategory == 'AEON' then
+                    local hasRange = cdr:HasEnhancement('CrysalisBeam')
+                    local hasRoF = cdr:HasEnhancement('HeatSink')
+                    local hasAdvanced = cdr:HasEnhancement('FAF_CrysalisBeamAdvanced')
+                    if not hasAdvanced and not (hasRange and hasRoF) then
+                        cdr.GunUpgradeRequired = true
+                    else
+                        cdr.GunUpgradeRequired = false
+                    end
+                elseif not CDRGunCheck(cdr, true) then
+                    cdr.GunUpgradeRequired = true
+                else
+                    cdr.GunUpgradeRequired = false
+                end
             else
+                -- No enemy gun threat.
                 cdr.GunUpgradeRequired = false
             end
         end
         if aiBrain.EnemyIntel.LandPhase == 2 or aiBrain.EnemyIntel.LandPhase == 1.5 then
+            --LOG('Enemy is in land phase 2')
             cdr.Phase = 2
-            if (not cdr.GunUpgradePresent) then
-                if not CDRGunCheck(cdr) then
-                    --RNGLOG('Enemy is phase 2 and I dont have gun')
-                    if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 65 or (cdr.DistanceToHome > 6400 and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 45) then
-                        cdr.Phase = 2
-                        cdr.GunUpgradeRequired = true
-                    end
-                else
-                    cdr.GunUpgradeRequired = false
+            if not CDRGunCheck(cdr, true) then
+                --LOG('Enemy is phase 2 and I dont have gun')
+                if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 65 or (cdr.DistanceToHome > 6400 and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 45) then
+                    --LOG('Income matches we should be requesting a gun upgrade')
+                    cdr.Phase = 2
+                    cdr.GunUpgradeRequired = true
                 end
+            else
+                cdr.GunUpgradeRequired = false
             end
         end
         if cdr.Phase < 3 and (aiBrain.EnemyIntel.LandPhase > 2.5 or aiBrain.EnemyIntel.AirPhase > 2.5 or aiBrain.BrainIntel.NavalPhase > 2.5) then
@@ -157,7 +171,7 @@ function CDRBrainThread(cdr)
             --LOG('cdr caution is true due to health < 5000 and distance to home greater than 900')
             cdr.Caution = true
             cdr.CautionReason = 'lowhealth'
-            if (not cdr.GunUpgradePresent) then
+            if (not CDRGunCheck(cdr, true)) then
                 cdr.GunUpgradeRequired = true
             end
             if (not cdr.HighThreatUpgradePresent) and GetEconomyIncome(aiBrain, 'ENERGY') > 80 then
@@ -167,7 +181,7 @@ function CDRBrainThread(cdr)
             --LOG('cdr caution is true due to health < 6500 and in hostile territory')
             cdr.Caution = true
             cdr.CautionReason = 'lowhealth and hostile'
-            if (not cdr.GunUpgradePresent) then
+            if (not CDRGunCheck(cdr, true)) then
                 cdr.GunUpgradeRequired = true
             end
             if (not cdr.HighThreatUpgradePresent) and GetEconomyIncome(aiBrain, 'ENERGY') > 80 then
@@ -277,13 +291,34 @@ end
 function CDRThreatAssessmentRNG(cdr)
     coroutine.yield(20)
     local aiBrain = cdr:GetAIBrain()
-    local im = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua').GetIntelManager(aiBrain)
+    local im = aiBrain.IntelManager
     local UnitCategories = (categories.STRUCTURE * categories.DEFENSE) + (categories.MOBILE * (categories.LAND + categories.AIR + categories.NAVAL) - categories.SCOUT )
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+    local mapSizeX, mapSizeZ
+    if not playableArea then
+        local scenarioMapSizeX, scenarioMapSizeZ = GetMapSize()
+        mapSizeX = scenarioMapSizeX
+        mapSizeZ = scenarioMapSizeZ
+    else
+        mapSizeX = playableArea[3]
+        mapSizeZ = playableArea[4]
+    end
     while not cdr.Dead do
         if cdr.Active then
             if not cdr.Position then
                 cdr.Position = cdr:GetPosition()
             end
+            local zoneType
+            local cdrLayer = cdr:GetCurrentLayer()
+            if cdrLayer == 'Land' then
+                zoneType = 'Land'
+            elseif cdrLayer == 'Seabed' then
+                zoneType = 'Naval'
+            else
+                zoneType = 'Land'
+            end
+            --LOG('zoneType '..tostring(zoneType))
+            local zoneId = MAP:GetZoneID(cdr.Position,aiBrain.Zones[zoneType].index)
             local enemyACUPresent = false
             local friendlyACURangeAdvantage = false
             local enemyUnits = GetUnitsAroundPoint(aiBrain, UnitCategories, cdr:GetPosition(), 80, 'Enemy')
@@ -490,6 +525,10 @@ function CDRThreatAssessmentRNG(cdr)
                     cdr.InFirebaseRange = false
                 end
             end
+            --LOG('--  Start of Confidence  --')
+            local maxZoneRangeLimit = math.ceil(math.min(math.max(mapSizeX,mapSizeZ), 256) / 2 / 32)
+            local enemyZoneThreat = RUtils.GetLocalEnemyZoneThreat(aiBrain, zoneId, zoneType, 'enemyantisurfacethreat', maxZoneRangeLimit)
+            --LOG('Local enemyZoneThreat '..tostring(enemyZoneThreat))
             -- Helper function to get the threat value with a default to avoid division by zero
             local function getThreatValue(threat, default)
                 return threat > 0 and threat or default
@@ -513,7 +552,12 @@ function CDRThreatAssessmentRNG(cdr)
             -- Calculate Enemy Threat Confidence Modifier
             local function calculateEnemyThreatModifier(aiBrain, enemyUnitThreatInner, enemyUnitThreatOuter, enemyDefenseThreat, weights)
                 local enemyThreatConfidenceModifier = 0
-                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyThreat * getThreatValue(aiBrain.EnemyIntel.EnemyThreatCurrent.Land, 0.1))
+                local globalLandThreat = getThreatValue(aiBrain.EnemyIntel.EnemyThreatCurrent.Land, 0.1)
+                local GLOBALTHREATSAFEMULTIPLIER = weights.globalThreat
+                local zoneRatio = math.min(1.0, enemyZoneThreat / (globalLandThreat * GLOBALTHREATSAFEMULTIPLIER))
+                local scaledGlobalThreat = globalLandThreat * zoneRatio
+                --LOG('GlobalLandThreat '..tostring(globalLandThreat)..' scaled global threat '..tostring(scaledGlobalThreat))
+                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyThreat * scaledGlobalThreat)
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyUnitThreatOuter * enemyUnitThreatOuter)
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyUnitThreatInner * enemyUnitThreatInner)
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyDefenseThreat * enemyDefenseThreat)
@@ -582,17 +626,16 @@ function CDRThreatAssessmentRNG(cdr)
                         end
                     end
                 end
-                --LOG('--  Start of Confidence  --')
-                --LOG('Distance to enemy base '..tostring(math.sqrt(distanceToEnemyBase)))
+                --G('Distance to enemy base '..tostring(math.sqrt(distanceToEnemyBase)))
                 local distanceFearFactor = distanceFearMultiplier(math.sqrt(cdrDistanceToBase), math.sqrt(distanceToEnemyBase))
-                --LOG('Distance fear factor '..tostring(distanceFearFactor))
-                --LOG('Friendly threat before '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
-                --LOG('Enemy threat before '..tostring(enemyThreatConfidenceModifier))
+                --G('Distance fear factor '..tostring(distanceFearFactor))
+                --G('Friendly threat before '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
+                --G('Enemy threat before '..tostring(enemyThreatConfidenceModifier))
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * distanceFearFactor
-                --LOG('Friendly threat after '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
+                --G('Friendly threat after '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + weights.localEnemyThreatRatio * localEnemyThreatRatio
-                --LOG('Enemy threat after '..tostring(enemyThreatConfidenceModifier))
-                --LOG('Distance to enemy base scaled factor for '..tostring(aiBrain.Nickname)..' is '..tostring(distanceFearFactor))
+                --G('Enemy threat after '..tostring(enemyThreatConfidenceModifier))
+                --G('Distance to enemy base scaled factor for '..tostring(aiBrain.Nickname)..' is '..tostring(distanceFearFactor))
 
 
                 -- Calculate confidence
@@ -603,7 +646,7 @@ function CDRThreatAssessmentRNG(cdr)
                 
                     -- **Health + Shield Influence on Confidence**
                 local healthModifer = customSurvivability(math.min(cdr.HealthPercent, 1))
-                --LOG('healthModifer ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(healthModifer))
+                --G('healthModifer ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(healthModifer))
                 local survivability = (healthModifer * weights.healthBoost) + (shieldFactor or 0)
                 --LOG('Survivability ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(survivability))
 
@@ -642,10 +685,10 @@ function CDRThreatAssessmentRNG(cdr)
                 healthBoost = 1.3, -- higher means more confidence
                 shieldBoost = 1.1, -- higher means more confidence
                 enemyThreat = 0.7, -- higher means less confidence
+                globalThreat = 0.60,
                 enemyUnitThreatOuter = 0.8, -- higher means less confidence
                 enemyUnitThreatInner = 1.1, -- higher means less confidence
                 enemyDefenseThreat = 0.75, -- higher means less confidence
-                distanceToBase = 0.8, -- higher means less confidence
                 localEnemyThreatRatio = 0.9, -- higher means less confidence
                 phasePenalty = 0.7, -- higher means less confidence
                 overchargeBoost = 1.3 -- higher means more confidence
@@ -678,7 +721,6 @@ function CDRThreatAssessmentRNG(cdr)
             --LOG('Max base range '..tostring(cdr.MaxBaseRange))
             --LOG('Current distance to home '..tostring(cdr.DistanceToHome))
             if aiBrain.IntelManager then
-                local im = aiBrain.IntelManager
                 local gridX, gridZ = im:GetIntelGrid(cdr.Position)
                 if im.MapIntelGrid[gridX][gridZ].IntelCoverage then
                     if not cdr['rngdata'] then
@@ -700,9 +742,12 @@ function CDRThreatAssessmentRNG(cdr)
     end
 end
 
-function CDRGunCheck(cdr)
-    if cdr['rngdata']['HasGunUpgrade'] then
+function CDRGunCheck(cdr, gun, aeonAdvanced)
+    if gun and cdr['rngdata']['HasGunUpgrade'] then
         --LOG('CDR Gun check is returning true for unit '..tostring(cdr.UnitId))
+        return true
+    end
+    if aeonAdvanced and cdr['rngdata']['HasAeonAdvancedGunUpgradePresent'] then
         return true
     end
     return false
@@ -1297,6 +1342,8 @@ GetACUSafeZone = function(aiBrain, cdr, baseOnly)
     local teamAveragePositions = aiBrain.IntelManager:GetTeamAveragePositions()
     local currentTeamValue = aiBrain.IntelManager:GetTeamDistanceValue(cdr.Position, teamAveragePositions)
     local cutoff = 225
+    local MinACUHPForRiskyUpgrade = 4000
+    local acuVulnerable = cdr.Health < MinACUHPForRiskyUpgrade
 
     if aiBrain.ZonesInitialized then
         local waterZoneSet
@@ -1313,6 +1360,9 @@ GetACUSafeZone = function(aiBrain, cdr, baseOnly)
                 local dz = originPosition[3] - v.pos[3]
                 local zoneDist = dx * dx + dz * dz
                 if (not bestZoneDist or zoneDist < bestZoneDist) and NavUtils.CanPathTo(movementLayer, originPosition, v.pos) and v.BuilderManager.FactoryManager.LocationActive then
+                    if acuVulnerable and not v.BuilderManager.FactoryManager.LocationActive then
+                        continue
+                    end
                     if currentTeamValue and v.teamvalue < currentTeamValue then
                         --LOG('Water Zones team value is lower than our current position which indicates its closer to the enemy')
                         continue

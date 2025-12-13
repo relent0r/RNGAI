@@ -156,6 +156,8 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                         unit['rngdata'].Role='Shield'
                     elseif unitCats.TECH2 and unitCats.STEALTHFIELD then
                         unit['rngdata'].Role='Stealth'
+                    elseif unitCats.TECH1 and unitCats.FRIGATE then
+                        unit['rngdata'].Role='Frigate'
                     end
                 elseif unitCats.SILO then
                     unit['rngdata'].Role='Silo'

@@ -1,4 +1,5 @@
 local AIUtils = import('/lua/ai/AIUtilities.lua')
+local ACUFunc = import('/mods/RNGAI/lua/AI/RNGACUFunctions.lua')
 local ScenarioUtils = import('/lua/sim/ScenarioUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local MarkerUtils = import("/lua/sim/MarkerUtilities.lua")
@@ -875,7 +876,12 @@ function SetArcPoints(position,enemyPosition,radius,num,arclength)
     return coords
 end
 
-function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRange, basePosition, cdrThreat)
+function IsZoneInAlert(aiBrain, zoneId)
+    local alertEntry = aiBrain.BaseMonitor.ZoneAlertTable[zoneId]
+    return alertEntry and alertEntry.Threat > 0
+end
+
+function AIAdvancedFindACUTargetRNGV1(aiBrain, cdr, cdrPos, movementLayer, maxRange, basePosition, cdrThreat)
 
     if not cdrPos then
         cdrPos = cdr.Position
@@ -1285,6 +1291,429 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
         return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets, acuInTrouble
     end
     --RNGLOG('No target being returned for ACU targeting')
+    return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets, acuInTrouble
+end
+
+function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRange, basePosition, cdrThreat)
+
+    if not cdrPos then cdrPos = cdr.Position end
+    if not maxRange then maxRange = cdr.MaxBaseRange end
+    if not movementLayer then movementLayer = 'Amphibious' end
+    if not basePosition then basePosition = aiBrain.BuilderManagers['MAIN'].Position end
+    if not cdrThreat then cdrThreat = aiBrain.CDRUnit:EnhancementThreatReturn() end
+    
+    local operatingArea = aiBrain.OperatingAreas['BaseMilitaryArea']
+    local acuDistanceToBase = VDist3Sq(cdrPos, basePosition)
+    local cdrHealthPercent = cdr.HealthPercent or 1
+    
+    -- Performance Cap: Never search larger than 384 to prevent engine stutter
+    local searchRange = maxRange
+    if searchRange > 384 then 
+        searchRange = 384 
+    end
+
+    local MaxAdjacentThreatForMove = 25
+
+    -- Optimization: Pre-calculate ACU labels to avoid pathing to unreachable islands
+    -- We assume ACU is Amphibious mostly, but check movementLayer argument just in case
+    local acuLabel = NavUtils.GetLabel('Land', cdrPos)
+    local acuAmphibLabel = NavUtils.GetLabel('Amphibious', cdrPos)
+
+    -- Helper to safely get zone from position
+    local function GetZoneAtPos(pos)
+        local zoneID = MAP:GetZoneID(pos, aiBrain.Zones.Land.index)
+        if zoneID and zoneID > 0 and aiBrain.Zones.Land.zones[zoneID] then
+            return aiBrain.Zones.Land.zones[zoneID]
+        end
+        return nil
+    end
+
+    -- 1. DETERMINE SEARCH CENTER
+    -- If main base is under heavy duress, we anchor our search from there.
+    -- This allows us to find base attackers even if we clamped our searchRange to 384.
+    local searchPos = cdrPos
+    local baseLandThreat = aiBrain.BasePerimeterMonitor['MAIN'].LandThreat
+    local defendingBase = false
+    
+    if baseLandThreat > 15 then
+        searchPos = basePosition
+        defendingBase = true
+    end
+
+    -- 2. GATHER TARGETS
+    local allTargets = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.INSIGNIFICANTUNIT, searchPos, searchRange, 'Enemy')
+    
+    local mobileTargets = {}
+    local structureTargets = {}
+    local enemyACUTargets = {}
+    local defenseTargets = {} 
+    local oportunisticTargets = {}
+    
+    local highThreat = 0
+    local returnTarget = false
+    local returnAcu = false
+    local closestDistance = 999999
+    local closestTarget = false
+    local closestTargetPosition = false
+    local acuInTrouble = false
+    local maxRangeStructureTarget = 6400
+
+    -- 3. PROCESS AND SORT CANDIDATES
+    for _, target in allTargets do
+        if not target.Dead then
+            local targetPos = target:GetPosition()
+            
+            -- ZONE LOOKUP
+            local zone = GetZoneAtPos(targetPos)
+            
+            -- OPTIMIZATION: Label Check
+            -- If we have zone data, use labels to discard unreachable targets immediately
+            -- This saves us from running expensive gravity math or pathfinding on units we can't reach
+            if zone then
+                if movementLayer == 'Amphibious' then
+                    if zone.amphiblabel ~= acuAmphibLabel then continue end
+                else
+                    if zone.label ~= acuLabel then continue end
+                end
+            end
+
+            -- Distance Calculation (Relative to ACU, even if we searched around Base)
+            local rx = cdrPos[1] - targetPos[1]
+            local rz = cdrPos[3] - targetPos[3]
+            local rawDist = rx * rx + rz * rz
+            
+            -- GRAVITY MODEL: Adjust effective distance based on strategic value
+            local distMult = 1.0
+            local allowedThreat = math.max(55, cdrThreat) 
+            
+            if zone then
+                -- Factor 1: Alert Status
+                if IsZoneInAlert(aiBrain, zone.id) then
+                    distMult = distMult * 0.5 
+                    allowedThreat = allowedThreat + 50 
+                end
+                
+                -- Factor 2: Main Base / High Value
+                -- If we are explicitly defending base (searchPos switched), we prioritize these heavily
+                if zone.label == 'MAIN' or (zone.teamvalue and zone.teamvalue > 5) then
+                    distMult = distMult * 0.4
+                    allowedThreat = allowedThreat + 100 
+                end
+                
+                -- Factor 3: Resource Value
+                if zone.weight and zone.weight > 3 then
+                    distMult = distMult * 0.8
+                end
+            end
+            
+            local score = rawDist * distMult
+            
+            local targetData = { 
+                unit = target, 
+                position = targetPos, 
+                distance = rawDist,
+                score = score,
+                zone = zone,
+                allowedThreat = allowedThreat
+            }
+            
+            -- Categorize
+            local cats = target.Blueprint.CategoriesHash
+
+            
+            if cats.COMMAND then
+                if target.EntityId then enemyACUTargets[target.EntityId] = targetData end
+            elseif cats.MOBILE then
+                if target.EntityId then mobileTargets[target.EntityId] = targetData end
+            elseif cats.STRUCTURE then
+                local isMex = cats.MASSEXTRACTION
+                if rawDist > maxRangeStructureTarget then
+                    targetData.score = targetData.score * 5
+                    if target.EntityId then oportunisticTargets[target.EntityId] = targetData end
+                else
+                    if isMex then
+                        if target.EntityId then oportunisticTargets[target.EntityId] = targetData end
+                    else
+                        if target.EntityId then structureTargets[target.EntityId] = targetData end
+                    end
+                end
+            end
+            
+            -- Keep track of raw closest for return values
+            if rawDist < closestDistance then
+                closestDistance = rawDist
+                closestTarget = target
+                closestTargetPosition = targetPos
+            end
+        end
+    end
+
+    -- 4. SELECT BEST TARGET
+    local function ProcessTargetList(targetList, checkPathing)
+        local sortedList = {}
+        for _, v in targetList do table.insert(sortedList, v) end
+        
+        -- Sort by SCORE (Strategic Priority), not just distance
+        table.sort(sortedList, function(a,b) return a.score < b.score end)
+        
+        -- We process top candidates. Since we filtered by Label earlier,
+        -- we are confident these are likely reachable, but we still do a path check
+        -- on the winner to be 100% sure.
+        for _, v in sortedList do
+            local validTarget = false
+            
+            local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+            local enemyCdrThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander')
+            
+            -- If defending base, we ignore some threat logic (fight for your life)
+            if defendingBase then 
+                v.allowedThreat = v.allowedThreat * 1.5 
+            end
+
+            if surfaceThreat < v.allowedThreat or v.distance < 400 or acuDistanceToBase < 6400 then
+                
+                if checkPathing then
+                    -- Layer Check
+                    local cdrLayer = aiBrain.CDRUnit:GetCurrentLayer()
+                    local targetLayer = v.unit:GetCurrentLayer()
+                    
+                    local layerCompatible = true
+                    if (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) or
+                    (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
+                        layerCompatible = false
+                    end
+                    
+                    if layerCompatible then
+                        -- Final Path Check
+                        -- Because we filtered by Label, this should pass most of the time
+                        if NavUtils.CanPathTo('Land', v.position, cdrPos) then
+                            validTarget = true
+                        elseif NavUtils.CanPathTo('Amphibious', v.position, cdrPos) and v.distance < (operatingArea * operatingArea) then
+                            validTarget = true
+                        end
+                    end
+                else
+                    validTarget = true
+                end
+            else
+                highThreat = highThreat + surfaceThreat
+            end
+            
+            if validTarget then
+                return v.unit
+            end
+        end
+        return nil
+    end
+
+    -- Execution Order
+
+    if not returnTarget and not RNGTableEmpty(enemyACUTargets) then
+        returnTarget = ProcessTargetList(enemyACUTargets, true)
+        if returnTarget then returnAcu = true end
+    end
+
+    if not returnTarget and not RNGTableEmpty(structureTargets) then
+        local acuCurrentZone = GetZoneAtPos(cdrPos)
+        local validOpportunisticZones = {}
+
+        -- Build a whitelist of allowed zones for "trash cleanup" (Current + Neighbors)
+        if acuCurrentZone then
+            -- 1. Add current zone
+            validOpportunisticZones[acuCurrentZone.id] = true
+            
+            -- 2. Add direct neighbors
+            if acuCurrentZone.edges then
+                for _, edge in acuCurrentZone.edges do
+                    -- 'edge.zone' is the ID of the neighbor zone
+                    validOpportunisticZones[edge.zone] = true
+                end
+            end
+        end
+        -- Populating defenseTargets for return value
+        for _, v in structureTargets do
+            local cats = v.unit.Blueprint.CategoriesHash
+            
+            -- Standard Defense Targeting (Keep this high range/unfiltered)
+            if v.distance < 14400 and cats.DEFENSE and (cats.DIRECTFIRE or cats.INDIRECTFIRE) then
+                table.insert(defenseTargets, v)
+            end
+            
+            -- OPPORTUNISTIC TARGETING (Mexes)
+            if cats.MASSEXTRACTION then
+                local isValidOpportunistic = false
+                
+                -- Condition A: It's extremely close (e.g. < 60 units)
+                -- We always take these even if zone data is weird, effectively "stepping on it"
+                if v.distance < 3600 then 
+                    isValidOpportunistic = true
+                    
+                -- Condition B: It's in the Safe Zone List (Current or Neighbor)
+                -- AND it isn't absurdly far away (hard cap of 200 units to prevent long-zone wandering)
+                elseif v.zone and validOpportunisticZones[v.zone.id] and v.distance < 25600 then 
+                    isValidOpportunistic = true
+                end
+                
+                if isValidOpportunistic then
+                    oportunisticTargets[v.unit.EntityId] = v
+                end
+            end
+        end
+        returnTarget = ProcessTargetList(structureTargets, true)
+    end
+
+    if not returnTarget and not RNGTableEmpty(mobileTargets) then
+        returnTarget = ProcessTargetList(mobileTargets, true)
+    end
+
+    if not returnTarget and not RNGTableEmpty(oportunisticTargets) and aiBrain.BrainIntel.HighestPhase < 3 then
+        returnTarget = ProcessTargetList(oportunisticTargets, true)
+    end
+
+    -- 5. TROUBLE CHECKS
+    if aiBrain.EnemyIntel.Experimental then
+        for _, v in aiBrain.EnemyIntel.Experimental do
+            if v.object and not v.object.Dead then
+                local unitCats = v.object.Blueprint.CategoriesHash
+                if unitCats.MOBILE and unitCats.LAND then
+                    if VDist3Sq(cdrPos, v.object:GetPosition()) < 10000 then
+                        acuInTrouble = true
+                    end
+                end
+            end
+        end
+    end
+
+    if not returnTarget and aiBrain.BrainIntel.HighestPhase < 3 then
+        
+        local bestMovePosition = nil
+        local bestScore = -999999
+        
+        local acuCurrentZone = GetZoneAtPos(cdrPos)
+        local safeThreatThreshold = math.max(MaxAdjacentThreatForMove, cdrThreat * 0.8)
+
+        if acuCurrentZone then 
+            -- Candidate zones: Current Zone + Immediate Neighbors only.
+            local candidateZones = {}
+
+            -- Current Zone
+            table.insert(candidateZones, {
+                zone = acuCurrentZone,
+                distance = 0,
+                isCurrent = true
+            })
+
+            -- Add Edges
+            if acuCurrentZone.edges then
+                for _, edge in acuCurrentZone.edges do
+                    local neighborZone = aiBrain.Zones.Land.zones[edge.zone]
+                    
+                    if neighborZone and neighborZone.amphiblabel == acuAmphibLabel then
+                        table.insert(candidateZones, {
+                            zone = neighborZone,
+                            distance = edge.distance or 100,
+                            isCurrent = false
+                        })
+                    end
+                end
+            end
+
+            -- 3. Evaluate Candidates
+            for _, candidate in candidateZones do
+                local cZone = candidate.zone
+                local cPos = cZone.pos
+
+                -- THREAT CHECK:
+                -- We strictly avoid entering a neighbor zone if the threat is higher than we can handle.
+                -- This prevents the "Walking past an ACU" scenario.
+                local zoneThreat = cZone.enemyantisurfacethreat or 0
+                if zoneThreat > safeThreatThreshold then 
+                    continue 
+                end
+
+                -- ISOLATION CHECK:
+                -- Don't move into a zone with terrible team control if it also has threat.
+                -- currentZone.teamvalue gives us a baseline of where we are.
+                if not candidate.isCurrent then
+                    if (cZone.teamvalue < 0 and zoneThreat > 10) then
+                        continue
+                    end
+                end
+
+                -- SCORING LOGIC
+                local currentScore = 0
+
+                -- A. Defensive Priority (Zone Alerts)
+                -- We only care about alerts if we can actually win the fight (threat check passed)
+                if IsZoneInAlert(aiBrain, cZone.id) then 
+                    currentScore = currentScore + 100
+                end
+
+                -- B. Expansion/Resource Priority
+                -- We prioritize resources, but weight them by teamvalue to ensure we expand safely
+                if cZone.resourcevalue > 0 then
+                    local resourceScore = cZone.resourcevalue * 2
+                    
+                    if cZone.status == 'Unoccupied' then
+                        resourceScore = resourceScore * 1.5
+                    end
+                    
+                    currentScore = currentScore + resourceScore
+                end
+
+                -- C. Team Value (Stick to friendly/contested areas, avoid deep enemy lines)
+                if cZone.teamvalue then
+                    currentScore = currentScore + (cZone.teamvalue * 5)
+                end
+
+                -- D. Distance Penalty (Slight bias to stay closer or move to closer neighbors)
+                currentScore = currentScore - (candidate.distance * 0.01)
+
+                -- E. Stability Bias
+                -- If scores are roughly equal, prefer the current zone to prevent jittering
+                if candidate.isCurrent then
+                    currentScore = currentScore + 5
+                end
+
+                if currentScore > bestScore then
+                    bestScore = currentScore
+                    bestMovePosition = cPos
+                end
+            end
+        end
+
+        if bestMovePosition then
+            closestTargetPosition = bestMovePosition
+        else
+            -- Last resort: If no safe neighbors exist (Encourages retreat if surrounded)
+            if acuDistanceToBase > 10000 and not defendingBase then 
+                closestTargetPosition = basePosition
+            end
+        end
+    end
+
+    local lowHealth = cdrHealthPercent < 0.35
+    local closeToBase = acuDistanceToBase < 900
+    local highEnemyThreat = (cdr.CurrentEnemyInnerCircle > math.max(60, cdr.CurrentFriendlyInnerCircle)) or (cdr.CurrentEnemyInnerCircle > cdr.CurrentFriendlyInnerCircle and returnAcu)
+
+    if lowHealth and (closeToBase and highEnemyThreat or cdr.Confidence < 3.5) then
+        acuInTrouble = true
+    elseif closeToBase and highThreat > 180 then
+        acuInTrouble = true
+    end
+
+    if returnTarget then
+        local rTargetPos = returnTarget:GetPosition()
+        if highThreat < 1 then
+            highThreat = GetThreatAtPosition(aiBrain, rTargetPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
+        end
+        if not aiBrain.ACUSupport.Supported then
+            aiBrain.ACUSupport.Supported = true
+            aiBrain.ACUSupport.TargetPosition = rTargetPos
+        end
+        return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets, acuInTrouble
+    end
+
     return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets, acuInTrouble
 end
 
@@ -5439,7 +5868,6 @@ end
 CDRWeaponCheckRNG = function (aiBrain, cdr, selfThreat)
 
     local factionCategory = cdr.Blueprint.FactionCategory
-    local gunUpgradePresent = false
     local aeonAdvancedGunUpgradePresent = false
     local weaponRange
     local threatLimit
@@ -5454,31 +5882,27 @@ CDRWeaponCheckRNG = function (aiBrain, cdr, selfThreat)
     else
         weaponRange = 22
     end
-    --LOG('CDRWeaponCheck Faction Category '..tostring(factionCategory)..' cdr.GunUpgradePresent '..tostring(cdr.GunUpgradePresent)..' cdr.GunAeonUpgradePresent '..tostring(cdr.GunAeonUpgradePresent))
+    --LOG('CDRWeaponCheck Faction Category '..tostring(factionCategory)..' GunUpgradePresent '..tostring(ACUFunc.CDRGunCheck(cdr))..' GunAeonUpgradePresent '..tostring(ACUFunc.CDRGunCheck(cdr, false, true))
 
         -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads
-    if not cdr.GunUpgradePresent or (factionCategory == 'AEON' and not cdr.GunAeonUpgradePresent) then
+    if not ACUFunc.CDRGunCheck(cdr, true) or (factionCategory == 'AEON' and not ACUFunc.CDRGunCheck(cdr, false, true)) then
         if factionCategory == 'UEF' then
             if cdr:HasEnhancement('HeavyAntiMatterCannon') then
                 local enhancement = cdr.Blueprint.Enhancements
-                gunUpgradePresent = true
                 weaponRange = enhancement.HeavyAntiMatterCannon.NewMaxRadius or 30
                 threatLimit = 48
             end
         elseif factionCategory == 'AEON' then
             if cdr:HasEnhancement('HeatSink') then
-                gunUpgradePresent = true
                 threatLimit = 43
             end
             if cdr:HasEnhancement('CrysalisBeam') then
                 local enhancement = cdr.Blueprint.Enhancements
-                gunUpgradePresent = true
                 weaponRange = enhancement.CrysalisBeam.NewMaxRadius or 30
                 threatLimit = 48
             end
             if cdr:HasEnhancement('FAF_CrysalisBeamAdvanced') then
                 local enhancement = cdr.Blueprint.Enhancements
-                gunUpgradePresent = true
                 aeonAdvancedGunUpgradePresent = true
                 weaponRange = enhancement.FAF_CrysalisBeamAdvanced.NewMaxRadius or 35
                 threatLimit = 50
@@ -5486,13 +5910,11 @@ CDRWeaponCheckRNG = function (aiBrain, cdr, selfThreat)
         elseif factionCategory == 'CYBRAN' then
             if cdr:HasEnhancement('CoolingUpgrade') then
                 local enhancement = cdr.Blueprint.Enhancements
-                gunUpgradePresent = true
                 weaponRange = enhancement.CoolingUpgrade.NewMaxRadius or 30
                 threatLimit = 48
             end
         elseif factionCategory == 'SERAPHIM' then
             if cdr:HasEnhancement('RateOfFire') then
-                gunUpgradePresent = true
                 weaponRange = enhancement.RateOfFire.NewMaxRadius or 30
                 threatLimit = 48
             end
@@ -5500,10 +5922,9 @@ CDRWeaponCheckRNG = function (aiBrain, cdr, selfThreat)
     end
     if selfThreat then
         --LOG('Self threat check')
-        --LOG('Gun present '..tostring(gunUpgradePresent))
+        --LOG('Gun present '..tostring(ACUFunc.CDRGunCheck(cdr, true)))
         --LOG('WeaponRange '..tostring(weaponRange))
         --LOG('ThreatLimit  '..tostring(threatLimit))
-        cdr.GunUpgradePresent = gunUpgradePresent
         if weaponRange then
             cdr.WeaponRange = weaponRange
         end
@@ -5512,7 +5933,6 @@ CDRWeaponCheckRNG = function (aiBrain, cdr, selfThreat)
         end
         if aeonAdvancedGunUpgradePresent then
             cdr.GunAeonUpgradeRequired = false
-            cdr.GunAeonUpgradePresent = true
         end
     end
 end
@@ -6184,6 +6604,7 @@ end
 function EngineerEnemyAction(aiBrain, eng)
     if not IsDestroyed(eng) then
         local actionTaken = false
+        local reclaimTarget
         local engPos = eng:GetPosition()
         local enemyUnits = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.MOBILE, engPos, 45, 'Enemy')
         for _, unit in enemyUnits do
@@ -6198,6 +6619,7 @@ function EngineerEnemyAction(aiBrain, eng)
                             IssueClearCommands({eng})
                             IssueReclaim({eng}, unit)
                             actionTaken = true
+                            reclaimTarget = unit
                             break
                         end
                     end
@@ -6212,6 +6634,7 @@ function EngineerEnemyAction(aiBrain, eng)
                         IssueClearCommands({eng})
                         IssueReclaim({eng}, unit)
                         actionTaken = true
+                        reclaimTarget = unit
                         break
                     end
                 else
@@ -6222,6 +6645,7 @@ function EngineerEnemyAction(aiBrain, eng)
                 end
             end
         end
+        return actionTaken, reclaimTarget
     end
 end
 
@@ -7519,6 +7943,7 @@ end
 CheckForCivilianUnitCapture = function(aiBrain, eng, movementLayer)
 
     if aiBrain.EnemyIntel.CivilianCaptureUnits and not table.empty(aiBrain.EnemyIntel.CivilianCaptureUnits) then
+        --LOG('Check for civ capture units')
         local closestUnit
         local closestDistance
         local engPos = eng:GetPosition()
@@ -8959,4 +9384,51 @@ function FindAirTargetForTeamRNG(aiBrain, position, platoon, maxRange, platoonTh
         coroutine.yield(1)
     end
     return nil
+end
+
+function GetLocalEnemyZoneThreat(aiBrain, startZone, zoneType, threatType, maxEdgeDistance)
+    -- Use camel case for locals as per your preference
+    local visitedZones = {}
+    local zonesToVisit = {startZone}
+    local currentDistance = 0
+    local totalThreatSum = 0
+    if not startZone or not aiBrain.Zones[zoneType].zones[startZone] then
+        return 0
+    end
+    local startZone = aiBrain.Zones[zoneType].zones[startZone]
+    
+    
+    -- Ensure we start by processing the first zone at distance 0
+    visitedZones[startZone.id] = true
+    
+    -- Queue structure for BFS: {zone, distance}
+    local queue = {{zone = startZone, distance = 0}}
+    
+    while table.getn(queue) > 0 do
+        -- Dequeue the next item
+        local currentItem = table.remove(queue, 1)
+        local currentZone = currentItem.zone
+        currentDistance = currentItem.distance
+        
+        -- Sum the land threat from the current zone
+        -- Note: using 'enemyantisurfacethreat' as the primary metric
+        totalThreatSum = totalThreatSum + (currentZone[threatType] or 0)
+        
+        -- Stop traversal if we've reached the maximum distance
+        if currentDistance < maxEdgeDistance then
+            -- Iterate through the edges to find unvisited neighbors
+            for k, edgeData in pairs(currentZone.edges) do
+                local neighborZone = edgeData.zone
+                
+                -- Check if the neighbor is a valid zone and has not been visited
+                if neighborZone and not visitedZones[neighborZone.id] then
+                    visitedZones[neighborZone.id] = true
+                    -- Enqueue the neighbor for the next iteration
+                    table.insert(queue, {zone = neighborZone, distance = currentDistance + 1})
+                end
+            end
+        end
+    end
+
+    return totalThreatSum
 end

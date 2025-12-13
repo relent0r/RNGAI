@@ -1078,10 +1078,11 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local aiBrain = self:GetBrain()
             local avoidTargetPos
+            local targetRange
             local target = StateUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
             local zoneRetreat
             if target and not target.Dead then
-                local targetRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
+                targetRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                 local minTargetRange
                 if targetRange then
                     minTargetRange = targetRange + 10
@@ -1116,7 +1117,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, targetPos, true, nil, 'Land')
+                    zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, targetPos, targetRange, true, nil, 'Land')
                     if attackStructure then
                         for _, v in platUnits do
                             if v['rngdata'].Role ~= 'Artillery' and v['rngdata'].Role ~= 'Silo' then
@@ -1151,9 +1152,9 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             end
             if not zoneRetreat then
                 if aiBrain.GridPresence:GetInferredStatus(self.Pos) == 'Hostile' then
-                    zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, avoidTargetPos, true, nil, 'Land')
+                    zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, avoidTargetPos, targetRange, true, nil, 'Land')
                 else
-                    zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, false, true, nil, 'Land')
+                    zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, false, nil, true, nil, 'Land')
                 end
             end
             local location = zoneRetreat.pos

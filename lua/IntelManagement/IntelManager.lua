@@ -960,7 +960,7 @@ IntelManager = Class {
         return alliedZones / totalZones
     end,
 
-    GetClosestRetreatZone = function(self, aiBrain, platoon, position, enemyPosition, defensiveRetreat, minimumResourceValue, movementLayer)
+    GetClosestRetreatZone = function(self, aiBrain, platoon, position, enemyPosition, enemyRange, defensiveRetreat, minimumResourceValue, movementLayer)
         --LOG('Get closest retreat zone '..tostring(defensiveRetreat)..' platoon buildername is '..tostring(platoon.BuilderName))
 
         local teamPositions = aiBrain.IntelManager:GetTeamAveragePositions()
@@ -982,10 +982,7 @@ IntelManager = Class {
         if not zoneSet then
             WARN('GetClosestZone: No zones for movement layer')
             return nil
-        end
-    
-
-
+        end   
         local originZoneID = platoon.ZoneID or MAP:GetZoneID(originPosition,aiBrain.Zones[movementLayer].index)
         local originZone = aiBrain.Zones[movementLayer].zones[originZoneID]
         --LOG('Origin Zone ID is '..tostring(originZone.id))
@@ -1028,10 +1025,11 @@ IntelManager = Class {
             end
     
             -- Check enemy unit proximity
+            local distToEnemyUnitSq
             if enemyPosition then
                 local ex = enemyPosition[1] - zone.pos[1]
                 local ez = enemyPosition[3] - zone.pos[3]
-                local distToEnemyUnitSq = ex * ex + ez * ez
+                distToEnemyUnitSq = ex * ex + ez * ez
                 if distToEnemyUnitSq < avoidRadiusSq then return end
             end
     
@@ -1055,12 +1053,31 @@ IntelManager = Class {
                 if zone.status == 'Hostile' then return end
             
                 local _, baseDist = StateUtils.GetClosestBaseManager(aiBrain, zone.pos)
-                score = -distSq + baseDist * 0.25
+                local dist = math.sqrt(distSq)
+                score = -dist + baseDist * 0.25
             
                 if zone.teamvalue and zone.teamvalue >= 1.0 then
                     score = score + 3
                 elseif zone.teamvalue then
                     score = score - 2
+                end
+                local maxAggressiveDistanceSq = 10000
+                if distToEnemyUnitSq and distToEnemyUnitSq > 0 and enemyRange and enemyRange > 0 then
+                    
+                    local enemyRangeSq = enemyRange * enemyRange
+                    local rangeDiffSq = distToEnemyUnitSq - enemyRangeSq + 1
+                    --LOG('We are taking into account an enemy position, enemy range dif '..tostring(rangeDiffSq)..' current score '..tostring(score))
+                    if distToEnemyUnitSq < enemyRangeSq then
+                        return
+                    end
+                    if rangeDiffSq < maxAggressiveDistanceSq then 
+                        score = score + 25 
+                        score = score + (1000 / rangeDiffSq) 
+                    else
+                        -- Penalty for giving up ground (drift penalty)
+                        score = score - (rangeDiffSq * 0.001)
+                    end
+                    --LOG('Score after penality '..tostring(score))
                 end
             
                 if zone.zoneincome.selfincome and zone.zoneincome.selfincome > 0 then
@@ -1779,6 +1796,7 @@ IntelManager = Class {
     end,
 
     ZoneEnemyIntelMonitorRNG = function(self)
+        -- This is currently disabled as we have migrated to the IntelGridThreatThread thread.
         local Zones = {
             'Land',
             'Naval'
@@ -2557,7 +2575,6 @@ IntelManager = Class {
                                     furthestPlayer = true
                                     aiBrain.BrainIntel.PlayerRole.AirPlayer = true
                                     aiBrain.BrainIntel.PlayerStrategy.T3AirRush = true
-                                    LOG('Player set to Air Role '..aiBrain.Nickname)
                                     RNGAIGLOBALS.PlayerRoles[teamReference][selfIndex] = 'AirPlayer'
                                     aiBrain:EvaluateDefaultProductionRatios()
                                     return
@@ -2582,7 +2599,6 @@ IntelManager = Class {
                                 aiBrain.BrainIntel.PlayerRole.SpamPlayer = true
                                 RNGAIGLOBALS.PlayerRoles[teamReference][selfIndex] = 'SpamPlayer'
                                 self:ForkThread(self.SpamTriggerDurationThread, 480)
-                                LOG('Assigned SpamPlayer to '..aiBrain.Nickname)
                                 return
                             end
                         end
@@ -2626,7 +2642,6 @@ IntelManager = Class {
             
                             if navalPlayer then
                                 aiBrain.BrainIntel.PlayerRole.NavalPlayer = true
-                                LOG('Player set to Naval Role '..aiBrain.Nickname)
                                 RNGAIGLOBALS.PlayerRoles[teamReference][selfIndex] = 'NavalPlayer'
                                 aiBrain:EvaluateDefaultProductionRatios()
                                 return
@@ -2783,7 +2798,7 @@ IntelManager = Class {
                 if useHistorical then
                     landThreat = hist.Land or 0
                 elseif current.Land == 0 and hist.Land > 0 then
-                    landThreat = hist.Land
+                    landThreat = (hist.Land or 0) * 0.5
                 else
                     landThreat = current.Land or 0
                 end
@@ -2794,7 +2809,7 @@ IntelManager = Class {
                 if useHistorical then
                     airThreat = hist.Air or 0
                 elseif current.Air == 0 and hist.Air > 0 then
-                    airThreat = hist.Air
+                    airThreat = (hist.Air or 0) * 0.5
                 else
                     airThreat = current.Air or 0
                 end
@@ -2805,7 +2820,7 @@ IntelManager = Class {
                 if useHistorical then
                     aaThreat = hist.AntiAir or 0
                 elseif current.AntiAir == 0 and hist.AntiAir > 0 then
-                    aaThreat = hist.AntiAir
+                    aaThreat = (hist.AntiAir or 0) * 0.5
                 else
                     aaThreat = current.AntiAir or 0
                 end
@@ -2816,7 +2831,7 @@ IntelManager = Class {
                 if useHistorical then
                     navalThreat = hist.Naval or 0
                 elseif current.Naval == 0 and hist.Naval > 0 then
-                    navalThreat = hist.Naval
+                    navalThreat = (hist.Naval or 0) * 0.5
                 else
                     navalThreat = current.Naval or 0
                 end
@@ -2827,7 +2842,7 @@ IntelManager = Class {
                 if useHistorical then
                     antisurfaceThreat = hist.AntiSurface or 0
                 elseif current.AntiSurface == 0 and hist.AntiSurface > 0 then
-                    antisurfaceThreat = hist.AntiSurface
+                    antisurfaceThreat = (hist.AntiSurface or 0) * 0.5
                 else
                     antisurfaceThreat = current.AntiSurface or 0
                 end
@@ -2838,7 +2853,7 @@ IntelManager = Class {
                 if useHistorical then
                     structuresNotMexThreat = hist.StructuresNotMex or 0
                 elseif current.StructuresNotMex == 0 and hist.StructuresNotMex > 0 then
-                    structuresNotMexThreat = hist.StructuresNotMex
+                    structuresNotMexThreat = (hist.StructuresNotMex or 0) * 0.5
                 else
                     structuresNotMexThreat = current.StructuresNotMex or 0
                 end
@@ -3022,6 +3037,7 @@ IntelManager = Class {
             if self.amanager.Demand.Air.T3.scout then
                 self.amanager.Demand.Air.T3.scout = airScoutDemand
             end
+            self:ProcessFrontlineRadarRequests(aiBrain)
             self.MapIntelStats.IntelCoverage = intelCoverage / (self.MapIntelGridXRes * self.MapIntelGridZRes) * 100
             self.MapIntelStats.MustScoutArea = mustScoutPresent
             aiBrain.BrainIntel.MapOwnership = mapOwnership / aiBrain.IntelManager.CellCount * 100
@@ -4218,12 +4234,17 @@ IntelManager = Class {
                             highestTier = 1
                         end
                         local localDefensePenalty = 0
+                        local safetyThreshold = localFriendlyDirectFireThreat * 0.8
                         
                 
-                        if localEnemyLandThreat > localFriendlyDirectFireThreat * 1.5 then
-                            local threatDifferential = localEnemyLandThreat - (localFriendlyDirectFireThreat * 1.5)
-                            localDefensePenalty = threatDifferential * 0.5
-                            --LOG('Base '..tostring(k)..' is under high local ground threat. Applying penalty: '..tostring(localDefensePenalty))
+                        if localEnemyLandThreat > safetyThreshold then
+                            local threatOverage = localEnemyLandThreat - safetyThreshold
+                            if localEnemyLandThreat > localFriendlyDirectFireThreat then
+                                localDefensePenalty = threatOverage * 4.0
+                            else
+                                localDefensePenalty = threatOverage * 1.5
+                            end
+                            --LOG('Base '..tostring(k)..' unstable. Enemy: '..localEnemyLandThreat..' FriendlyDF: '..localFriendlyDirectFireThreat..' Penalty: '..localDefensePenalty)
                         end
         
                         table.insert(baseCandidates, {
@@ -5021,7 +5042,158 @@ IntelManager = Class {
             frontier = nextFrontier
         end
         self.CurrentFrontLineZones = frontlineZones
+        self.CurrentControlledZones = controlledZones
         return controlledZones, frontlineZones
+    end,
+
+    ProcessFrontlineRadarRequests = function(self, aiBrain)
+
+        if aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime > 14 then
+            -- Configurations
+            local RadarRange = 200 -- T1 Radar Range
+            local MaxRadarThreatForConstruction = 10 
+            local RequestProximityDistance = 100 
+            --LOG("DEBUG_RADAR: Proximity Distance Parameter is:", RequestProximityDistance)
+            
+            local PlacementRequestRadius = math.ceil(RadarRange * 0.075)
+
+            -- 1. Acquire Data
+            local controlledZones = self.CurrentControlledZones
+            local frontlineZones = self.CurrentFrontLineZones
+            local zoneMap = aiBrain.Zones.Land.zones
+
+            if not frontlineZones then return end
+
+            for zoneId, _ in pairs(frontlineZones) do
+                local targetZone = zoneMap[zoneId]
+                if not targetZone then continue end
+
+                local isZoneCoveredBroadly = self:FindIntelInRings(targetZone.pos, 45) 
+                if isZoneCoveredBroadly then
+                    continue 
+                end
+                
+                -- Filter 1: If factory is active, skip radar requests to prioritize combat build.
+                if targetZone.BuilderManager and targetZone.BuilderManager.FactoryManager and targetZone.BuilderManager.FactoryManager.LocationActive then
+                    continue 
+                end
+                
+                -- Filter 2: Dedicated Radar Check (Fast Fail)
+                if targetZone.intelassignment and targetZone.intelassignment.RadarCoverage then
+                    continue 
+                end
+                
+                -- === NEW FILTER 3: FORWARD VISIBILITY CHECK ===
+                -- Check if the area of interest (the enemy-facing border) is already covered.
+                local needsForwardRadar = true
+                
+                if targetZone.edges then
+                    for _, edge in ipairs(targetZone.edges) do
+                        local neighborZone = edge.zone
+                        
+                        -- Find edges that border an UNCONTROLLED zone (which we assume is the enemy direction)
+                        if not controlledZones[neighborZone.id] and neighborZone.status ~= 'Allied' then
+                            
+                            -- Use the EDGE MIDPOINT as the point of interest (POI)
+                            -- We check the POI itself and a spot just inside the TARGET ZONE (0.9 * distance)
+                            local checkPoint = edge.midpoint
+                            
+                            -- We can check if the POI is visible. If ANY border is visible, we might not need a new radar.
+                            local isEdgeVisible = self:FindIntelInRings(checkPoint, 20)
+                            
+                            if isEdgeVisible then
+                                -- If any critical border is visible, we assume current coverage is sufficient
+                                -- and break the outer loop.
+                                needsForwardRadar = false
+                                break
+                            end
+                        end
+                    end
+                end
+
+                if not needsForwardRadar then
+                    continue
+                end
+                
+                -- If we reach here, the Frontline Zone is dark or its enemy-facing borders are dark.
+                
+                -- === STEP 2: FIND A SAFE BUILD POSITION ===
+                local bestBuildPosition = nil
+                local bestSupportMetric = -1
+
+                if targetZone.edges then
+                    for _, edge in ipairs(targetZone.edges) do
+                        local neighborZone = edge.zone
+                        
+                        -- We build in CONTROLLED (Allied) zones looking INTO Frontline zones.
+                        if controlledZones[neighborZone.id] and neighborZone.status == 'Allied' then
+                            
+                            local startPos = neighborZone.pos
+                            local endPos = targetZone.pos
+                            
+                            local distance = VDist3(startPos, endPos) 
+                            
+                            local stepSize = 10
+                            local steps = math.floor(distance / stepSize)
+                            
+                            for i = 1, steps do
+                                local lerpFactor = i / steps
+                                
+                                -- Stay strictly on the friendly side of the border (90%).
+                                if lerpFactor > 0.9 then break end
+
+                                local checkPos = {
+                                    startPos[1] + (endPos[1] - startPos[1]) * lerpFactor,
+                                    GetSurfaceHeight(startPos[1], startPos[3]), 
+                                    startPos[3] + (endPos[3] - startPos[3]) * lerpFactor
+                                }
+                                
+                                local gridX, gridZ = self:GetIntelGrid(checkPos)
+                                if gridX and self.MapIntelGrid[gridX] and self.MapIntelGrid[gridX][gridZ] then
+                                    local cell = self.MapIntelGrid[gridX][gridZ]
+                                    
+                                    -- 1. Must be in the Friendly Zone.
+                                    local inFriendlyZone = (cell.LandZoneID == neighborZone.id)
+                                    
+                                    -- 2. Must be safe from Historical Threat.
+                                    local isSafe = (cell.IMAPHistoricalThreat.Land or 0) < MaxRadarThreatForConstruction
+                                    
+                                    -- 3. Must not have a request pending nearby.
+                                    local isUnique = not self:IsExistingStructureRequestPresent(checkPos, RequestProximityDistance, 'RADAR')
+                                    --LOG("DEBUG_RADAR: isUnique at pos [%.1f, %.1f]: %s", checkPos[1], checkPos[3], tostring(isUnique))
+
+                                    if inFriendlyZone and isSafe and isUnique then
+                                        
+                                        -- SCORING:
+                                        local metric = lerpFactor * 10 
+                                        
+                                        -- Bonus for extending the network into a dark cell.
+                                        if not cell.IntelCoverage then
+                                            metric = metric + 5
+                                        end
+
+                                        if metric > bestSupportMetric then
+                                            bestSupportMetric = metric
+                                            bestBuildPosition = checkPos
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+
+                --local finalIsCovered = self:FindIntelInRings(targetZone.pos, 45) 
+                --LOG("DEBUG_RADAR: Zone %d final state isCovered: %s", targetZone.id, tostring(finalIsCovered ~= nil))
+                
+                -- === STEP 3: EXECUTE ===
+                if bestBuildPosition and bestSupportMetric > 0 then
+                    --LOG('Requesting radar to be built at '..tostring(repr(bestBuildPosition)))
+                    self:RequestStructureNearPosition(bestBuildPosition, PlacementRequestRadius, 'RADAR')
+                    break 
+                end
+            end
+        end
     end,
 }
 

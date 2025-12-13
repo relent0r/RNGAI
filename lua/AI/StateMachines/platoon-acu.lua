@@ -169,6 +169,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
             --LOG('Current acu health '..tostring(cdr.Health))
             --LOG('Current acu confidence '..tostring(cdr.Confidence))
+
             if cdr.Confidence < 3.5 and cdr.DistanceToHome > 625 then
                 --LOG('CDR has low confidence')
                 if self.BuilderData.Expansion then
@@ -256,7 +257,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                         end
                                     end
                                     self:LogDebug(string.format('Current expansion count is '..tostring(expansionCount)))
-                                    if expansionsAvailable > 0 then
+                                    if expansionsAvailable > 0 and aiBrain.BrainIntel.HighestPhase < 3 then
                                         if not table.empty(im.ZoneExpansions.Pathable) then
                                             local stageExpansion
                                             local BaseDMZArea = math.max( ScenarioInfo.size[1]-40, ScenarioInfo.size[2]-40 ) / 2
@@ -310,6 +311,17 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             Position = closestThreatUnit:GetPosition(), 
                         }
                         self:ChangeState(self.AttackRetreat)
+                        return
+                    elseif not target and closestUnitPosition then
+                        self.BuilderData = {
+                            Position = closestUnitPosition,
+                            CutOff = 625,
+                            Retreat = false,
+                            ShortNavigation = true
+
+                        }
+                        self:LogDebug(string.format('Nothing to do and there is a TML within range of us'))
+                        self:ChangeState(self.Navigating)
                         return
                     end
                 end
@@ -366,6 +378,50 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             elseif cdr.EnemyAirPresent then
                 cdr.EnemyAirPresent = false
             end
+            local priorityUpgradeRequired = cdr.GunUpgradeRequired or cdr.GunAeonUpgradeRequired or cdr.HighThreatUpgradeRequired
+            if priorityUpgradeRequired and GetEconomyIncome(brain, 'ENERGY') > (35 * ecoMultiplier)
+            or gameTime > 1500 and GetEconomyIncome(brain, 'ENERGY') > (40 * ecoMultiplier) and GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95 then
+                --LOG('ACU is checking if it can perform a priority upgrade')
+                local inRange = false
+                local highThreat = cdr.CurrentEnemyThreat > 30 and cdr.CurrentFriendlyThreat < 15
+                local enhancementLocation, locationDistance, enhancementZone
+                local movementCutOff = 225
+                if self.BuilderData.ZoneRetreat and VDist3Sq(cdr.Position, self.BuilderData.Position) <= self.BuilderData.CutOff and cdr.CurrentEnemyThreat < 30 then
+                    self:LogDebug(string.format('ACU close to position for enhancement and threat is '..cdr.CurrentEnemyThreat))
+                    self:ChangeState(self.EnhancementBuild)
+                    return
+                end
+                if priorityUpgradeRequired then
+                    enhancementLocation, enhancementZone, locationDistance, movementCutOff = ACUFunc.GetACUSafeZone(brain, cdr, false)
+                    if locationDistance < 2209 then
+                        inRange = true
+                    end
+                else
+                    enhancementLocation, enhancementZone, locationDistance, movementCutOff = ACUFunc.GetACUSafeZone(brain, cdr, true)
+                    if locationDistance < 2209 then
+                        inRange = true
+                    end
+                end
+                if inRange and not highThreat and (priorityUpgradeRequired or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
+                    self:LogDebug(string.format('We are in range and will perform enhancement'))
+                    self:ChangeState(self.EnhancementBuild)
+                    return
+                elseif not highThreat and (priorityUpgradeRequired or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
+                    if enhancementLocation then
+                        self.BuilderData = {
+                            Position = enhancementLocation,
+                            CutOff = movementCutOff,
+                            EnhancementBuild = true,
+                            ZoneRetreat = true,
+                            ZoneID = enhancementZone
+                        }
+                        --LOG('Enhancement cutoff set to '..tostring(movementCutOff))
+                        self:LogDebug(string.format('We are not in range for enhancement and will navigate to the position '..tostring(self.BuilderData.Position)))
+                        self:ChangeState(self.Navigating)
+                        return
+                    end
+                end
+            end
             if self.CheckEarlyLandFactory then
                 self.CheckEarlyLandFactory = false
                 if brain.BrainIntel.PlayerRole.SpamPlayer and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < 6400 and not cdr.Caution and cdr.CurrentEnemyThreat < 25 then
@@ -408,6 +464,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                         else
                                             brain:BuildStructure(cdr, v[1], v[2], v[3])
                                         end
+                                        coroutine.yield(2)
                                         local failureCount = 0
                                         while (not cdr.Dead and 0<RNGGETN(cdr:GetCommandQueue())) or (cdr:IsUnitState('Building')) or (cdr:IsUnitState("Moving")) do
                                             coroutine.yield(10)
@@ -503,49 +560,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         }
                     else
                         self.BuilderData = { }
-                    end
-                end
-            end
-            local priorityUpgradeRequired = cdr.GunUpgradeRequired or cdr.GunAeonUpgradeRequired or cdr.HighThreatUpgradeRequired
-            if priorityUpgradeRequired and GetEconomyIncome(brain, 'ENERGY') > (35 * ecoMultiplier)
-            or gameTime > 1500 and GetEconomyIncome(brain, 'ENERGY') > (40 * ecoMultiplier) and GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95 then
-                local inRange = false
-                local highThreat = cdr.CurrentEnemyThreat > 30 and cdr.CurrentFriendlyThreat < 15
-                local enhancementLocation, locationDistance, enhancementZone
-                local movementCutOff = 225
-                if self.BuilderData.ZoneRetreat and VDist3Sq(cdr.Position, self.BuilderData.Position) <= self.BuilderData.CutOff and cdr.CurrentEnemyThreat < 30 then
-                    self:LogDebug(string.format('ACU close to position for enhancement and threat is '..cdr.CurrentEnemyThreat))
-                    self:ChangeState(self.EnhancementBuild)
-                    return
-                end
-                if priorityUpgradeRequired then
-                    enhancementLocation, enhancementZone, locationDistance, movementCutOff = ACUFunc.GetACUSafeZone(brain, cdr, false)
-                    if locationDistance < 2209 then
-                        inRange = true
-                    end
-                else
-                    enhancementLocation, enhancementZone, locationDistance, movementCutOff = ACUFunc.GetACUSafeZone(brain, cdr, true)
-                    if locationDistance < 2209 then
-                        inRange = true
-                    end
-                end
-                if inRange and not highThreat and (priorityUpgradeRequired or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
-                    self:LogDebug(string.format('We are in range and will perform enhancement'))
-                    self:ChangeState(self.EnhancementBuild)
-                    return
-                elseif not highThreat and (priorityUpgradeRequired or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
-                    if enhancementLocation then
-                        self.BuilderData = {
-                            Position = enhancementLocation,
-                            CutOff = movementCutOff,
-                            EnhancementBuild = true,
-                            ZoneRetreat = true,
-                            ZoneID = enhancementZone
-                        }
-                        --LOG('Enhancement cutoff set to '..tostring(movementCutOff))
-                        self:LogDebug(string.format('We are not in range for enhancement and will navigate to the position '..tostring(self.BuilderData.Position)))
-                        self:ChangeState(self.Navigating)
-                        return
                     end
                 end
             end
@@ -709,23 +723,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
             local numUnits = GetNumUnitsAroundPoint(brain, categories.LAND + categories.MASSEXTRACTION + (categories.STRUCTURE * categories.DIRECTFIRE) - categories.SCOUT, targetSearchPosition, targetSearchRange, 'Enemy')
             if numUnits > 0 then
-                if not cdr['rngdata']['RadarCoverage'] then
-                    local currentLayer = cdr:GetCurrentLayer()
-                    if currentLayer ~= 'Seabed' then
-                        --LOG('We dont have any radar coverage where we are')
-                        local radarInRange = im:FindIntelInRings(cdr.Position, 70)
-                        if not radarInRange then
-                            --LOG('No radar in range, check if already a request exists ')
-                            local radarRequestExists = im:IsExistingStructureRequestPresent(cdr.Position, 70, 'RADAR')
-                            if not radarRequestExists then
-                                --LOG('No existing requests, create one')
-                                im:RequestStructureNearPosition(cdr.Position, 70, 'RADAR')
-                            else
-                                --LOG('There is already a request in the table around this position')
-                            end
-                        end
-                    end
-                end
                 self:LogDebug(string.format('numUnits > 1 '..tostring(numUnits)..'enemy threat is '..tostring(cdr.CurrentEnemyThreat)..' friendly threat is '..tostring(cdr.CurrentFriendlyThreat)))
                 self:LogDebug(string.format(' friendly inner circle '..tostring(cdr.CurrentFriendlyInnerCircle)..' enemy inner circle '..tostring(cdr.CurrentEnemyInnerCircle)))
                 local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets
@@ -823,7 +820,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.AttackRetreat)
                     return
                 end
-                if not target and closestThreatDistance < 1600 and closestThreatUnit and not IsDestroyed(closestThreatUnit) then
+                if not target and closestThreatDistance and closestThreatDistance < 1600 and closestThreatUnit and not IsDestroyed(closestThreatUnit) then
                     --RNGLOG('No Target Found due to high threat, closestThreatDistance is below 1225 so we will attack that ')
                     self:LogDebug(string.format('No Target Found but we have a close threat unit '..tostring(closestThreatUnit.UnitId)))
                     if self.BuilderData.DefendExpansion then
@@ -955,6 +952,17 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     self:LogDebug(string.format('Have target, attacking enemy threat is '..cdr.CurrentEnemyThreat..' friendly threat is '..cdr.CurrentFriendlyThreat))
                     self:ChangeState(self.AttackTarget)
                     return
+                elseif not target and closestUnitPosition then
+                    self.BuilderData = {
+                        Position = closestUnitPosition,
+                        CutOff = 625,
+                        Retreat = false,
+                        ShortNavigation = true
+
+                    }
+                    self:LogDebug(string.format('Nothing to do and there is a TML within range of us'))
+                    self:ChangeState(self.Navigating)
+                    return
                 else
                     ----self:LogDebug(string.format('No target found for ACU'))
                     if not cdr.SuicideMode then
@@ -978,7 +986,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                         self:ChangeState(self.Navigating)
                                         return
                                     end
-                                elseif cdr.Blueprint.FactionCategory == 'AEON' and (not cdr.GunAeonUpgradePresent) and threatAtPos > 55 and threatAtPos > cdr.ThreatLimit * 1.3 and GetEconomyIncome(brain, 'ENERGY') > 65 then
+                                elseif cdr.Blueprint.FactionCategory == 'AEON' and (not ACUFunc.CDRGunCheck(cdr, false, true)) and threatAtPos > 55 and threatAtPos > cdr.ThreatLimit * 1.3 and GetEconomyIncome(brain, 'ENERGY') > 65 then
                                     --LOG('Aeon Second gun upgrade required')
                                     cdr.GunAeonUpgradeRequired = true
                                     local closestBase = ACUFunc.GetClosestBase(brain, cdr)
@@ -1137,6 +1145,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local cdr = self.cdr
             local builderData = self.BuilderData
             local destination = builderData.Position
+            local shortNavigation = builderData.ShortNavigation 
             local navigateDistanceCutOff = builderData.CutOff or 400
             local destCutOff = math.sqrt(navigateDistanceCutOff) + 10
             if not destination then
@@ -1253,7 +1262,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         --LOG('CutOff is '..navigateDistanceCutOff)
                         if distance < 9 then
                             StateUtils.IssueNavigationMove(cdr, destination)
-                            WaitTicks(100)
+                            WaitTicks(80)
                         end
                         if not endPoint then
                             IssueClearCommands({cdr})
@@ -1351,6 +1360,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             IssueClearCommands({cdr})
                             break
                         end
+                    end
+                    if shortNavigation then
+                        WaitTicks(20)
+                        self:LogDebug(string.format('We have performed a short navigation move'))
+                        self:ChangeState(self.DecideWhatToDo)
                     end
                 end
                 WaitTicks(1)
@@ -1780,6 +1794,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 brain:BuildStructure(eng, v[1], v[2], false)
                             end
                         end
+                        coroutine.yield(2)
                         local pauseTimeOut = 0
                         while not eng.Dead and eng:IsUnitState('Building') or 0 < RNGGETN(eng:GetCommandQueue()) do
                             --[[local massStateCaution = brain:EcoManagerMassStateCheck()
@@ -1826,6 +1841,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 brain:BuildStructure(eng, v[1], v[2], false)
                             end
                         end
+                        coroutine.yield(2)
                         while eng:IsUnitState('Building') or 0 < RNGGETN(eng:GetCommandQueue()) do
                             coroutine.yield(5)
                         end
@@ -3026,9 +3042,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         ----self:LogDebug(string.format('Enhancement should be completed '))
                         for _, v in priorityUpgrades do
                             if NextEnhancement == v then
-                                if ACUFunc.CDRGunCheck(cdr) then
+                                if ACUFunc.CDRGunCheck(cdr, true) then
                                     cdr.GunUpgradeRequired = false
-                                    cdr.GunUpgradePresent = true
                                     RUtils.CDRWeaponCheckRNG(brain, cdr, true)
                                 end
                                 if not ACUFunc.CDRHpUpgradeCheck(brain, cdr) then
@@ -3435,8 +3450,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         --aiBrain:BuildStructure(eng, whatToBuild, buildLocation, false)
                     end
                 end
-            else
-            --RNGLOG('Hydro is present we shouldnt need any more pgens during initialization')
             end
             if not hydroPresent and closeMarkers > 3 then
                 local factoryType = 'T1LandFactory'
@@ -3538,7 +3551,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             --RNGLOG('CommanderInitializeAIRNG : CDR Initialize almost done, should have just finished final t1 land')
             if hydroPresent and (closeMarkers > 0 or distantMarkers > 0) then
                 engPos = eng:GetPosition()
-                --RNGLOG('CommanderInitializeAIRNG : Hydro Distance is '..VDist3Sq(engPos,closestHydro.Position))
+                --LOG('CommanderInitializeAIRNG : Hydro Distance is '..VDist3Sq(engPos,closestHydro.Position))
                 if VDist3Sq(engPos,closestHydro.Position) > 144 then
                     IssueMove({eng}, closestHydro.Position )
                     while VDist3Sq(engPos,closestHydro.Position) > 100 do
@@ -3547,15 +3560,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         if eng:IsIdleState() and VDist3Sq(engPos,closestHydro.Position) > 100 then
                             break
                         end
-                        --RNGLOG('CommanderInitializeAIRNG : Still inside movement loop')
-                        --RNGLOG('Distance is '..VDist3Sq(engPos,closestHydro.Position))
+                        --LOG('CommanderInitializeAIRNG : Still inside movement loop')
+                        --LOG('Distance is '..VDist3Sq(engPos,closestHydro.Position))
                     end
-                    --RNGLOG('CommanderInitializeAIRNG : We should be close to the hydro now')
+                    --LOG('CommanderInitializeAIRNG : We should be close to the hydro now')
                 end
                 IssueClearCommands({eng})
                 local assistList = RUtils.GetAssisteesRNG(aiBrain, self.LocationType, categories.ENGINEER, categories.HYDROCARBON, categories.ALLUNITS)
                 local assistee = false
-                --RNGLOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
+                --LOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
                 local assistListCount = 0
                 while not not RNGTableEmpty(assistList) do
                     coroutine.yield( 15 )
@@ -3563,7 +3576,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     assistListCount = assistListCount + 1
                     --LOG('CommanderInitializeAIRNG : AssistList is '..table.getn(assistList)..' in length')
                     if assistListCount > 10 then
-                        --RNGLOG('assistListCount is still empty after 7.5 seconds')
+                        --LOG('assistListCount is still empty after 7.5 seconds')
                         break
                     end
                 end
@@ -3572,14 +3585,13 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     local low = false
                     local bestUnit = false
                     for k,v in assistList do
-                        --DUNCAN - check unit is inside assist range 
                         local unitPos = v:GetPosition()
                         local UnitAssist = v.UnitBeingBuilt or v.UnitBeingAssist or v
                         local NumAssist = RNGGETN(UnitAssist:GetGuards())
                         local dist = VDist2Sq(engPos[1], engPos[3], unitPos[1], unitPos[3])
-                        --RNGLOG('CommanderInitializeAIRNG : Assist distance for commander assist is '..dist)
+                        --LOG('CommanderInitializeAIRNG : Assist distance for commander assist is '..dist)
                         -- Find the closest unit to assist
-                        if (not low or dist < low) and NumAssist < 20 and dist < 225 then
+                        if (not low or dist < low) and NumAssist < 20 and dist < 256 then
                             low = dist
                             bestUnit = v
                         end
@@ -3589,7 +3601,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if assistee  then
                     IssueClearCommands({eng})
                     eng.UnitBeingAssist = assistee.UnitBeingBuilt or assistee.UnitBeingAssist or assistee
-                    --RNGLOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
+                    --LOG('* EconAssistBody: Assisting now: ['..eng.UnitBeingAssist:GetBlueprint().BlueprintId..'] ('..eng.UnitBeingAssist:GetBlueprint().Description..')')
                     IssueGuard({eng}, eng.UnitBeingAssist)
                     coroutine.yield(30)
                     while eng and not eng.Dead and not eng:IsIdleState() do

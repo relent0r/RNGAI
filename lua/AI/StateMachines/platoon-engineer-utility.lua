@@ -353,7 +353,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             self:ChangeState(self.SetTaskData)
                             return
                         else
-                           --LOG('Position is greater than 20')
+                            --LOG('Position is greater than 20')
                             self:ChangeState(self.NavigateToTaskLocation)
                             return
                         end
@@ -1493,7 +1493,22 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                         if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") and not emergencyBuild then
                             if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, PlatoonPos, 45, 'Enemy') > 0 then
-                                local actionTaken = RUtils.EngineerEnemyAction(aiBrain, eng)
+                                local actionTaken, reclaimTarget = RUtils.EngineerEnemyAction(aiBrain, eng)
+                                if actionTaken then
+                                    coroutine.yield(5)
+                                    if reclaimTarget then
+                                        while reclaimTarget and not reclaimTarget.Dead do
+                                            coroutine.yield(20)
+                                            enemyPos = reclaimTarget:GetPosition()
+                                            engPos = eng:GetPosition()
+                                            if VDist3Sq(engPos, enemyPos) > 225 then
+                                                break
+                                            end
+                                        end
+                                    end
+                                    self:ChangeState(self.PerformBuildTask)
+                                    return
+                                end
                             end
                         end
                         if eng.Upgrading or eng.Combat or eng.Active then
@@ -1519,7 +1534,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if movementRequired then
-                        IssueClearCommands({eng})
+                        if not eng:IsUnitState('Building') then
+                            IssueClearCommands({eng})
+                        end
                     -- check to see if we need to reclaim or capture...
                         local unitSize = aiBrain:GetUnitBlueprint(whatToBuild).Physics
                         local reclaimRadius = (unitSize.SkirtSizeX and unitSize.SkirtSizeX / 2) or 5
@@ -1903,8 +1920,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
 
             while not IsDestroyed(eng) and (eng.GetCommandQueue and (0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving"))) do
+                --LOG('Constructing Loop Check: Commands='..tostring(RNGGETN(eng:GetCommandQueue()))..', Building='..tostring(eng:IsUnitState('Building'))..', Moving='..tostring(eng:IsUnitState("Moving")))
                 coroutine.yield(1)
-                local platPos = self:GetPlatoonPosition()
+                local platPos = eng:GetPosition()
                 if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                     if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, platPos, 30, 'Enemy') > 0 then
                         --self:LogDebug(string.format('Constructing enemy unit found '))

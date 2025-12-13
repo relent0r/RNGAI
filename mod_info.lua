@@ -1,6 +1,6 @@
 name = "RNGAI"
-uid = "faf0863e-94a0-b0b0-ae88-e008d8414174"
-version = 223
+uid = "171f3f5a-17f6-43be-92d8-02f26bc8891d"
+version = 224
 copyright = "2025 relentless"
 description = "RNG Standard AI. October 2025. If you find issues or have ideas please visit the FAF discord AI feedback channel, if you can provide a replay id that will make it much easier for troubleshooting."
 author = "relentless"

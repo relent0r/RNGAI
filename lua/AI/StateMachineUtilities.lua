@@ -298,6 +298,11 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride, checkLayer
     elseif unit['rngdata'].Role=='Scout' then
         dest=KiteDist(pos,tpos,(platoon['rngdata'].MaxPlatoonWeaponRange-3),0)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
+    elseif unit['rngdata'].Role=='Frigate' then
+        -- frigates seems to not quite hit units some times due to their length
+        local destRange = unit['rngdata'].MaxWeaponRange - 4 - mod - healthmod
+        dest = KiteDist(pos, tpos, destRange, 0)
+        dest = CrossP(pos, dest, strafemod/VDist3(pos, dest)*(1-2*math.random(0,1)))
     elseif maxPlatoonRangeOverride then
         dest=KiteDist(pos,tpos,platoon['rngdata'].MaxPlatoonWeaponRange,0)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
@@ -690,6 +695,9 @@ GetClosestUnitRNG = function(aiBrain, platoon, platoonPosition, unitCat, pathChe
     }
     local closestUnit
     local closestDistance
+    local threatTable = {} 
+    local maxThreatRangeFound = 0
+
     for _, range in RangeList do
         if range <= rangeCutOff then
             local targetUnits = GetUnitsAroundPoint(aiBrain, unitCat, platoonPosition, range, alliance)
@@ -1629,9 +1637,6 @@ BuildAIFailedRNG = function(unit, params)
         unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.PerformBuildTask)
     elseif not unit.PlatoonHandle.HighValueDiscard then
         if not unit.PerformingBuildTask then
-            if unit.PlatoonHandle.BuilderData.Construction.Type == 'TMD' then
-                --LOG('Engineer Triggered BuildAIFailed')
-            end
             unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
         else
             unit.PerformingBuildTask = false

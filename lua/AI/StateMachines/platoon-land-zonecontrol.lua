@@ -1008,11 +1008,12 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local location = false
             local avoidTargetPos
+            local targetRange
             local controlRequired = not self.Raid
             local target = StateUtils.GetClosestUnitRNG(aiBrain, self, self.Pos, (categories.MOBILE + categories.STRUCTURE) * (categories.DIRECTFIRE + categories.INDIRECTFIRE),false,  false, 128, 'Enemy')
             local zoneRetreat
             if target and not target.Dead then
-                local targetRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
+                targetRange = StateUtils.GetUnitMaxWeaponRange(target) or 10
                 local minTargetRange
                 if targetRange then
                     minTargetRange = targetRange + 10
@@ -1024,7 +1025,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local rx = self.Pos[1] - targetPos[1]
                 local rz = self.Pos[3] - targetPos[3]
                 local targetDistance = rx * rx + rz * rz
-                zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, targetPos, controlRequired, nil, 'Land')
+                zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, targetPos, targetRange, controlRequired, nil, 'Land')
                 local zonePos = zoneRetreat.pos
                 local platUnits = self:GetPlatoonUnits()
                 if targetDistance < targetRange * targetRange then
@@ -1091,7 +1092,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 coroutine.yield(20)
             end
             if not zoneRetreat then
-                zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, avoidTargetPos, controlRequired, nil, 'Land')
+                zoneRetreat = aiBrain.IntelManager:GetClosestRetreatZone(aiBrain, self, false, avoidTargetPos, targetRange, controlRequired, nil, 'Land')
             end
             local location = zoneRetreat.pos
             if (not location) then

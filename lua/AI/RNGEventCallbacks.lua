@@ -312,7 +312,11 @@ end
 function OnStopBeingCaptured(self, captor)
     local aiBrain = self:GetAIBrain()
     if aiBrain.RNG then
-        self:Kill()
+        -- We are adding a chance, making the units ALWAYS commit suicide teaches bad habits to humans.
+        local chance = math.random(2)
+        if chance == 1 then
+            self:Kill()
+        end
     end
 end
 
@@ -324,6 +328,39 @@ function UnitEnhancementCreate(unit, enh)
         local enhancementBp = unit.Blueprint.Enhancements[enh]
         if unitCats.COMMAND then
             StateUtils.GetUnitMaxWeaponRange(unit, false, true)
+            if unitCats.AEON then
+                -- Moving to having 3 upgrades for the Aeon is dumb for AI
+                -- Check for the Advanced Gun
+                if not unit['rngdata'] then
+                    unit['rngdata'] = {}
+                end
+                if enh == 'FAF_CrysalisBeamAdvanced' then
+                    unit['rngdata']['HasGunUpgrade'] = true
+                    unit['rngdata']['HasAeonAdvancedGunUpgradePresent'] = true
+                    if unit['rngdata']['IsUpgradingGun'] then
+                        unit['rngdata']['IsUpgradingGun'] = false
+                    end
+                    return -- Exit early, we are done
+                end
+
+                -- Check for T2 Components
+                if enh == 'CrysalisBeam' or enh == 'HeatSink' then
+                    local hasRange = unit:HasEnhancement('CrysalisBeam') or enh == 'CrysalisBeam'
+                    local hasRoF = unit:HasEnhancement('HeatSink') or enh == 'HeatSink'
+
+                    if hasRange and hasRoF then
+                        unit['rngdata']['HasGunUpgrade'] = true
+                        if unit['rngdata']['IsUpgradingGun'] then
+                            unit['rngdata']['IsUpgradingGun'] = false
+                        end
+                    else
+                        -- We only have one half of the upgrade suite. 
+                        -- Ensure the flag is false so the AI builds the other half.
+                        unit['rngdata']['HasGunUpgrade'] = false
+                    end
+                    return -- Exit early to prevent generic logic from overriding
+                end
+            end
             local isCombatType = enhancementBp.NewRoF or enhancementBp.NewMaxRadius or enhancementBp.NewRateOfFire or enhancementBp.NewRadius 
             or enhancementBp.NewDamage or enhancementBp.DamageMod or enhancementBp.ZephyrDamageMod
             local isSurvivalType = (enhancementBp.NewRegenRate and enhancementBp.NewRegenRate > 20) or enhancementBp.ShieldMaxHealth
