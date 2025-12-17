@@ -261,7 +261,8 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not target then
-                local maxThreat = math.max(self.CurrentPlatoonThreatAntiSurface, 12)
+                local currentThreat = self.CurrentPlatoonThreatAntiSurface or 0
+                local maxThreat = math.max(currentThreat, 12)
                 if not table.empty(aiBrain.prioritypoints) then
                     local point = RUtils.CheckPriorityTarget(aiBrain, false, self, 'AntiAir', 12, 'Allied', false, false, 'Sub')
                     if point then
@@ -461,6 +462,9 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 ----self:LogDebug(string.format('Gunship is in retreat mode, waiting until it arrives home, distance from home is '..VDist3Sq(platPos, self.Home)))
                 coroutine.yield(25)
                 platPos = self:GetPlatoonPosition()
+            end
+            if not platPos[1] then
+                return
             end
             if VDist3Sq(platPos, self.Home) < 2500 then
                 for _, unit in self:GetPlatoonUnits() do

@@ -797,6 +797,14 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerFocusHighValue = false
         self.EngineerAssistManagerFocusLandUpgrade = false
         self.EngineerAssistManagerPriorityTable = {}
+        self.EngineerAssistRuleBP = {
+            Energy = 320,
+            None = 999999999
+        }
+        self.EngineerAssistCurrentBPAllocated = {
+            Energy = 0,
+            None = 0
+        }
         self.EngineerSpendDistributionTable = {
             BuildPower = 0,
             BuildStructure = 0,
@@ -6242,7 +6250,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     --LOG('Current assist power '..tostring(self.EngineerAssistManagerBuildPower))
                     --LOG('Current required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
                     self.EngineerAssistManagerPriorityTable = {
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'lowincome structure * energyproduction'}, 
+                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', bpKey = 'Energy'}, 
                         {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'AirUpgrade air hsq upgrade'}, 
                         {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'AirUpgrade mass'}, 
                         {cat = categories.STRUCTURE * (categories.DEFENSE + categories.TECH2 * categories.ARTILLERY), type = 'Completion', debug = 'lowincome structure * defense or arty' }
@@ -6257,19 +6265,21 @@ AIBrain = Class(RNGAIBrainClass) {
                 if (gameTime < 300 and self.EconomyOverTimeCurrent.MassIncome < 2.5) then
                     state = 'Energy'
                     --LOG('Assist Focus is Factory and Energy Completion')
+                    self.EngineerAssistManagerFocusCategoryLookup = nil
                     self.EngineerAssistManagerPriorityTable = {
-                        {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'lowincome structure * factory'},
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'lowincome structure * energyproduction', maxbp = 320}, 
+                        {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
+                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'lowincome structure * energyproduction', bpKey = 'Energy'}, 
                         {cat = categories.STRUCTURE * (categories.DEFENSE + categories.TECH2 * categories.ARTILLERY), type = 'Completion', debug = 'lowincome structure * defense or arty' }
                     }
                 elseif self.EcoManager.EcoPowerPreemptive or self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 or self.EngineerAssistManagerFocusPower then
                     state = 'Energy'
                     --LOG('Assist Focus is Energy')
                     self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION
+                    self.EngineerAssistManagerFocusCategoryLookup = 'Energy'
                     self.EngineerAssistManagerPriorityTable = {
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 , type = 'Completion', debug = 'energy structure * energyproduction t3', maxbp = 320}, 
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2, type = 'Completion', debug = 'energy structure * energyproduction t2', maxbp = 320}, 
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'energy structure * energyproduction t1', maxbp = 320}, 
+                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 , type = 'Completion', debug = 'energy structure * energyproduction t3', bpKey = 'Energy'}, 
+                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2, type = 'Completion', debug = 'energy structure * energyproduction t2', bpKey = 'Energy'}, 
+                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'energy structure * energyproduction t1', bpKey = 'Energy'}, 
                         {cat = categories.FACTORY * ( categories.LAND + categories.AIR ) - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'energy factory * land air'},
                         {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'energy factory'},
                     }
@@ -6277,11 +6287,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     state = 'Snipe'
                     --LOG('Assist Focus is Snipe')
                     self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.FACTORY
+                    self.EngineerAssistManagerFocusCategoryLookup = 'Factory'
                     self.EngineerAssistManagerPriorityTable = {
                         {cat = categories.daa0206, type = 'Completion', debug = 'snipe daa0206'},
                         {cat = categories.xrl0302, type = 'Completion', debug = 'snipe xrl0302'},
                         {cat = categories.AIR * (categories.BOMBER + categories.GROUNDATTACK), type = 'Completion', debug = 'snipe air bombergunship'},
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'snipe structure * energyproduction', maxbp = 320},
+                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'snipe structure * energyproduction', bpKey = 'Energy'},
                         {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'snipe upgrade factory'}, 
                         {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'snipe mass upgrade'}, 
                         {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'snipe factory'},
@@ -6291,12 +6302,13 @@ AIBrain = Class(RNGAIBrainClass) {
                     state = 'Experimental'
                     --LOG('Assist Focus is High Value')
                     self.EngineerAssistManagerFocusCategory = categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC
+                    self.EngineerAssistManagerFocusCategoryLookup = 'HighValue'
                     self.EngineerAssistManagerPriorityTable = {
                         {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion', debug = 'HighValue smd'},
                         {cat = categories.MOBILE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion', debug = 'HighValue experimental'},
                         {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'HighValue hq factory upgrade'}, 
                         {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'HighValue mass'}, 
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'HighValue structure * energyproduction', maxbp = 320}, 
+                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'HighValue structure * energyproduction', bpKey = 'Energy'}, 
                         {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'HighValue factory'},
                         {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'HighValue mass storage'}
                     }
@@ -6304,10 +6316,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     state = 'Air'
                     --LOG('Assist Focus is Air Upgrade')
                     self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY
+                    self.EngineerAssistManagerFocusCategoryLookup = 'AirUpgrade'
                     self.EngineerAssistManagerPriorityTable = {
                         {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'AirUpgrade air hsq upgrade'}, 
                         {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'AirUpgrade mass'}, 
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'AirUpgrade structure * energyproduction', maxbp = 320}, 
+                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'AirUpgrade structure * energyproduction', bpKey = 'Energy'}, 
                         {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'AirUpgrade factory'},
                         {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'AirUpgrade experimental'},
                         {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'AirUpgrade mass storage'} 
@@ -6316,10 +6329,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     state = 'Land'
                     --LOG('Assist Focus is Land upgrade')
                     self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY
+                    self.EngineerAssistManagerFocusCategoryLookup = 'LandUpgrade'
                     self.EngineerAssistManagerPriorityTable = {
                         {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'LandUpgrade hq factory'}, 
                         {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'LandUpgrade mass'}, 
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'LandUpgrade structure * energy', maxbp = 320}, 
+                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'LandUpgrade structure * energy', bpKey = 'Energy'}, 
                         {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'LandUpgrade factory'},
                         {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'LandUpgrade experimental'},
                         {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'LandUpgrade mass storage'}
@@ -6327,6 +6341,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 else
                     state = 'Mass'
                     --LOG('Assist Focus is Mass and everything')
+                    self.EngineerAssistManagerFocusCategoryLookup = nil
                     self.EngineerAssistManagerPriorityTable = {
                         {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion', debug = 'Mass smd'},
                         {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'Mass mass'},
@@ -6334,7 +6349,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'Mass mobile experimental'},
                         {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion', debug = 'Mass structure experimental'},
                         {cat = categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion', debug = 'Mass strategic'},
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'Mass energy', maxbp = 320}, 
+                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'Mass energy', bpKey = 'Energy'}, 
                         {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade', debug = 'Mass factory upgrade'}, 
                         {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'Mass factory complete'}, 
                         {cat = categories.STRUCTURE * categories.SHIELD, type = 'Completion', debug = 'Mass shield complete'}, 

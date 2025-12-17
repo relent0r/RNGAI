@@ -1714,11 +1714,13 @@ StructureManager = Class {
                     self.Brain.EngineerAssistManagerFocusLandUpgrade = false
                     if self.Brain.EngineerAssistManagerFocusCategory == categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY then
                         self.Brain.EngineerAssistManagerFocusCategory = false
+                        self.Brain.EngineerAssistManagerFocusCategoryLookup = nil
                     end
                 elseif hq =='AIR' then
                     self.Brain.EngineerAssistManagerFocusAirUpgrade = false
                     if self.Brain.EngineerAssistManagerFocusCategory == categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY then
                         self.Brain.EngineerAssistManagerFocusCategory = false
+                        self.Brain.EngineerAssistManagerFocusCategoryLookup = nil
                     end
                     if self.Brain.BrainIntel.PlayerStrategy.T3AirRush and upgradedFactory.Blueprint.CategoriesHash.TECH3 then
                         self.Brain.BrainIntel.PlayerStrategy.T3AirRush = false
@@ -1807,11 +1809,13 @@ StructureManager = Class {
                 aiBrain.EcoManager.CoreMassPush = true
                 --RNGLOG('Assist Focus is Mass extraction')
                 aiBrain.EngineerAssistManagerFocusCategory = categories.MASSEXTRACTION
+                aiBrain.EngineerAssistManagerFocusCategoryLookup = 'Mass'
             elseif aiBrain.EcoManager.CoreMassPush then
                 aiBrain.EcoManager.CoreMassPush = false
                 --RNGLOG('Assist Focus is set to false from Extractor upgrade manager')
                 if aiBrain.EngineerAssistManagerFocusCategory == categories.MASSEXTRACTION then
                     aiBrain.EngineerAssistManagerFocusCategory = false
+                    aiBrain.EngineerAssistManagerFocusCategoryLookup = nil
                 end
             end
 

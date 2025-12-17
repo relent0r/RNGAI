@@ -925,6 +925,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local targetDistance = zx * zx + zz * zz
                         local unitRange = StateUtils.GetUnitMaxWeaponRange(target, 'Direct Fire') or 0
                         local riskRange = unitRange * unitRange + 400
+                        local isRisky, riskReason = RUtils.ValidateACUEngagementRisk(brain, cdr, target, targetPos, highThreatCount, defenseTargets)
+
                         if cdr.DistanceToHome > 225 and highThreatCount and highThreatCount > 130 and unitRange > cdr.WeaponRange then
                             --LOG('ACU is more than 15 from base, we are going to retreat from a high range unit')
                             self:LogDebug(string.format('High unit threat at target and it outranges the acu, target was '..tostring(target.UnitId)))
@@ -932,13 +934,21 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             --LOG('ACU : We are going to retreat due to high threat at target and unit range higher')
                             self:ChangeState(self.Retreating)
                             return
-                        elseif targetDistance < riskRange and cdr.DistanceToHome < 225 and highThreatCount and highThreatCount > 130 and unitRange > cdr.WeaponRange and target:GetHealth() > 6000 then
+                        elseif isRisky and cdr.DistanceToHome > 225 then
+                            -- This catches the cases where the ACU outranges the target, but the total threat (250+) 
+                            -- or static defenses make the fight suicidal.
+                            --LOG('Engagement Risk Detected: %s. Threat: %s. Aborting Attack and Retreating.', riskReason, tostring(highThreatCount))
+                            self:LogDebug(string.format('Engagement Risk Detected: %s. Threat: %s. Aborting Attack and Retreating.', riskReason, tostring(highThreatCount)))
+                            self:ChangeState(self.Retreating)
+                            return
+                        elseif not isRisky and targetDistance < riskRange and cdr.DistanceToHome < 225 and highThreatCount and highThreatCount > 130 and unitRange > cdr.WeaponRange and target:GetHealth() > 6000 then
                             --LOG('Unit is less than its risk range, acu is going to try and lerp away from it')
-                            local movePos = RUtils.lerpy(cdr.Position, target:GetPosition(), {riskRange, riskRange + 15})
-                            --LOG('Move pos is '..tostring(movePos[1])..':'..tostring(movePos[3]))
-                            IssueClearCommands({cdr})
-                            IssueMove({cdr},movePos)
-                            coroutine.yield(25)
+                            self.BuilderData = {
+                                AttackTarget = target,
+                                Position = target:GetPosition(), 
+                            }
+                            self:ChangeState(self.AttackRetreat)
+                            return
                         end
                     end
                     --LOG('About to attack target '..tostring(target.UnitId))
@@ -1238,7 +1248,41 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
-                    
+                end
+
+                if builderData.Retreat and cdr.CurrentEnemyDefenseThreat > 20 then
+                    -- Will nudge away from a point defense.
+                    -- hopefully this will stop the acu from walking into a point defenses range when
+                    -- its trying to retreat towards a base.
+                    local enemyPD = StateUtils.GetClosestUnitRNG(brain, self, origin, 
+                        categories.STRUCTURE * (categories.DIRECTFIRE + categories.INDIRECTFIRE), 
+                        false, false, 128, 'Enemy')
+                
+                    if enemyPD and not enemyPD.Dead then
+                        local pdPos = enemyPD:GetPosition()
+                        local pdRange = StateUtils.GetUnitMaxWeaponRange(enemyPD, 'Direct Fire') or 30
+                        local distToPDSq = VDist2Sq(origin[1], origin[3], pdPos[1], pdPos[3])
+                        if distToPDSq < (pdRange + 10) * (pdRange + 10) then
+                            local dist = math.sqrt(distToPDSq)
+                            local pushX, pushZ = (origin[1] - pdPos[1]) / dist, (origin[3] - pdPos[3]) / dist
+                            local dirX, dirZ = destination[1] - origin[1], destination[3] - origin[3]
+                            local dirMag = math.sqrt(dirX*dirX + dirZ*dirZ)
+                
+                            if dirMag > 0.1 then
+                                dirX, dirZ = dirX / dirMag, dirZ / dirMag
+                                local tanX, tanZ = -pushZ, pushX 
+                                local nudgeX = (pushX * 1.0) + (tanX * 0.6) + (dirX * 0.8)
+                                local nudgeZ = (pushZ * 1.0) + (tanZ * 0.6) + (dirZ * 0.8)
+                
+                                waypoint = {
+                                    origin[1] + (nudgeX * 20),
+                                    origin[2],
+                                    origin[3] + (nudgeZ * 20)
+                                }
+                                wx, wz = waypoint[1], waypoint[3]
+                            end
+                        end
+                    end
                 end
 
 

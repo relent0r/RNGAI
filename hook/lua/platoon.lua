@@ -469,6 +469,11 @@ Platoon = Class(RNGAIPlatoonClass) {
             local platoonCount = 0
             local platUnits = GetPlatoonUnits(self)
             local builderRates = {singleTech1BuilderRate, singleTech2BuilderRate, singleTech3BuilderRate}
+            local focusCategoryCurrentBuildPower = 0
+            aiBrain.EngineerAssistCurrentBPAllocated = {
+                Energy = 0,
+                None = 0
+            }
             --LOG('Actual count '..tostring(table.getn(platUnits)))
             for _, eng in platUnits do
                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
@@ -493,10 +498,34 @@ Platoon = Class(RNGAIPlatoonClass) {
                         table.insert(tech3Engineers, eng)
                     end
                     totalBuildRate = totalBuildRate + (bp.Economy.BuildRate * buildMultiplier)
+                    if aiBrain.EngineerAssistManagerFocusCategory and eng.UnitBeingAssist and not eng.UnitBeingAssist.Dead then
+                        local matchingRuleKey = nil
+                        for _, rule in aiBrain.EngineerAssistManagerPriorityTable do
+                            local ruleCategory = rule.cat
+                            local ruleKey = rule.bpKey
+                            local unitBeingAssist = eng.UnitBeingAssist
+                            
+                            -- Use the only guaranteed engine check: Unit against Rule Category Mask
+                            if unitBeingAssist and ruleCategory and EntityCategoryContains(ruleCategory, unitBeingAssist) then
+                                
+                                -- Crucial: Use the ruleKey to associate the BP, 
+                                -- not the complex category mask.
+                                matchingRuleKey = ruleKey 
+                                break -- Stop on the first, most specific match (assuming the table is ordered)
+                            end
+                        end
+                        if matchingRuleKey then
+                            if not aiBrain.EngineerAssistCurrentBPAllocated[matchingRuleKey] then
+                                aiBrain.EngineerAssistCurrentBPAllocated[matchingRuleKey] = 0
+                            end
+                            aiBrain.EngineerAssistCurrentBPAllocated[matchingRuleKey] = aiBrain.EngineerAssistCurrentBPAllocated[matchingRuleKey] + (bp.Economy.BuildRate * buildMultiplier)
+                        end
+                    end
                     eng.Active = true
                     platoonCount = platoonCount + 1
                 end
             end
+            aiBrain.EngineerAssistManagerFocusCategoryAssignedBuildRate = focusCategoryCurrentBuildPower
             --LOG('TotalBuildPower '..tostring(totalBuildRate))
             --LOG('T1 Build Power '..tostring(totalTech1BuilderRate))
             --LOG('T1 EngineerCount '..tostring(table.getn(tech1Engineers)))
@@ -603,8 +632,10 @@ Platoon = Class(RNGAIPlatoonClass) {
                 -- If we run out of available engineers break loop.
                 if RNGGETN(availableEngineers) == 0 then break end
 
-                local maxBP = assistData.maxbp or 999999
-                local buildRateToCommit = maxBP * buildMultiplier
+                local lookupKey = assistData.bpKey or 'None'
+                local maxBp = aiBrain.EngineerAssistRuleBP[lookupKey]
+                --LOG('Max bp for lookup key '..tostring(lookupKey)..' is '..tostring(maxBp))
+                local buildRateToCommit = maxBp * buildMultiplier
                 local currentBuildRateCommited = 0
                 local bestUnit = false
 
@@ -662,25 +693,22 @@ Platoon = Class(RNGAIPlatoonClass) {
                 end
                 
                 if bestUnit and not IsDestroyed(bestUnit) then
+                    --LOG('bestUnit found, it is '..tostring(bestUnit.UnitId))
                     assistFound = true
                     
                     for i = RNGGETN(availableEngineers), 1, -1 do
                         local eng = availableEngineers[i]
-                        local engBuildRate = (eng.Blueprint.Economy.BuildRate * buildMultiplier)
+                        if eng and not eng.dead then
+                            local engBuildRate = (eng.Blueprint.Economy.BuildRate * buildMultiplier)
 
-                        if (currentBuildRateCommited + engBuildRate) <= buildRateToCommit then
-                            eng.UnitBeingAssist = bestUnit
-                            IssueClearCommands({eng})
-                            IssueGuard({eng}, eng.UnitBeingAssist)
-                            self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit, assistData.type)
-                            
-                            currentBuildRateCommited = currentBuildRateCommited + engBuildRate
-                            
-                            table.remove(availableEngineers, i) 
-                            coroutine.yield(1)
-                            
-                        else
-                            break
+                            if (currentBuildRateCommited + engBuildRate) <= buildRateToCommit then
+                                eng.UnitBeingAssist = bestUnit
+                                self:ForkThread(self.EngineerAssistThreadRNG, aiBrain, eng, bestUnit, assistData.type, assistData.bpKey or 'None')
+                                currentBuildRateCommited = currentBuildRateCommited + engBuildRate
+                                table.remove(availableEngineers, i) 
+                            else
+                                break
+                            end
                         end
                     end
                 end
@@ -696,6 +724,8 @@ Platoon = Class(RNGAIPlatoonClass) {
     end,
 
     EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
+        IssueClearCommands({eng})
+        IssueGuard({eng}, unitToAssist)
         coroutine.yield(math.random(1, 20))
         while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() and unitToAssist do
             --RNGLOG('EngineerAssistLoop runing for '..aiBrain.Nickname)
@@ -720,9 +750,18 @@ Platoon = Class(RNGAIPlatoonClass) {
             end
             if aiBrain.EngineerAssistManagerFocusCategory and not EntityCategoryContains(aiBrain.EngineerAssistManagerFocusCategory, unitToAssist) 
             and aiBrain:IsAnyEngineerBuilding(aiBrain.EngineerAssistManagerFocusCategory) and not unitToAssist.Blueprint.CategoriesHash.ENERGYPRODUCTION then
+                local focusLookupValue = aiBrain.EngineerAssistManagerFocusCategoryLookup or 'None'
+                local ruleMaxBP = aiBrain.EngineerAssistRuleBP[focusLookupValue] or 0
+                local removeEngineer = true
+                local currentAllocatedBP = aiBrain.EngineerAssistCurrentBPAllocated[focusLookupValue] or 0
+                if focusLookupValue ~= 'None' and ruleMaxBP > 0 and currentAllocatedBP >= ruleMaxBP then
+                    removeEngineer = false 
+                end
                 --RNGLOG('Assist Platoon Focus Category has changed, aborting current assist')
-                eng.UnitBeingAssist = nil
-                break
+                if removeEngineer then
+                    eng.UnitBeingAssist = nil
+                    break
+                end
             end
             if unitToAssist.Blueprint.CategoriesHash.ENERGYPRODUCTION and aiBrain:GetEconomyTrend('ENERGY') > ( 10 * aiBrain.EnemyIntel.HighestPhase ) and aiBrain:GetEconomyStored('MASS') == 0 then
                 if not eng.Dead and not eng:IsPaused() then
