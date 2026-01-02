@@ -2761,129 +2761,61 @@ IntelManager = Class {
     end,
 
     AssignIMAPThreatToZones = function(self, aiBrain, zoneType)
-        -- Get the relevant zone list (Land or Naval)
         local zoneTable = aiBrain.Zones[zoneType].zones
         local zoneToGridMap = self.ZoneToGridMap
         local currentTime = GetGameTimeSeconds()
-        local STALE_TIME = 5  -- seconds before we treat data as outdated
+        local STALE_TIME = 5
     
         for _, zone in zoneTable do
             local cells = zoneToGridMap[zone.id]
-            if not cells or table.getn(cells) == 0 then
-                -- No cells mapped to this zone
-                continue
-            end
+            if not cells or table.getn(cells) == 0 then continue end
     
-            -- Accumulate total threat per type
             local total = {
-                Land = 0,
-                Air = 0,
-                Naval = 0,
-                AntiAir = 0,
-                AntiSurface = 0,
-                StructuresNotMex = 0,
-                count = 0
+                Land = 0, Air = 0, AntiAir = 0, Naval = 0, 
+                AntiSurface = 0, StructuresNotMex = 0, count = 0
+            }
+            
+            -- Initialize peaks for every category we care about
+            local historicalPeak = {
+                Land = 0, Air = 0, AntiAir = 0, Naval = 0, 
+                AntiSurface = 0, StructuresNotMex = 0
             }
     
             for _, cell in cells do
                 if not cell.Enabled then continue end
-            
-                local age = currentTime - (cell.LastThreatUpdate or 0)
-                local useHistorical = age > STALE_TIME
+                
                 local current = cell.IMAPCurrentThreat
                 local hist = cell.IMAPHistoricalThreat
-            
-                -- LAND
-                local landThreat
-                if useHistorical then
-                    landThreat = hist.Land or 0
-                elseif current.Land == 0 and hist.Land > 0 then
-                    landThreat = (hist.Land or 0) * 0.5
-                else
-                    landThreat = current.Land or 0
-                end
-                total.Land = total.Land + landThreat
-            
-                -- AIR
-                local airThreat
-                if useHistorical then
-                    airThreat = hist.Air or 0
-                elseif current.Air == 0 and hist.Air > 0 then
-                    airThreat = (hist.Air or 0) * 0.5
-                else
-                    airThreat = current.Air or 0
-                end
-                total.Air = total.Air + airThreat
-            
-                -- ANTIAIR
-                local aaThreat
-                if useHistorical then
-                    aaThreat = hist.AntiAir or 0
-                elseif current.AntiAir == 0 and hist.AntiAir > 0 then
-                    aaThreat = (hist.AntiAir or 0) * 0.5
-                else
-                    aaThreat = current.AntiAir or 0
-                end
-                total.AntiAir = total.AntiAir + aaThreat
-            
-                -- NAVAL (optional)
-                local navalThreat
-                if useHistorical then
-                    navalThreat = hist.Naval or 0
-                elseif current.Naval == 0 and hist.Naval > 0 then
-                    navalThreat = (hist.Naval or 0) * 0.5
-                else
-                    navalThreat = current.Naval or 0
-                end
-                total.Naval = total.Naval + navalThreat
-
-                -- ANTISURFACE (optional)
-                local antisurfaceThreat
-                if useHistorical then
-                    antisurfaceThreat = hist.AntiSurface or 0
-                elseif current.AntiSurface == 0 and hist.AntiSurface > 0 then
-                    antisurfaceThreat = (hist.AntiSurface or 0) * 0.5
-                else
-                    antisurfaceThreat = current.AntiSurface or 0
-                end
-                total.AntiSurface = total.AntiSurface + antisurfaceThreat
-
-                -- ANTISURFACE (optional)
-                local structuresNotMexThreat
-                if useHistorical then
-                    structuresNotMexThreat = hist.StructuresNotMex or 0
-                elseif current.StructuresNotMex == 0 and hist.StructuresNotMex > 0 then
-                    structuresNotMexThreat = (hist.StructuresNotMex or 0) * 0.5
-                else
-                    structuresNotMexThreat = current.StructuresNotMex or 0
-                end
-                total.StructuresNotMex = total.StructuresNotMex + structuresNotMexThreat
-            
+                
+                -- SUM Current: Accurate count of units presently in the zone
+                total.Land = total.Land + (current.Land or 0)
+                total.Air = total.Air + (current.Air or 0)
+                total.AntiAir = total.AntiAir + (current.AntiAir or 0)
+                total.Naval = total.Naval + (current.Naval or 0)
+                total.AntiSurface = total.AntiSurface + (current.AntiSurface or 0)
+                total.StructuresNotMex = total.StructuresNotMex + (current.StructuresNotMex or 0)
+    
+                -- MAX Historical: Tracks the largest army seen in this zone, 
+                -- without multiplying it by the number of cells they walked through.
+                historicalPeak.Land = math.max(historicalPeak.Land, hist.Land or 0)
+                historicalPeak.Air = math.max(historicalPeak.Air, hist.Air or 0)
+                historicalPeak.AntiAir = math.max(historicalPeak.AntiAir, hist.AntiAir or 0)
+                historicalPeak.Naval = math.max(historicalPeak.Naval, hist.Naval or 0)
+                historicalPeak.AntiSurface = math.max(historicalPeak.AntiSurface, hist.AntiSurface or 0)
+                historicalPeak.StructuresNotMex = math.max(historicalPeak.StructuresNotMex, hist.StructuresNotMex or 0)
+    
                 total.count = total.count + 1
             end
     
             if total.count > 0 then
-                --LOG('Zone being checked is '..tostring(zone.id)..' zone type is '..tostring(zoneType))
-                zone.enemylandthreat        = total.Land
-                --LOG('Current Zone Land threat via original means is '..tostring(zone.enemylandthreat))
-                zone.enemyairthreat         = total.Air
-                --LOG('Current Zone Air threat via original means is '..tostring(zone.enemyairthreat))
-                zone.enemyantiairthreat     = total.AntiAir
-                --LOG('Current Zone AntiAir threat via original means is '..tostring(zone.enemyantiairthreat))
-                zone.enemyantisurfacethreat = total.AntiSurface
-                --LOG('Current Zone AntiSurface threat via original means is '..tostring(zone.enemyantisurfacethreat))
-                zone.enemynavalthreat = total.Naval
-                --LOG('Current Zone Naval threat via original means is '..tostring(zone.enemynavalthreat))
-                zone.enemystructurethreat = total.StructuresNotMex
-                --LOG('Current Zone structure threat via original means is '..tostring(zone.enemystructurethreat))
-            else
-                -- All cells disabled? fall back to last known (rare)
-                --LOG('All Cells are disabled')
-                zone.enemylandthreat        = zone.enemylandthreat or 0
-                zone.enemyairthreat         = zone.enemyairthreat or 0
-                zone.enemyantiairthreat     = zone.enemyantiairthreat or 0
-                zone.enemyantisurfacethreat = zone.enemyantisurfacethreat or 0
-                zone.enemynavalthreat = zone.enemynavalthreat or 0
+                -- For each type: If current is 0, use a decayed version of the PEAK.
+                -- This keeps the "memory" of the threat without the 400+ inflation.
+                zone.enemylandthreat = (total.Land > 0) and total.Land or (historicalPeak.Land * 0.5)
+                zone.enemyairthreat  = (total.Air > 0) and total.Air or (historicalPeak.Air * 0.5)
+                zone.enemyantiairthreat = (total.AntiAir > 0) and total.AntiAir or (historicalPeak.AntiAir * 0.5)
+                zone.enemynavalthreat = (total.Naval > 0) and total.Naval or (historicalPeak.Naval * 0.5)
+                zone.enemyantisurfacethreat = (total.AntiSurface > 0) and total.AntiSurface or (historicalPeak.AntiSurface * 0.5)
+                zone.enemystructurethreat = (total.StructuresNotMex > 0) and total.StructuresNotMex or (historicalPeak.StructuresNotMex * 0.5)
             end
         end
     end,
@@ -2893,7 +2825,7 @@ IntelManager = Class {
             coroutine.yield(30)
         end
         local aiBrain = self.Brain
-        local threatDecayRate = 5
+        local threatDecayRate = 10
         while aiBrain.Status ~= "Defeat" do
             coroutine.yield(20)
             local intelCoverage = 0

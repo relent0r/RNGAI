@@ -325,6 +325,7 @@ function CDRThreatAssessmentRNG(cdr)
             local friendlyUnits = GetUnitsAroundPoint(aiBrain, UnitCategories, cdr:GetPosition(), 70, 'Ally')
             local enemyUnitThreat = 0
             local enemyUnitThreatInner = 0
+            local enemyUnitThreatOuter = 0
             local enemyAirThreat = 0
             local enemyAirInnerThreat = 0
             local enemyDefenseThreat = 0
@@ -332,6 +333,7 @@ function CDRThreatAssessmentRNG(cdr)
             local friendAntiAirInnerThreat = 0
             local friendlyUnitThreat = 0
             local friendlyUnitThreatInner = 0
+            local friendlyUnitThreatOuter = 0
             for k,v in friendlyUnits do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
@@ -350,17 +352,17 @@ function CDRThreatAssessmentRNG(cdr)
                         end
                     else
                         if v.Blueprint.CategoriesHash.COMMAND then
-                            friendlyUnitThreat = friendlyUnitThreat + v:EnhancementThreatReturn()
+                            friendlyUnitThreatOuter = friendlyUnitThreatOuter + v:EnhancementThreatReturn()
                         else
                             if v.Blueprint.CategoriesHash.ANTIAIR then
                                 friendAntiAirThreat = friendAntiAirThreat + v.Blueprint.Defense.AirThreatLevel
                             end
-                            friendlyUnitThreat = friendlyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
+                            friendlyUnitThreatOuter = friendlyUnitThreatOuter + v.Blueprint.Defense.SurfaceThreatLevel
                         end
                     end
                 end
             end
-            friendlyUnitThreat = friendlyUnitThreat + friendlyUnitThreatInner
+            friendlyUnitThreat = friendlyUnitThreatOuter + friendlyUnitThreatInner
             local enemyOverRangedPDCount = 0
             local enemyACUHealthModifier = 1.0
             local maxEnemyWeaponRange
@@ -385,14 +387,11 @@ function CDRThreatAssessmentRNG(cdr)
                     if unitDist < 1225 then
                         if EntityCategoryContains(CategoryT2Defense, v) then
                             if v.Blueprint.Defense.SurfaceThreatLevel then
-                                if unitDist < (weaponRange * weaponRange) + 3 then
+                                local fraction = v:GetFractionComplete() or 1
+                                if unitDist < (weaponRange + 10) * (weaponRange + 10) then
                                     enemyOverRangedPDCount = enemyOverRangedPDCount + 1
                                 end
-                                if enemyOverRangedPDCount > 2 then
-                                    enemyDefenseThreat = enemyDefenseThreat + v.Blueprint.Defense.SurfaceThreatLevel * 1.5
-                                else
-                                    enemyDefenseThreat = enemyDefenseThreat + v.Blueprint.Defense.SurfaceThreatLevel
-                                end
+                                enemyDefenseThreat = enemyDefenseThreat + (v.Blueprint.Defense.SurfaceThreatLevel * fraction)
                             end
                         end
                         if v.Blueprint.CategoriesHash.COMMAND then
@@ -417,32 +416,34 @@ function CDRThreatAssessmentRNG(cdr)
                     else
                         if EntityCategoryContains(CategoryT2Defense, v) then
                             if v.Blueprint.Defense.SurfaceThreatLevel then
-                                if unitDist < (weaponRange * weaponRange) + 3 then
+                                local fraction = v:GetFractionComplete() or 1
+                                if unitDist < (weaponRange + 10) * (weaponRange + 10) then
                                     enemyOverRangedPDCount = enemyOverRangedPDCount + 1
                                 end
-                                if enemyOverRangedPDCount > 2 then
-                                    enemyDefenseThreat = enemyDefenseThreat + v.Blueprint.Defense.SurfaceThreatLevel * 1.5
-                                else
-                                    enemyDefenseThreat = enemyDefenseThreat + v.Blueprint.Defense.SurfaceThreatLevel
-                                end
+                                enemyDefenseThreat = enemyDefenseThreat + (v.Blueprint.Defense.SurfaceThreatLevel * fraction)
                             end
                         end
                         if v.Blueprint.CategoriesHash.COMMAND then
                             enemyACUPresent = true
-                            enemyUnitThreat = enemyUnitThreat + v:EnhancementThreatReturn()
+                            enemyUnitThreatOuter = enemyUnitThreatOuter + v:EnhancementThreatReturn()
                         else
                             if v.Blueprint.CategoriesHash.AIR then
                                 enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.SurfaceThreatLevel
                             end
-                            enemyUnitThreat = enemyUnitThreat + v.Blueprint.Defense.SurfaceThreatLevel
+                            enemyUnitThreatOuter = enemyUnitThreatOuter + v.Blueprint.Defense.SurfaceThreatLevel
                         end
                     end
                 end
             end
+            if enemyOverRangedPDCount > 3 then
+                enemyDefenseThreat = enemyDefenseThreat * 3.5
+            elseif enemyOverRangedPDCount > 2 then
+                enemyDefenseThreat = enemyDefenseThreat * 2.5
+            end
             if not enemyACUPresent and maxEnemyWeaponRange and maxEnemyWeaponRange < cdr.WeaponRange then
                 friendlyACURangeAdvantage = true
             end
-            enemyUnitThreat = enemyUnitThreat + enemyUnitThreatInner
+            enemyUnitThreat = enemyUnitThreatOuter + enemyUnitThreatInner
             if enemyACUPresent then
                 cdr.EnemyCDRPresent = true
                 cdr.EnemyACUModifiedThreat = enemyUnitThreatInner * enemyACUHealthModifier
@@ -459,6 +460,7 @@ function CDRThreatAssessmentRNG(cdr)
             --RNGLOG('ACU Cutoff Threat '..cdr.ThreatLimit)
             cdr.CurrentEnemyThreat = enemyUnitThreat
             cdr.CurrentEnemyDefenseThreat = enemyDefenseThreat
+            --LOG('Pure enemy defense threat '..tostring(enemyDefenseThreat))
             cdr.CurrentFriendlyThreat = friendlyUnitThreat
             cdr.CurrentEnemyInnerCircle = enemyUnitThreatInner
             cdr.CurrentFriendlyInnerCircle = friendlyUnitThreatInner
@@ -529,6 +531,7 @@ function CDRThreatAssessmentRNG(cdr)
             local maxZoneRangeLimit = math.ceil(math.min(math.max(mapSizeX,mapSizeZ), 256) / 2 / 32)
             local enemyZoneThreat = RUtils.GetLocalEnemyZoneThreat(aiBrain, zoneId, zoneType, 'enemyantisurfacethreat', maxZoneRangeLimit)
             --LOG('Local enemyZoneThreat '..tostring(enemyZoneThreat))
+
             -- Helper function to get the threat value with a default to avoid division by zero
             local function getThreatValue(threat, default)
                 return threat > 0 and threat or default
@@ -538,13 +541,21 @@ function CDRThreatAssessmentRNG(cdr)
             local function calculateFriendlyThreatModifier(aiBrain, friendlyUnitThreatInner, friendlyUnitThreatOuter, cdr, weights)
                 local friendlyThreatConfidenceModifier = 0
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.selfThreat * getThreatValue(aiBrain.BrainIntel.SelfThreat.LandNow, 0.1))
+                --LOG('(weights.selfThreat * getThreatValue(aiBrain.BrainIntel.SelfThreat.LandNow, 0.1)) '..tostring(aiBrain.BrainIntel.SelfThreat.LandNow))
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.allyThreat * getThreatValue(aiBrain.BrainIntel.SelfThreat.AllyLandThreat, 0.1))
+                --LOG('(weights.allyThreat * getThreatValue(aiBrain.BrainIntel.SelfThreat.AllyLandThreat, 0.1)) '..tostring(aiBrain.BrainIntel.SelfThreat.AllyLandThreat))
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.friendlyUnitThreatOuter * friendlyUnitThreatOuter)
+                --LOG('(weights.friendlyUnitThreatOuter * friendlyUnitThreatOuter) '..tostring(friendlyThreatConfidenceModifier))
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.friendlyUnitThreatInner * friendlyUnitThreatInner)
+                --LOG('(weights.friendlyUnitThreatInner * friendlyUnitThreatInner) '..tostring(friendlyThreatConfidenceModifier))
 
-                if cdr.Health > 7000 and aiBrain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
+                if cdr.Health > 7000 then
                     friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * weights.healthBoost
                 end
+                if aiBrain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
+                    friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * 1.1
+                end
+                --LOG('friendlyThreatConfidenceModifier * weights.healthBoost '..tostring(friendlyThreatConfidenceModifier))
 
                 return friendlyThreatConfidenceModifier
             end
@@ -554,13 +565,25 @@ function CDRThreatAssessmentRNG(cdr)
                 local enemyThreatConfidenceModifier = 0
                 local globalLandThreat = getThreatValue(aiBrain.EnemyIntel.EnemyThreatCurrent.Land, 0.1)
                 local GLOBALTHREATSAFEMULTIPLIER = weights.globalThreat
+                enemyZoneThreat = math.min(enemyZoneThreat, globalLandThreat)
                 local zoneRatio = math.min(1.0, enemyZoneThreat / (globalLandThreat * GLOBALTHREATSAFEMULTIPLIER))
                 local scaledGlobalThreat = globalLandThreat * zoneRatio
                 --LOG('GlobalLandThreat '..tostring(globalLandThreat)..' scaled global threat '..tostring(scaledGlobalThreat))
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyThreat * scaledGlobalThreat)
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyUnitThreatOuter * enemyUnitThreatOuter)
+                --LOG('(weights.enemyUnitThreatOuter * enemyUnitThreatOuter) '..tostring((weights.enemyUnitThreatOuter * enemyUnitThreatOuter)))
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyUnitThreatInner * enemyUnitThreatInner)
                 enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + (weights.enemyDefenseThreat * enemyDefenseThreat)
+                --LOG('(weights.enemyDefenseThreat * enemyDefenseThreat)'..tostring((weights.enemyDefenseThreat * enemyDefenseThreat)))
+
+                if cdr.DistanceToHome > 3600 then
+                    local strategicFear = 0
+                    if aiBrain.EnemyIntel.SML and RNGGETN(aiBrain.EnemyIntel.SML) > 0 then strategicFear = strategicFear + 250 end
+                    if aiBrain.EnemyIntel.Artillery and RNGGETN(aiBrain.EnemyIntel.Artillery) > 0 then strategicFear = strategicFear + 200 end
+                    if aiBrain.EnemyIntel.Experimental and RNGGETN(aiBrain.EnemyIntel.Experimental) > 0 then strategicFear = strategicFear + 150 end
+                    
+                    enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + strategicFear
+                end
 
                 return enemyThreatConfidenceModifier
             end
@@ -626,16 +649,16 @@ function CDRThreatAssessmentRNG(cdr)
                         end
                     end
                 end
-                --G('Distance to enemy base '..tostring(math.sqrt(distanceToEnemyBase)))
+                --LOG('Distance to enemy base '..tostring(math.sqrt(distanceToEnemyBase)))
                 local distanceFearFactor = distanceFearMultiplier(math.sqrt(cdrDistanceToBase), math.sqrt(distanceToEnemyBase))
-                --G('Distance fear factor '..tostring(distanceFearFactor))
-                --G('Friendly threat before '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
-                --G('Enemy threat before '..tostring(enemyThreatConfidenceModifier))
+                --LOG('Distance fear factor '..tostring(distanceFearFactor))
+                --LOG('Friendly threat before '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
+                --LOG('Enemy threat before '..tostring(enemyThreatConfidenceModifier))
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * distanceFearFactor
-                --G('Friendly threat after '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
-                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + weights.localEnemyThreatRatio * localEnemyThreatRatio
-                --G('Enemy threat after '..tostring(enemyThreatConfidenceModifier))
-                --G('Distance to enemy base scaled factor for '..tostring(aiBrain.Nickname)..' is '..tostring(distanceFearFactor))
+                --LOG('Friendly threat after '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
+                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + weights.localEnemyThreatRatio * localEnemyThreatRatio, 0.1
+                --LOG('Enemy threat after '..tostring(enemyThreatConfidenceModifier))
+                --LOG('Distance to enemy base scaled factor for '..tostring(aiBrain.Nickname)..' is '..tostring(distanceFearFactor))
 
 
                 -- Calculate confidence
@@ -646,14 +669,14 @@ function CDRThreatAssessmentRNG(cdr)
                 
                     -- **Health + Shield Influence on Confidence**
                 local healthModifer = customSurvivability(math.min(cdr.HealthPercent, 1))
-                --G('healthModifer ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(healthModifer))
+                --LOG('healthModifer ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(healthModifer))
                 local survivability = (healthModifer * weights.healthBoost) + (shieldFactor or 0)
                 --LOG('Survivability ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(survivability))
 
                 local overchargeFactor = 0
                 local energyStored = aiBrain:GetEconomyStored('ENERGY')
                 if energyStored and cdr.OverCharge.EnergyRequired and energyStored >= cdr.OverCharge.EnergyRequired then
-                    local threatScaling = math.min(2.0, math.max(0.75, enemyUnitThreat / 50))
+                    local threatScaling = math.min(1.5, math.max(0.5, enemyUnitThreat / 150))
                     local healthScaling = math.max(0, math.min(1, cdr.HealthPercent))  -- Clamp between 0 and 1
                     overchargeFactor = weights.overchargeBoost * threatScaling * healthScaling
                 end
@@ -673,6 +696,7 @@ function CDRThreatAssessmentRNG(cdr)
                     cdr.Confidence = cdr.Confidence * weights.phasePenalty
                 end
                 --LOG('Current ACU Confidence for '..tostring(aiBrain.Nickname)..' is '..tostring(cdr.Confidence))
+                --LOG('Threat check antisurface'..tostring(aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface' )))
                 --LOG('--  End of Confidence  --')
             end
 
@@ -688,14 +712,14 @@ function CDRThreatAssessmentRNG(cdr)
                 globalThreat = 0.60,
                 enemyUnitThreatOuter = 0.8, -- higher means less confidence
                 enemyUnitThreatInner = 1.1, -- higher means less confidence
-                enemyDefenseThreat = 0.75, -- higher means less confidence
+                enemyDefenseThreat = 0.95, -- higher means less confidence
                 localEnemyThreatRatio = 0.9, -- higher means less confidence
                 phasePenalty = 0.7, -- higher means less confidence
-                overchargeBoost = 1.3 -- higher means more confidence
+                overchargeBoost = 1.25 -- higher means more confidence
             }
             local enemyThreatRatio = friendlyUnitThreat > 0 and (enemyUnitThreat / friendlyUnitThreat) or 0.5
             -- Example call
-            calculateConfidence(aiBrain, cdr, friendlyUnitThreatInner, friendlyUnitThreat, enemyUnitThreatInner, (enemyUnitThreat + enemyAirThreat), enemyDefenseThreat, cdr.DistanceToHome, enemyThreatRatio, weights)
+            calculateConfidence(aiBrain, cdr, friendlyUnitThreatInner, friendlyUnitThreatOuter, enemyUnitThreatInner, (enemyUnitThreatOuter + enemyAirThreat), enemyDefenseThreat, cdr.DistanceToHome, enemyThreatRatio, weights)
 
             
 

@@ -9054,6 +9054,7 @@ function GetLocalEnemyZoneThreat(aiBrain, startZone, zoneType, threatType, maxEd
     
     -- Queue structure for BFS: {zone, distance}
     local queue = {{zone = startZone, distance = 0}}
+    --LOG('RNGAI BFS DEBUG: Starting at Zone '..tostring(startZone.id)..' for '..tostring(threatType))
     
     while table.getn(queue) > 0 do
         -- Dequeue the next item
@@ -9061,9 +9062,18 @@ function GetLocalEnemyZoneThreat(aiBrain, startZone, zoneType, threatType, maxEd
         local currentZone = currentItem.zone
         currentDistance = currentItem.distance
         
-        -- Sum the land threat from the current zone
-        -- Note: using 'enemyantisurfacethreat' as the primary metric
-        totalThreatSum = totalThreatSum + (currentZone[threatType] or 0)
+       local zoneThreat = currentZone[threatType] or 0
+        local distanceWeight = 1.0
+        if currentDistance == 2 then
+            distanceWeight = 0.5
+        elseif currentDistance == 3 then
+            distanceWeight = 0.25
+        elseif currentDistance >= 4 then
+            distanceWeight = 0.1
+        end
+    
+        totalThreatSum = totalThreatSum + (zoneThreat * distanceWeight)
+        --LOG('RNGAI BFS DEBUG: Visiting Zone '..tostring(currentZone.id)..' [Dist: '..tostring(currentDistance)..'] Threat: '..tostring(zoneThreat))
         
         -- Stop traversal if we've reached the maximum distance
         if currentDistance < maxEdgeDistance then
@@ -9080,6 +9090,6 @@ function GetLocalEnemyZoneThreat(aiBrain, startZone, zoneType, threatType, maxEd
             end
         end
     end
-
+    --LOG('RNGAI BFS DEBUG: Total Sum for BFS: '..tostring(totalThreatSum))
     return totalThreatSum
 end

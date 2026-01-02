@@ -222,3 +222,72 @@ function RNGUtils.EvaluateStrategicContext_Global(aiBrain)
     aiBrain.StrategicContext.Global = ctx
 end
 
+function IntelManager:SelectZoneNuancedBFS(aiBrain, platoon, startZoneID, maxDepth)
+    local layer = platoon.MovementLayer or 'Land'
+    local zones = aiBrain.Zones[layer].zones
+    local queue = {{ id = startZoneID, depth = 0 }}
+    local visited = { [startZoneID] = true }
+    
+    local bestZone = nil
+    local bestScore = -999999
+    
+    -- Weightage values mirrored from ZoneExpansionThreadRNG
+    local weights = {
+        teamValue = 0.4,
+        massValue = 0.6,
+        distanceValue = 0.5, -- BFS uses path depth instead of Euclidean distance
+        graphValue = 0.2,
+        enemyLand = 0.1,
+        enemyAir = 0.1,
+        friendlySurface = 0.05,
+        friendlyAA = 0.05
+    }
+
+    local maxResourceValue = self.MapMaximumValues.MaximumResourceValue or 1
+    local maxGraphValue = self.MapMaximumValues.MaxumumGraphValue or 1
+    local maxThreat = 25
+
+    while table.getn(queue) > 0 do
+        local current = table.remove(queue, 1)
+        if current.depth > (maxDepth or 8) then break end
+
+        local v = zones[current.id]
+        
+        -- Normalization logic mirrored from IntelManager.lua
+        local normalizedTeam = v.teamvalue / 2
+        local normalizedRes = v.resourcevalue / maxResourceValue
+        local normalizedGraph = (v.markersInGraph or 1) / maxGraphValue
+        local normalizedEnemyLand = v.enemylandthreat / maxThreat
+        local normalizedEnemyAir = v.enemyantiairthreat / maxThreat
+        local normalizedFriendSurface = v.friendlyantisurfacethreat / maxThreat
+        local normalizedFriendAA = v.friendlylandantiairthreat / maxThreat
+        
+        -- Distance penalty using BFS depth (Path Distance)
+        local normalizedDepth = current.depth / (maxDepth or 8)
+
+        local priorityScore = (
+            normalizedTeam * weights.teamValue +
+            normalizedRes * weights.massValue -
+            normalizedDepth * weights.distanceValue + -- BFS Depth replaces Euclidean distance
+            normalizedGraph * weights.graphValue -
+            normalizedEnemyLand * weights.enemyLand -
+            normalizedEnemyAir * weights.enemyAir +
+            normalizedFriendSurface * weights.friendlySurface -
+            normalizedFriendAA * weights.friendlyAA
+        )
+
+        if priorityScore > bestScore then
+            bestScore = priorityScore
+            bestZone = v.id
+        end
+
+        -- Traverse Neighbors via Edges
+        for _, edge in ipairs(v.edges or {}) do
+            if not visited[edge.zone.id] then
+                visited[edge.zone.id] = true
+                table.insert(queue, { id = edge.zone.id, depth = current.depth + 1 })
+            end
+        end
+    end
+    return bestZone
+end

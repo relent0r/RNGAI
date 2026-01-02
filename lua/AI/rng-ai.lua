@@ -4206,7 +4206,8 @@ AIBrain = Class(RNGAIBrainClass) {
         local allyBrains = {}
         for index, brain in ArmyBrains do
             if index ~= self:GetArmyIndex() then
-                if IsAlly(selfIndex, brain:GetArmyIndex()) then
+                local brainIndex = brain:GetArmyIndex()
+                if IsAlly(selfIndex, brainIndex) and not ArmyIsCivilian(brainIndex) then
                     RNGINSERT(allyBrains, brain)
                 end
             end

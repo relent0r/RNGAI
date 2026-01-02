@@ -1313,6 +1313,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                         break
                     end
+                    if not builderData.Retreat and cdr.Confidence < 3.5 and cdr.DistanceToHome > 2500 then 
+                        self:LogDebug('Panic interrupt: Confidence too low!')
+                        self:ChangeState(self.Retreating)
+                        return
+                    end
                     -- check for threats
                     if cdr.Confidence > 4 and cdr.Health > 5500 and not builderData.Retreat and not builderData.EnhancementBuild and cdr.CurrentEnemyInnerCircle > 0 
                     and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < cdr.MaxBaseRange * cdr.MaxBaseRange then

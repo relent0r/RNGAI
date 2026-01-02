@@ -365,7 +365,7 @@ EngineerManager = Class(BuilderManager) {
                         if bestArmyBrain and bestArmyBrain.Status ~= "Defeat" and IsAlly(playerIndex, armyIndex) then
                             local TransferUnitsOwnership = import("/lua/simutils.lua").TransferUnitsOwnership
                             local AISendChat = import('/lua/AI/sorianutilities.lua').AISendChat
-                            AISendChat('allies', aiBrain.Nickname, 'AI '..aiBrain.Nickname..' I believe this extractor is yours, handing over ownership '..aiBrain.Nickname, bestArmyBrain.Nickname)
+                            AISendChat('allies', aiBrain.Nickname, 'AI Message '..bestArmyBrain.Nickname..' I believe this extractor is yours, handing over ownership '..aiBrain.Nickname, bestArmyBrain.Nickname)
                             TransferUnitsOwnership({finishedUnit}, playerIndex)
                         end
                     end
