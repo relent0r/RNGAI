@@ -521,6 +521,7 @@ BuilderGroup {
         Priority = 890,
         BuilderConditions = {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 0.95 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.TRANSPORTFOCUS * categories.TECH1 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading'}},
@@ -534,6 +535,7 @@ BuilderGroup {
         Priority = 890,
         BuilderConditions = {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.95, 1.05 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.9}},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
@@ -550,7 +552,7 @@ BuilderGroup {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 1.0, 1.05 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.95, 1.05 }},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Air',
@@ -561,6 +563,7 @@ BuilderGroup {
         Priority = 880,
         BuilderConditions = {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.95, 1.05 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 4, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading'}},
@@ -575,6 +578,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.9}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.95, 1.05 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading'}},
@@ -622,6 +626,7 @@ BuilderGroup {
             { MIBC, 'MapGreaterThan', { 256, 256 }},
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.9}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.95, 1.05 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading'}},
@@ -650,6 +655,7 @@ BuilderGroup {
             { MIBC, 'MapGreaterThan', { 256, 256 }},
             { MIBC, 'ArmyNeedOrWantTransports', {} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.07, 0.9}},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.95, 1.05 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 5, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading'}},

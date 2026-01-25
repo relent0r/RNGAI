@@ -222,7 +222,7 @@ function RNGUtils.EvaluateStrategicContext_Global(aiBrain)
     aiBrain.StrategicContext.Global = ctx
 end
 
-function IntelManager:SelectZoneNuancedBFS(aiBrain, platoon, startZoneID, maxDepth)
+function SelectZoneNuancedBFS(aiBrain, platoon, startZoneID, maxDepth)
     local layer = platoon.MovementLayer or 'Land'
     local zones = aiBrain.Zones[layer].zones
     local queue = {{ id = startZoneID, depth = 0 }}

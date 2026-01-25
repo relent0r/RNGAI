@@ -50,11 +50,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             self.MergeType = 'LandMergeStateMachine'
             self.ZoneType = self.PlatoonData.ZoneType or 'control'
             if aiBrain.EnemyIntel.LandPhase > 1 then
-                self.EnemyRadius = 75
-                self.EnemyRadiusSq = 75 * 75
+                self.EnemyRadius = math.max(self['rngdata'].MaxPlatoonWeaponRange+35, 85)
+                self.EnemyRadiusSq = self.EnemyRadius * self.EnemyRadius
             else
-                self.EnemyRadius = 60
-                self.EnemyRadiusSq = 60 * 60
+                self.EnemyRadius = math.max(self['rngdata'].MaxPlatoonWeaponRange+35, 60)
+                self.EnemyRadiusSq = self.EnemyRadius * self.EnemyRadius
             end
             if type(self.PlatoonData.MaxPathDistance) == 'string' then
                 self.MaxPathDistance = aiBrain.OperatingAreas[self.PlatoonData.MaxPathDistance]
@@ -352,7 +352,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     if currentLabel then
                         --LOG('We are requesting a position on our current label, which is '..tostring(self.Label))
                     end
-                    targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType, currentLabel)
+                    targetZone = IntelManagerRNG.GetIntelManager(aiBrain):GetBestZoneForPlatoon(self, self.ZoneType)
+                    --LOG('Zone selected with GetBestZoneForPlatoon : '..tostring(targetZone)..' with zone type '..tostring(self.ZoneType))
                     self:LogDebug(string.format('Looked for zone at the current label'))
                 end
                 if targetZone then
@@ -633,10 +634,19 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
-                for k,unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit['rngdata'].machineworth then 
+                for k, unit in self.targetcandidates do
+                    if unit and not unit.Dead and not unit['rngdata'].machineworth then
+                        if not unit['rngdata'] then
+                            unit['rngdata'] = {}
+                        end
+                        local unitData = unit['rngdata']
+                        local unithealth = StateUtils.GetTrueHealth(unit, true)
+                        unitData.machinevalue = unit.Blueprint.Economy.BuildCostMass/unithealth
+                        unitData.machineworth = unitData.machinevalue/unithealth
+                    end
+                    if not unit or unit.Dead then 
                         --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
-                        table.remove(self.targetcandidates,k) 
+                        table.remove(self.targetcandidates, k) 
                     end
                 end
             end
@@ -826,10 +836,19 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
-                for k,unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit['rngdata'].machineworth then 
+                for k, unit in self.targetcandidates do
+                    if unit and not unit.Dead and not unit['rngdata'].machineworth then
+                        if not unit['rngdata'] then
+                            unit['rngdata'] = {}
+                        end
+                        local unitData = unit['rngdata']
+                        local unithealth = StateUtils.GetTrueHealth(unit, true)
+                        unitData.machinevalue = unit.Blueprint.Economy.BuildCostMass/unithealth
+                        unitData.machineworth = unitData.machinevalue/unithealth
+                    end
+                    if not unit or unit.Dead then 
                         --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
-                        table.remove(self.targetcandidates,k) 
+                        table.remove(self.targetcandidates, k) 
                     end
                 end
             end
@@ -902,8 +921,18 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
     
             if not aiBrain.BrainIntel.SuicideModeActive then
                 for k, unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit['rngdata'].machineworth then
-                        table.remove(self.targetcandidates, k)
+                    if unit and not unit.Dead and not unit['rngdata'].machineworth then
+                        if not unit['rngdata'] then
+                            unit['rngdata'] = {}
+                        end
+                        local unitData = unit['rngdata']
+                        local unithealth = StateUtils.GetTrueHealth(unit, true)
+                        unitData.machinevalue = unit.Blueprint.Economy.BuildCostMass/unithealth
+                        unitData.machineworth = unitData.machinevalue/unithealth
+                    end
+                    if not unit or unit.Dead then 
+                        --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
+                        table.remove(self.targetcandidates, k) 
                     end
                 end
             end

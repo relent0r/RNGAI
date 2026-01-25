@@ -101,6 +101,14 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local cdr = self.cdr
             local im = IntelManagerRNG.GetIntelManager(brain)
             local gameTime = GetGameTimeSeconds()
+            local currentACULayer = cdr:GetCurrentLayer()
+            local acuWeaponUnderWater
+            if currentACULayer == 'Seabed' then
+                local weaponPos = StateUtils.GetDFWeaponPos(cdr)
+                if RUtils.PositionInWater(weaponPos) then
+                    acuWeaponUnderWater = true
+                end
+            end
             local maxBaseRange = cdr.MaxBaseRange * cdr.MaxBaseRange
             local ecoMultiplier = 1
             if brain.CheatEnabled then 
@@ -345,7 +353,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            if cdr.Caution and cdr.EnemyNavalPresent and cdr:GetCurrentLayer() == 'Seabed' and cdr.DistanceToHome > 2500 then
+            if cdr.Caution and cdr['rngdata'].EnemyNavalPresent and currentACULayer == 'Seabed' and cdr.DistanceToHome > 2500 then
                 self:LogDebug(string.format('retreating due to seabed'))
                 --LOG('ACU : We are going to retreat due to enemy sea bed')
                 self:ChangeState(self.Retreating)
@@ -367,7 +375,10 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             ----self:LogDebug(string.format('Current ACU enemy air threat is '..cdr.CurrentEnemyAirThreat))
             if brain.IntelManager.StrategyFlags.EnemyAirSnipeThreat or ((cdr.CurrentEnemyAirThreat + cdr.CurrentEnemyAirInnerThreat) > 25 and cdr.CurrentFriendlyAntiAirInnerThreat < 20) then
                 if brain.BrainIntel.SelfThreat.AntiAirNow < brain.EnemyIntel.EnemyThreatCurrent.AntiAir then
-                    cdr.EnemyAirPresent = true
+                    if not cdr['rngdata'] then
+                        cdr['rngdata'] = {}
+                    end
+                    cdr['rngdata'].EnemyAirPresent = true
                     if not cdr.AtHoldPosition then
                         self:LogDebug(string.format('Retreating due to enemy air snipe possibility'))
                         --LOG('ACU : We are going to retreat due to air snipe possibility')
@@ -375,8 +386,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                 end
-            elseif cdr.EnemyAirPresent then
-                cdr.EnemyAirPresent = false
+            elseif cdr['rngdata'].EnemyAirPresent then
+                cdr['rngdata'].EnemyAirPresent = false
             end
             local priorityUpgradeRequired = cdr.GunUpgradeRequired or cdr.GunAeonUpgradeRequired or cdr.HighThreatUpgradeRequired
             if priorityUpgradeRequired and GetEconomyIncome(brain, 'ENERGY') > (35 * ecoMultiplier)
@@ -876,7 +887,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                             self:LogDebug(string.format('We are switching targets to a PD'))
                                             break
                                         end
-                                        if brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
+                                        if brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired and not acuWeaponUnderWater then
                                             target = dUnit
                                             --LOG('ACU Def Targets : OverCharge Available on PD target is '..tostring(target.UnitId))
                                             self:LogDebug(string.format('OverCharge Available on PD target'))
@@ -1162,8 +1173,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 --LOG('no destination BuilderData '..repr(builderData))
                 self:LogWarning(string.format('no destination to navigate to'))
                 coroutine.yield(10)
-                if cdr.EnemyNavalPresent then
-                    cdr.EnemyNavalPresent = nil
+                if cdr['rngdata'].EnemyNavalPresent then
+                    cdr['rngdata'].EnemyNavalPresent = nil
                 end
                 self:LogDebug(string.format('No destiantion break out of Navigating'))
                 --LOG('No destiantion break out of Navigating')
@@ -1219,8 +1230,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 -- something odd happened: no direction found
                 if not waypoint then
                     self:LogWarning(string.format('no path found'))
-                    if cdr.EnemyNavalPresent then
-                        cdr.EnemyNavalPresent = nil
+                    if cdr['rngdata'].EnemyNavalPresent then
+                        cdr['rngdata'].EnemyNavalPresent= nil
                     end
                     self:LogDebug(string.format('No waypoint, break out of navigation'))
                     self:ChangeState(self.DecideWhatToDo)
@@ -1238,8 +1249,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         --LOG('distance is '..(dx * dx + dz * dz))
                         --LOG('CutOff is '..navigateDistanceCutOff)
                         --LOG('Waypoint = destination cutoff')
-                        if cdr.EnemyNavalPresent then
-                            cdr.EnemyNavalPresent = nil
+                        if cdr['rngdata'].EnemyNavalPresent then
+                            cdr['rngdata'].EnemyNavalPresent = nil
                         end
                         StateUtils.IssueNavigationMove(cdr, destination)
                         --LOG('ACU at position '..repr(destination))
@@ -1345,8 +1356,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     AttackTarget = acuUnit,
                                     ACUTarget    = acuUnit,
                                 }
-                                if cdr.EnemyNavalPresent then
-                                    cdr.EnemyNavalPresent = nil
+                                if cdr['rngdata'].EnemyNavalPresent then
+                                    cdr['rngdata'].EnemyNavalPresent = nil
                                 end
                                 --LOG('Combat while navigating resetting builderdata')
                                 self:ChangeState(self.AttackTarget)
@@ -1368,8 +1379,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                         AttackTarget = target,
                                         ACUTarget    = nil,
                                     }
-                                    if cdr.EnemyNavalPresent then
-                                        cdr.EnemyNavalPresent = nil
+                                    if cdr['rngdata'].EnemyNavalPresent then
+                                        cdr['rngdata'].EnemyNavalPresent = nil
                                     end
                                     --LOG('Combat while navigating resetting builderdata')
                                     self:ChangeState(self.AttackTarget)
@@ -1377,7 +1388,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                         end
-                    elseif cdr.Health > 6000 and builderData.Retreat and cdr.Phase < 3 and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr.Caution) and (not cdr.EnemyAirPresent) then
+                    elseif cdr.Health > 6000 and builderData.Retreat and cdr.Phase < 3 and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < cdr.MaxBaseRange * cdr.MaxBaseRange and (not cdr.Caution) and (not cdr['rngdata'].EnemyAirPresent) then
                         local supportPlatoon = brain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
                         if supportPlatoon.GetPlatoonPosition then
                             local supportPlatoonPos = supportPlatoon:GetPlatoonPosition()
@@ -1415,6 +1426,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         self:LogDebug(string.format('We have performed a short navigation move'))
                         self:ChangeState(self.DecideWhatToDo)
                     end
+                    --LOG(string.format('Navigating: Destination=%s, CurrentPos=%s, IsRetreat=%s', tostring(repr(destination)), tostring(repr(cdr:GetPosition())), tostring(builderData.Retreat)))
                 end
                 WaitTicks(1)
             end
@@ -1918,6 +1930,14 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local brain = self:GetBrain()
             local cdr = self.cdr
+            local currentACULayer = cdr:GetCurrentLayer()
+            local acuWeaponUnderWater
+            if currentACULayer == 'Seabed' then
+                local weaponPos = StateUtils.GetDFWeaponPos(cdr)
+                if RUtils.PositionInWater(weaponPos) then
+                    acuWeaponUnderWater = true
+                end
+            end
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 local target = self.BuilderData.AttackTarget
                 local snipeAttempt = false
@@ -1929,7 +1949,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     local targetDistance = VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                     local enemyMaxRange = StateUtils.GetUnitMaxWeaponRange(target, 'Direct Fire') or 0
                     if enemyMaxRange > cdr.WeaponRange then
-                        if targetDistance <= (cdr.WeaponRange * cdr.WeaponRange) and brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
+                        if targetDistance <= (cdr.WeaponRange * cdr.WeaponRange) and brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired and not acuWeaponUnderWater then
                             IssueOverCharge({cdr}, target)
                             coroutine.yield(10)
                         end
@@ -2011,8 +2031,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     if target and not target.Dead and not target:BeenDestroyed() then
                         targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         local movePos
-                        local currentLayer = cdr:GetCurrentLayer() 
-                        if target.Blueprint.CategoriesHash.RECLAIMABLE and currentLayer == 'Seabed' and targetDistance < 10 then
+                        if target.Blueprint.CategoriesHash.RECLAIMABLE and currentACULayer == 'Seabed' and targetDistance < 10 then
                             ----self:LogDebug(string.format('acu is under water and target is close, attempt reclaim, current unit distance is '..VDist3(cdrPos, targetPos)))
                             IssueClearCommands({cdr})
                             IssueReclaim({cdr}, target)
@@ -2025,7 +2044,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         else
                             movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 5)})
                         end
-                        if not snipeAttempt and currentLayer ~= 'Seabed' and brain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
+                        if not snipeAttempt and currentACULayer ~= 'Seabed' and brain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
                             local checkPoints = ACUFunc.DrawCirclePoints(6, 15, movePos)
                             local alternateFirePos = false
                             for k, v in checkPoints do
@@ -2113,6 +2132,14 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local brain = self:GetBrain()
             local cdr = self.cdr
+            local currentACULayer = cdr:GetCurrentLayer()
+            local acuWeaponUnderWater
+            if currentACULayer == 'Seabed' then
+                local weaponPos = StateUtils.GetDFWeaponPos(cdr)
+                if RUtils.PositionInWater(weaponPos) then
+                    acuWeaponUnderWater = true
+                end
+            end
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 local target = self.BuilderData.AttackTarget
                 local snipeAttempt = false
@@ -2209,8 +2236,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     if target and not target.Dead and not target:BeenDestroyed() then
                         targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         local movePos
-                        local currentLayer = cdr:GetCurrentLayer() 
-                        if target.Blueprint.CategoriesHash.RECLAIMABLE and currentLayer == 'Seabed' and targetDistance < 10 then
+                        if target.Blueprint.CategoriesHash.RECLAIMABLE and currentACULayer == 'Seabed' and targetDistance < 10 then
                             ----self:LogDebug(string.format('acu is under water and target is close, attempt reclaim, current unit distance is '..VDist3(cdrPos, targetPos)))
                             IssueClearCommands({cdr})
                             IssueReclaim({cdr}, target)
@@ -2225,7 +2251,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         else
                             movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 5)})
                         end
-                        if not snipeAttempt and currentLayer ~= 'Seabed' and brain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
+                        if not snipeAttempt and currentACULayer ~= 'Seabed' and brain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
                             local checkPoints = ACUFunc.DrawCirclePoints(6, 15, movePos)
                             local alternateFirePos = false
                             for k, v in checkPoints do
@@ -2329,7 +2355,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 brain.BrainIntel.SuicideModeActive = false
                 brain.BrainIntel.SuicideModeTarget = nil
             end
-            if cdr.EnemyAirPresent and not cdr.AtHoldPosition then
+            if cdr['rngdata'].EnemyAirPresent and not cdr.AtHoldPosition then
                 local retreatKey
                 local acuHoldPosition
                 cdr.Retreat = true
@@ -2373,12 +2399,13 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 Retreat = true
                             }
                             --LOG('CDR navigating to friendly positions')
+                            --LOG('CDR is retreating to a zone '..tostring(repr(zonePos)))
                             self:ChangeState(self.Navigating)
                             return
                         end
                     end
                 end
-                if supportPlatoon and supportPlatoon.CurrentPlatoonThreatDirectFireAntiSurface > 8 then
+                if supportPlatoon and supportPlatoon.CurrentPlatoonThreatDirectFireAntiSurface > math.min(20, cdr.CurrentEnemyThreat) then
                     --LOG('Retreating to support platoon, support platoon has '..tostring(supportPlatoon.CurrentPlatoonThreatDirectFireAntiSurface)..' surface threat')
                     local threatened
                     closestPlatoon = supportPlatoon
@@ -2388,15 +2415,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local az = closestAPlatPos[3] - cdr.Position[3]
                         closestPlatoonDistance = ax * ax + az * az
                         for _, threatPos in threatLocations do
-                            local tx = closestAPlatPos[1] - cdr.Position[1]
-                            local tz = closestAPlatPos[3] - cdr.Position[3]
+                            local tx = threatPos[1] - cdr.Position[1]
+                            local tz = threatPos[2] - cdr.Position[3]
                             local threatLocationDistance = tx * tx + tz * tz
-                            if (threatLocationDistance + 900) < closestPlatoonDistance and threatPos[3] > 30 and RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], closestAPlatPos[1], closestAPlatPos[3], threatPos[1], threatPos[2]) < 0.35 then
-                                --LOG('Support Platoon angle is dangerous '..tostring(RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], closestAPlatPos[1], closestAPlatPos[3], threatPos[1], threatPos[2]))..' threat was '..tostring(threatPos[3]))
+                            --LOG('Support Platoon angle is dangerous '..tostring(RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], closestAPlatPos[1], closestAPlatPos[3], threatPos[1], threatPos[2]))..' threat  pos '..tostring(repr(threatPos)))
+                            --LOG('threatLocationDistance '..(threatLocationDistance + 900)..' vs closestPlatoonDistance '..tostring(closestPlatoonDistance))
+                            if (threatLocationDistance + 900) < closestPlatoonDistance and threatPos[3] > 30 and RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], closestAPlatPos[1], closestAPlatPos[3], threatPos[1], threatPos[2]) < 0.65 then
+                                 --LOG('support platoon is considered dangerous')
                                 threatened = true
                                 break
-                            else
-                                --LOG('Support Platoon angle is not dangerous '..tostring((RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], closestAPlatPos[1], closestAPlatPos[3], threatPos[1], threatPos[2])))..' threat was '..tostring(threatPos[3]))
                             end
                         end
                         if threatened then
@@ -2409,6 +2436,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if not closestPlatoonDistance then
                     local AlliedPlatoons = brain:GetPlatoonsList()
                     for _,aPlat in AlliedPlatoons do
+                        local threatened = false
                         if aPlat.PlatoonName == 'LandAssaultBehavior' or aPlat.PlatoonName == 'LandCombatBehavior' or aPlat.PlanName == 'ACUSupportRNG' or aPlat.PlatoonName == 'ZoneControlBehavior' then 
                             --LOG('Allied platoon name '..tostring(aPlat.PlanName))
                             if aPlat.UsingTransport then 
@@ -2426,20 +2454,19 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 local aPlatToHomeDistance = VDist2Sq(aPlatPos[1],aPlatPos[3],cdr.CDRHome[1],cdr.CDRHome[3])
                                 if aPlatDistance > 1600 and aPlatToHomeDistance < distanceToHome then
                                     local threat = aPlat:CalculatePlatoonThreat('Surface', categories.ALLUNITS)
-                                    if threat > 15 then
+                                    if threat > math.min(20, cdr.CurrentEnemyThreat) then
                                         local platoonValue = aPlatDistance * aPlatDistance / threat
-                                        local threatened = false
                                         
                                         for _, threatPos in threatLocations do
                                             local tx = aPlatPos[1] - cdr.Position[1]
                                             local tz = aPlatPos[3] - cdr.Position[3]
                                             local threatLocationDistance = tx * tx + tz * tz
-                                            if (threatLocationDistance + 900) < aPlatDistance and threatPos[3] > 30 and RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], aPlatPos[1], aPlatPos[3], threatPos[1], threatPos[2]) < 0.35 then
-                                                --LOG('Platoon angle is dangerous '..tostring(RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], aPlatPos[1], aPlatPos[3], threatPos[1], threatPos[2])))
+                                            --LOG('Platoon angle is '..tostring(RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], aPlatPos[1], aPlatPos[3], threatPos[1], threatPos[2]))..' threat pos '..tostring(repr(threatPos)))
+                                            --LOG('ThreatDistance location '..tostring((threatLocationDistance + 900)..' aPlatDistance '..tostring(aPlatDistance)))
+                                            if (threatLocationDistance + 900) < aPlatDistance and threatPos[3] > 30 and RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], aPlatPos[1], aPlatPos[3], threatPos[1], threatPos[2]) < 0.65 then
+                                                --LOG('Platoon angle is considered dangerous ')
                                                 threatened = true
                                                 break
-                                            else
-                                                --LOG('Platoon angle is not dangerous '..tostring((RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], aPlatPos[1], aPlatPos[3], threatPos[1], threatPos[2])))..' threat was '..tostring(threatPos[3]))
                                             end
                                         end
                     
@@ -2465,6 +2492,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
+            --LOG(string.format('Retreating: SupportPlatoon=%s, Pos=%s', tostring(supportPlatoon), tostring(closestAPlatPos)))
             --LOG('No platoon found, trying for base')
             local closestBase
             local closestBaseDistance
@@ -2482,9 +2510,15 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     if not table.empty(base.FactoryManager.FactoryList) then
                         local bypass = false
                         local baseDistance = VDist3Sq(cdr.Position, base.Position)
+                        local isNavalBase = base.FactoryManager.LocationType and base.FactoryManager.LocationType == 'Naval'
+                        if isNavalBase and (aiBrain.BasePerimeterMonitor[baseName] and aiBrain.BasePerimeterMonitor[baseName].NavalUnits > 0 or cdr['rngdata'].EnemyNavalPresent ) then
+                            continue
+                        end
                         if takeThreatIntoAccount and baseName ~= self.LocationType then
                             for _, threat in threatLocations do
-                                if threat[3] > 30 and RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3], threat[1], threat[2]) < 0.35 then
+                                --LOG('base angle is '..tostring(RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3], threat[1], threat[2]))..' threat pos '..tostring(repr(threat)))
+                                if threat[3] > 30 and RUtils.GetAngleRNG(cdr.Position[1], cdr.Position[3], base.Position[1], base.Position[3], threat[1], threat[2]) < 0.65 then
+                                    --LOG('base angle is considered dangerous. bypass')
                                     bypass = true
                                 end
                             end
@@ -2534,6 +2568,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
             elseif closestBase then
                 if NavUtils.CanPathTo('Amphibious', cdr.Position, brain.BuilderManagers[closestBase].Position) then
+                    --LOG('We have a base to retreat to '..tostring(brain.Nickname)..' at position '..tostring(brain.BuilderManagers[closestBase].Position))
                     cdr.Retreat = false
                     cdr.BaseLocation = true
                     self.BuilderData = {

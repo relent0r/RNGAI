@@ -1065,10 +1065,12 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
                     local targetLayer = v.unit:GetCurrentLayer()
                     
                     local layerCompatible = true
-                    if (cdrLayer == 'Land' and (targetLayer == 'Air' or targetLayer == 'Sub' or targetLayer == 'Seabed')) or
-                    (cdrLayer == 'Seabed' and (targetLayer == 'Air' or targetLayer == 'Water')) then
+                    local isNavalTarget = (targetLayer == 'Water' or targetLayer == 'Sub' or targetLayer == 'Seabed')
+                    if (cdrLayer == 'Land' and (targetLayer == 'Air' or (isNavalTarget and v.distance > 900))) or
+                    (cdrLayer == 'Seabed' and (targetLayer == 'Air' or (isNavalTarget and v.distance > 900))) then
                         layerCompatible = false
                     end
+
                     
                     if layerCompatible then
                         -- Final Path Check
@@ -1077,6 +1079,24 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
                             validTarget = true
                         elseif NavUtils.CanPathTo('Amphibious', v.position, cdrPos) and v.distance < (operatingArea * operatingArea) then
                             validTarget = true
+                            local highValue = false
+                            if v.zone then
+                                local zoneStrategicValue = (v.zone.resourcevalue or 0) + (v.zone.teamvalue or 0)
+                                local isHighValueZone = zoneStrategicValue > 5
+                                if isHighValueZone then
+                                    -- If the zone is important, we take ANY target there (even a T1 Mex)
+                                    highValue = true
+                                elseif v.distance < 2500 then
+                                    -- If it's a low-value zone, we only go if it's very close (shoreline expansion)
+                                    highValue = true
+                                elseif v.unit.Blueprint.CategoriesHash.FACTORY then
+                                    -- Or if the specific unit is a 'High Value Target' despite being in a 'trash' zone
+                                    highValue = true
+                                end
+                            end
+                            if not highValue then
+                                validTarget = false
+                            end
                         end
                     end
                 else
@@ -4333,6 +4353,38 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                 end
             end
         end
+    elseif pointType == 'MobileAntiAir' then
+        local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
+        local snipeActive = aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat
+        local targetSpoke = nil
+        local targetLayer = 2 -- Layer 2 is the "sweet spot" for mobile units
+        
+        -- If a snipe is happening, we prioritize spokes near the ACU or the RecentAirAngle
+        local searchAngle = aiBrain.BasePerimeterMonitor[baseLocation].RecentAirAngle or 0
+        
+        -- To avoid stacking, we look for the spoke with the LOWEST current mobile AA count
+        local lowestUnitCount = 999
+        local bestSpokeIndex = nil
+
+        for spokeIndex, spokePoints in ipairs(defensiveSpokes) do
+            local pt = spokePoints[targetLayer]
+            if not pt or not pt.Enabled then continue end
+
+            -- Initialize the counter if it doesn't exist
+            local numMobileAACount = GetNumUnitsAroundPoint(aiBrain, categories.ANTIAIR, pt.Position, 20, 'Ally')
+            
+            -- Distribution Logic: Find the spoke with the least mobile units
+            if numMobileAACount < lowestUnitCount then
+                lowestUnitCount = numMobileAACount
+                bestSpokeIndex = spokeIndex
+            end
+        end
+
+        if bestSpokeIndex then
+            local pt = defensiveSpokes[bestSpokeIndex][targetLayer]
+            -- Pre-emptive return
+            defensivePoint = pt.Position
+        end
     elseif pointType == 'AntiAir' then
         local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
         local recentAngle = aiBrain.BasePerimeterMonitor[baseLocation].RecentAirAngle
@@ -5209,6 +5261,7 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
             RNGLOG('im.MapIntelStats.MustScoutArea is false')
         end
     end
+    local scoutAAThreatWeight = 0.5
 
     if im.MapIntelStats.MustScoutArea then
         --RNGLOG('AirScout MustScoutArea is set')
@@ -5227,7 +5280,7 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
                             im.MapIntelGrid[i][k].TimeScouted = 1
                         end
                         local mustScoutPriority = im.MapIntelGrid[i][k].ScoutPriority > 0 and im.MapIntelGrid[i][k].ScoutPriority or 100
-                        currentGrid = {x = i, z = k, Priority = (mustScoutPriority * mustScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain }
+                        currentGrid = {x = i, z = k, Priority = (mustScoutPriority * mustScoutPriority) * im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain }
                         if currentGrid.Priority > highestGrid.Priority then
                             highestGrid = currentGrid
                         end
@@ -5278,9 +5331,10 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
                         if im.MapIntelGrid[i][k].TimeScouted == 0 then
                             im.MapIntelGrid[i][k].TimeScouted = 1
                         end
+                        local aaThreat = im:GetHistoricalThreatInRings(i, k, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings) or 0
                         local deathCount = im.MapIntelGrid[i][k].RecentScoutDeaths or 0
-                        local deathPenaltyDivisor = 1.0 + (deathCount * scoutDeathPenalityFactor)
-                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].ScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain / deathPenaltyDivisor }
+                        local riskDivisor = 1.0 + (deathCount * scoutDeathPenalityFactor) + (aaThreat * scoutAAThreatWeight)
+                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].ScoutPriority) * im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain / riskDivisor }
                         --RNGLOG('AirScouting CurrentGrid Priority is '..currentGrid.Priority)
                         --RNGLOG('AirScouting TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
                         if currentGrid.Priority > highestGrid.Priority then
@@ -5317,9 +5371,10 @@ GetAirScoutLocationRNG = function(platoon, aiBrain, scout, optics)
                         if im.MapIntelGrid[i][k].DistanceToMain == 0 then
                             im.MapIntelGrid[i][k].DistanceToMain = 1
                         end
+                        local aaThreat = im:GetHistoricalThreatInRings(i, k, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings) or 0
                         local deathCount = im.MapIntelGrid[i][k].RecentScoutDeaths or 0
-                        local deathPenaltyDivisor = 1.0 + (deathCount * scoutDeathPenalityFactor)
-                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].ScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain / deathPenaltyDivisor }
+                        local riskDivisor = 1.0 + (deathCount * scoutDeathPenalityFactor) + (aaThreat * scoutAAThreatWeight)
+                        currentGrid = {x = i, z = k, Priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].ScoutPriority) * im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain / riskDivisor }
                         --RNGLOG('CurrentGrid Priority is '..currentGrid.Priority)
                         --RNGLOG(im.MapIntelGrid[i][k].ScoutPriority..','..im.MapIntelGrid[i][k].LastScouted..','..im.MapIntelGrid[i][k].DistanceToMain..','..im.MapIntelGrid[i][k].TimeScouted..','..currentGrid.Priority)
                         --RNGLOG('TimeScouted is '..im.MapIntelGrid[i][k].TimeScouted)
@@ -8363,22 +8418,80 @@ function GetDistanceValue(mapDiagonalSq, zone, platoonPosition, enemyPosition, o
 end
 
 function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
-    local friendly = zone.friendlyantisurfacethreat or 0
-    local enemy = zone.enemyantisurfacethreat or 0
-    local score
-    if zone.platoonallocations and zone.platoonallocations.friendlydirectfireallocatedthreat and ( zone.status == 'Allied' or zone.status == 'Contested' ) and zoneSelectionType ~= 'raid' then
-        friendly = friendly + zone.platoonallocations.friendlydirectfireallocatedthreat * 0.6
+    local enemy = 0
+    local friendly = 0
+    local isProductionZone = false
+    if zone.BuilderManager and zone.BuilderManager.FactoryManager and zone.BuilderManager.FactoryManager.LocationActive then
+        isProductionZone = true
+    end
+    
+    if zoneSelectionType == 'aadefense' then
+        -- We only care about things in the air
+        enemy = zone.enemyairthreat or 0
+        -- We only care about our own ability to hit them
+        friendly = zone.friendlylandantiairthreat or 0
+        
+        -- "The Fighter/Scout Filter"
+        -- If enemy anti-air threat is high but air threat is low, 
+        -- it's just a land army with AA. Our AA doesn't need to 'defend' against it.
+        if enemy < 1 and (zone.enemyantiairthreat or 0) > 0 then
+            return 0 -- No reason for AA-only platoons to go here
+        end
+    elseif zoneSelectionType == 'airsurface' then
+        -- Gunships hunt land units and structures
+        enemy = (zone.enemyantisurfacethreat or 0) + ((zone.enemystructurethreat or 0) * 0.5)
+        -- Friendly help is any air-to-surface threat already there
+        friendly = zone.friendlyantisurfacethreat or 0
+    else
+        -- Standard Land/Raid logic
+        enemy = zone.enemyantisurfacethreat or 0
+        friendly = zone.friendlyantisurfacethreat or 0
     end
 
-    if platoon and platoon.CurrentPlatoonThreatDirectFireAntiSurface then
-        friendly = friendly + platoon.CurrentPlatoonThreatDirectFireAntiSurface
+    local score
+    local allocated = 0
+    if zone.platoonallocations then
+        if zoneSelectionType == 'aadefense' then
+            allocated = zone.platoonallocations.friendlyantiairallocatedthreat or 0
+        else
+            allocated = zone.platoonallocations.friendlydirectfireallocatedthreat or 0
+        end
+    end
+
+    -- Apply allocation to the friendly total
+    if (zone.status == 'Allied' or zone.status == 'Contested') and zoneSelectionType ~= 'raid' then
+        friendly = friendly + (allocated * 0.6)
+    end
+
+    -- Fix: Use the correct platoon threat property
+    if platoon then
+        if zoneSelectionType == 'aadefense' then
+            friendly = friendly + (platoon.CurrentPlatoonThreatAntiAir or 0)
+        else
+            friendly = friendly + (platoon.CurrentPlatoonThreatDirectFireAntiSurface or 0)
+        end
+    end
+
+    if enemy <= 0 and (zone.enemystructurethreat or 0) > 0 then
+        -- A small positive score to encourage raiding unprotected buildings
+        score = (zoneSelectionType == 'raid') and 1.5 or 0.5
+        
+        -- Still apply distance penalty in the main function, 
+        -- but this ensures we don't return a flat 0
+        return score
     end
 
     if enemy <= 0 then
         return 0
     end
 
-    local cappedFriendly = math.min(friendly, enemy * 1.5)
+    local cappedFriendly
+    if zoneSelectionType == 'airsurface' then
+        -- Allow gunships to appreciate their own strength more
+        cappedFriendly = math.min(friendly, enemy * 4.0) 
+    else
+        cappedFriendly = math.min(friendly, enemy * 1.5)
+    end
     local ratio = cappedFriendly / enemy
 
     if zoneSelectionType == 'raid' then
@@ -8393,45 +8506,71 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
     end
 
     -- --- Penalty if grossly overcommitted ---
-    if friendly > enemy * 1.5 then
+    if zoneSelectionType == 'aadefense' then
+        enemy = zone.enemyairthreat or 0
+        friendly = zone.friendlylandantiairthreat or 0
+    
+        -- Only penalize if we have more than double the enemy air threat
+        -- This provides a "Safety Buffer" for gunship spikes.
+        if friendly > (enemy * 2.0) + 5 then 
+            local excessRatio = (friendly - (enemy * 2.0)) / (enemy + 5)
+            -- Lower multiplier (0.8) and lower cap (2.0)
+            -- This is enough to discourage idling, but not enough to ignore a threat.
+            local overcommitPenalty = math.min(excessRatio * 0.8, 2.0) 
+            score = score - overcommitPenalty
+        end
+    elseif zoneSelectionType == 'airsurface' then
+        -- Gunships shouldn't be penalized as heavily for overcommitting
+        if friendly > enemy * 4.0 then 
+            -- Only penalize if we are truly triple the enemy strength
+            local excessRatio = (friendly - enemy * 4.0) / enemy
+            score = score - math.min(excessRatio * 0.4, 1.0)
+        end
+    elseif friendly > enemy * 1.5 then
         local excessRatio = (friendly - enemy * 1.5) / enemy
-        local overcommitPenalty = math.min(excessRatio * 0.5, 1.0) -- up to -1
+        local overcommitPenalty = math.min(excessRatio * 1.2, 4.0) -- up to -1
         score = score - overcommitPenalty
     end
     return math.max(score, -2.0)
 end
 
-GetZonePressureValue = function(enemyStartClose, zone, platoon)
-    local friendlyStrength = math.max(platoon.CurrentPlatoonThreatDirectFireAntiSurface or 1, zone.friendlyantisurfacethreat or 1)
+GetZonePressureValue = function(enemyStartClose, zone, platoon, zonetype)
 
-    -- Normalize threat ratio between [0, 1]
-    local directThreatRatio = 0.0
-    if zone.enemyantisurfacethreat > 0 then
-        directThreatRatio = math.min(zone.enemyantisurfacethreat / friendlyStrength, 1.0)
+    local myThreat
+    if zonetype == 'airsurface' then
+        myThreat = platoon.CurrentPlatoonThreatAntiSurface or 1
+    else
+        myThreat = platoon.CurrentPlatoonThreatDirectFireAntiSurface or 1
+    end
+    
+    local friendlyStrength = math.max(myThreat, zone.friendlyantisurfacethreat or 1)
+
+
+    local hazard = 0
+    if zonetype == 'airsurface' then
+        hazard = zone.enemyantiairthreat or 0
+    else
+        hazard = zone.enemyantisurfacethreat or 0
     end
 
-    -- Grid-based persistent threat, like artillery, snipers, etc
-    local gridThreat = zone.gridenemylandthreat or 0
-    local gridThreatPressure = math.min(gridThreat / 100, 1.0)  -- scale 0-1, assuming 100 is "high"
+    local directThreatRatio = 0.0
+    if hazard > 0 then
+        directThreatRatio = math.min(hazard / friendlyStrength, 1.0)
+    end
 
-    -- Structural enemy pressure: total threat (including structures)
+    local gridThreat = zone.gridenemylandthreat or 0
+    local gridThreatPressure = math.min(gridThreat / 100, 1.0)
     local structuralThreat = (zone.enemystructurethreat or 0) + (zone.enemyantisurfacethreat or 0)
     local structuralPressure = math.min(structuralThreat / 100, 1.0)
+    local startBias = enemyStartClose and 1.2 or 1.0
 
-    -- Start bias: penalize heavy zones close to enemy start
-    local startBias = 1.0
-    if enemyStartClose then
-        startBias = 1.2
-    end
-
-    -- Final blend
     local pressure = (
         0.5 * directThreatRatio + 
         0.3 * gridThreatPressure + 
         0.2 * structuralPressure
     ) * startBias
 
-    return pressure  -- approximately 0.0 (safe) to 1.5+ (high risk)
+    return pressure
 end
 
 GetZoneContiguityValue = function(intelmanager, zone)
@@ -8924,7 +9063,98 @@ function CalculateTeamCentroidAndSpread(aiBrain, allyStartLocations)
     return centroid, maxDist, isCohesive
 end
 
+function GetZoneAAEscortValue(zone, statusValueTable)
+    local friendlySurf = zone.friendlyantisurfacethreat or 0
+    local friendlyAA = zone.friendlylandantiairthreat or 0
+    
+    local MinEscortThreatSize = 10
+    local MaxExistingAAForEscort = 2
+    
+    if friendlySurf > MinEscortThreatSize and friendlyAA < MaxExistingAAForEscort then
+        
+        if zone.status == 'Contested' then
+            local statusUrgency = statusValueTable[zone.status] or 1.0
+            return (2.0 + (friendlySurf / 10)) * statusUrgency
+        end
+
+        if zone.edges then
+            for _, edge in zone.edges do
+                local neighbor = edge.zone
+                if neighbor.status == 'Contested' or neighbor.status == 'Hostile' or (neighbor.enemyantisurfacethreat or 0) > 0 then
+                    local statusUrgency = statusValueTable[zone.status] or 1.0
+                    return (2.0 + (friendlySurf / 10)) * statusUrgency
+                end
+            end
+        end
+    end
+    return 0
+end
+
+function GetAASaturationPenalty(zone)
+    -- Using the specific keys from your RNGAI data structure
+    local allocatedAA = zone.platoonallocations.friendlyantiairallocatedthreat or 0
+    local currentAA = zone.friendlylandantiairthreat or 0
+    local totalProjectedAA = currentAA + allocatedAA
+
+    -- Constants per instructions: camelCase with role-based Capitalization
+    local MaxAARatioPerSurfaceThreat = 0.15 
+    local SaturationPenaltyMultiplier = 2.5
+
+    -- How much AA is "ideal" for the current army size?
+    local aaNeeded = (zone.friendlyantisurfacethreat or 0) * MaxAARatioPerSurfaceThreat
+
+    -- Only apply penalty if we are actually over-saturated
+    if totalProjectedAA > aaNeeded and aaNeeded > 0 then
+        local overflow = totalProjectedAA - aaNeeded
+        return overflow * SaturationPenaltyMultiplier
+    end
+    
+    return 0
+end
+
+function GetZoneAirSurfaceUtility(v, teamValueBonus)
+    -- 1. Isolation Metric (Island/Plateau Check)
+    -- We leverage the edges table provided in your zone structure
+    local edgeCount = v.edges and table.getn(v.edges) or 0
+    local isolationValue = 0
+    if edgeCount <= 2 then
+        isolationValue = 1.0 -- High priority for air (Zone 3/4 Open Palms)
+    elseif edgeCount <= 4 then
+        isolationValue = 0.4
+    end
+
+    local vulnerabilityScore = 0
+    if teamValueBonus > 1.4 then
+        -- This zone is near the enemy base (teamvalue near 0)
+        vulnerabilityScore = -1.5 -- "The Angle" Penalty (Suicide Zone)
+    elseif teamValueBonus >= 0.8 and teamValueBonus <= 1.4 then
+        -- This is the expansion/flank "Sweet Spot"
+        vulnerabilityScore = 1.0
+    end
+
+    return isolationValue + vulnerabilityScore
+end
+
+function GetZoneAirSurfaceViability(maxResourceValue, zone)
+    local maxRes = maxResourceValue or 4
+    local resScore = math.min(zone.resourcevalue / maxRes, 1.0)
+    
+    local structScore = math.min((zone.enemystructurethreat or 0) / 20, 1.0)
+    local totalBounty = (resScore * 0.7) + (structScore * 0.3)
+
+    local teamValue = zone.teamvalue or 1.0
+    local distanceFriction = 0
+    if teamValue < 0.6 then
+        distanceFriction = (0.6 - teamValue) * 2.0 
+    end
+
+    local finalScore = totalBounty - distanceFriction
+
+    return math.max(math.min(finalScore, 1.0), 0.0)
+end
+
 function FindAirTargetForTeamRNG(aiBrain, position, platoon, maxRange, platoonThreat, priorityList)
+    --LOG('Looking for antiair target with FindAirTargetForTeamRNG')
     if not position then return nil end
     
     local armyIndex = aiBrain:GetArmyIndex()
@@ -9092,4 +9322,40 @@ function GetLocalEnemyZoneThreat(aiBrain, startZone, zoneType, threatType, maxEd
     end
     --LOG('RNGAI BFS DEBUG: Total Sum for BFS: '..tostring(totalThreatSum))
     return totalThreatSum
+end
+
+function GetZoneExposureValue(myStart, enemyStart, zonePos, mapDiagonalSq)
+    -- Returns 0.0 (Safe/Isolated) to 1.0 (Deep behind enemy lines)
+    if not myStart or not enemyStart then
+        return 0.0
+    end
+    local distToEnemySq = VDist2Sq(myStart[1], myStart[3], enemyStart[1], enemyStart[3])
+    local distToZoneSq = VDist2Sq(myStart[1], myStart[3], zonePos[1], zonePos[3])
+    
+    -- If the zone is significantly closer to us than the enemy base, it's not exposed
+    if distToZoneSq < distToEnemySq * 0.8 then
+        return 0.0
+    end
+
+    local angleToEnemy = GetAngleToPosition(myStart, enemyStart)
+    local angleToZone = GetAngleToPosition(myStart, zonePos)
+    local angleDiff = math.abs(angleToEnemy - angleToZone)
+    
+    -- Normalize angle difference for 360 degrees
+    if angleDiff > 180 then angleDiff = 360 - angleDiff end
+
+    -- Logic: If the zone is further than the enemy base AND within a 45-degree 
+    -- cone of the enemy base, it's a high-risk 'backdoor' zone (Zone 2).
+    if distToZoneSq > distToEnemySq and angleDiff < 45 then
+        -- Scale risk based on how deep behind them it is
+        return math.min((distToZoneSq - distToEnemySq) / mapDiagonalSq + 0.5, 1.0)
+    end
+
+    -- If the angle is wide (e.g. > 70 degrees), it's a 'Flank' zone like 3 or 4
+    -- Even if it's far away, the flight path doesn't cross the enemy core.
+    if angleDiff > 70 then
+        return 0.0
+    end
+
+    return 0.2 -- Moderate exposure for general central-map zones
 end

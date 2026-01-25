@@ -853,26 +853,26 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
             local result, navReason
             local whatToBuildM = self.ExtractorBuildID
             local bUsedTransports
+            if IsDestroyed(eng) then
+                --SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
+                return
+            end
+            local navigateDist = VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3])
+            local maxWalkTime = 180
+            local minPlatoonSpeed = self['rngdata'].MinPlatoonSpeed or 1.9
+            local walkDistThreshold = minPlatoonSpeed * maxWalkTime
+            local walkDistThresholdSq = walkDistThreshold * walkDistThreshold
             if reason ~= 'PathOK' then
                 self:LogDebug(string.format('Path is not ok '))
                 -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
-                if reason == 'NoGraph' then
-                    result = true
-                elseif VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) < 300*300 then
-                    --self:LogDebug(string.format('Distance is less than 300'))
-                    --SPEW('* AI-RNG: engineerMoveWithSafePath(): executing CanPathTo(). LUA GenerateSafePathTo returned: ('..repr(reason)..') '..VDist2Sq(pos[1], pos[3], destination[1], destination[3]))
-                    -- be really sure we don't try a pathing with a destoryed c-object
-                    if IsDestroyed(eng) then
-                        --SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
-                        return
-                    end
+                if navigateDist < 300*300 then
                     result, navReason = NavUtils.CanPathTo('Amphibious', pos, builderData.Position)
                     --self:LogDebug(string.format('Can we path to it '..tostring(result)))
                 end 
             end
-            if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 350 * 350
-            and eng.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, eng) then
 
+            if ((not result and reason ~= 'PathOK') or navigateDist > walkDistThresholdSq)
+            and eng.PlatoonHandle then
                 -- Skip the last move... we want to return and do a build
                eng.WaitingForTransport = true
                bUsedTransports = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua").SendPlatoonWithTransports(aiBrain, eng.PlatoonHandle, builderData.Position, 2, true)

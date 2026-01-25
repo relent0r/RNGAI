@@ -179,6 +179,14 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
+            if self.ZoneID and self.BuilderData.TargetZone and self.ZoneID == self.BuilderData.TargetZone then
+                local mainBaseZoneID = aiBrain.BuilderManagers['MAIN'].ZoneID
+                if mainBaseZoneID and mainBaseZoneID == self.BuilderData.TargetZone then
+                    --LOG('Mobile AA is going to loiter at main base point')
+                    self:ChangeState(self.Loiter)
+                    return
+                end
+            end
             local targetZone
             if not target then
                 -- look for main base attacks?
@@ -218,7 +226,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 --self:LogDebug(string.format('DecideWhatToDo no target zone, look for one'))
                 --Note this yield is to try and avoid a bunch of platoons all selecting the same zone before the allocation thread has looped.
                 coroutine.yield(Random(5,35))
-                targetZone = IntelManagerRNG.GetIntelManager(aiBrain):SelectZoneRNG(aiBrain, self, self.ZoneType, true)
+                targetZone = IntelManagerRNG.GetIntelManager(aiBrain):GetBestZoneForPlatoon(self, self.ZoneType)
+                --LOG('Zone selected with GetBestZoneForPlatoon : '..tostring(testtargetZone)..' with zone type '..tostring(self.ZoneType))
                 if targetZone then
                     if self.LocationType and aiBrain.BuilderManagers[self.LocationType].ZoneID then
                         if targetZone == aiBrain.BuilderManagers[self.LocationType].ZoneID then
@@ -296,6 +305,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local builderData = self.BuilderData
             local currentZoneID = builderData.TargetZone
             local currentZone
+            --LOG('Mobile AA defense being asked to loiter')
 
             if not builderData.Position then
                 WARN('No position passed to ZoneControlDefense')
@@ -317,12 +327,20 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             else
                 currentZone = aiBrain.Zones.Land.zones[currentZoneID]
             end
+            --LOG('Loitering at current zone '..tostring(currentZone.id)..' builder manager here is '..tostring(currentZone.BuilderManager.LocationType))
+            --LOG('Main base zone is '..tostring(aiBrain.BuilderManagers['MAIN'].ZoneID))
 
             if currentZone then
+                local movePosition = currentZone.pos
+                local mainbaseZone = aiBrain.BuilderManagers['MAIN'].ZoneID
+                if currentZone.id == mainbaseZone then
+                    movePosition = RUtils.GetDefensiveSpokePointRNG(aiBrain, 'MAIN', nil, 'MobileAntiAir')
+                    --LOG('Mobile aa defense is going to spoke position '..tostring(repr(movePosition)))
+                end
                 --LOG('Zone Control is moving to factory manager rally point')
                 local platUnits = self:GetPlatoonUnits()
                 for _, v in platUnits do
-                    StateUtils.IssueNavigationMove(v, currentZone.pos)
+                    StateUtils.IssueNavigationMove(v, movePosition)
                 end
                 coroutine.yield(25)
             end
@@ -333,6 +351,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 coroutine.yield(20)
                 local adjacentThreatCheck = StateUtils.SearchHighestThreatFromZone(aiBrain, self.Pos,'air')
                 if adjacentThreatCheck then
+                    --LOG('Adjacent threat check found, aborting loiter, counter was '..tostring(counter))
                     break
                 end
             end
@@ -353,10 +372,19 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
-                for k,unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit['rngdata'].machineworth then 
+                for k, unit in self.targetcandidates do
+                    if unit and not unit.Dead and not unit['rngdata'].machineworth then
+                        if not unit['rngdata'] then
+                            unit['rngdata'] = {}
+                        end
+                        local unitData = unit['rngdata']
+                        local unithealth = StateUtils.GetTrueHealth(unit, true)
+                        unitData.machinevalue = unit.Blueprint.Economy.BuildCostMass/unithealth
+                        unitData.machineworth = unitData.machinevalue/unithealth
+                    end
+                    if not unit or unit.Dead then 
                         --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
-                        table.remove(self.targetcandidates,k) 
+                        table.remove(self.targetcandidates, k) 
                     end
                 end
             end

@@ -93,6 +93,7 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local targetsAssigned
             self:LogDebug(string.format('Current novax platoon DPS is '..tostring(self['rngdata'].MaxPlatoonDPS)))
+            --LOG('Current novax platoon DPS is '..tostring(self['rngdata'].MaxPlatoonDPS))
             if not targetsAssigned then
                 local novaxCount = 0
                 local targetCount = 0
@@ -109,22 +110,35 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
                             elseif v.CurrentTarget and not v.CurrentTarget.Dead then
                                 targetCount = targetCount + 1
                                 local totalShieldHealth = RUtils.GetShieldHealthAroundPosition(aiBrain, v.CurrentTarget:GetPosition(), 46, 'Enemy')
-                                if totalShieldHealth > 0 and (totalShieldHealth / v.UnitDPS) > 12 then
-                                    v.CurrentTarget = target
-                                    v.CurrentTargetHealth = target:GetHealth()
+                                if totalShieldHealth > 0 and (totalShieldHealth / self['rngdata'].MaxPlatoonDPS) > 12 then
+                                    local newTargetShieldHealth = RUtils.GetShieldHealthAroundPosition(aiBrain, target:GetPosition(), 46, 'Enemy')
+                                    if newTargetShieldHealth == 0 or (newTargetShieldHealth / self['rngdata'].MaxPlatoonDPS) <= 12 then
+                                        self:LogDebug('Switching to Director target: New target has acceptable shield levels.')
+                                        v.CurrentTarget = target
+                                        v.CurrentTargetHealth = target:GetHealth()
+                                    else
+                                        v.CurrentTarget = nil 
+                                        targetCount = targetCount - 1
+                                        self:LogDebug('Director target is also heavily shielded. Staying on current or looking for fallback.')
+                                        -- Optional: Force a fallback search if both are bad
+                                    end
                                 end
                             end
                         end
                     end
                     self:LogDebug(string.format('NovaxCount '..novaxCount))
                     self:LogDebug(string.format('targetCount '..targetCount))
+                    --LOG('NovaxCount '..tostring(novaxCount))
+                    --LOG('targetCount '..tostring(targetCount))
                     if novaxCount == targetCount then
                         self:LogDebug(string.format('Novax targetsAssgined is true'))
+                        --LOG('Novax targetsAssgined is true')
                         targetsAssigned = true
                     end
                 end
             end
             if not targetsAssigned then
+                --LOG('No target assigned from directory, using search')
                 local novaxCount = 0
                 local targetCount = 0
                 self:LogDebug(string.format('Novax No director target, searching for prioritized at range '..self.MaxSearchRadius))
@@ -138,6 +152,9 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
                                 targetCount = targetCount + 1
                                 v.CurrentTarget = target
                                 v.CurrentTargetHealth = target:GetHealth()
+                            elseif v.CurrentTarget and not v.CurrentTarget.Dead then
+                                --LOG('We already have a target')
+                                targetCount = targetCount + 1
                             end
                         end
                     end
@@ -150,6 +167,7 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if targetsAssigned then
+                --LOG('Novax Attacking targets')
                 self:LogDebug(string.format('Novax Attacking targets'))
                 self:ChangeState(self.AttackTarget)
                 return
@@ -172,6 +190,7 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
             self:Stop()
             local breakRotation = false
             for _, v in self.NovaxUnits do
+                --LOG('Setting novax to attack')
                 if not v.Unit.Dead then
                     if v.CurrentTarget and not v.CurrentTarget.Dead then
                         IssueAttack({v.Unit}, v.CurrentTarget)
@@ -179,10 +198,12 @@ AINovaxBehavior = Class(AIPlatoonRNG) {
                 end
             end
             while not breakRotation do
+                --LOG('Novax attack loop target rotation'..tostring(targetRotation))
                 --self:LogDebug(string.format('Novax Attack loop'))
                 targetRotation = targetRotation + 1
                 coroutine.yield(200)
                 for _, v in self.NovaxUnits do
+                    --LOG('target is '..tostring(v.CurrentTarget.UnitId))
                     if v.CurrentTarget.Dead then
                         --self:LogDebug(string.format('Novax target dead, break rotation'))
                         breakRotation = true

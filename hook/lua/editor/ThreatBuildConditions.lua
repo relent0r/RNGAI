@@ -188,10 +188,6 @@ function GreaterThanAlliedThreatInZone(aiBrain, locationType, threat)
     return false
 end
 
-function LandThreatAtAdjacentZones(aiBrain)
-
-end
-
 function GreaterThanAlliedThreatInAdjacentZones(aiBrain, locationType, threat)
     if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive then
         local position = aiBrain.BuilderManagers[locationType].Position

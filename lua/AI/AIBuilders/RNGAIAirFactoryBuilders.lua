@@ -24,6 +24,18 @@ local T3BomberRushActivated = function(self, aiBrain, builderManager)
     end
 end
 
+local ACUUnderNavalAttack = function(self, aiBrain, builderManager)
+    local acuUnderNavalAttack
+    if aiBrain.CDRUnit and not aiBrain.CDRUnit.Dead then
+        acuUnderNavalAttack = aiBrain.CDRUnit['rngdata'].EnemyNavalPresent
+    end
+    if acuUnderNavalAttack then
+        return 1000
+    else
+        return 893
+    end
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T1 Ratio',
     BuildersType = 'FactoryBuilder',
@@ -129,6 +141,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T2 Torp Bomber',
         PlatoonTemplate = 'T2AirTorpedoBomber',
         Priority = 893,
+        PriorityFunction = ACUUnderNavalAttack,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T2', 'torpedo'} },
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},

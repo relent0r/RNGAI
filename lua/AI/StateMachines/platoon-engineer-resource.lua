@@ -294,15 +294,21 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 --SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
                 return
             end
+            local navigateDist = VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3])
+            local maxWalkTime = 180
+            local minPlatoonSpeed = self['rngdata'].MinPlatoonSpeed or 1.9
+            local walkDistThreshold = minPlatoonSpeed * maxWalkTime
+            local walkDistThresholdSq = walkDistThreshold * walkDistThreshold
             if reason ~= 'PathOK' then
                 --self:LogDebug(string.format('Path is not ok '))
-                if VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) < 300*300 then
+                if navigateDist < 300*300 then
                     --self:LogDebug(string.format('Distance is less than 300'))
                     result, navReason = NavUtils.CanPathTo('Amphibious', pos, builderData.Position)
                 end 
             end
-            if (not result and reason ~= 'PathOK') or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 350 * 350
-            and eng.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, eng) then
+
+            if ((not result and reason ~= 'PathOK') or navigateDist > walkDistThresholdSq)
+            and eng.PlatoonHandle then
 
                 -- Skip the last move... we want to return and do a build
                eng.WaitingForTransport = true

@@ -301,7 +301,12 @@ function GetTransports( platoon, aiBrain)
 				neededTable.Medium = neededTable.Medium + 0.25
 				neededTable.Large = neededTable.Large + 1.0
                 neededTable.Total = neededTable.Total + 1
-
+			elseif v.Blueprint.Transport.TransportClass == 10 then
+				CanUseTransports = true
+				neededTable.Large = neededTable.Large + 1.0
+				neededTable.Medium = neededTable.Medium + 2.0
+				neededTable.Small = neededTable.Small + 4.0
+				neededTable.Total = neededTable.Total + 1
 			else
 				LOG("*AI DEBUG "..tostring(aiBrain.Nickname).." "..tostring(platoon.BuilderName).." during GetTransports - "..tostring(v:GetBlueprint().Description).." has no transportClass value")
 			end
@@ -472,83 +477,95 @@ function GetTransports( platoon, aiBrain)
 		local id = unit.UnitId
 		if aiBrain.TransportSlotTable[id] then
 			return aiBrain.TransportSlotTable[id]
-		else
-			local EntityCategoryContains = EntityCategoryContains
-			local bones = { Large = 0, Medium = 0, Small = 0,}
-			if EntityCategoryContains( categories.xea0306, unit) then
-				bones.Large = 8
-				bones.Medium = 10
-				bones.Small = 24
-			elseif EntityCategoryContains( categories.uea0203, unit) then
-				bones.Large = 0
-				bones.Medium = 1
-				bones.Small = 1
-			elseif EntityCategoryContains( categories.uea0104, unit) then
-				bones.Large = 3
-				bones.Medium = 6
-				bones.Small = 14
-			elseif EntityCategoryContains( categories.uea0107, unit) then
-				bones.Large = 1
-				bones.Medium = 2
-				bones.Small = 6
-			elseif EntityCategoryContains( categories.uaa0107, unit) then
-				bones.Large = 1
-				bones.Medium = 3
-				bones.Small = 6
-			elseif EntityCategoryContains( categories.uaa0104, unit) then
-				bones.Large = 3
-				bones.Medium = 6
-				bones.Small = 12
-			elseif EntityCategoryContains( categories.ura0107, unit) then
-				bones.Large = 1
-				bones.Medium = 2
-				bones.Small = 6
-			elseif EntityCategoryContains( categories.ura0104, unit) then
-				bones.Large = 2
-				bones.Medium = 4
-				bones.Small = 10
-			elseif EntityCategoryContains( categories.xsa0107, unit) then
-				bones.Large = 1
-				bones.Medium = 4
-				bones.Small = 8
-			elseif EntityCategoryContains( categories.xsa0104, unit) then
-				bones.Large = 4
-				bones.Medium = 8
-				bones.Small = 16
-			-- BO Aeon transport
-			elseif bones.Small == 0 and (categories.baa0309 and EntityCategoryContains( categories.baa0309, unit)) then
-				bones.Large = 6
-				bones.Medium = 10
-				bones.Small = 16
-			-- BO Cybran transport
-			elseif bones.Small == 0 and (categories.bra0309 and EntityCategoryContains( categories.bra0309, unit)) then
-				bones.Large = 3
-				bones.Medium = 12
-				bones.Small = 14
-			-- BrewLan Cybran transport
-			elseif bones.Small == 0 and (categories.sra0306 and EntityCategoryContains( categories.sra0306, unit)) then
-				bones.Large = 4
-				bones.Medium = 8
-				bones.Small = 16
-			-- Gargantua
-			elseif bones.Small == 0 and (categories.bra0409 and EntityCategoryContains( categories.bra0409, unit)) then
-				bones.Large = 20
-				bones.Medium = 4
-				bones.Small = 4
-			-- BO Sera transport
-			elseif bones.Small == 0 and (categories.bsa0309 and EntityCategoryContains( categories.bsa0309, unit)) then
-				bones.Large = 8
-				bones.Medium = 10
-				bones.Small = 28
-			-- BrewLAN Seraphim transport
-			elseif bones.Small == 0 and (categories.ssa0306 and EntityCategoryContains( categories.ssa0306, unit)) then
-				bones.Large = 7
-				bones.Medium = 15
-				bones.Small = 32
-			end
+		end
+
+		local bp = unit.Blueprint.Transport
+		if bp.SlotsLarge or bp.SlotsMedium or bp.SlotsSmall then
+			local bones = {
+				Large = bp.SlotsLarge or 0,
+				Medium = bp.SlotsMedium or 0,
+				Small = bp.SlotsSmall or 0,
+			}
+			LOG('Building bones from buildprints '..tostring(repr(bones)))
 			aiBrain.TransportSlotTable[id] = bones
 			return bones
 		end
+
+		local EntityCategoryContains = EntityCategoryContains
+		local bones = { Large = 0, Medium = 0, Small = 0,}
+		if EntityCategoryContains( categories.xea0306, unit) then
+			bones.Large = 8
+			bones.Medium = 10
+			bones.Small = 24
+		elseif EntityCategoryContains( categories.uea0203, unit) then
+			bones.Large = 0
+			bones.Medium = 1
+			bones.Small = 1
+		elseif EntityCategoryContains( categories.uea0104, unit) then
+			bones.Large = 3
+			bones.Medium = 6
+			bones.Small = 14
+		elseif EntityCategoryContains( categories.uea0107, unit) then
+			bones.Large = 1
+			bones.Medium = 2
+			bones.Small = 6
+		elseif EntityCategoryContains( categories.uaa0107, unit) then
+			bones.Large = 1
+			bones.Medium = 3
+			bones.Small = 6
+		elseif EntityCategoryContains( categories.uaa0104, unit) then
+			bones.Large = 3
+			bones.Medium = 6
+			bones.Small = 12
+		elseif EntityCategoryContains( categories.ura0107, unit) then
+			bones.Large = 1
+			bones.Medium = 2
+			bones.Small = 6
+		elseif EntityCategoryContains( categories.ura0104, unit) then
+			bones.Large = 2
+			bones.Medium = 4
+			bones.Small = 10
+		elseif EntityCategoryContains( categories.xsa0107, unit) then
+			bones.Large = 1
+			bones.Medium = 4
+			bones.Small = 8
+		elseif EntityCategoryContains( categories.xsa0104, unit) then
+			bones.Large = 4
+			bones.Medium = 8
+			bones.Small = 16
+		-- BO Aeon transport
+		elseif bones.Small == 0 and (categories.baa0309 and EntityCategoryContains( categories.baa0309, unit)) then
+			bones.Large = 6
+			bones.Medium = 10
+			bones.Small = 16
+		-- BO Cybran transport
+		elseif bones.Small == 0 and (categories.bra0309 and EntityCategoryContains( categories.bra0309, unit)) then
+			bones.Large = 3
+			bones.Medium = 12
+			bones.Small = 14
+		-- BrewLan Cybran transport
+		elseif bones.Small == 0 and (categories.sra0306 and EntityCategoryContains( categories.sra0306, unit)) then
+			bones.Large = 4
+			bones.Medium = 8
+			bones.Small = 16
+		-- Gargantua
+		elseif bones.Small == 0 and (categories.bra0409 and EntityCategoryContains( categories.bra0409, unit)) then
+			bones.Large = 20
+			bones.Medium = 4
+			bones.Small = 4
+		-- BO Sera transport
+		elseif bones.Small == 0 and (categories.bsa0309 and EntityCategoryContains( categories.bsa0309, unit)) then
+			bones.Large = 8
+			bones.Medium = 10
+			bones.Small = 28
+		-- BrewLAN Seraphim transport
+		elseif bones.Small == 0 and (categories.ssa0306 and EntityCategoryContains( categories.ssa0306, unit)) then
+			bones.Large = 7
+			bones.Medium = 15
+			bones.Small = 32
+		end
+		aiBrain.TransportSlotTable[id] = bones
+		return bones
 	end
     
     -- ASSIGNMENT PHASE - assign transports to the task until the requirements are met

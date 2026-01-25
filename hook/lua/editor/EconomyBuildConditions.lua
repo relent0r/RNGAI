@@ -526,16 +526,34 @@ function FactorySpendRatioRNG(aiBrain,LocationType, uType,upgradeType, noStorage
     local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
     local currentFactorySpend = aiBrain.cmanager.categoryspend.fact[uType] - aiBrain.cmanager.categoryspend.fact[upgradeType]
     local productionRatio = demandBuilder and math.max(aiBrain.ProductionRatios[uType], aiBrain.DefaultProductionRatios[uType]) or aiBrain.ProductionRatios[uType]
+    local fmgr = aiBrain.BuilderManagers[LocationType].FactoryManager
     if not demandBuilder then
-        if aiBrain.BuilderManagers[LocationType].FactoryManager.ZoneThreatAssignment then
-            local zoneThreat = aiBrain.BuilderManagers[LocationType].FactoryManager.ZoneThreatAssignment
-            if zoneThreat > 0 and zoneThreat < 5 then
-                --LOG('ZoneThreatAssignment is lower than 5, decrease production ratio')
-                productionRatio = productionRatio * 0.5
+        if fmgr.ZoneThreatAssignment then
+            local zoneThreat = fmgr.ZoneThreatAssignment
+            if uType == 'Land' then
+                local minThreatForFullProduction = 10.0
+                local highSecurityMultiplier = 0.4
+                local isSpamPlayer = aiBrain.BrainIntel.PlayerRole.SpamPlayer
+                if zoneThreat > 0 then
+                    if zoneThreat < minThreatForFullProduction then
+                        local minFactor = isSpamPlayer and 0.5 or 0.1
+                        local threatFactor = math.max(minFactor, math.min(zoneThreat / minThreatForFullProduction, 1.0))
+                        productionRatio = productionRatio * threatFactor
+                    end
+                else
+                    if not isSpamPlayer then
+                        if (fmgr.SecurityDepth or 0) >= 2 and (fmgr.PathSecurity or 0) > 2.0 then
+                            productionRatio = productionRatio * highSecurityMultiplier
+                            --LOG(string.format("RNGAI Spend: %s %s - Secure Rear Base, applying HighSecurityMultiplier", LocationType, uType))
+                        end
+                    end
+                end
             end
         end
     end
-    if currentFactorySpend / ( aiBrain.cmanager.income.r.m - (mexSpend * 0.5)) < productionRatio then
+    local currentRatio = currentFactorySpend / (aiBrain.cmanager.income.r.m - (mexSpend * 0.5))
+    local triggerProduction = currentRatio < productionRatio
+    if triggerProduction then
         if aiBrain.EnemyIntel.ChokeFlag and uType == 'Land' then 
             if (GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.10 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.95) then
                 return true

@@ -252,9 +252,16 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     if threatTable.DefenseThreat.TotalThreat > 260 and not self.SuicideModeActive or experimentalHealthPercent < 0.40 and threatTable.DefenseThreat.TotalThreat > 80 and not self.SuicideModeActive then
                         local localFriendlyLandThreat = self:CalculatePlatoonThreatAroundPosition('Surface', (categories.LAND + categories.AMPHIBIOUS) * (categories.DIRECTFIRE + categories.INDIRECTFIRE), experimentalPosition, 35)
                         if localFriendlyLandThreat < self.DefaultSurfaceThreat + 30 then
+                            local immediateDefenseThreat = 0
                             for _, enemyUnit in threatTable.DefenseThreat.Units do
                                 if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored then
+                                    if enemyUnit.Object.Blueprint.CategoriesHash.TACTICALMISSILEPLATFORM then continue end
                                     local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object) or 10
+                                    local rangeBuffer = (unitRange + 15) * (unitRange + 15)
+                                    if unitRange >= self['rngdata'].MaxPlatoonWeaponRange and enemyUnit.Distance < rangeBuffer then
+                                        --LOG('Enemy turrets outrange us enemy range '..tostring(unitRange)..' our range '..tostring(self['rngdata'].MaxPlatoonWeaponRange)..' distance from us '..tostring(enemyUnit.Distance))
+                                        immediateDefenseThreat = immediateDefenseThreat + (enemyUnit.Threat or 0)
+                                    end
                                     if (not closestUnit and unitRange < self['rngdata'].MaxPlatoonWeaponRange and enemyUnit.Distance < self['rngdata'].MaxPlatoonWeaponRangeSq + 40 * 40) or (unitRange < self['rngdata'].MaxPlatoonWeaponRange and (enemyUnit.Distance < closestUnitDistance and closestUnitDistance > 25)) then
                                         closestUnit = enemyUnit.Object
                                         closestUnitDistance = enemyUnit.Distance
@@ -271,14 +278,21 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                     end
                                 end
                             end
-                            self.BuilderData = {
-                                Retreat = true,
-                                RetreatReason = 'DefenseThreat'
-                            }
-                            --self:LogDebug(string.format('Experimental enemy defense threat of '..threatTable.DefenseThreat.TotalThreat..' and friendly surface threat of '..localFriendlyLandThreat..' retreating'))
-                            --LOG('Experimental is retreating because of defense threat of '..tostring(threatTable.DefenseThreat.TotalThreat))
-                            self:ChangeState(self.Retreating)
-                            return
+                            local braveryFactor = 1.0
+                            if experimentalHealthPercent > 0.75 then
+                                braveryFactor = 1.3
+                            elseif experimentalHealthPercent < 0.40 then
+                                braveryFactor = 0.5
+                            end
+                            --LOG('ImmediateDefense threat is '..tostring(immediateDefenseThreat)..' local is '..tostring(localFriendlyLandThreat))
+                            if immediateDefenseThreat > (localFriendlyLandThreat * braveryFactor) + 10 then
+                                self.BuilderData = {
+                                    Retreat = true,
+                                    RetreatReason = 'DefenseThreat'
+                                }
+                                self:ChangeState(self.Retreating)
+                                return
+                            end
                         end
                     end
                     if antiAirSupportNeeded then
@@ -349,7 +363,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                         AttackTarget = enemyUnit.Object
                                     }
                                     --self:LogDebug(string.format('Experimental has more than one T2 arty within range of it, retreat'))
-                                    --LOG('Experimental is retreating because of artillery threat that outranges us'..tostring(threatTable.RangedUnitThreat.TotalThreat)..' unit range '..tostring(unitRange))
+                                    --LOG('Experimental is retreating because of artillery threat that outranges us'..tostring(threatTable.ArtilleryThreat.TotalThreat)..' unit range '..tostring(unitRange))
                                     self:ChangeState(self.Retreating)
                                 end
                                 if not closestUnit or (enemyUnit.Distance < closestUnitDistance and closestUnitDistance > 25) then
@@ -826,6 +840,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                 return
             end
             local retreatReason = self.BuilderData.RetreatReason
+            --LOG('Retreating due to '..tostring(retreatReason))
             local retreatTarget = self.BuilderData.AttackTarget or false
             if retreatReason then
                 if retreatReason == 'AirThreat' then

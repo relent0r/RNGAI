@@ -415,7 +415,7 @@ BuilderGroup {
     },
     Builder {
         BuilderName = 'RNGAI T4 Exp Sea',
-        PlatoonTemplate = 'T4ExperimentalSea',
+        PlatoonTemplate = 'T4ExperimentalNavalRNG',
         Priority = 1000,
         FormRadius = 1000,
         InstanceCount = 50,
@@ -424,6 +424,7 @@ BuilderGroup {
         },
         BuilderType = 'Any',
         BuilderData = {
+            StateMachine = 'NavalExperimental',
             ThreatWeights = {
                 TargetThreatType = 'Commander',
             },

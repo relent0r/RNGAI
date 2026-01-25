@@ -229,8 +229,6 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
     local PrimaryTargetThreatType = 'Naval'
     local SecondaryTargetThreatType = 'Structures'
-    --RNGLOG('GetBestNavalTargetRNG Running')
-
 
     -- These are the values that are used to weight the two types of "threats"
     -- primary by default is weighed most heavily, while a secondary threat is
@@ -525,7 +523,6 @@ function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeap
     selectedWeaponArc = selectedWeaponArc or 'none'
 
     local success, bestGoalPos
-    local threatTargetPos = location
     local inWater = GetTerrainHeight(location[1], location[3]) < GetSurfaceHeight(location[1], location[3]) - 1.4
 
     --if this threat is in the water, see if we can get to it
@@ -540,18 +537,18 @@ function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeap
     --if it is not in the water or we can't get to it, then see if there is water within weapon range that we can get to
     if not success and maxRange then
         --Check vectors in 8 directions around the threat location at maxRange to see if they are in water.
-        local vectors = NavUtils.GetPositionsInRadius('Water', platoonPosition, maxRange, 6)
+        local vectors = NavUtils.GetPositionsInRadius('Water', location, maxRange, 6)
         --Sort the vectors by their distance to us.
         table.sort(vectors, function(a,b)
-            local distA = VDist2Sq(platoonPosition[1], platoonPosition[3], a[1], a[3])
-            local distB = VDist2Sq(platoonPosition[1], platoonPosition[3], b[1], b[3])
+            local distA = VDist2Sq(location[1], location[3], a[1], a[3])
+            local distB = VDist2Sq(location[1], location[3], b[1], b[3])
 
             return distA < distB
         end)
 
         --Iterate through the vector list and check if each is in the water. Use the first one in the water that has enemy structures in range.
         for _,vec in vectors do
-            inWater = GetTerrainHeight(vec[1], vec[3]) < GetSurfaceHeight(vec[1], vec[3]) - 2
+            inWater = GetTerrainHeight(vec[1], vec[3]) < GetSurfaceHeight(vec[1], vec[3]) - 1.4
             if inWater then
                 if NavUtils.CanPathTo(platoon.MovementLayer, platoonPosition, vec) then
                     bestGoalPos = vec
@@ -560,7 +557,7 @@ function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeap
             end
 
             if success then
-                success = not aiBrain:CheckBlockingTerrain(bestGoalPos, threatTargetPos, selectedWeaponArc)
+                success = not aiBrain:CheckBlockingTerrain(bestGoalPos, location, selectedWeaponArc)
             end
 
             if success then

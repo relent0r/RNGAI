@@ -34,7 +34,6 @@ function SetCDRDefaults(aiBrain, cdr)
     cdr.Confidence = 1
     cdr.EnemyCDRPresent = false
     cdr.InFirebaseRange = false
-    cdr.EnemyAirPresent = false
     cdr.Caution = false
     cdr.EnemyFlanking = false
     cdr.HealthPercent = 0
@@ -258,7 +257,7 @@ function CDRBrainThread(cdr)
             --LOG('Enemy Air Snipe Potential is low')
         end
         ]]
-        if cdr.EnemyAirPresent and not cdr.AtHoldPosition then
+        if cdr['rngdata'].EnemyAirPresent and not cdr.AtHoldPosition then
             if aiBrain.BuilderManagers['MAIN'] and aiBrain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].PositionKey then
                 cdr.HoldPosition = aiBrain.BrainIntel.ACUDefensivePositionKeyTable['MAIN'].Position
                 local hx = cdr.HoldPosition[1]
@@ -272,7 +271,7 @@ function CDRBrainThread(cdr)
                     cdr.AtHoldPosition = false
                 end
             end
-        elseif (not cdr.EnemyAirPresent) and cdr.AtHoldPosition then
+        elseif (not cdr['rngdata'].EnemyAirPresent) and cdr.AtHoldPosition then
             local hx = cdr.HoldPosition[1]
             local hz = cdr.HoldPosition[3]
             local ax = cdr.Position[1] - hx
@@ -475,7 +474,7 @@ function CDRThreatAssessmentRNG(cdr)
             --LOG('Current CDR Confidence '..cdr.Confidence)
             --LOG('Enemy Bomber threat '..cdr.CurrentEnemyAirThreat)
             --LOG('Friendly AA threat '..cdr.CurrentFriendlyAntiAirThreat)
-            if cdr.EnemyNavalPresent then
+            if cdr['rngdata'].EnemyNavalPresent then
                 --RNGLOG('ACU Threat Assessment . Enemy unit is antinaval and hitting me')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyNavalStriking'
@@ -597,28 +596,33 @@ function CDRThreatAssessmentRNG(cdr)
                 return result
             end
 
-            local function distanceFearMultiplier(cdrDistanceToBase, distanceToEnemyBase)
+            local function distanceFearMultiplier(cdrDistanceToBase, distanceToEnemyBase, weights)
                 if not cdrDistanceToBase or not distanceToEnemyBase then
                     return 1
                 end
             
-                local k = 8  -- sharpness of scaling
+                local k = weights.distanceSteepness or 8
+                local midPoint = weights.distanceMidPoint or 0.5
                 local ratio = cdrDistanceToBase / (cdrDistanceToBase + distanceToEnemyBase)
-                --LOG('Distance Ratio '..tostring(ratio))
             
-                if ratio < 0.4 then
-                    local mapped = (0.5 - ratio) / 0.5 
+                -- Near Home (Ratio < MidPoint): Apply Bonus
+                if ratio < midPoint then
+                    -- Map the ratio so it fits the 0.0 to 1.0 sigmoid input range
+                    local mapped = (midPoint - ratio) / midPoint 
                     local sig = 1 / (1 + math.exp(-k * (mapped - 0.5)))
-                    local bonus = 1 + (sig * 0.8) 
-                    return bonus
-                elseif ratio < 0.6 then
-                    return 1
-                else
-                    local mapped = (ratio - 0.5) / 0.5 
+                    
+                    -- Use weights.distanceHomeBonus to control the strength of the confidence boost
+                    return 1 + (sig * weights.distanceHomeBonus)
+                    
+                -- Deep in Enemy Territory (Ratio > MidPoint): Apply Penalty
+                elseif ratio > midPoint then
+                    local mapped = (ratio - midPoint) / (1 - midPoint) 
                     local sig = 1 / (1 + math.exp(-k * (mapped - 0.5)))
-                    local penalty = 1 - (sig * 0.5)
-                    return penalty
+                    
+                    return 1 - (sig * weights.distanceEnemyPenalty)
                 end
+            
+                return 1
             end
 
             -- Main function to calculate cdr.Confidence
@@ -650,7 +654,7 @@ function CDRThreatAssessmentRNG(cdr)
                     end
                 end
                 --LOG('Distance to enemy base '..tostring(math.sqrt(distanceToEnemyBase)))
-                local distanceFearFactor = distanceFearMultiplier(math.sqrt(cdrDistanceToBase), math.sqrt(distanceToEnemyBase))
+                local distanceFearFactor = distanceFearMultiplier(math.sqrt(cdrDistanceToBase), math.sqrt(distanceToEnemyBase), weights)
                 --LOG('Distance fear factor '..tostring(distanceFearFactor))
                 --LOG('Friendly threat before '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
                 --LOG('Enemy threat before '..tostring(enemyThreatConfidenceModifier))
@@ -681,7 +685,7 @@ function CDRThreatAssessmentRNG(cdr)
                     overchargeFactor = weights.overchargeBoost * threatScaling * healthScaling
                 end
                 
-                --LOG('AI '..tostring(aiBrain.Nickname)..' health percent '..tostring(cdr.HealthPercent)..' friendlyThreatConfidenceModifier '..tostring(friendlyThreatConfidenceModifier)..' enemyThreatConfidenceModifier '..tostring(enemyThreatConfidenceModifier)..' ratio '..tostring(friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier)..' survivability '..tostring(survivability)..' overcharge '..tostring(overchargeFactor))
+               -- LOG('AI '..tostring(aiBrain.Nickname)..' health percent '..tostring(cdr.HealthPercent)..' friendlyThreatConfidenceModifier '..tostring(friendlyThreatConfidenceModifier)..' enemyThreatConfidenceModifier '..tostring(enemyThreatConfidenceModifier)..' ratio '..tostring(friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier)..' survivability '..tostring(survivability)..' overcharge '..tostring(overchargeFactor))
 
                 cdr.Confidence = ((friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier) * survivability) + overchargeFactor
                 if friendlyACURangeAdvantage then
@@ -709,13 +713,17 @@ function CDRThreatAssessmentRNG(cdr)
                 healthBoost = 1.3, -- higher means more confidence
                 shieldBoost = 1.1, -- higher means more confidence
                 enemyThreat = 0.7, -- higher means less confidence
-                globalThreat = 0.60,
+                globalThreat = 1.1,
                 enemyUnitThreatOuter = 0.8, -- higher means less confidence
                 enemyUnitThreatInner = 1.1, -- higher means less confidence
                 enemyDefenseThreat = 0.95, -- higher means less confidence
                 localEnemyThreatRatio = 0.9, -- higher means less confidence
                 phasePenalty = 0.7, -- higher means less confidence
-                overchargeBoost = 1.25 -- higher means more confidence
+                overchargeBoost = 1.25, -- higher means more confidence
+                distanceHomeBonus = 0.8,    -- Increase to be braver at home
+                distanceEnemyPenalty = 0.6, -- Increase to be more scared far from home
+                distanceMidPoint = 0.5,     -- Increase to make the mid point closer to the enemy
+                distanceSteepness = 8, -- increase to make the transition more sudden
             }
             local enemyThreatRatio = friendlyUnitThreat > 0 and (enemyUnitThreat / friendlyUnitThreat) or 0.5
             -- Example call

@@ -31,6 +31,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         local maxPlatoonStrikeRadius = 20
         local maxPlatoonStrikeRadiusDistance = 0
         local intelrange = 0
+        local minPlatoonSpeed = 999
         if not self['rngdata'] then
             self['rngdata'] = {}
         end
@@ -113,12 +114,18 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
             if not unit['rngdata'].MaxWeaponRange then
                 unit['rngdata'].MaxWeaponRange = 0
             end
+            local maxSpeed = unit.Blueprint.Physics.MaxSpeed or 0
+            if maxSpeed > 0 and maxSpeed < minPlatoonSpeed then
+                minPlatoonSpeed = maxSpeed
+            end
             if unitCats.SATELLITE then
                 if not self.NovaxUnits then
                     self.NovaxUnits = {}
                 end
                 if not self.NovaxUnits[unit.EntityId] then
-                    self.NovaxUnits[unit.EntityId] = {Unit = unit, CurrentTarget = nil, CurrentTargetHealth = nil, UnitDPS = RUtils.CalculatedDPSRNG(ALLBPS['xea0002'].Weapon[1]) }
+                    local unitDPS = RUtils.CalculatedDPSRNG(ALLBPS['xea0002'].Weapon[1])
+                    self.NovaxUnits[unit.EntityId] = {Unit = unit, CurrentTarget = nil, CurrentTargetHealth = nil, UnitDPS = unitDPS }
+                    maxPlatoonDPS = maxPlatoonDPS + unitDPS
                 end
             end
             if unitCats.ARTILLERY and ( unitCats.STRUCTURE and unitCats.TECH3 or unitCats.EXPERIMENTAL ) then
@@ -212,6 +219,10 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         end
         if not self['rngdata'].MaxPlatoonWeaponRange then
             self['rngdata'].MaxPlatoonWeaponRange = 20
+        end
+        if minPlatoonSpeed == 999 then minPlatoonSpeed = 0 end
+        if not self['rngdata'].MinPlatoonSpeed then
+            self['rngdata'].MinPlatoonSpeed = minPlatoonSpeed
         end
     end,
 

@@ -485,45 +485,31 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
             end
             local aiBrain = self:GetBrain()
             local path, reason, distance, threats = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, self.Pos, builderData.Position, 1500 , 80)
-            if not path then
-                if not path then
-                    if reason ~= "TooMuchThreat" then
-                        --self:LogDebug(string.format('platoon is going to use transport'))
-                        self:ChangeState(self.Transporting)
-                        return
-                    elseif reason == "TooMuchThreat" and NavUtils.CanPathTo(self.MovementLayer, self.Pos, builderData.Position) then
-                        self:LogDebug('Too much threat for pathing')
-                        --LOG('High pathing threat detected for assault platoon')
-                        local alternativeStageZone = aiBrain.IntelManager:GetClosestZone(aiBrain, false, builderData.Position, false, true, 2)
-                        if alternativeStageZone then
-                            local alternativeStagePos = aiBrain.Zones.Land.zones[alternativeStageZone].pos
-                            local rx = self.Pos[1] - alternativeStagePos[1]
-                            local rz = self.Pos[3] -alternativeStagePos[3]
-                            local stageDistance = rx * rx + rz * rz
-                            if stageDistance > 2500 then
-                                self:LogDebug('Trying to get alternate path to closest zone')
-                                path, reason, distance  = AIAttackUtils.PlatoonGeneratePathToRNG(self.MovementLayer, self.Pos, alternativeStagePos, 300, 20)
-                            else
-                                --LOG('Alternate stage position not found')
-                                local closestThreatDistance
-                                local closestThreat
-                                for _, v in threats do
-                                    local rx = self.Pos[1] - v[1]
-                                    local rz = self.Pos[3] - v[2]
-                                    local threatDistance = rx * rx + rz * rz
-                                    if not closestThreatDistance or threatDistance < closestThreatDistance then
-                                        closestThreatDistance = threatDistance
-                                        closestThreat = v
-                                    end
-                                end
-                                if closestThreat then
-                                    --LOG('Closest threat position found at distance of '..tostring(closestThreatDistance)..' position '..tostring(closestThreat[1])..':'..tostring(closestThreat[2]))
-                                    local threat = RUtils.GrabPosDangerRNG(aiBrain, {closestThreat[1], 0, closestThreat[2]}, 60, aiBrain.BrainIntel.IMAPConfig.IMAPSize, true, false, true, true)
-                                    if threat.enemyrange and threat.enemyrange <= self['rngdata'].MaxPlatoonWeaponRange then
-                                        path, reason, distance  = AIAttackUtils.PlatoonGeneratePathToRNG(self.MovementLayer, self.Pos, { closestThreat[1], GetSurfaceHeight(closestThreat[1], closestThreat[2]), closestThreat[2] }, 300, 80)
-                                    end
-                                end
-                            end
+            local minPlatoonSpeed = self['rngdata'].MinPlatoonSpeed or 2.0
+            local maxWalkTime = 180 -- Assault platoons tolerate a 3-minute walk
+            local walkDistThresholdSq = (minPlatoonSpeed * maxWalkTime) * (minPlatoonSpeed * maxWalkTime)
+            
+            local dx = self.Pos[1] - builderData.Position[1]
+            local dz = self.Pos[3] - builderData.Position[3]
+            local navigateDistSq = dx * dx + dz * dz
+
+            if not path or navigateDistSq > walkDistThresholdSq then
+                if reason ~= "TooMuchThreat" or navigateDistSq > walkDistThresholdSq then
+                    --self:LogDebug(string.format('platoon is going to use transport'))
+                    self:ChangeState(self.Transporting)
+                    return
+                elseif reason == "TooMuchThreat" and NavUtils.CanPathTo(self.MovementLayer, self.Pos, builderData.Position) then
+                    self:LogDebug('Too much threat for pathing')
+                    --LOG('High pathing threat detected for assault platoon')
+                    local alternativeStageZone = aiBrain.IntelManager:GetClosestZone(aiBrain, false, builderData.Position, false, true, 2)
+                    if alternativeStageZone then
+                        local alternativeStagePos = aiBrain.Zones.Land.zones[alternativeStageZone].pos
+                        local rx = self.Pos[1] - alternativeStagePos[1]
+                        local rz = self.Pos[3] -alternativeStagePos[3]
+                        local stageDistance = rx * rx + rz * rz
+                        if stageDistance > 2500 then
+                            self:LogDebug('Trying to get alternate path to closest zone')
+                            path, reason, distance  = AIAttackUtils.PlatoonGeneratePathToRNG(self.MovementLayer, self.Pos, alternativeStagePos, 300, 20)
                         else
                             --LOG('Alternate stage position not found')
                             local closestThreatDistance
@@ -545,9 +531,30 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                         end
+                    else
+                        --LOG('Alternate stage position not found')
+                        local closestThreatDistance
+                        local closestThreat
+                        for _, v in threats do
+                            local rx = self.Pos[1] - v[1]
+                            local rz = self.Pos[3] - v[2]
+                            local threatDistance = rx * rx + rz * rz
+                            if not closestThreatDistance or threatDistance < closestThreatDistance then
+                                closestThreatDistance = threatDistance
+                                closestThreat = v
+                            end
+                        end
+                        if closestThreat then
+                            --LOG('Closest threat position found at distance of '..tostring(closestThreatDistance)..' position '..tostring(closestThreat[1])..':'..tostring(closestThreat[2]))
+                            local threat = RUtils.GrabPosDangerRNG(aiBrain, {closestThreat[1], 0, closestThreat[2]}, 60, aiBrain.BrainIntel.IMAPConfig.IMAPSize, true, false, true, true)
+                            if threat.enemyrange and threat.enemyrange <= self['rngdata'].MaxPlatoonWeaponRange then
+                                path, reason, distance  = AIAttackUtils.PlatoonGeneratePathToRNG(self.MovementLayer, self.Pos, { closestThreat[1], GetSurfaceHeight(closestThreat[1], closestThreat[2]), closestThreat[2] }, 300, 80)
+                            end
+                        end
                     end
                 end
             end
+
             if path then
                 local bAggroMove = self.PlatoonData.AggressiveMove
                 local pathNodesCount = RNGGETN(path)

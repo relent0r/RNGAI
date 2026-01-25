@@ -1105,15 +1105,15 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                 local commanderThreat = unit:EnhancementThreatReturn()
                 unitTable.CommandThreat.TotalThreat = unitTable.CommandThreat.TotalThreat + commanderThreat
                 unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + commanderThreat
-                RNGINSERT(unitTable.CommandThreat.Units, {Object = unit, Distance = distance})
+                RNGINSERT(unitTable.CommandThreat.Units, {Object = unit, Distance = distance, Threat = commanderThreat})
             elseif unitCats.EXPERIMENTAL and (unitCats.LAND or unitCats.AMPHIBIOUS) then
                 unitTable.ExperimentalThreat.TotalThreat = unitTable.ExperimentalThreat.TotalThreat + unitThreat
                 unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
-                RNGINSERT(unitTable.ExperimentalThreat.Units, {Object = unit, Distance = distance})
+                RNGINSERT(unitTable.ExperimentalThreat.Units, {Object = unit, Distance = distance, Threat = unitThreat})
             elseif unitCats.AIR and (unitCats.BOMBER or unitCats.GROUNDATTACK) then
                 unitTable.AirSurfaceThreat.TotalThreat = unitTable.AirSurfaceThreat.TotalThreat + unitThreat
                 unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
-                RNGINSERT(unitTable.AirSurfaceThreat.Units, {Object = unit, Distance = distance})
+                RNGINSERT(unitTable.AirSurfaceThreat.Units, {Object = unit, Distance = distance, Threat = unitThreat})
             elseif (unitCats.LAND or unitCats.AMPHIBIOUS or unitCats.HOVER) and (unitCats.DIRECTFIRE or unitCats.INDIRECTFIRE) and not unitCats.SCOUT then
                 local unitRange = GetUnitMaxWeaponRange(unit)
                 if experimentalRange then
@@ -1127,14 +1127,14 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                     end
                     unitTable.RangedUnitThreat.TotalThreat = unitTable.RangedUnitThreat.TotalThreat + unitThreat
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
-                    RNGINSERT(unitTable.RangedUnitThreat.Units, {Object = unit, Distance = distance})
+                    RNGINSERT(unitTable.RangedUnitThreat.Units, {Object = unit, Distance = distance, Threat = unitThreat})
                 else
                     if unitCats.INDIRECTFIRE then
                         unitThreat = unitThreat * 0.3
                     end
                     unitTable.CloseUnitThreat.TotalThreat = unitTable.CloseUnitThreat.TotalThreat + unitThreat
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
-                    RNGINSERT(unitTable.CloseUnitThreat.Units, {Object = unit, Distance = distance})
+                    RNGINSERT(unitTable.CloseUnitThreat.Units, {Object = unit, Distance = distance, Threat = unitThreat})
                 end
             elseif unitCats.STRUCTURE and (unitCats.DIRECTFIRE or unitCats.INDIRECTFIRE) then
                 if unitCats.ARTILLERY and unitCats.TECH2 then
@@ -1157,12 +1157,12 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                     end
                     unitTable.ArtilleryThreat.TotalThreat = unitTable.ArtilleryThreat.TotalThreat + unitThreat
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
-                    RNGINSERT(unitTable.ArtilleryThreat.Units, {Object = unit, Distance = distance})
+                    RNGINSERT(unitTable.ArtilleryThreat.Units, {Object = unit, Distance = distance, Threat = unitThreat})
                 elseif unitCats.TACTICALMISSILEPLATFORM then
                     -- This shouldnt be a static number but the threat calculations are causing tmls to have over inflated values. Will try fix the faf blueprint-ai.lua calculation soon.
                     unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + 120
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + 120
-                    RNGINSERT(unitTable.DefenseThreat.Units, {Object = unit, Distance = distance})
+                    RNGINSERT(unitTable.DefenseThreat.Units, {Object = unit, Distance = distance, Threat = 120})
                 else
                     local unitRange = GetUnitMaxWeaponRange(unit)
                     if experimentalRange and experimentalRange > unitRange then
@@ -1175,7 +1175,7 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                     end
                     unitTable.DefenseThreat.TotalThreat = unitTable.DefenseThreat.TotalThreat + unitThreat
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
-                    RNGINSERT(unitTable.DefenseThreat.Units, {Object = unit, Distance = distance})
+                    RNGINSERT(unitTable.DefenseThreat.Units, {Object = unit, Distance = distance, Threat = unitThreat})
                 end
             elseif unitCats.NAVAL and (unitCats.DIRECTFIRE or unitCats.INDIRECTFIRE) then
                 local unitRange = GetUnitMaxWeaponRange(unit)
@@ -1185,7 +1185,7 @@ function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, i
                 if unitRange > 35 or distance < 1225 then
                     unitTable.NavalUnitThreat.TotalThreat = unitTable.NavalUnitThreat.TotalThreat + unitThreat
                     unitTable.TotalSuroundingThreat = unitTable.TotalSuroundingThreat + unitThreat
-                    RNGINSERT(unitTable.NavalUnitThreat.Units, {Object = unit, Distance = distance})
+                    RNGINSERT(unitTable.NavalUnitThreat.Units, {Object = unit, Distance = distance, Threat = unitThreat})
                 end
             end
         end
@@ -2783,13 +2783,19 @@ GetCallBackCheck = function(unit)
         if instigator and instigator.IsUnit and (not IsDestroyed(instigator)) then
             if instigator.Blueprint.Defense.SurfaceThreatLevel 
             and instigator.Blueprint.Defense.SurfaceThreatLevel > 0 and instigator.Blueprint.CategoriesHash.AIR
-            and (not unit.EnemyAirPresent) then
+            and (not unit['rngdata'].EnemyAirPresent) then
+                if not unit['rngdata'] then
+                    unit['rngdata'] = {}
+                end
             --RNGLOG('ACU EnemyAir is now present '..instigator.UnitId)
-                unit.EnemyAirPresent = true
+                unit['rngdata'].EnemyAirPresent = true
             elseif instigator.Blueprint.Defense.SubThreatLevel 
             and instigator.Blueprint.Defense.SubThreatLevel > 0 and instigator.Blueprint.CategoriesHash.ANTINAVY
-            and (not unit.EnemyNavalPresent) then
-                unit.EnemyNavalPresent = true
+            and (not unit['rngdata'].EnemyNavalPresent) then
+                if not unit['rngdata'] then
+                    unit['rngdata'] = {}
+                end
+                unit['rngdata'].EnemyNavalPresent = true
             end
         end
     end
@@ -2845,4 +2851,75 @@ GetCallBackCheck = function(unit)
     if unit.Blueprint.CategoriesHash.COMMAND then
         unit:AddOnDamagedCallback( ACUDamageDetail, nil, 100)
     end
+end
+
+local MinForwardBaseMassValue = 40
+local MaxForwardBaseThreat = 5
+local ForwardBaseDistanceThresholdSq = 64000 -- e.g., 250 units squared
+
+function EvaluateForwardBaseOpportunity(aiBrain, engPos, zone)
+    if zone.BuilderManager or zone.status == 'Occupied' then 
+        return false 
+    end
+
+    local mainPos = aiBrain.BuilderManagers['MAIN'].Position
+    local distSq = VDist2Sq(engPos[1], engPos[3], mainPos[1], mainPos[3])
+    if distSq < ForwardBaseDistanceThresholdSq then
+        return false
+    end
+
+    -- 3. Evaluate Value vs Danger
+    if zone.resourcevalue >= MinForwardBaseMassValue and zone.enemylandthreat <= MaxForwardBaseThreat then
+        return true
+    end
+
+    return false
+end
+
+local boneCache = {}
+
+function GetDFWeaponPos(unit)
+
+    local bpId = unit.UnitId
+    local firingBone = boneCache[bpId]
+    if firingBone == nil then
+        local unitBp = unit.Blueprint
+        local unitCats = unitBp.CategoriesHash
+        
+        -- Default to 'NoBone' so we don't recalculate failed lookups
+        boneCache[bpId] = 'NoBone' 
+        
+        local bIsFatboy = unitCats.uel0401
+        local bIsACU = unitCats.COMMAND
+
+        if unitBp.Weapon then
+            for _, wep in unitBp.Weapon do
+                local isDf = wep.RangeCategory == 'UWRC_DirectFire'
+                local isFatboyDf = bIsFatboy and wep.RangeCategory == 'UWRC_IndirectFire'
+                
+                if isDf or isFatboyDf then
+                    -- ACU logic: must be OverCharge weapon
+                    if bIsACU and not wep.OverChargeWeapon then
+                        continue
+                    end
+
+                    local firstRack = wep.RackBones and wep.RackBones[1]
+                    if firstRack and firstRack.MuzzleBones then
+                        firingBone = firstRack.MuzzleBones[1]
+                        boneCache[bpId] = firingBone
+                        break
+                    end
+                end
+            end
+        end
+    end
+
+    local weaponPos
+    if firingBone and firingBone ~= 'NoBone' then
+        weaponPos = unit:GetPosition(firingBone)
+    else
+        weaponPos = unit:GetPosition()
+    end
+
+    return weaponPos
 end

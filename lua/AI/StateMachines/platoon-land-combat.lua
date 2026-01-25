@@ -61,7 +61,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             self.PlatoonLimit = self.PlatoonData.PlatoonLimit or 18
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             if aiBrain.EnemyIntel.LandPhase > 1 then
-                self.EnemyRadius = math.max(self['rngdata'].MaxPlatoonWeaponRange+35, 75)
+                self.EnemyRadius = math.max(self['rngdata'].MaxPlatoonWeaponRange+35, 85)
             else
                 self.EnemyRadius = math.max(self['rngdata'].MaxPlatoonWeaponRange+35, 60)
             end
@@ -391,10 +391,19 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
-                for k,unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit['rngdata'].machineworth then 
+                for k, unit in self.targetcandidates do
+                    if unit and not unit.Dead and not unit['rngdata'].machineworth then
+                        if not unit['rngdata'] then
+                            unit['rngdata'] = {}
+                        end
+                        local unitData = unit['rngdata']
+                        local unithealth = StateUtils.GetTrueHealth(unit, true)
+                        unitData.machinevalue = unit.Blueprint.Economy.BuildCostMass/unithealth
+                        unitData.machineworth = unitData.machinevalue/unithealth
+                    end
+                    if not unit or unit.Dead then 
                         --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
-                        table.remove(self.targetcandidates,k) 
+                        table.remove(self.targetcandidates, k) 
                     end
                 end
             end
@@ -582,10 +591,19 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
-                for k,unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit['rngdata'].machineworth then 
+                for k, unit in self.targetcandidates do
+                    if unit and not unit.Dead and not unit['rngdata'].machineworth then
+                        if not unit['rngdata'] then
+                            unit['rngdata'] = {}
+                        end
+                        local unitData = unit['rngdata']
+                        local unithealth = StateUtils.GetTrueHealth(unit, true)
+                        unitData.machinevalue = unit.Blueprint.Economy.BuildCostMass/unithealth
+                        unitData.machineworth = unitData.machinevalue/unithealth
+                    end
+                    if not unit or unit.Dead then 
                         --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
-                        table.remove(self.targetcandidates,k) 
+                        table.remove(self.targetcandidates, k) 
                     end
                 end
             end
@@ -658,8 +676,18 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
     
             if not aiBrain.BrainIntel.SuicideModeActive then
                 for k, unit in self.targetcandidates do
-                    if not unit or unit.Dead or not unit['rngdata'].machineworth then
-                        table.remove(self.targetcandidates, k)
+                    if unit and not unit.Dead and not unit['rngdata'].machineworth then
+                        if not unit['rngdata'] then
+                            unit['rngdata'] = {}
+                        end
+                        local unitData = unit['rngdata']
+                        local unithealth = StateUtils.GetTrueHealth(unit, true)
+                        unitData.machinevalue = unit.Blueprint.Economy.BuildCostMass/unithealth
+                        unitData.machineworth = unitData.machinevalue/unithealth
+                    end
+                    if not unit or unit.Dead then 
+                        --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
+                        table.remove(self.targetcandidates, k) 
                     end
                 end
             end

@@ -42,3 +42,11 @@ PlatoonTemplate {
         { categories.MOBILE * categories.NAVAL * categories.CRUISER, 0, 20, 'Artillery', 'GrowthFormation' },
     },
 }
+
+PlatoonTemplate {
+    Name = 'T4ExperimentalNavalRNG',
+    Plan = 'StateMachineAIRNG',
+    GlobalSquads = {
+        { categories.EXPERIMENTAL * categories.NAVAL * categories.MOBILE - categories.INSIGNIFICANTUNIT, 1, 1, 'attack', 'none' }
+    },
+}

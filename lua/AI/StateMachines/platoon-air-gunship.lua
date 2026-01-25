@@ -45,7 +45,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             if not self.MovementLayer then
                 self.MovementLayer = self:GetNavigationalLayer()
             end
-            self.EnemyRadius = 35
+            self.EnemyRadius = 45
             self.Home = aiBrain.BuilderManagers[self.LocationType].Position
             StartGunshipThreads(aiBrain, self)
             self:ChangeState(self.DecideWhatToDo)
@@ -278,6 +278,42 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
+            if not target then
+                local targetZone = aiBrain.IntelManager:GetBestZoneForPlatoon(self, 'airsurface')
+                --LOG('Gunship platoon has selected a zone to check')
+                --LOG('Zone Selected '..tostring(targetZone))
+                
+                if targetZone then
+                    if targetZone == self.LastTargetZone then
+                        local zonePosition = aiBrain.Zones.Land.zones[targetZone].pos
+                        local rx = self.Pos[1] - zonePosition[1]
+                        local rz = self.Pos[3] - zonePosition[3]
+                        local currentZoneDistance = rx * rx + rz * rz
+                        if currentZoneDistance < 1225 then
+                            self:LogDebug(string.format('Zone detected was our starting base, go to loiter mode'))
+                            self.BuilderData = {
+                                TargetZone = targetZone,
+                                Position = aiBrain.Zones.Land.zones[targetZone].pos,
+                                CutOff = 400
+                            }
+                            --LOG('We are already at the zone, move to loiter mode')
+                            self:ChangeState(self.ZoneLoiter)
+                            return
+                        end
+                    end
+                    self.BuilderData = {
+                        TargetZone = targetZone,
+                        Position = aiBrain.Zones.Land.zones[targetZone].pos,
+                        CutOff = 400
+                    }
+                    --LOG('Gunship Zone Position '..tostring(repr(self.BuilderData.Position)))
+                    self.LastTargetZone = targetZone
+                    --self:LogDebug(string.format('DecideWhatToDo target zone navigate, zone selection '..targetZone))
+                    self:LogDebug(string.format('Distance to zone is '..VDist3(self.Pos, self.dest)))
+                    self:ChangeState(self.Navigating)
+                    return
+                end
+            end
             if not target and VDist3Sq(platPos, self.Home) > 900 then
                 self.BuilderData = {
                     Position = self.Home
@@ -432,6 +468,14 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
+                if builderData.TargetZone then
+                    --LOG('Arrived at zone, recheckposition')
+                    if self.BuilderData then
+                        self.BuilderData.RecheckPosition = destination
+                    end
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
                 WaitTicks(1)
             end
         end,
@@ -518,6 +562,64 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             else
                 --LOG('No target to attack')
             end
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
+    ZoneLoiter = State {
+
+        StateName = 'ZoneLoiter',
+
+        --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
+        ---@param self AIPlatoonLandCombatBehavior
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            local builderData = self.BuilderData
+            if not builderData.Position then
+                WARN('No position passed to Gunsip platoon')
+                self:ChangeState(self.DecideWhatToDo)
+                return false
+            end
+            local counter = 0
+            local target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, self.Pos, self, 'Attack', 120, {categories.MOBILE * categories.STRUCTURE - categories.INSIGNIFICANTUNIT - categories.WALL}, false)
+            if target and not target.Dead then
+                --LOG('Zone Control found target around loiter position')
+                self.BuilderData = {
+                    AttackTarget = target,
+                    Position = target:GetPosition()
+                }
+                self:ChangeState(self.AttackTarget)
+                return
+            end
+            local maxPlatoonRange = self['rngdata'].MaxPlatoonWeaponRange or 0
+            local potentialTargetZone = StateUtils.SearchHighestThreatFromZone(aiBrain, self.Pos, 'land', 'antisurface')
+            if potentialTargetZone and potentialTargetZone ~= self.ZoneID then
+                local zonePos = potentialTargetZone.pos
+                local rx = self.Pos[1] - zonePos[1]
+                local rz = self.Pos[3] - zonePos[3]
+                local distanceToZone = math.sqrt(rx * rx + rz * rz)
+                local lerpPosition = RUtils.lerpy(self.Pos, zonePos, {distanceToZone, distanceToZone - math.max(15, maxPlatoonRange)})
+                self.BuilderData = {
+                    Position = lerpPosition,
+                    CutOff = 225,
+                    Loiter = true,
+                }
+                self:ChangeState(self.Navigating)
+                return
+            end
+            local loiterLimit = Random(7, 15)
+            while counter < loiterLimit and not IsDestroyed(self) do
+                --LOG('Zone Control is loitering at rally pont')
+                if aiBrain:GetNumUnitsAroundPoint(categories.MOBILE * categories.STRUCTURE - categories.INSIGNIFICANTUNIT - categories.WALL, self.Pos, 80, 'Enemy') > 0 then
+                    self.BuilderData = {}
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
+                counter = counter + 1
+                coroutine.yield(20)
+            end
+            self.BuilderData = {}
             self:ChangeState(self.DecideWhatToDo)
             return
         end,

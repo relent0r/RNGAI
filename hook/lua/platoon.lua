@@ -849,6 +849,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-air-fighter.lua").AssignToUnitsMachine({PlatoonData = self.PlatoonData  }, self, self:GetPlatoonUnits())
         elseif machineType == 'FatBoy' then
             import("/mods/rngai/lua/ai/statemachines/platoon-experimental-fatboy.lua").AssignToUnitsMachine({PlatoonData = self.PlatoonData  }, self, self:GetPlatoonUnits())
+        elseif machineType == 'NavalExperimental' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-experimental-naval-combat.lua").AssignToUnitsMachine({PlatoonData = self.PlatoonData  }, self, self:GetPlatoonUnits())
         elseif machineType == 'NavalZoneControl' then
             import("/mods/rngai/lua/ai/statemachines/platoon-naval-zonecontrol.lua").AssignToUnitsMachine({PlatoonData = self.PlatoonData  }, self, self:GetPlatoonUnits())
         elseif machineType == 'NavalCombat' then

@@ -2362,7 +2362,8 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Needs to wait a while for the Label properties to be populated
         local zoneId
         local zoneSet = false
-        while not zoneSet do
+        local zoneSetCount = 0
+        while not zoneSet and zoneSetCount < 60 do
             if baseLayer then
                 if baseLayer == 'Water' then
                     zoneId = MAP:GetZoneID(position,self.Zones.Naval.index)
@@ -2376,27 +2377,29 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             if zoneId then
                 self.BuilderManagers[baseName].ZoneID = zoneId
+                if not self.BuilderManagers[baseName].LocationType then
+                    self.BuilderManagers[baseName].LocationType = baseName
+                end
                 if zoneId > -1 then
                     if baseLayer == 'Water' then
                         if not self.Zones.Naval.zones[zoneId] then
+                            WARN('Missing zone for builder manager '..tostring(baseName))
                         end
                         self.Zones.Naval.zones[zoneId].BuilderManager = self.BuilderManagers[baseName]
                         self.BuilderManagers[baseName].Zone = self.Zones.Naval.zones[zoneId]
                     else
                         if not self.Zones.Land.zones[zoneId] then
+                            WARN('Missing zone for builder manager '..tostring(baseName))
                         end
                         self.Zones.Land.zones[zoneId].BuilderManager = self.BuilderManagers[baseName]
                         self.BuilderManagers[baseName].Zone = self.Zones.Land.zones[zoneId]
                     end
-                    return
                 else
                     WARN('No Zone found at provided position '..tostring(position[1])..':'..tostring(position[3]))
                 end
-                --LOG('Zone is '..self.BuilderManagers[baseName].ZoneID)
                 zoneSet = true
-            else
-                --LOG('No zone for builder manager')
             end
+            zoneSetCount = zoneSetCount + 1
             coroutine.yield(10)
         end
     end,
@@ -4119,6 +4122,7 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyNavalSubThreat = 0
         local enemyExtractorthreat = 0
         local enemyExtractorCount = 0
+        local enemyStructureThreat = 0
         local enemyDefenseAir = 0
         local enemyDefenseSurface = 0
         local enemyDefenseSub = 0
@@ -6022,12 +6026,14 @@ AIBrain = Class(RNGAIBrainClass) {
                     
                     if not v.MaintenanceConsumption then continue end
                     --RNGLOG('pausing MASSFABRICATION or SHIELD '..v.UnitId)
+                    local unitConsumption = 0
                     if type == 'MASS' then
-                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondMass(v)
+                        unitConsumption = GetConsumptionPerSecondMass(v)
                     elseif type == 'ENERGY' then
-                        totalResourceSaved = totalResourceSaved + GetConsumptionPerSecondEnergy(v)
+                        unitConsumption = GetConsumptionPerSecondEnergy(v)
                     end
-                    if totalResourceSaved > 0 then
+                    if unitConsumption > 0 then
+                        totalResourceSaved = totalResourceSaved + unitConsumption
                         v:SetPaused(true)
                         v:OnScriptBitSet(3)
                     end
