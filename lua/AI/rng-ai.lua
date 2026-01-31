@@ -2360,6 +2360,7 @@ AIBrain = Class(RNGAIBrainClass) {
     GetBaseZone = function(self, position, baseName, baseLayer)
         -- This will set the zone of the factory manager so we don't need to look it up every time
         -- Needs to wait a while for the Label properties to be populated
+        local label
         local zoneId
         local zoneSet = false
         local zoneSetCount = 0
@@ -2367,13 +2368,18 @@ AIBrain = Class(RNGAIBrainClass) {
             if baseLayer then
                 if baseLayer == 'Water' then
                     zoneId = MAP:GetZoneID(position,self.Zones.Naval.index)
+                    label = NavUtils.GetLabel('Water', position)
                 else
                     zoneId = MAP:GetZoneID(position,self.Zones.Land.index)
+                    label = NavUtils.GetLabel('Land', position)
                     --LOG('Requested land zone for base, zone returned was '..tostring(zone))
                 end
             end
             if not zoneId then
                 WARN('Missing zone for builder manager land node or no path markers')
+            end
+            if label then
+                self.BuilderManagers[baseName].Label = label
             end
             if zoneId then
                 self.BuilderManagers[baseName].ZoneID = zoneId

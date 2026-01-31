@@ -320,7 +320,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         }
                         self:ChangeState(self.AttackRetreat)
                         return
-                    elseif not target and closestUnitPosition then
+                    elseif not target and closestUnitPosition and closestThreatDistance < (targetSearchRange * targetSearchRange) then
                         self.BuilderData = {
                             Position = closestUnitPosition,
                             CutOff = 625,
@@ -328,7 +328,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             ShortNavigation = true
 
                         }
-                        self:LogDebug(string.format('Nothing to do and there is a TML within range of us'))
+                        self:LogDebug(string.format('No target but we have a closest unit position'))
                         self:ChangeState(self.Navigating)
                         return
                     end
@@ -973,7 +973,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     self:LogDebug(string.format('Have target, attacking enemy threat is '..cdr.CurrentEnemyThreat..' friendly threat is '..cdr.CurrentFriendlyThreat))
                     self:ChangeState(self.AttackTarget)
                     return
-                elseif not target and closestUnitPosition then
+                elseif not target and closestUnitPosition and closestThreatDistance < (targetSearchRange * targetSearchRange) then
                     self.BuilderData = {
                         Position = closestUnitPosition,
                         CutOff = 625,
@@ -981,7 +981,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         ShortNavigation = true
 
                     }
-                    self:LogDebug(string.format('Nothing to do and there is a TML within range of us'))
+                    self:LogDebug(string.format('No target but there is a closest unit position'))
                     self:ChangeState(self.Navigating)
                     return
                 else
@@ -2045,6 +2045,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 5)})
                         end
                         if not snipeAttempt and currentACULayer ~= 'Seabed' and brain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
+                            LOG('Terrain is blocked, look for an alternative firing position, original move pos is '..tostring(repr(movePos)))
                             local checkPoints = ACUFunc.DrawCirclePoints(6, 15, movePos)
                             local alternateFirePos = false
                             for k, v in checkPoints do
@@ -2055,6 +2056,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                             if alternateFirePos then
+                                LOG('We have an alternative firing position of '..tostring(repr(alternateFirePos)))
                                 StateUtils.IssueNavigationMove(cdr, movePos)
                             else
                                 StateUtils.IssueNavigationMove(cdr, cdr.CDRHome)
@@ -2070,6 +2072,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 local direction = math.random(2) == 1 and 1 or -1
                                 local cdrNewPos = RUtils.GetLateralMovePos(targetPos, cdrPos, 6, direction)
                                 if brain:CheckBlockingTerrain(cdrNewPos, targetPos, 'none') then
+                                    LOG('ACU is being blocked after selecting the move pos, trying to pick a new pos of '..tostring(repr(cdrNewPos)))
                                     if direction == 1 then
                                         cdrNewPos = RUtils.GetLateralMovePos(cdrNewPos, targetPos, 6, -1)
                                     else
@@ -2252,6 +2255,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 5)})
                         end
                         if not snipeAttempt and currentACULayer ~= 'Seabed' and brain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
+                            LOG('ACU is being blocked after the second half, trying to pick a new pos of '..tostring(repr(movePos)))
                             local checkPoints = ACUFunc.DrawCirclePoints(6, 15, movePos)
                             local alternateFirePos = false
                             for k, v in checkPoints do
@@ -2262,6 +2266,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                             if alternateFirePos then
+                                LOG('ACU found new pos of '..tostring(repr(movePos)))
                                 StateUtils.IssueNavigationMove(cdr, movePos)
                             else
                                 StateUtils.IssueNavigationMove(cdr, cdr.CDRHome)
@@ -2277,6 +2282,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 local direction = math.random(2) == 1 and 1 or -1
                                 local cdrNewPos = RUtils.GetLateralMovePos(targetPos, cdrPos, 6, direction)
                                 if brain:CheckBlockingTerrain(cdrNewPos, targetPos, 'none') then
+                                    LOG('ACU blocked by terrain after 3 second wait second half '..tostring(repr(movePos)))
                                     if direction == 1 then
                                         cdrNewPos = RUtils.GetLateralMovePos(cdrNewPos, targetPos, 6, -1)
                                     else

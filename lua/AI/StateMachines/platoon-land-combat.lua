@@ -391,7 +391,8 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
-                for k, unit in self.targetcandidates do
+                for i = table.getn(self.targetcandidates), 1, -1 do
+                    local unit = self.targetcandidates[i]
                     if unit and not unit.Dead and not unit['rngdata'].machineworth then
                         if not unit['rngdata'] then
                             unit['rngdata'] = {}
@@ -403,7 +404,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                     if not unit or unit.Dead then 
                         --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
-                        table.remove(self.targetcandidates, k) 
+                        table.remove(self.targetcandidates, i) 
                     end
                 end
             end
@@ -591,7 +592,8 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local units=GetPlatoonUnits(self)
             if not aiBrain.BrainIntel.SuicideModeActive then
-                for k, unit in self.targetcandidates do
+                for i = table.getn(self.targetcandidates), 1, -1 do
+                    local unit = self.targetcandidates[i]
                     if unit and not unit.Dead and not unit['rngdata'].machineworth then
                         if not unit['rngdata'] then
                             unit['rngdata'] = {}
@@ -603,7 +605,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                     if not unit or unit.Dead then 
                         --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
-                        table.remove(self.targetcandidates, k) 
+                        table.remove(self.targetcandidates, i) 
                     end
                 end
             end
@@ -675,7 +677,8 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             local units = GetPlatoonUnits(self)
     
             if not aiBrain.BrainIntel.SuicideModeActive then
-                for k, unit in self.targetcandidates do
+                for i = table.getn(self.targetcandidates), 1, -1 do
+                    local unit = self.targetcandidates[i]
                     if unit and not unit.Dead and not unit['rngdata'].machineworth then
                         if not unit['rngdata'] then
                             unit['rngdata'] = {}
@@ -687,7 +690,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                     if not unit or unit.Dead then 
                         --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
-                        table.remove(self.targetcandidates, k) 
+                        table.remove(self.targetcandidates, i) 
                     end
                 end
             end

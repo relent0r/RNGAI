@@ -224,6 +224,7 @@ FactoryBuilderManager = Class(BuilderManager) {
         if not self:FactoryAlreadyExists(unit) and unit:GetFractionComplete() == 1 then
             table.insert(self.FactoryList, unit)
             unit.DesiresAssist = true
+            local unitCats = unit.Blueprint.CategoriesHash
             if EntityCategoryContains(categories.LAND, unit) then
                 self:SetupNewFactory(unit, 'Land')
             elseif EntityCategoryContains(categories.AIR, unit) then
@@ -243,6 +244,17 @@ FactoryBuilderManager = Class(BuilderManager) {
                 end
                 unit.LocationType = self.LocationType
                 unit.Zone = zone
+                local label = self.Brain.BuilderManagers[self.LocationType].Label
+                if not label then
+                    LOG('Label wasnt defined')
+                    if unitCats.NAVAL then
+                        label = NavUtils.GetLabel('Water', unit:GetPosition())
+                    else
+                        label = NavUtils.GetLabel('Land', unit:GetPosition())
+                    end
+                end
+                unit.Label = label
+                LOG('Factory Managet label is '..tostring(label))
             end
         end
     end,

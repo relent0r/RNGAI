@@ -262,20 +262,20 @@ AIExperimentalNavalBehavior = Class(AIPlatoonRNG) {
             --LOG('Combatloop starting')
     
             if not aiBrain.BrainIntel.SuicideModeActive then
-                for k, unit in self.targetcandidates do
+                for i = table.getn(self.targetcandidates), 1, -1 do
+                    local unit = self.targetcandidates[i]
                     if unit and not unit.Dead and not unit['rngdata'].machineworth then
                         if not unit['rngdata'] then
                             unit['rngdata'] = {}
                         end
-                        --LOG('Enemy unit in candidate but no machineworth, adding')
                         local unitData = unit['rngdata']
                         local unithealth = StateUtils.GetTrueHealth(unit, true)
                         unitData.machinevalue = unit.Blueprint.Economy.BuildCostMass/unithealth
                         unitData.machineworth = unitData.machinevalue/unithealth
                     end
                     if not unit or unit.Dead then 
-                        --LOG('Enemy Unit is dead, remove') 
-                        table.remove(self.targetcandidates, k) 
+                        --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
+                        table.remove(self.targetcandidates, i) 
                     end
                 end
             end

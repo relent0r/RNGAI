@@ -287,7 +287,7 @@ VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride, checkLayer
         dest=KiteDist(pos,tpos,platoon['rngdata'].MaxPlatoonWeaponRange+3,healthmod)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif (unit['rngdata'].Role=='Sniper' or unit['rngdata'].Role=='Artillery' or unit['rngdata'].Role=='Silo' or unit['rngdata'].Role=='MissileShip') and unit['rngdata'].MaxWeaponRange then
-        dest=KiteDist(pos,tpos,unit['rngdata'].MaxWeaponRange-1,0)
+        dest=KiteDist(pos,tpos,unit['rngdata'].MaxWeaponRange-2,0)
         dest=CrossP(pos,dest,strafemod/VDist3(pos,dest)*(1-2*math.random(0,1)))
     elseif maxPlatoonRangeOverride and (unit['rngdata'].Role=='Shield' or unit['rngdata'].Role == 'Stealth') and platoon['rngdata'].MaxDirectFireRange > 0 then
         dest=KiteDist(pos,tpos,platoon['rngdata'].MaxDirectFireRange-math.random(1,3)-mod,0)
@@ -2891,13 +2891,15 @@ function GetDFWeaponPos(unit)
         
         local bIsFatboy = unitCats.uel0401
         local bIsACU = unitCats.COMMAND
+        local isMissileShip = unit['rngdata'] and unit['rngdata'].Role == 'MissileShip'
 
         if unitBp.Weapon then
             for _, wep in unitBp.Weapon do
                 local isDf = wep.RangeCategory == 'UWRC_DirectFire'
                 local isFatboyDf = bIsFatboy and wep.RangeCategory == 'UWRC_IndirectFire'
+                local isIdfCruiser = isMissileShip and wep.RangeCategory == 'UWRC_IndirectFire'
                 
-                if isDf or isFatboyDf then
+                if isDf or isFatboyDf or isIdfCruiser then
                     -- ACU logic: must be OverCharge weapon
                     if bIsACU and not wep.OverChargeWeapon then
                         continue

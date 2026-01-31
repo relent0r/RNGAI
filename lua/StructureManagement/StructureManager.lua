@@ -22,6 +22,7 @@ StructureManager = Class {
         self.Brain = brain
         self.Initialized = false
         self.Debug = false
+        self.LabelMassDrain = {}
         self.Factories = {
             -- Reminder about the keys being tech level
             LAND = {
@@ -578,6 +579,8 @@ StructureManager = Class {
                 T3NAVAL = {},
                 TotalT3NAVAL = 0,
             }
+            local labelMassDrain = {
+            }
             for baseName, manager in self.Brain.BuilderManagers do
                 if baseName ~= 'FLOATING' then
                     if manager.FactoryManager.FactoryList and not table.empty(manager.FactoryManager.FactoryList) then
@@ -599,6 +602,16 @@ StructureManager = Class {
                                         end
                                         FactoryData.TotalT1LAND = FactoryData.TotalT1LAND + 1
                                         FactoryData.T1LANDApproxConsumption = FactoryData.T1LANDApproxConsumption + massToFactoryValues.T1LandValue
+                                        if unit.Label then
+                                            if not labelMassDrain[unit.Label] then
+                                                labelMassDrain[unit.Label] = {
+                                                    Land = 0,
+                                                    Air = 0,
+                                                    Naval = 0
+                                                }
+                                            end
+                                            labelMassDrain[unit.Label].Land = labelMassDrain[unit.Label].Land + massToFactoryValues.T1LandValue
+                                        end
                                     elseif unitCat.TECH2 then
                                         RNGINSERT(FactoryData.T2LAND, unit)
                                         if not unitCat.SUPPORTFACTORY then
@@ -614,6 +627,16 @@ StructureManager = Class {
                                         end
                                         FactoryData.TotalT2LAND = FactoryData.TotalT2LAND + 1
                                         FactoryData.T2LANDApproxConsumption = FactoryData.T2LANDApproxConsumption + massToFactoryValues.T2LandValue
+                                        if unit.Label then
+                                            if not labelMassDrain[unit.Label] then
+                                                labelMassDrain[unit.Label] = {
+                                                    Land = 0,
+                                                    Air = 0,
+                                                    Naval = 0
+                                                }
+                                            end
+                                            labelMassDrain[unit.Label].Land = labelMassDrain[unit.Label].Land + massToFactoryValues.T2LandValue
+                                        end
                                     elseif unitCat.TECH3 then
                                         RNGINSERT(FactoryData.T3LAND, unit)
                                         if not unitCat.SUPPORTFACTORY then
@@ -625,6 +648,16 @@ StructureManager = Class {
                                         landFactoryBuildRate = landFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         FactoryData.TotalT3LAND = FactoryData.TotalT3LAND + 1
                                         FactoryData.T3LANDApproxConsumption = FactoryData.T3LANDApproxConsumption + massToFactoryValues.T3LandValue
+                                        if unit.Label then
+                                            if not labelMassDrain[unit.Label] then
+                                                labelMassDrain[unit.Label] = {
+                                                    Land = 0,
+                                                    Air = 0,
+                                                    Naval = 0
+                                                }
+                                            end
+                                            labelMassDrain[unit.Label].Land = labelMassDrain[unit.Label].Land + massToFactoryValues.T3LandValue
+                                        end
                                     end
                                 elseif unitCat.AIR then
 
@@ -637,6 +670,16 @@ StructureManager = Class {
                                         end
                                         FactoryData.TotalT1AIR = FactoryData.TotalT1AIR + 1
                                         FactoryData.T1AIRApproxConsumption = FactoryData.T1AIRApproxConsumption + massToFactoryValues.T1AirValue
+                                        if unit.Label then
+                                            if not labelMassDrain[unit.Label] then
+                                                labelMassDrain[unit.Label] = {
+                                                    Land = 0,
+                                                    Air = 0,
+                                                    Naval = 0
+                                                }
+                                            end
+                                            labelMassDrain[unit.Label].Air = labelMassDrain[unit.Label].Air + massToFactoryValues.T1AirValue
+                                        end
                                     elseif unitCat.TECH2 then
                                         RNGINSERT(FactoryData.T2AIR, unit)
                                         if not unitCat.SUPPORTFACTORY then
@@ -652,6 +695,16 @@ StructureManager = Class {
                                         end
                                         FactoryData.TotalT2AIR = FactoryData.TotalT2AIR + 1
                                         FactoryData.T2AIRApproxConsumption = FactoryData.T2AIRApproxConsumption + massToFactoryValues.T2AirValue
+                                        if unit.Label then
+                                            if not labelMassDrain[unit.Label] then
+                                                labelMassDrain[unit.Label] = {
+                                                    Land = 0,
+                                                    Air = 0,
+                                                    Naval = 0
+                                                }
+                                            end
+                                            labelMassDrain[unit.Label].Air = labelMassDrain[unit.Label].Air + massToFactoryValues.T2AirValue
+                                        end
                                     elseif unitCat.TECH3 then
                                         RNGINSERT(FactoryData.T3AIR, unit)
                                         if not unitCat.SUPPORTFACTORY then
@@ -663,6 +716,16 @@ StructureManager = Class {
                                         airFactoryBuildRate = airFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         FactoryData.TotalT3AIR = FactoryData.TotalT3AIR + 1
                                         FactoryData.T3AIRApproxConsumption = FactoryData.T3AIRApproxConsumption + massToFactoryValues.T3AirValue
+                                        if unit.Label then
+                                            if not labelMassDrain[unit.Label] then
+                                                labelMassDrain[unit.Label] = {
+                                                    Land = 0,
+                                                    Air = 0,
+                                                    Naval = 0
+                                                }
+                                            end
+                                            labelMassDrain[unit.Label].Air = labelMassDrain[unit.Label].Air + massToFactoryValues.T3AirValue
+                                        end
                                     end
                                 elseif unitCat.NAVAL then
                                     if unitCat.TECH1 then
@@ -674,6 +737,16 @@ StructureManager = Class {
                                         end
                                         FactoryData.TotalT1NAVAL = FactoryData.TotalT1NAVAL + 1
                                         FactoryData.T1NAVALApproxConsumption = FactoryData.T1NAVALApproxConsumption + massToFactoryValues.T1NavalValue
+                                        if unit.Label then
+                                            if not labelMassDrain[unit.Label] then
+                                                labelMassDrain[unit.Label] = {
+                                                    Land = 0,
+                                                    Air = 0,
+                                                    Naval = 0
+                                                }
+                                            end
+                                            labelMassDrain[unit.Label].Naval = labelMassDrain[unit.Label].Naval + massToFactoryValues.T1NavalValue
+                                        end
                                     elseif unitCat.TECH2 then
                                         RNGINSERT(FactoryData.T2NAVAL, unit)
                                         if not unitCat.SUPPORTFACTORY then
@@ -689,6 +762,16 @@ StructureManager = Class {
                                         end
                                         FactoryData.TotalT2NAVAL = FactoryData.TotalT2NAVAL + 1
                                         FactoryData.T2NAVALApproxConsumption = FactoryData.T2NAVALApproxConsumption + massToFactoryValues.T2NavalValue
+                                        if unit.Label then
+                                            if not labelMassDrain[unit.Label] then
+                                                labelMassDrain[unit.Label] = {
+                                                    Land = 0,
+                                                    Air = 0,
+                                                    Naval = 0
+                                                }
+                                            end
+                                            labelMassDrain[unit.Label].Naval = labelMassDrain[unit.Label].Naval + massToFactoryValues.T2NavalValue
+                                        end
                                     elseif unitCat.TECH3 then
                                         RNGINSERT(FactoryData.T3NAVAL, unit)
                                         if not unitCat.SUPPORTFACTORY then
@@ -700,6 +783,16 @@ StructureManager = Class {
                                         navalFactoryBuildRate = navalFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         FactoryData.TotalT3NAVAL = FactoryData.TotalT3NAVAL + 1
                                         FactoryData.T3NAVALApproxConsumption = FactoryData.T3NAVALApproxConsumption + massToFactoryValues.T3NavalValue
+                                        if unit.Label then
+                                            if not labelMassDrain[unit.Label] then
+                                                labelMassDrain[unit.Label] = {
+                                                    Land = 0,
+                                                    Air = 0,
+                                                    Naval = 0
+                                                }
+                                            end
+                                            labelMassDrain[unit.Label].Naval = labelMassDrain[unit.Label].Naval + massToFactoryValues.T3NavalValue
+                                        end
                                     end
                                 end
                             end
@@ -787,6 +880,7 @@ StructureManager = Class {
             self.Factories.NAVAL[2].HQCount = FactoryData.T2NAVALHQCount
             self.Factories.NAVAL[3].HQCount = FactoryData.T3NAVALHQCount
             self.Factories.NAVAL[3].Total = FactoryData.TotalT3NAVAL
+            self.LabelMassDrain = labelMassDrain
             local totalLandApproxConsumption = FactoryData.T1LANDApproxConsumption + FactoryData.T2LANDApproxConsumption + FactoryData.T3LANDApproxConsumption
             local totalAirApproxConsumption = FactoryData.T1AIRApproxConsumption + FactoryData.T2AIRApproxConsumption + FactoryData.T3AIRApproxConsumption
             local totalNavalApproxConsumption = FactoryData.T1NAVALApproxConsumption + FactoryData.T2NAVALApproxConsumption + FactoryData.T3NAVALApproxConsumption

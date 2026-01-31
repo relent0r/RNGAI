@@ -66,6 +66,11 @@ IntelManager = Class {
             MustScoutArea = false,
         }
         self.ZoneIMAPThreat = {}
+        self.LabelIMAPThreat = {
+            Land = {},
+            Air = {},
+            Naval = {}
+        }
         self.ZoneToGridMap = {}
         self.ZoneWeightTable = {
             control = {
@@ -91,6 +96,9 @@ IntelManager = Class {
             }
         }
         self.SafeAirThreatRadius = 0
+        self.FactoryInvasionThreatThreshold = 10.0      -- [ThreatToFactoryMassRatio] 100 Threat = 10 Mass Drain req.
+        self.FactoryEconInvestmentThreshold = 1.5       -- [IncomeToFactoryMassRatio] 10 Income = 15 Mass Drain req.
+        self.FactoryReclaimThresholdBuffer = 25.0       -- Buffer to prevent "fluttering" (building/reclaiming repeatedly)
         self.ScoutingCurveZones = {}
         self.CurrentFrontLineZones = {}
         self.UnpathableExpansionZoneCount = 0
@@ -1465,10 +1473,10 @@ IntelManager = Class {
                 -- E. LABEL AGGREGATION
                 local lbl = v.label
                 if not self.LabelMetrics[lbl] then
-                    self.LabelMetrics[lbl] = { EnemyThreat = 0, Reachable = (homeDepths[id] ~= nil), Mass = 0 }
+                    self.LabelMetrics[lbl] = { EnemyLandThreat = 0, Reachable = (homeDepths[id] ~= nil), Mass = 0 }
                 end
                 local lm = self.LabelMetrics[lbl]
-                lm.EnemyThreat = lm.EnemyThreat + v.enemylandthreat
+                lm.EnemyLandThreat = lm.EnemyLandThreat + v.enemylandthreat
                 lm.Mass = lm.Mass + (v.resourcevalue or 0)
     
                 -- F. PRODUCTION DEMAND LOGIC
@@ -1476,7 +1484,7 @@ IntelManager = Class {
                     self.ProductionDemand.Land = self.ProductionDemand.Land + math.max(0, v.enemylandthreat - v.friendlyantisurfacethreat)
                 else
                     -- High value/threat on unreachable label? Demand Air/Transports.
-                    if lm.EnemyThreat > 10 or lm.Mass > 20 then
+                    if lm.EnemyLandThreat > 10 or lm.Mass > 20 then
                         self.ProductionDemand.Air = self.ProductionDemand.Air + 5
                     end
                 end
@@ -1705,6 +1713,114 @@ IntelManager = Class {
             end
             coroutine.yield(5)
         end
+    end,
+
+    IntelGridThreatThread = function(self, aiBrain)
+        while not self.MapIntelGrid do
+            coroutine.yield(30)
+        end
+        local threatTypes = {
+            'Naval',
+            'AntiAir',
+            'Air',
+            'Land',
+            'AntiSurface',
+            'StructuresNotMex',
+            'Land',
+            'Naval'
+        }
+        while aiBrain.Status ~= "Defeat" do
+            local gameTime = GetGameTimeSeconds()
+            for _, ttype in threatTypes do
+                self:UpdateThreatMemoryScan(gameTime, ttype)
+                coroutine.yield(2)
+            end
+            self:AssignIMAPThreat(aiBrain, 'Land')
+            self:AssignIMAPThreat(aiBrain, 'Naval')
+            self:AssignThreatToFactories(aiBrain.Zones['Land'].zones, 'Land')
+            for _, zone in aiBrain.Zones['Land'].zones do
+                zone.status = aiBrain.GridPresence:GetInferredStatus(zone.pos)
+            end
+            coroutine.yield(20)
+        end
+    end,
+
+    AssignIMAPThreat = function(self, aiBrain, zoneType)
+        local zoneTable = aiBrain.Zones[zoneType].zones
+        local labelTable = {}
+        local zoneToGridMap = self.ZoneToGridMap
+        local currentTime = GetGameTimeSeconds()
+        local STALE_TIME = 5
+    
+        for _, zone in zoneTable do
+            local cells = zoneToGridMap[zone.id]
+            if not cells or table.getn(cells) == 0 then continue end
+    
+            local total = {
+                Land = 0, Air = 0, AntiAir = 0, Naval = 0, 
+                AntiSurface = 0, StructuresNotMex = 0, count = 0
+            }
+            
+            -- Initialize peaks for every category we care about
+            local historicalPeak = {
+                Land = 0, Air = 0, AntiAir = 0, Naval = 0, 
+                AntiSurface = 0, StructuresNotMex = 0
+            }
+    
+            for _, cell in cells do
+                if not cell.Enabled then continue end
+                
+                local current = cell.IMAPCurrentThreat
+                local hist = cell.IMAPHistoricalThreat
+                
+                -- SUM Current: Accurate count of units presently in the zone
+                total.Land = total.Land + (current.Land or 0)
+                total.Air = total.Air + (current.Air or 0)
+                total.AntiAir = total.AntiAir + (current.AntiAir or 0)
+                total.Naval = total.Naval + (current.Naval or 0)
+                total.AntiSurface = total.AntiSurface + (current.AntiSurface or 0)
+                total.StructuresNotMex = total.StructuresNotMex + (current.StructuresNotMex or 0)
+    
+                -- MAX Historical: Tracks the largest army seen in this zone, 
+                -- without multiplying it by the number of cells they walked through.
+                historicalPeak.Land = math.max(historicalPeak.Land, hist.Land or 0)
+                historicalPeak.Air = math.max(historicalPeak.Air, hist.Air or 0)
+                historicalPeak.AntiAir = math.max(historicalPeak.AntiAir, hist.AntiAir or 0)
+                historicalPeak.Naval = math.max(historicalPeak.Naval, hist.Naval or 0)
+                historicalPeak.AntiSurface = math.max(historicalPeak.AntiSurface, hist.AntiSurface or 0)
+                historicalPeak.StructuresNotMex = math.max(historicalPeak.StructuresNotMex, hist.StructuresNotMex or 0)
+    
+                total.count = total.count + 1
+            end
+    
+            if total.count > 0 then
+                -- For each type: If current is 0, use a decayed version of the PEAK.
+                -- This keeps the "memory" of the threat without the 400+ inflation.
+                zone.enemylandthreat = (total.Land > 0) and total.Land or (historicalPeak.Land * 0.5)
+                zone.enemyairthreat  = (total.Air > 0) and total.Air or (historicalPeak.Air * 0.5)
+                zone.enemyantiairthreat = (total.AntiAir > 0) and total.AntiAir or (historicalPeak.AntiAir * 0.5)
+                zone.enemynavalthreat = (total.Naval > 0) and total.Naval or (historicalPeak.Naval * 0.5)
+                zone.enemyantisurfacethreat = (total.AntiSurface > 0) and total.AntiSurface or (historicalPeak.AntiSurface * 0.5)
+                zone.enemystructurethreat = (total.StructuresNotMex > 0) and total.StructuresNotMex or (historicalPeak.StructuresNotMex * 0.5)
+                if not labelTable[zone.label] then
+                    labelTable[zone.label] = {
+                        enemylandthreat = 0,
+                        enemyairthreat = 0,
+                        enemyantiairthreat = 0,
+                        enemynavalthreat = 0,
+                        enemyantisurfacethreat = 0,
+                        enemystructurethreat = 0
+                    }
+                end
+                labelTable.enemylandthreat = labelTable.enemylandthreat + zone.enemylandthreat
+                labelTable.enemyairthreat = labelTable.enemyairthreat +zone.enemyairthreat
+                labelTable.enemyantiairthreat = labelTable.enemyantiairthreat +zone.enemyantiairthreat
+                labelTable.enemynavalthreat = labelTable.enemynavalthreat + zone.enemynavalthreat
+                labelTable.enemyantisurfacethreat = labelTable.enemyantisurfacethreat + zone.enemyantisurfacethreat
+                labelTable.enemystructurethreat = labelTable.enemystructurethreat + zone.enemystructurethreat
+            end
+        end
+        self.LabelIMAPThreat[zoneType] = labelTable
     end,
 
     ZoneFriendlyIntelMonitorRNG = function(self)
@@ -2597,36 +2713,6 @@ IntelManager = Class {
         return teamTable
     end,
 
-    IntelGridThreatThread = function(self, aiBrain)
-        while not self.MapIntelGrid do
-            coroutine.yield(30)
-        end
-        local threatTypes = {
-            'Naval',
-            'AntiAir',
-            'Air',
-            'Land',
-            'AntiSurface',
-            'StructuresNotMex',
-            'Land',
-            'Naval'
-        }
-        while aiBrain.Status ~= "Defeat" do
-            local gameTime = GetGameTimeSeconds()
-            for _, ttype in threatTypes do
-                self:UpdateThreatMemoryScan(gameTime, ttype)
-                coroutine.yield(2)
-            end
-            self:AssignIMAPThreatToZones(aiBrain, 'Land')
-            self:AssignIMAPThreatToZones(aiBrain, 'Naval')
-            self:AssignThreatToFactories(aiBrain.Zones['Land'].zones, 'Land')
-            for _, zone in aiBrain.Zones['Land'].zones do
-                zone.status = aiBrain.GridPresence:GetInferredStatus(zone.pos)
-            end
-            coroutine.yield(20)
-        end
-    end,
-
     UpdateThreatMemoryScan = function(self, timeNow, threatType)
         local gridSize = self.IMAPConfig.IMAPSize
         local scanData = self.Brain:GetThreatsAroundPosition(
@@ -2657,66 +2743,6 @@ IntelManager = Class {
             end
         end
         return totalThreat
-    end,
-
-    AssignIMAPThreatToZones = function(self, aiBrain, zoneType)
-        local zoneTable = aiBrain.Zones[zoneType].zones
-        local zoneToGridMap = self.ZoneToGridMap
-        local currentTime = GetGameTimeSeconds()
-        local STALE_TIME = 5
-    
-        for _, zone in zoneTable do
-            local cells = zoneToGridMap[zone.id]
-            if not cells or table.getn(cells) == 0 then continue end
-    
-            local total = {
-                Land = 0, Air = 0, AntiAir = 0, Naval = 0, 
-                AntiSurface = 0, StructuresNotMex = 0, count = 0
-            }
-            
-            -- Initialize peaks for every category we care about
-            local historicalPeak = {
-                Land = 0, Air = 0, AntiAir = 0, Naval = 0, 
-                AntiSurface = 0, StructuresNotMex = 0
-            }
-    
-            for _, cell in cells do
-                if not cell.Enabled then continue end
-                
-                local current = cell.IMAPCurrentThreat
-                local hist = cell.IMAPHistoricalThreat
-                
-                -- SUM Current: Accurate count of units presently in the zone
-                total.Land = total.Land + (current.Land or 0)
-                total.Air = total.Air + (current.Air or 0)
-                total.AntiAir = total.AntiAir + (current.AntiAir or 0)
-                total.Naval = total.Naval + (current.Naval or 0)
-                total.AntiSurface = total.AntiSurface + (current.AntiSurface or 0)
-                total.StructuresNotMex = total.StructuresNotMex + (current.StructuresNotMex or 0)
-    
-                -- MAX Historical: Tracks the largest army seen in this zone, 
-                -- without multiplying it by the number of cells they walked through.
-                historicalPeak.Land = math.max(historicalPeak.Land, hist.Land or 0)
-                historicalPeak.Air = math.max(historicalPeak.Air, hist.Air or 0)
-                historicalPeak.AntiAir = math.max(historicalPeak.AntiAir, hist.AntiAir or 0)
-                historicalPeak.Naval = math.max(historicalPeak.Naval, hist.Naval or 0)
-                historicalPeak.AntiSurface = math.max(historicalPeak.AntiSurface, hist.AntiSurface or 0)
-                historicalPeak.StructuresNotMex = math.max(historicalPeak.StructuresNotMex, hist.StructuresNotMex or 0)
-    
-                total.count = total.count + 1
-            end
-    
-            if total.count > 0 then
-                -- For each type: If current is 0, use a decayed version of the PEAK.
-                -- This keeps the "memory" of the threat without the 400+ inflation.
-                zone.enemylandthreat = (total.Land > 0) and total.Land or (historicalPeak.Land * 0.5)
-                zone.enemyairthreat  = (total.Air > 0) and total.Air or (historicalPeak.Air * 0.5)
-                zone.enemyantiairthreat = (total.AntiAir > 0) and total.AntiAir or (historicalPeak.AntiAir * 0.5)
-                zone.enemynavalthreat = (total.Naval > 0) and total.Naval or (historicalPeak.Naval * 0.5)
-                zone.enemyantisurfacethreat = (total.AntiSurface > 0) and total.AntiSurface or (historicalPeak.AntiSurface * 0.5)
-                zone.enemystructurethreat = (total.StructuresNotMex > 0) and total.StructuresNotMex or (historicalPeak.StructuresNotMex * 0.5)
-            end
-        end
     end,
 
     IntelGridThread = function(self, aiBrain)
