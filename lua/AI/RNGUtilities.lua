@@ -9359,3 +9359,20 @@ function GetZoneExposureValue(myStart, enemyStart, zonePos, mapDiagonalSq)
 
     return 0.2 -- Moderate exposure for general central-map zones
 end
+
+function GetBuilldRateOfEngineers(aiBrain, engineers)
+    local buildMultiplier = 1.0
+    if aiBrain.CheatEnabled then
+        buildMultiplier = aiBrain.EcoManager.BuildMultiplier
+    end
+    local totalBuildPower = 0
+    for _, e in engineers do
+        if not e.Dead then
+            -- Sum actual build rate (handles T1, T2, T3, and SCUs naturally)
+            local buildRate = e.Blueprint.Economy.BuildRate or 1
+            totalBuildPower = totalBuildPower + (buildRate * buildMultiplier)
+        end
+    end
+    LOG('Returning totalBuildPower for engineer group is '..tostring(totalBuildPower))
+    return totalBuildPower
+end

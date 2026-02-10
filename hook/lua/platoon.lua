@@ -537,10 +537,11 @@ Platoon = Class(RNGAIPlatoonClass) {
             aiBrain.EngineerAssistManagerBuildPowerTech1 = totalTech1BuilderRate
             aiBrain.EngineerAssistManagerBuildPowerTech2 = totalTech2BuilderRate
             aiBrain.EngineerAssistManagerBuildPowerTech3 = totalTech3BuilderRate
+            local massEfficiencyOverTime = aiBrain.EconomyOverTimeCurrent.MassEfficiencyOverTime
 
             --local debugIdleEng = false
-            local curentMassStorage = aiBrain:GetEconomyStoredRatio('MASS')
-            if curentMassStorage < 0.30 then
+            local currentMassStorage = aiBrain:GetEconomyStoredRatio('MASS')
+            if (currentMassStorage < 0.10) or (currentMassStorage < 0.30 and massEfficiencyOverTime < 0.8) then
                 for techlevel, engineers in ipairs({tech1Engineers, tech2Engineers, tech3Engineers}) do
                     local builderRate = builderRates[techlevel]
                     if builderRate then
@@ -559,7 +560,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                         end
                     end
                 end
-            elseif curentMassStorage > 0.30 and (aiBrain.BrainIntel.LandPhase > 2 or aiBrain.BrainIntel.AirPhase > 2) and ( aiBrain.EngineerAssistManagerBuildPowerTech1 > 0 or aiBrain.EngineerAssistManagerBuildPowerTech2 > 0 ) then
+            elseif currentMassStorage > 0.30 and (aiBrain.BrainIntel.LandPhase > 2 or aiBrain.BrainIntel.AirPhase > 2) and ( aiBrain.EngineerAssistManagerBuildPowerTech1 > 0 or aiBrain.EngineerAssistManagerBuildPowerTech2 > 0 ) then
                 local poolCount = RUtils.GetPoolCountAtLocation(aiBrain, 'MAIN', categories.ENGINEER * categories.TECH3)
                 --LOG('This pool count of T3 engineers is '..tostring(poolCount))
                 if poolCount > 2 and builderRates[3] then
@@ -638,6 +639,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local buildRateToCommit = maxBp * buildMultiplier
                 local currentBuildRateCommited = 0
                 local bestUnit = false
+                --LOG('Lookup category is '..tostring(self.EngineerAssistManagerFocusCategoryLookup))
 
                 if assistData.type == 'Upgrade' then
                     local assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
@@ -646,11 +648,21 @@ Platoon = Class(RNGAIPlatoonClass) {
                         for _, unit in assistDesc do
                             if not IsDestroyed(unit) and unit:IsUnitState('Upgrading') and unit:GetAIBrain():GetArmyIndex() == armyIndex then
                                 local unitPos = unit:GetPosition()
-                                local NumAssist = RNGGETN(unit:GetGuards())
-                                local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
-                                if (not low or dist < low) and NumAssist < 20 and dist < (engineerRadius * engineerRadius) then
-                                    low = dist
-                                    bestUnit = unit
+                                local engAssist = unit:GetGuards()
+                                local currentBuildPower = RUtils.GetBuilldRateOfEngineers(aiBrain, engAssist)
+                                if currentBuildPower <= 0 then
+                                    currentBuildPower = 1
+                                end
+                                local workProgress = unit:GetWorkProgress()
+                                --LOG('workProgress of Upgrading unit '..tostring(unit.UnitId)..' : '..tostring(workProgress))
+                                if workProgress > 0 then
+                                    local econBuildTime = unit.Blueprint.Economy.BuildTime or 0
+                                    local remainingTime = (econBuildTime * (1 - workProgress)) / currentBuildPower
+                                    local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
+                                    if (not low or dist < low) and remainingTime > 4 and dist < (engineerRadius * engineerRadius) then
+                                        low = dist
+                                        bestUnit = unit
+                                    end
                                 end
                             end
                         end
@@ -662,29 +674,66 @@ Platoon = Class(RNGAIPlatoonClass) {
                         for _, unit in assistDesc do
                             if not unit.Dead and not unit:BeenDestroyed() and unit:IsUnitState('Building') and unit:GetAIBrain():GetArmyIndex() == armyIndex then
                                 local unitPos = unit:GetPosition()
-                                local NumAssist = RNGGETN(unit:GetGuards())
-                                local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
-                                if (not low or dist < low) and NumAssist < 20 and dist < (engineerRadius * engineerRadius) then
-                                    low = dist
-                                    bestUnit = unit
+                                local engAssist = unit:GetGuards()
+                                local currentBuildPower = RUtils.GetBuilldRateOfEngineers(aiBrain, engAssist)
+                                if currentBuildPower <= 0 then
+                                    currentBuildPower = 1
+                                end
+                                local workProgress = unit:GetWorkProgress()
+                                --LOG('workProgress of factory unit '..tostring(unit.UnitId)..' : '..tostring(workProgress))
+                                if workProgress > 0 then
+                                    local econBuildTime = unit.Blueprint.Economy.BuildTime or 0
+                                    local remainingTime = (econBuildTime * (1 - workProgress)) / currentBuildPower
+                                    local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
+                                    if (not low or dist < low) and remainingTime > 4 and dist < (engineerRadius * engineerRadius) then
+                                        low = dist
+                                        bestUnit = unit
+                                    end
                                 end
                             end
                         end
                     end
                 elseif assistData.type == 'Completion' then
+                    --LOG('Completion data is '..tostring(assistData.debug))
                     local assistDesc = GetUnitsAroundPoint(aiBrain, assistData.cat, managerPosition, engineerRadius, 'Ally')
                     if assistDesc then
-                        local completion = false
+                        local bestWeight = -1 
+                        --LOG('Number of units in table '..tostring(table.getn(assistDesc)))
                         for _, unit in assistDesc do
                             if not unit.Dead and not unit.ReclaimInProgress and not unit:BeenDestroyed() and unit:GetAIBrain():GetArmyIndex() == armyIndex then
                                 local unitCompletion = unit:GetFractionComplete()
                                 if unitCompletion < 1 then
                                     local unitPos = unit:GetPosition()
-                                    local NumAssist = RNGGETN(unit:GetGuards())
+                                    local engAssist = unit:GetGuards()
+                                    local currentBuildPower = RUtils.GetBuilldRateOfEngineers(aiBrain, engAssist)
+                                    if currentBuildPower <= 0 then
+                                        currentBuildPower = 1
+                                    end
+                                    --LOG('unitCompletion of completion unit '..tostring(unit.UnitId)..' : '..tostring(unitCompletion))
+                                    local econBuildTime = unit.Blueprint.Economy.BuildTime or 0
+                                    --LOG('econBuildTime '..tostring(econBuildTime))
+                                    --LOG('currentBuildPower '..tostring(currentBuildPower))
+                                    local remainingTime = (econBuildTime * (1 - unitCompletion)) / currentBuildPower
                                     local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
-                                    if (not completion or unitCompletion > completion) and NumAssist < 30 and dist < (engineerRadius * engineerRadius) then
-                                        completion = unitCompletion
-                                        bestUnit = unit
+                                    --LOG('Remaining build time '..tostring(remainingTime))
+
+                                    if remainingTime > 4 and dist < (engineerRadius * engineerRadius) then
+                                        -- The weighting was added to try and help the scenario where a t4 structure was being built and ignored for cheaper experimentals.
+                                        local unitBp = unit.Blueprint
+                                        local massCost = unitBp.Economy.BuildCostMass or 1
+                                        local weight = massCost * unitCompletion
+
+                                        if unitCompletion > 0.75 then
+                                            weight = weight + 30000
+                                        elseif unitCompletion > 0.40 then
+                                            weight = weight + 10000
+                                        end
+                                        local linearDist = math.sqrt(dist)
+                                        weight = weight - (linearDist * 500)
+                                        if weight > bestWeight then
+                                            bestWeight = weight
+                                            bestUnit = unit
+                                        end
                                     end
                                 end
                             end
@@ -753,6 +802,7 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local focusLookupValue = aiBrain.EngineerAssistManagerFocusCategoryLookup or 'None'
                 local ruleMaxBP = aiBrain.EngineerAssistRuleBP[focusLookupValue] or 0
                 local removeEngineer = true
+                LOG('Engineer is not focused on its primary task '..tostring(focusLookupValue))
                 local currentAllocatedBP = aiBrain.EngineerAssistCurrentBPAllocated[focusLookupValue] or 0
                 if focusLookupValue ~= 'None' and ruleMaxBP > 0 and currentAllocatedBP >= ruleMaxBP then
                     removeEngineer = false 

@@ -5765,11 +5765,12 @@ AIBrain = Class(RNGAIBrainClass) {
                         continue
                     end
                     if not v.UnitBeingBuilt then continue end
-                    if v.UnitBeingBuilt.Blueprint.CategoriesHash.ENGINEER then continue end
-                    if v.UnitBeingBuilt.Blueprint.CategoriesHash.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
+                    local unitCats = v.UnitBeingBuilt.Blueprint.CategoriesHash
+                    if unitCats.ENGINEER then continue end
+                    if unitCats.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
                     --if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
-                    if (v.Zone and self.IntelManager.CurrentFrontLineZones and self.IntelManager.CurrentFrontLineZones[v.Zone]) or (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirUnits > 0) then
+                    if (v.Zone and self.IntelManager.CurrentFrontLineZones and self.IntelManager.CurrentFrontLineZones[v.Zone]) or (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirThreat > 0) then
                         --LOG('Air Factory is in frontline zone or air units detected '..tostring(v.Zone))
                         continue
                     end
@@ -5794,11 +5795,12 @@ AIBrain = Class(RNGAIBrainClass) {
                         --LOG('Air Factory has nearby threat')
                         continue
                     end
-                    if v.UnitBeingBuilt.Blueprint.CategoriesHash.ENGINEER then continue end
-                    if v.UnitBeingBuilt.Blueprint.CategoriesHash.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
+                    local unitCats = v.UnitBeingBuilt.Blueprint.CategoriesHash
+                    if unitCats.ENGINEER then continue end
+                    if unitCats.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
                     --if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
-                    if (v.Zone and self.IntelManager.CurrentFrontLineZones and self.IntelManager.CurrentFrontLineZones[v.Zone]) or (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirUnits > 0) then
+                    if (v.Zone and self.IntelManager.CurrentFrontLineZones and self.IntelManager.CurrentFrontLineZones[v.Zone]) or (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirThreat > 0) then
                         --LOG('Air Factory is in frontline zone or units detected '..tostring(v.Zone))
                         continue
                     end
@@ -5823,11 +5825,12 @@ AIBrain = Class(RNGAIBrainClass) {
                         --LOG('Air Factory has nearby threat')
                         continue
                     end
-                    if v.UnitBeingBuilt.Blueprint.CategoriesHash.ENGINEER then continue end
-                    if v.UnitBeingBuilt.Blueprint.CategoriesHash.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
+                    local unitCats = v.UnitBeingBuilt.Blueprint.CategoriesHash
+                    if unitCats.ENGINEER then continue end
+                    if unitCats.TRANSPORTFOCUS and self:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then continue end
                     --if RNGGETN(units) == 1 then continue end
                     if v:IsPaused() then continue end
-                    if (v.Zone and self.IntelManager.CurrentFrontLineZones and self.IntelManager.CurrentFrontLineZones[v.Zone]) or (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirUnits > 0) then
+                    if (v.Zone and self.IntelManager.CurrentFrontLineZones and self.IntelManager.CurrentFrontLineZones[v.Zone]) or (v.LocationType and self.BasePerimeterMonitor[v.LocationType] and self.BasePerimeterMonitor[v.LocationType].AirThreat > 0) then
                         --LOG('Air Factory is in frontline zone or units detected '..tostring(v.Zone))
                         continue
                     end
@@ -6243,6 +6246,8 @@ AIBrain = Class(RNGAIBrainClass) {
 
         coroutine.yield(900)
         local state
+        local lastBP = 0
+        local assistGapThreshold = 0.5
         while true do
             local massStorage = GetEconomyStored( self, 'MASS')
             local energyStorage = GetEconomyStored( self, 'ENERGY')
@@ -6250,10 +6255,30 @@ AIBrain = Class(RNGAIBrainClass) {
             local multiplier = self.EcoManager.BuildMultiplier
             local CoreMassNumberAchieved = false
             local minAssistPower = 0
+            local maxAssistPower = 0
             local currentAssistRatio = self.EngineerAssistRatio
-            if self.cmanager.income.r.m then
-                minAssistPower = math.ceil(math.max(self.cmanager.income.r.m * currentAssistRatio, 5))
+            local massIncome = self.cmanager.income.r.m
+            
+            local bPGeneratedPerMass = 1 * self.EnemyIntel.HighestPhase
+            LOG('Income '..tostring(massIncome))
+            LOG('Ratio desired '..tostring(currentAssistRatio))
+            
+
+            if massIncome then
+                -- 1. How much mass am I allowed to spend?
+                local massToSpend = massIncome * currentAssistRatio
+                
+                -- 2. Multiply Mass by the BP-per-mass factor
+                -- Logic: (Mass/Sec) * (BP/Mass) = Target BP
+                minAssistPower = math.ceil(massToSpend * bPGeneratedPerMass)
+                
+                -- 3. Max assist based on your 80% income ceiling
+                local maxMassToSpend = massIncome * 0.8
+                maxAssistPower = math.ceil(maxMassToSpend * bPGeneratedPerMass)
             end
+            LOG('minAssistPower '..tostring(minAssistPower))
+            LOG('maxAssistPower '..tostring(maxAssistPower))
+            local targetBp = minAssistPower
             local strategyAssist = self.BrainIntel.PlayerStrategy.T3AirRush
             if strategyAssist then
                 if self.BrainIntel.PlayerStrategy.T3AirRush then
@@ -6269,7 +6294,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         {cat = categories.STRUCTURE * (categories.DEFENSE + categories.TECH2 * categories.ARTILLERY), type = 'Completion', debug = 'lowincome structure * defense or arty' }
                     }
                 end
-                self.EngineerAssistManagerBuildPowerRequired = minAssistPower
+                targetBp = minAssistPower
                 --LOG('Setting T3AirRush build power required')
                 if self.EngineerAssistManagerBuildPower < minAssistPower then
                     self.EngineerAssistManagerActive = true
@@ -6355,6 +6380,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     state = 'Mass'
                     --LOG('Assist Focus is Mass and everything')
                     self.EngineerAssistManagerFocusCategoryLookup = nil
+                    self.EngineerAssistManagerFocusCategory = nil
                     self.EngineerAssistManagerPriorityTable = {
                         {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion', debug = 'Mass smd'},
                         {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'Mass mass'},
@@ -6369,30 +6395,34 @@ AIBrain = Class(RNGAIBrainClass) {
                         {cat = categories.STRUCTURE * categories.SHIELD, type = 'Upgrade', debug = 'Mass shield upgrade'},
                     }
                 end
+                --LOG('Engineer assist manager state type is '..tostring(state))
+                local coreMassPushMultiplier = 1.5
+                local burstMultiplier = 5.0 
                 --LOG('Current EngineerAssistManager build power '..self.EngineerAssistManagerBuildPower..' build power required '..self.EngineerAssistManagerBuildPowerRequired)
                 --LOG('Min Assist Power is '..tostring(minAssistPower))
                 --LOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
                 --LOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
                 if self.RNGEXP and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.9 and self.EngineerAssistManagerBuildPower < minAssistPower then
-                    self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
+                    targetBp = self.EngineerAssistManagerBuildPowerRequired + math.max(5, (minAssistPower * 0.2))
                     self.EngineerAssistManagerActive = true
-                elseif not CoreMassNumberAchieved and self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPower <= 75 then
+                elseif not CoreMassNumberAchieved and self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPower <= maxAssistPower then
                     --RNGLOG('CoreMassPush is true')
-                    self.EngineerAssistManagerBuildPowerRequired = 75
-                elseif self.EngineerAssistManagerFocusHighValue and self.EngineerAssistManagerBuildPower <= math.ceil(math.max((150 * multiplier), minAssistPower)) then
+                    targetBp = maxAssistPower
+                elseif self.EngineerAssistManagerFocusHighValue and self.EngineerAssistManagerBuildPower <= maxAssistPower then
                     --LOG('EngineerAssistManagerFocusHighValue is true')
-                    self.EngineerAssistManagerBuildPowerRequired = math.ceil(math.max((150 * multiplier), minAssistPower))
+                    targetBp = maxAssistPower
+                    --LOG('assist build power required is now '..tostring(targetBp))
                 elseif massStorage > 150 and energyStorage > 150 and self.EngineerAssistManagerBuildPower < math.max(minAssistPower, 5) and not self.EngineerAssistManagerFocusHighValue and not self.EcoManager.CoreMassPush then
                     if self.EngineerAssistManagerBuildPowerRequired < math.max(minAssistPower, 5) then
-                        self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired + 5
+                        targetBp = self.EngineerAssistManagerBuildPowerRequired + math.max(5, (minAssistPower * 0.2))
                     end
                     --RNGLOG('EngineerAssistManager is Active due to storage and builder power being less than minAssistPower')
                     self.EngineerAssistManagerActive = true
                 elseif self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.8 and self.EngineerAssistManagerBuildPower <= 0 and self.EngineerAssistManagerBuildPowerRequired < 6 then
                     --RNGLOG('EngineerAssistManagerBuildPower being set to 5')
                     self.EngineerAssistManagerActive = true
-                    self.EngineerAssistManagerBuildPowerRequired = 5
-                elseif self.EngineerAssistManagerBuildPower == self.EngineerAssistManagerBuildPowerRequired and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.8 then
+                    targetBp = 5
+                elseif self.EngineerAssistManagerBuildPower == targetBp and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.8 then
                     --RNGLOG('EngineerAssistManagerBuildPower matches EngineerAssistManagerBuildPowerRequired, not add or removal')
                     coroutine.yield(30)
                 else
@@ -6401,7 +6431,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         --LOG('minAssistPower '..minAssistPower)
                         --LOG('Current build power '..self.EngineerAssistManagerBuildPower)
                         --LOG('Current build power required '..self.EngineerAssistManagerBuildPowerRequired)
-                        self.EngineerAssistManagerBuildPowerRequired = self.EngineerAssistManagerBuildPowerRequired - 2.5
+                        targetBp = self.EngineerAssistManagerBuildPowerRequired - math.max(2.5, (minAssistPower * 0.1))
                     end
                     --self.EngineerAssistManagerActive = false
                 end
@@ -6409,8 +6439,20 @@ AIBrain = Class(RNGAIBrainClass) {
             if not CoreMassNumberAchieved and self.EcoManager.CoreExtractorT3Count > 2 then
                 CoreMassNumberAchieved = true
                 if not self.EngineerAssistManagerFocusHighValue and not self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPowerRequired > minAssistPower then
-                    self.EngineerAssistManagerBuildPowerRequired = minAssistPower
+                    targetBp = minAssistPower
                 end
+            end
+            local energyTrend = self.EconomyOverTimeCurrent.EnergyTrendOverTime
+            local energyPanic = self:GetEconomyStoredRatio('ENERGY') < 0.10
+            if energyTrend < 0 and energyPanic then
+                if state ~= 'Energy' and state ~= 'Snipe' then
+                    targetBp = targetBp * 0.5 -- Throttles Land/Mass pushes to save the grid
+                end
+            end
+            --LOG('TargetBP is '..tostring(targetBp))
+            if math.abs(targetBp - lastBP) > (lastBP * assistGapThreshold) then
+                self.EngineerAssistManagerBuildPowerRequired = targetBp
+                lastBP = targetBp
             end
             --LOG('Current build power required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
             --LOG('Current Build Power '..tostring(self.EngineerAssistManagerBuildPower))

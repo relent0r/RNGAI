@@ -2318,6 +2318,37 @@ function NoStructureOfCategoryQueuedOrBeingBuilt(aiBrain, locationType, techCate
     return true
 end
 
+function EnemyInT3ArtilleryRangeRNG(aiBrain, locationtype, inrange)
+    local engineerManager = aiBrain.BuilderManagers[locationtype].EngineerManager
+    if not engineerManager then
+        return false
+    end
+    local start = engineerManager:GetLocationCoords()
+    local radius = 825
+    for k,v in ArmyBrains do
+        if v.Status ~= "Defeat" and not ArmyIsCivilian(v.Army) and IsEnemy(v.Army, aiBrain.Army) then
+            local estartX, estartZ = v:GetArmyStartPos()
+            if (VDist2Sq(start[1], start[3], estartX, estartZ) <= radius * radius) and inrange then
+                return true
+            elseif (VDist2Sq(start[1], start[3], estartX, estartZ) > radius * radius) and not inrange then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function T4StrategicArtilleryRequirementRNG(aiBrain, locationType)
+    local strategicCount = aiBrain:GetCurrentUnits(categories.STRUCTURE * categories.STRATEGIC * categories.TECH3)
+    -- On large maps where T3 Artillery is out of range, allow T4 after the first SML is complete.
+    if strategicCount >= 2 then
+        return true
+    elseif strategicCount >= 1 and not EnemyInT3ArtilleryRangeRNG(aiBrain, locationType, true) then
+        return true
+    end
+    return false
+end
+
 --[[
 function NavalBaseCheckRNG(aiBrain)
     -- Removed automatic setting of naval-Expasions-allowed. We have a Game-Option for this.
