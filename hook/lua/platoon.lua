@@ -918,6 +918,8 @@ Platoon = Class(RNGAIPlatoonClass) {
             import("/mods/rngai/lua/ai/statemachines/platoon-engineer-resource.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'ReclaimEngineer' then
             import("/mods/rngai/lua/ai/statemachines/platoon-engineer-reclaim.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
+        elseif machineType == 'AssistManagerEngineer' then
+            import("/mods/rngai/lua/ai/statemachines/platoon-engineer-assist-manager.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, self, self:GetPlatoonUnits())
         elseif machineType == 'ACUSupport' then
             local aiBrain = self:GetBrain()
             local platoonName = 'ACUSupportPlatoon'

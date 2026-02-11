@@ -1812,12 +1812,12 @@ IntelManager = Class {
                         enemystructurethreat = 0
                     }
                 end
-                labelTable.enemylandthreat = labelTable.enemylandthreat + zone.enemylandthreat
-                labelTable.enemyairthreat = labelTable.enemyairthreat +zone.enemyairthreat
-                labelTable.enemyantiairthreat = labelTable.enemyantiairthreat +zone.enemyantiairthreat
-                labelTable.enemynavalthreat = labelTable.enemynavalthreat + zone.enemynavalthreat
-                labelTable.enemyantisurfacethreat = labelTable.enemyantisurfacethreat + zone.enemyantisurfacethreat
-                labelTable.enemystructurethreat = labelTable.enemystructurethreat + zone.enemystructurethreat
+                labelTable[zone.label].enemylandthreat = labelTable[zone.label].enemylandthreat + zone.enemylandthreat
+                labelTable[zone.label].enemyairthreat = labelTable[zone.label].enemyairthreat +zone.enemyairthreat
+                labelTable[zone.label].enemyantiairthreat = labelTable[zone.label].enemyantiairthreat +zone.enemyantiairthreat
+                labelTable[zone.label].enemynavalthreat = labelTable[zone.label].enemynavalthreat + zone.enemynavalthreat
+                labelTable[zone.label].enemyantisurfacethreat = labelTable[zone.label].enemyantisurfacethreat + zone.enemyantisurfacethreat
+                labelTable[zone.label].enemystructurethreat = labelTable[zone.label].enemystructurethreat + zone.enemystructurethreat
             end
         end
         self.LabelIMAPThreat[zoneType] = labelTable

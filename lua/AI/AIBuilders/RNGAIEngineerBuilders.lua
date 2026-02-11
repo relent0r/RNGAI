@@ -1173,7 +1173,8 @@ BuilderGroup {
         },
         BuilderData = {
             JobType = 'Assist',
-            PlatoonPlan = 'EngineerAssistManagerRNG',
+            StateMachine = 'AssistManagerEngineer',
+            --PlatoonPlan = 'EngineerAssistManagerRNG',
             LocationType = 'LocationType'
         },
         BuilderType = 'Any',
@@ -1189,7 +1190,8 @@ BuilderGroup {
         },
         BuilderData = {
             JobType = 'Assist',
-            PlatoonPlan = 'EngineerAssistManagerRNG',
+            StateMachine = 'AssistManagerEngineer',
+            --PlatoonPlan = 'EngineerAssistManagerRNG',
             LocationType = 'LocationType'
         },
         BuilderType = 'Any',
@@ -1205,7 +1207,8 @@ BuilderGroup {
         },
         BuilderData = {
             JobType = 'Assist',
-            PlatoonPlan = 'EngineerAssistManagerRNG',
+            StateMachine = 'AssistManagerEngineer',
+            --PlatoonPlan = 'EngineerAssistManagerRNG',
             LocationType = 'LocationType'
         },
         BuilderType = 'Any',
