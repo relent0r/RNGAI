@@ -125,10 +125,11 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             if self.BuilderData.RecheckPosition then
                 local checkPos = self.BuilderData.RecheckPosition
                 if StateUtils.SimpleTarget(self,aiBrain,checkPos) then
-                    for k,unit in self.targetcandidates do
+                    for i = table.getn(self.targetcandidates), 1, -1 do
+                        local unit = self.targetcandidates[i]
                         if not unit or unit.Dead or not unit['rngdata'].machineworth or unit.Layer == 'Sub' then 
                             --RNGLOG('Unit with no machineworth is '..unit.UnitId) 
-                            table.remove(self.targetcandidates,k) 
+                            table.remove(self.targetcandidates,i) 
                         end
                     end
                     local closestTarget

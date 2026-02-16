@@ -1936,7 +1936,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                     if unit and not unit.Dead and unit:GetFractionComplete() == 1 and not unit:IsUnitState('Attached') then
                                         local oldUnitBeingBuilt = eng.UnitBeingBuilt
                                         if VDist3Sq(platPos, enemyUnitPos) < 156 then
-                                            eng.CustomReclaim = true
+                                            eng.CustomState = true
                                             IssueClearCommands({eng})
                                             IssueReclaim({eng}, unit)
                                             coroutine.yield(40)
@@ -1951,7 +1951,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                                     break
                                                 end
                                             end
-                                            eng.CustomReclaim = nil
+                                            eng.CustomState = nil
                                             if oldUnitBeingBuilt and oldUnitBeingBuilt:GetFractionComplete() < 1.0 then
                                                 eng.UnitBeingBuilt = oldUnitBeingBuilt
                                                 IssueGuard({eng}, oldUnitBeingBuilt)
@@ -1998,7 +1998,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                     if unit and not unit.Dead and unit:GetFractionComplete() == 1 and not unit:IsUnitState('Attached') then
                                         local oldUnitBeingBuilt = eng.UnitBeingBuilt
                                         if VDist3Sq(platPos, enemyUnitPos) < 156 then
-                                            eng.CustomReclaim = true
+                                            eng.CustomState = true
                                             IssueClearCommands({eng})
                                             IssueReclaim({eng}, unit)
                                             coroutine.yield(40)
@@ -2013,7 +2013,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                                     break
                                                 end
                                             end
-                                            eng.CustomReclaim = nil
+                                            eng.CustomState = nil
                                             if oldUnitBeingBuilt and oldUnitBeingBuilt:GetFractionComplete() < 1.0 then
                                                 eng.UnitBeingBuilt = oldUnitBeingBuilt
                                                 IssueGuard({eng}, oldUnitBeingBuilt)

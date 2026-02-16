@@ -793,17 +793,85 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerBuildPowerTech2 = 0
         self.EngineerAssistManagerBuildPowerTech3 = 0
         self.EngineerAssistManagerFocusCategory = false
-        self.EngineerAssistManagerFocusAirUpgrade = false
-        self.EngineerAssistManagerFocusHighValue = false
-        self.EngineerAssistManagerFocusLandUpgrade = false
+        self.EngineerAssistManagerMinAssistPower = 0
+        self.EngineerAssistManagerRequests = {}
         self.EngineerAssistManagerPriorityTable = {}
         self.EngineerAssistRuleBP = {
             Energy = 320,
+            Mass= 320,
             None = 999999999
         }
         self.EngineerAssistCurrentBPAllocated = {
             Energy = 0,
             None = 0
+        }
+        self.EngineerAssistPriorityTables = {
+            ['T3AirRush'] = {
+                {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', bpKey = 'Energy'}, 
+                {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'AirUpgrade air hsq upgrade'}, 
+                {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'AirUpgrade mass', bpKey = 'Mass'}, 
+                {cat = categories.STRUCTURE * (categories.DEFENSE + categories.TECH2 * categories.ARTILLERY), type = 'Completion', debug = 'lowincome structure * defense or arty' }
+            },
+            ['EnergyEarly'] = {
+                {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
+                {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'lowincome structure * energyproduction', bpKey = 'Energy'}, 
+                {cat = categories.STRUCTURE * (categories.DEFENSE + categories.TECH2 * categories.ARTILLERY), type = 'Completion', debug = 'lowincome structure * defense or arty' }
+            },
+            ['EnergyRequired'] = {
+                {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 , type = 'Completion', debug = 'energy structure * energyproduction t3', bpKey = 'Energy'}, 
+                {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2, type = 'Completion', debug = 'energy structure * energyproduction t2', bpKey = 'Energy'}, 
+                {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'energy structure * energyproduction t1', bpKey = 'Energy'}, 
+                {cat = categories.FACTORY * ( categories.LAND + categories.AIR ) - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'energy factory * land air'},
+                {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'energy factory'},
+            },
+            ['SnipeACU'] = {
+                {cat = categories.daa0206, type = 'Completion', debug = 'snipe daa0206'},
+                {cat = categories.xrl0302, type = 'Completion', debug = 'snipe xrl0302'},
+                {cat = categories.AIR * (categories.BOMBER + categories.GROUNDATTACK), type = 'Completion', debug = 'snipe air bombergunship'},
+                {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'snipe structure * energyproduction', bpKey = 'Energy'},
+                {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'snipe upgrade factory'}, 
+                {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'snipe mass upgrade', bpKey = 'Mass'}, 
+                {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'snipe factory'},
+                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'snipe mass storage'}
+            },
+            ['HighValue'] = {
+                {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion', debug = 'HighValue smd'},
+                {cat = categories.MOBILE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion', debug = 'HighValue experimental'},
+                {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'HighValue hq factory upgrade'}, 
+                {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'HighValue mass', bpKey = 'Mass'}, 
+                {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'HighValue structure * energyproduction', bpKey = 'Energy'}, 
+                {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'HighValue factory'},
+                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'HighValue mass storage'}
+            },
+            ['AirUpgrade'] = {
+                {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'AirUpgrade air hsq upgrade'}, 
+                {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'AirUpgrade mass', bpKey = 'Mass'}, 
+                {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'AirUpgrade structure * energyproduction', bpKey = 'Energy'}, 
+                {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'AirUpgrade factory'},
+                {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'AirUpgrade experimental'},
+                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'AirUpgrade mass storage'} 
+            },
+            ['LandUpgrade'] = {
+                {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'LandUpgrade hq factory'}, 
+                {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'LandUpgrade mass', bpKey = 'Mass'}, 
+                {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'LandUpgrade structure * energy', bpKey = 'Energy'}, 
+                {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'LandUpgrade factory'},
+                {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'LandUpgrade experimental'},
+                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'LandUpgrade mass storage'}
+            },
+            ['General'] = {
+                {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion', debug = 'Mass smd'},
+                {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'Mass mass', bpKey = 'Mass'},
+                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'Mass mass storage'},
+                {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'Mass mobile experimental'},
+                {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion', debug = 'Mass structure experimental'},
+                {cat = categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion', debug = 'Mass strategic'},
+                {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'Mass energy', bpKey = 'Energy'}, 
+                {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade', debug = 'Mass factory upgrade'}, 
+                {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'Mass factory complete'}, 
+                {cat = categories.STRUCTURE * categories.SHIELD, type = 'Completion', debug = 'Mass shield complete'}, 
+                {cat = categories.STRUCTURE * categories.SHIELD, type = 'Upgrade', debug = 'Mass shield upgrade'},
+            }
         }
         self.EngineerSpendDistributionTable = {
             BuildPower = 0,
@@ -1890,9 +1958,6 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             if self.cmanager.income.r.m > 110 and self.cmanager.buildpower.eng.T3 < 225 then
                 RNGLOG('Dynamic T3 Engineer builder should be activated for experimental extractor push')
-            end
-            if self.EngineerAssistManagerFocusHighValue then
-                RNGLOG('We should be pushing for an experimental and we only have one in progress')
             end
             RNGLOG('Core T3 Extractor Count '..self.EcoManager.CoreExtractorT3Count)
             if self.EcoManager.CoreMassPush then
@@ -4098,11 +4163,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 --LOG('Number of high value buildng '..tostring(RUtils.GetNumberUnitsBeingBuilt(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC))))
                 if not self.RNGEXP and self.cmanager.income.r.m > (120 * multiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBeingBuilt(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC)) >= 1 then
                     --LOG('Land Phase > 2 and eco is above 120 and number units building for exp is 1')
-                    self.EngineerAssistManagerFocusHighValue = true
+                    self:RequestEngineerAssistFocus('InternalBrain', 'HighValue', 110, 60, true)
                 elseif self.RNGEXP and self.cmanager.income.r.m > (90 * multiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBeingBuilt(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC)) >= 1 then
-                    self.EngineerAssistManagerFocusHighValue = true
-                else
-                    self.EngineerAssistManagerFocusHighValue = false
+                    self:RequestEngineerAssistFocus('InternalBrain', 'HighValue', 110, 60, true)
                 end
             end
             coroutine.yield(600)
@@ -5590,22 +5653,22 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                             if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.FACTORY and beingBuiltUnitCats.AIR and beingBuiltUnitCats.TECH3 and v.UnitBeingBuilt:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
-                                potentialPowerConsumption = potentialPowerConsumption + (1000 * multiplier)
+                                potentialPowerConsumption = potentialPowerConsumption + (750 * multiplier)
                                 continue
                             end
                             if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.FACTORY and v.UnitBeingBuilt:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
-                                potentialPowerConsumption = potentialPowerConsumption + (120 * multiplier)
+                                potentialPowerConsumption = potentialPowerConsumption + (80 * multiplier)
                                 continue
                             end
                             if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.RADAR and v.UnitBeingBuilt:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
-                                potentialPowerConsumption = potentialPowerConsumption + (60 * multiplier)
+                                potentialPowerConsumption = potentialPowerConsumption + (40 * multiplier)
                                 continue
                             end
                             if beingBuiltUnitCats.STRUCTURE and beingBuiltUnitCats.DEFENSE and beingBuiltUnitCats.DIRECTFIRE and v.UnitBeingBuilt:GetFractionComplete() < 0.8 then
                                 --RNGLOG('EcoPowerPreemptive : Shield being built')
-                                potentialPowerConsumption = potentialPowerConsumption + (60 * multiplier)
+                                potentialPowerConsumption = potentialPowerConsumption + (40 * multiplier)
                                 continue
                             end
                         end
@@ -5613,7 +5676,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         if unitCat.TECH3 and unitCat.AIR then
                                 if v:GetFractionComplete() < 0.7 then
                                     --RNGLOG('EcoPowerPreemptive : T3 Air Being Built')
-                                    potentialPowerConsumption = potentialPowerConsumption + (1000 * multiplier)
+                                    potentialPowerConsumption = potentialPowerConsumption + (750 * multiplier)
                                     continue
                                 else
                                     v.BuildCompleted = true
@@ -5621,7 +5684,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif unitCat.TECH2 and unitCat.AIR then
                             if v:GetFractionComplete() < 0.7 then
                                 --RNGLOG('EcoPowerPreemptive : T2 Air Being Built')
-                                potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
+                                potentialPowerConsumption = potentialPowerConsumption + (160 * multiplier)
                                 continue
                             else
                                 v.BuildCompleted = true
@@ -5629,7 +5692,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif unitCat.TECH3 and unitCat.LAND then
                             if v:GetFractionComplete() < 0.7 then
                                 --RNGLOG('EcoPowerPreemptive : T3 Air Being Built')
-                                potentialPowerConsumption = potentialPowerConsumption + (250 * multiplier)
+                                potentialPowerConsumption = potentialPowerConsumption + (200 * multiplier)
                                 continue
                             else
                                 v.BuildCompleted = true
@@ -5637,7 +5700,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         elseif unitCat.TECH2 and unitCat.LAND then
                             if v:GetFractionComplete() < 0.7 then
                                 --RNGLOG('EcoPowerPreemptive : T2 Air Being Built')
-                                potentialPowerConsumption = potentialPowerConsumption + (70 * multiplier)
+                                potentialPowerConsumption = potentialPowerConsumption + (50 * multiplier)
                                 continue
                             else
                                 v.BuildCompleted = true
@@ -5665,6 +5728,11 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                 end
+            end
+            if self.EngineerAssistManagerMinAssistPower and self.EngineerAssistManagerMinAssistPower > 0 then
+                local approxAssistConsumption = self.EngineerAssistManagerMinAssistPower * (5 * self.EcoManager.BuildMultiplier) * self.BrainIntel.HighestPhase
+                LOG('approxAssistConsumption is '..tostring(approxAssistConsumption))
+                potentialPowerConsumption = potentialPowerConsumption + approxAssistConsumption
             end
             if potentialPowerConsumption > 0 then
                 --RNGLOG('PowerConsumption of things being built '..potentialPowerConsumption)
@@ -6236,7 +6304,108 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    RequestEngineerAssistFocus = function(self, source, focusKey, priority, ttl, maxAssist)
+        self.EngineerAssistManagerRequests = self.EngineerAssistManagerRequests or {}
+        local expiry = GetGameTimeSeconds() + (ttl or 60)
+        
+        self.EngineerAssistManagerRequests[source] = {
+            FocusKey = focusKey,
+            Priority = priority,
+            MaxAssistPower = maxAssist,
+            Expiry = expiry,
+        }
+    end,
+
+    GetBrainAssistPriorities = function(self, gameTime)
+        local massIncome = self.cmanager.income.r.m
+        -- 1. Energy Early / Low Income Check
+        if (gameTime < 300 and massIncome < 2.5) then
+            self.EngineerAssistManagerRequests['InternalBrain'] = {
+                FocusKey = 'EnergyEarly',
+                Priority = 90,
+                MaxAssistPower = false,
+                Expiry = gameTime + 2
+            }
+        -- 2. Energy Required / Survival Check
+        elseif self.EcoManager.EcoPowerPreemptive or self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 then
+            self.EngineerAssistManagerRequests['InternalBrain'] = {
+                FocusKey = 'EnergyRequired',
+                Priority = 1000,
+                MaxAssistPower = false,
+                Expiry = gameTime + 2
+            }
+        -- 3. T3 Air Rush Strategy Check
+        elseif self.BrainIntel.PlayerStrategy.T3AirRush then
+            self.EngineerAssistManagerRequests['InternalBrain'] = {
+                FocusKey = 'T3AirRush',
+                Priority = 80,
+                MaxAssistPower = false,
+                Expiry = gameTime + 2
+            }
+        -- 4. Default Fallback (Mass/General)
+        else
+            self.EngineerAssistManagerRequests['InternalBrain'] = {
+                FocusKey = 'General',
+                Priority = 0,
+                MaxAssistPower = false,
+                Expiry = gameTime + 2
+            }
+        end
+    end,
+
+    GetTargetBP = function(self, bestFocus, minAssistPower, maxAssistPower)
+        local massStorage = GetEconomyStored( self, 'MASS')
+        local energyStorage = GetEconomyStored( self, 'ENERGY')
+        local targetBp = minAssistPower
+        if bestFocus == 'HighValue' and self.EngineerAssistManagerBuildPower <= maxAssistPower then
+            --LOG('EngineerAssistManagerFocusHighValue is true')
+            targetBp = maxAssistPower
+            --LOG('assist build power required is now '..tostring(targetBp))
+        elseif massStorage > 150 and energyStorage > 150 and self.EngineerAssistManagerBuildPower < math.max(minAssistPower, 5) and bestFocus ~= 'HighValue' and not self.EcoManager.CoreMassPush then
+            if self.EngineerAssistManagerBuildPowerRequired < math.max(minAssistPower, 5) then
+                targetBp = self.EngineerAssistManagerBuildPowerRequired + math.max(5, (minAssistPower * 0.2))
+            end
+        elseif self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.8 and self.EngineerAssistManagerBuildPower <= 0 and self.EngineerAssistManagerBuildPowerRequired < 6 then
+            --RNGLOG('EngineerAssistManagerBuildPower being set to 5')
+            targetBp = 5
+        elseif self.EngineerAssistManagerBuildPower == targetBp and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.8 then
+            --RNGLOG('EngineerAssistManagerBuildPower matches EngineerAssistManagerBuildPowerRequired, not add or removal')
+            coroutine.yield(30)
+        else
+            if self.EngineerAssistManagerBuildPowerRequired > math.max(minAssistPower, 5) then
+                --LOG('Decreasing build power by 1 due to lower requirements')
+                --LOG('minAssistPower '..minAssistPower)
+                --LOG('Current build power '..self.EngineerAssistManagerBuildPower)
+                --LOG('Current build power required '..self.EngineerAssistManagerBuildPowerRequired)
+                targetBp = self.EngineerAssistManagerBuildPowerRequired - math.max(2.5, (minAssistPower * 0.1))
+            end
+        end
+        local energyTrend = self.EconomyOverTimeCurrent.EnergyTrendOverTime
+        local energyPanic = self:GetEconomyStoredRatio('ENERGY') < 0.10
+        if energyTrend < 0 and energyPanic then
+            if bestFocus ~= 'EnergyRequired' and bestFocus ~= 'SnipeACU' then
+                targetBp = targetBp * 0.5 -- Throttles Land/Mass pushes to save the grid
+            end
+        end
+        return targetBp
+
+    end,
+
     EngineerAssistManagerBrainRNG = function(self, type)
+        -- This is the engineer assist manager brain. It will decide what the AI needs to focus its assisting on.
+        -- Note this is global and does not take bases into account.
+
+        local GetPriorityAssistTable = function(focusKey)
+            return self.EngineerAssistPriorityTables[focusKey] or self.EngineerAssistPriorityTables['General']
+        end
+        local FocusCategoryMap = {
+            ['AirUpgrade'] = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY,
+            ['LandUpgrade'] = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY,
+            ['EnergyRequired'] = categories.ENERGYPRODUCTION,
+            ['T3AirRush'] = categories.FACTORY * categories.AIR * categories.TECH3,
+            ['HighValue'] = categories.MOBILE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.TECH3 * (categories.STRATEGIC + categories.ANTIMISSILE),
+            ['General'] = categories.STRUCTURE + categories.EXPERIMENTAL + categories.MOBILE,
+        }
 
         local buildPowerTable = {
             TECH1 = 5,
@@ -6245,12 +6414,11 @@ AIBrain = Class(RNGAIBrainClass) {
         }
 
         coroutine.yield(900)
-        local state
         local lastBP = 0
-        local assistGapThreshold = 0.5
+        local assistGapThreshold = 0.05
+        
         while true do
-            local massStorage = GetEconomyStored( self, 'MASS')
-            local energyStorage = GetEconomyStored( self, 'ENERGY')
+            self.EngineerAssistManagerActive = true
             local gameTime = GetGameTimeSeconds()
             local multiplier = self.EcoManager.BuildMultiplier
             local CoreMassNumberAchieved = false
@@ -6279,184 +6447,40 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('minAssistPower '..tostring(minAssistPower))
             LOG('maxAssistPower '..tostring(maxAssistPower))
             local targetBp = minAssistPower
-            local strategyAssist = self.BrainIntel.PlayerStrategy.T3AirRush
-            if strategyAssist then
-                if self.BrainIntel.PlayerStrategy.T3AirRush then
-                    state = 'T3AirRush'
-                    --LOG('Assist Focus is T3 Air Rush')
-                    --LOG('Current assist ratio '..tostring(self.EngineerAssistRatio))
-                    --LOG('Current assist power '..tostring(self.EngineerAssistManagerBuildPower))
-                    --LOG('Current required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
-                    self.EngineerAssistManagerPriorityTable = {
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', bpKey = 'Energy'}, 
-                        {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'AirUpgrade air hsq upgrade'}, 
-                        {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'AirUpgrade mass'}, 
-                        {cat = categories.STRUCTURE * (categories.DEFENSE + categories.TECH2 * categories.ARTILLERY), type = 'Completion', debug = 'lowincome structure * defense or arty' }
-                    }
-                end
-                targetBp = minAssistPower
-                --LOG('Setting T3AirRush build power required')
-                if self.EngineerAssistManagerBuildPower < minAssistPower then
-                    self.EngineerAssistManagerActive = true
-                end
-            else
-                if (gameTime < 300 and self.EconomyOverTimeCurrent.MassIncome < 2.5) then
-                    state = 'Energy'
-                    --LOG('Assist Focus is Factory and Energy Completion')
-                    self.EngineerAssistManagerFocusCategoryLookup = nil
-                    self.EngineerAssistManagerPriorityTable = {
-                        {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion'},
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'lowincome structure * energyproduction', bpKey = 'Energy'}, 
-                        {cat = categories.STRUCTURE * (categories.DEFENSE + categories.TECH2 * categories.ARTILLERY), type = 'Completion', debug = 'lowincome structure * defense or arty' }
-                    }
-                elseif self.EcoManager.EcoPowerPreemptive or self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 or self.EngineerAssistManagerFocusPower then
-                    state = 'Energy'
-                    --LOG('Assist Focus is Energy')
-                    self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.ENERGYPRODUCTION
-                    self.EngineerAssistManagerFocusCategoryLookup = 'Energy'
-                    self.EngineerAssistManagerPriorityTable = {
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3 , type = 'Completion', debug = 'energy structure * energyproduction t3', bpKey = 'Energy'}, 
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH2, type = 'Completion', debug = 'energy structure * energyproduction t2', bpKey = 'Energy'}, 
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'energy structure * energyproduction t1', bpKey = 'Energy'}, 
-                        {cat = categories.FACTORY * ( categories.LAND + categories.AIR ) - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'energy factory * land air'},
-                        {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'energy factory'},
-                    }
-                elseif self.EngineerAssistManagerFocusSnipe then
-                    state = 'Snipe'
-                    --LOG('Assist Focus is Snipe')
-                    self.EngineerAssistManagerFocusCategory = categories.STRUCTURE * categories.FACTORY
-                    self.EngineerAssistManagerFocusCategoryLookup = 'Factory'
-                    self.EngineerAssistManagerPriorityTable = {
-                        {cat = categories.daa0206, type = 'Completion', debug = 'snipe daa0206'},
-                        {cat = categories.xrl0302, type = 'Completion', debug = 'snipe xrl0302'},
-                        {cat = categories.AIR * (categories.BOMBER + categories.GROUNDATTACK), type = 'Completion', debug = 'snipe air bombergunship'},
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'snipe structure * energyproduction', bpKey = 'Energy'},
-                        {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'snipe upgrade factory'}, 
-                        {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'snipe mass upgrade'}, 
-                        {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'snipe factory'},
-                        {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'snipe mass storage'}
-                    }
-                elseif self.EngineerAssistManagerFocusHighValue then
-                    state = 'Experimental'
-                    --LOG('Assist Focus is High Value')
-                    self.EngineerAssistManagerFocusCategory = categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC
-                    self.EngineerAssistManagerFocusCategoryLookup = 'HighValue'
-                    self.EngineerAssistManagerPriorityTable = {
-                        {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion', debug = 'HighValue smd'},
-                        {cat = categories.MOBILE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion', debug = 'HighValue experimental'},
-                        {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'HighValue hq factory upgrade'}, 
-                        {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'HighValue mass'}, 
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'HighValue structure * energyproduction', bpKey = 'Energy'}, 
-                        {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'HighValue factory'},
-                        {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'HighValue mass storage'}
-                    }
-                elseif self.EngineerAssistManagerFocusAirUpgrade then
-                    state = 'Air'
-                    --LOG('Assist Focus is Air Upgrade')
-                    self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY
-                    self.EngineerAssistManagerFocusCategoryLookup = 'AirUpgrade'
-                    self.EngineerAssistManagerPriorityTable = {
-                        {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'AirUpgrade air hsq upgrade'}, 
-                        {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'AirUpgrade mass'}, 
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'AirUpgrade structure * energyproduction', bpKey = 'Energy'}, 
-                        {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'AirUpgrade factory'},
-                        {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'AirUpgrade experimental'},
-                        {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'AirUpgrade mass storage'} 
-                    }
-                elseif self.EngineerAssistManagerFocusLandUpgrade then
-                    state = 'Land'
-                    --LOG('Assist Focus is Land upgrade')
-                    self.EngineerAssistManagerFocusCategory = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY
-                    self.EngineerAssistManagerFocusCategoryLookup = 'LandUpgrade'
-                    self.EngineerAssistManagerPriorityTable = {
-                        {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'LandUpgrade hq factory'}, 
-                        {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'LandUpgrade mass'}, 
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'LandUpgrade structure * energy', bpKey = 'Energy'}, 
-                        {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'LandUpgrade factory'},
-                        {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'LandUpgrade experimental'},
-                        {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'LandUpgrade mass storage'}
-                    }
-                else
-                    state = 'Mass'
-                    --LOG('Assist Focus is Mass and everything')
-                    self.EngineerAssistManagerFocusCategoryLookup = nil
-                    self.EngineerAssistManagerFocusCategory = nil
-                    self.EngineerAssistManagerPriorityTable = {
-                        {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion', debug = 'Mass smd'},
-                        {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'Mass mass'},
-                        {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'Mass mass storage'},
-                        {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'Mass mobile experimental'},
-                        {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion', debug = 'Mass structure experimental'},
-                        {cat = categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion', debug = 'Mass strategic'},
-                        {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'Mass energy', bpKey = 'Energy'}, 
-                        {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade', debug = 'Mass factory upgrade'}, 
-                        {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'Mass factory complete'}, 
-                        {cat = categories.STRUCTURE * categories.SHIELD, type = 'Completion', debug = 'Mass shield complete'}, 
-                        {cat = categories.STRUCTURE * categories.SHIELD, type = 'Upgrade', debug = 'Mass shield upgrade'},
-                    }
-                end
-                --LOG('Engineer assist manager state type is '..tostring(state))
-                local coreMassPushMultiplier = 1.5
-                local burstMultiplier = 5.0 
-                --LOG('Current EngineerAssistManager build power '..self.EngineerAssistManagerBuildPower..' build power required '..self.EngineerAssistManagerBuildPowerRequired)
-                --LOG('Min Assist Power is '..tostring(minAssistPower))
-                --LOG('EngineerAssistManagerRNGMass Storage is : '..massStorage)
-                --LOG('EngineerAssistManagerRNG Energy Storage is : '..energyStorage)
-                if self.RNGEXP and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.9 and self.EngineerAssistManagerBuildPower < minAssistPower then
-                    targetBp = self.EngineerAssistManagerBuildPowerRequired + math.max(5, (minAssistPower * 0.2))
-                    self.EngineerAssistManagerActive = true
-                elseif not CoreMassNumberAchieved and self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPower <= maxAssistPower then
-                    --RNGLOG('CoreMassPush is true')
-                    targetBp = maxAssistPower
-                elseif self.EngineerAssistManagerFocusHighValue and self.EngineerAssistManagerBuildPower <= maxAssistPower then
-                    --LOG('EngineerAssistManagerFocusHighValue is true')
-                    targetBp = maxAssistPower
-                    --LOG('assist build power required is now '..tostring(targetBp))
-                elseif massStorage > 150 and energyStorage > 150 and self.EngineerAssistManagerBuildPower < math.max(minAssistPower, 5) and not self.EngineerAssistManagerFocusHighValue and not self.EcoManager.CoreMassPush then
-                    if self.EngineerAssistManagerBuildPowerRequired < math.max(minAssistPower, 5) then
-                        targetBp = self.EngineerAssistManagerBuildPowerRequired + math.max(5, (minAssistPower * 0.2))
+            local bestFocus = 'General'
+            local bestPriority = -1
+            local bestForceMaxAssist = false
+            local currentTime = GetGameTimeSeconds()
+            self:GetBrainAssistPriorities(currentTime)
+
+            if self.EngineerAssistManagerRequests then
+                for source, data in self.EngineerAssistManagerRequests do
+                    if currentTime < data.Expiry then
+                        if data.Priority > bestPriority then
+                            bestPriority = data.Priority
+                            bestFocus = data.FocusKey
+                        end
+                    else
+                        -- Prune expired entry
+                        self.EngineerAssistManagerRequests[source] = nil
                     end
-                    --RNGLOG('EngineerAssistManager is Active due to storage and builder power being less than minAssistPower')
-                    self.EngineerAssistManagerActive = true
-                elseif self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.8 and self.EngineerAssistManagerBuildPower <= 0 and self.EngineerAssistManagerBuildPowerRequired < 6 then
-                    --RNGLOG('EngineerAssistManagerBuildPower being set to 5')
-                    self.EngineerAssistManagerActive = true
-                    targetBp = 5
-                elseif self.EngineerAssistManagerBuildPower == targetBp and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.8 then
-                    --RNGLOG('EngineerAssistManagerBuildPower matches EngineerAssistManagerBuildPowerRequired, not add or removal')
-                    coroutine.yield(30)
-                else
-                    if self.EngineerAssistManagerBuildPowerRequired > math.max(minAssistPower, 5) then
-                        --LOG('Decreasing build power by 1 due to lower requirements')
-                        --LOG('minAssistPower '..minAssistPower)
-                        --LOG('Current build power '..self.EngineerAssistManagerBuildPower)
-                        --LOG('Current build power required '..self.EngineerAssistManagerBuildPowerRequired)
-                        targetBp = self.EngineerAssistManagerBuildPowerRequired - math.max(2.5, (minAssistPower * 0.1))
-                    end
-                    --self.EngineerAssistManagerActive = false
                 end
             end
-            if not CoreMassNumberAchieved and self.EcoManager.CoreExtractorT3Count > 2 then
-                CoreMassNumberAchieved = true
-                if not self.EngineerAssistManagerFocusHighValue and not self.EcoManager.CoreMassPush and self.EngineerAssistManagerBuildPowerRequired > minAssistPower then
-                    targetBp = minAssistPower
-                end
-            end
-            local energyTrend = self.EconomyOverTimeCurrent.EnergyTrendOverTime
-            local energyPanic = self:GetEconomyStoredRatio('ENERGY') < 0.10
-            if energyTrend < 0 and energyPanic then
-                if state ~= 'Energy' and state ~= 'Snipe' then
-                    targetBp = targetBp * 0.5 -- Throttles Land/Mass pushes to save the grid
-                end
-            end
-            --LOG('TargetBP is '..tostring(targetBp))
+
+            self.EngineerAssistManagerPriorityTable = GetPriorityAssistTable(bestFocus)
+            self.EngineerAssistManagerFocusCategoryLookup = bestFocus
+            self.EngineerAssistManagerFocusCategory = FocusCategoryMap[bestFocus] or FocusCategoryMap['General']
+            self.EngineerAssistManagerMinAssistPower = targetBp
+            targetBp = self:GetTargetBP(bestFocus, minAssistPower, maxAssistPower)
             if math.abs(targetBp - lastBP) > (lastBP * assistGapThreshold) then
                 self.EngineerAssistManagerBuildPowerRequired = targetBp
                 lastBP = targetBp
             end
-            --LOG('Current build power required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
-            --LOG('Current Build Power '..tostring(self.EngineerAssistManagerBuildPower))
-            --LOG('MinAssist Build Power '..tostring(minAssistPower))
+            LOG('Current build power required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
+            LOG('Current Build Power '..tostring(self.EngineerAssistManagerBuildPower))
+            LOG('LastBP is '..tostring(lastBP))
+            LOG('bestPriority is '..tostring(bestPriority))
+            LOG('bestFocus is '..tostring(bestFocus))
             coroutine.yield(10)
         end
     end,

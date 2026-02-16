@@ -3550,7 +3550,7 @@ IntelManager = Class {
                     end
                     --maybe one day they'll put the Mercy back to a sniping unit, until then the build logic is disabled
                     --aiBrain.amanager.Demand.Air.T2.mercy = count
-                    aiBrain.EngineerAssistManagerFocusSnipe = true
+                    aiBrain:RequestEngineerAssistFocus('IntelManager', 'SnipeACU', 150, 60, true)
                 end
                 if zoneAttack then
                     if aiBrain.BrainIntel.AirPhase < 3 then
@@ -3569,16 +3569,11 @@ IntelManager = Class {
                 if disableBomb and aiBrain.amanager.Demand.Air.T2.mercy > 0 then
                     --RNGLOG('No mercy snipe missions, disable demand')
                     aiBrain.amanager.Demand.Air.T2.mercy = 0
-                    aiBrain.EngineerAssistManagerFocusSnipe = false
                 end
                 if disableBomb and aiBrain.amanager.Demand.Air.T2.bomber > 0 then
                     --RNGLOG('No t2 bomber missions, disable demand')
                     aiBrain.amanager.Demand.Air.T2.bomber = 0
-                    aiBrain.EngineerAssistManagerFocusSnipe = false
                 end
-            end
-            if not acuSnipe then
-                aiBrain.EngineerAssistManagerFocusSnipe = false
             end
         elseif productiontype == 'LandAntiSurface' then
             local acuSnipe = false
@@ -3597,7 +3592,7 @@ IntelManager = Class {
                     --RNGLOG('Set game time '..gameTime)
                     aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe[acuIndex]['LAND'] = { GameTime = gameTime, CountRequired = count }
                     aiBrain.amanager.Demand.Land.T2.mobilebomb = count
-                    aiBrain.EngineerAssistManagerFocusSnipe = true
+                    aiBrain:RequestEngineerAssistFocus('IntelManager', 'SnipeACU', 150, 60, true)
                 end
             else
                 local disableBomb = true
@@ -3611,7 +3606,6 @@ IntelManager = Class {
                 if disableBomb and aiBrain.amanager.Demand.Land.T2.mobilebomb > 0 then
                     --RNGLOG('No mobile bomb missions, disable demand')
                     aiBrain.amanager.Demand.Land.T2.mobilebomb = 0
-                    aiBrain.EngineerAssistManagerFocusSnipe = false
                 end
             end
             local disableRangedBot = true
@@ -3682,7 +3676,7 @@ IntelManager = Class {
                     aiBrain.TacticalMonitor.TacticalMissions.ACUSnipe[acuIndex]['AIRANTINAVY'] = { GameTime = gameTime, CountRequired = count }
                     aiBrain.amanager.Demand.Air.T2.torpedo = count
                     aiBrain.amanager.Demand.Air.T3.torpedo = math.ceil(count / 2)
-                    aiBrain.EngineerAssistManagerFocusSnipe = true
+                    aiBrain:RequestEngineerAssistFocus('IntelManager', 'SnipeACU', 150, 60, true)
                 end
                 if navalAttack then
                     --LOG(aiBrain.Nickname)
@@ -3706,7 +3700,6 @@ IntelManager = Class {
                     --RNGLOG('No mercy snipe missions, disable demand')
                     aiBrain.amanager.Demand.Air.T2.torpedo = 0
                     aiBrain.amanager.Demand.Air.T3.torpedo = 0
-                    aiBrain.EngineerAssistManagerFocusSnipe = false
                 end
             end
             --RNGLOG('Current T2 torpcount is '..aiBrain.amanager.Demand.Air.T2.torpedo)

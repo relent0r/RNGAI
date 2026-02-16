@@ -1776,10 +1776,9 @@ StructureManager = Class {
                 local fractionComplete = upgradedFactory:GetFractionComplete()
                 unit.Upgrading = true
                 if hq == 'LAND' then
-                    self.Brain.EngineerAssistManagerFocusLandUpgrade = true
+                    self.Brain:RequestEngineerAssistFocus('StructureManager', 'LandUpgrade', 95, 60, false)
                 elseif hq =='AIR' then
-                    self.Brain.EngineerAssistManagerFocusAirUpgrade = true
-                    
+                    self.Brain:RequestEngineerAssistFocus('StructureManager', 'AirUpgrade', 95, 60, false)
                 end
                 while upgradedFactory and not IsDestroyed(upgradedFactory) and fractionComplete < 1 do
                     fractionComplete = upgradedFactory:GetFractionComplete()
@@ -1805,13 +1804,11 @@ StructureManager = Class {
                     end
                 end
                 if hq == 'LAND' then
-                    self.Brain.EngineerAssistManagerFocusLandUpgrade = false
                     if self.Brain.EngineerAssistManagerFocusCategory == categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY then
                         self.Brain.EngineerAssistManagerFocusCategory = false
                         self.Brain.EngineerAssistManagerFocusCategoryLookup = nil
                     end
                 elseif hq =='AIR' then
-                    self.Brain.EngineerAssistManagerFocusAirUpgrade = false
                     if self.Brain.EngineerAssistManagerFocusCategory == categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY then
                         self.Brain.EngineerAssistManagerFocusCategory = false
                         self.Brain.EngineerAssistManagerFocusCategoryLookup = nil

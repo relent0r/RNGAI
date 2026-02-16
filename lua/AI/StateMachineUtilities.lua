@@ -1596,7 +1596,7 @@ end
 BuildAIDoneRNG = function(unit, params)
     if unit.Active or unit.Dead then return end
     if not unit.AIPlatoonReference then return end
-    if unit.CustomReclaim then return end
+    if unit.CustomState then return end
     if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
         table.remove(unit.EngineerBuildQueue, 1)
     end
@@ -1629,7 +1629,7 @@ BuildAIFailedRNG = function(unit, params)
     if not unit.BuildFailedCount then
         unit.BuildFailedCount = 0
     end
-    if unit.CustomReclaim then return end
+    if unit.CustomState then return end
     unit.BuildFailedCount = unit.BuildFailedCount + 1
     --LOG('Current fail count is '..unit.FailedCount)
     if unit.BuildFailedCount > 2 and not table.empty(unit.EngineerBuildQueue) then
