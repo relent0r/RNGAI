@@ -27,6 +27,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             self.Active = false
 
             self.SingleTechBuilderRate = { [1]=nil, [2]=nil, [3]=nil }
+            self.DefaultTechBuilderRate = { [1]=5, [2]=13, [3]=32.5 }
 
             -- optional: central scratchpad
             self.TechEngineers = { [1]={}, [2]={}, [3]={} }
@@ -35,6 +36,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             LOG('Starting Engineer Assist Manager')
 
             self:ChangeState(self.UpdateRoster)
+            return
         end,
     },
     UpdateRoster = State {
@@ -122,9 +124,11 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             LOG('TotalBuildRate '..tostring(self.TotalBuildRate))
             if self.TotalBuildRate == 0 then
                 self:ChangeState(self.Wait)
+                return
             end
 
             self:ChangeState(self.AdjustRosterForEco)
+            return
         end,
     },
     AdjustRosterForEco = State {
@@ -167,6 +171,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                 if poolCount > 2 and self.TotalTechBuildRate[3] then
                     --LOG('We have going to try Removing Engineers to allow space for T3, build power is '..tostring(aiBrain.EngineerAssistManagerBuildPower))
                     --LOG('We have a pool count greater than 2 and a tech 3 builderRate')
+                    local t3BuildRate = builderRates[3] or self.DefaultTechBuilderRate[3]
                     local maxBuildPowerToGain = (poolCount - 2) * builderRates[3]
                     --LOG('maxBuildPowerToGain is '..tostring(maxBuildPowerToGain))
                     if maxBuildPowerToGain > 0 and aiBrain.EngineerAssistManagerBuildPowerTech1 > 0 then
@@ -200,6 +205,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             end
 
             self:ChangeState(self.CheckDisband)
+            return
         end,
     },
     CheckDisband = State {
@@ -221,6 +227,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             end
 
             self:ChangeState(self.CollectAvailable)
+            return
         end,
     },
     CollectAvailable = State {
@@ -239,6 +246,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             if availableCount== 0 then
                 LOG('There are no available engineers, wait 4 seconds')
                 self:ChangeState(self.Wait)
+                return
             end
 
             table.sort(available, function(a, b)
@@ -249,6 +257,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
 
             self.AvailableEngineers = available
             self:ChangeState(self.AssignAssists)
+            return
         end,
     },
     AssignAssists = State {
@@ -425,6 +434,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
 
             self.AssistFoundLastTick = assistFound
             self:ChangeState(self.Wait)
+            return
         end,
     },
 
@@ -438,8 +448,8 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then return end
             local aiBrain = self.AIBrain
             if not aiBrain or not aiBrain:PlatoonExists(self) then return end
-
             self:ChangeState(self.UpdateRoster)
+            return
         end,
     },
 
@@ -451,13 +461,20 @@ EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
     LOG('Assist Platoon Focus Category at the time was '..tostring(aiBrain.EngineerAssistManagerFocusCategoryLookup))
     IssueClearCommands({eng})
     IssueGuard({eng}, unitToAssist)
+    local assistTimeout = 0
     coroutine.yield(math.random(1, 20))
-    while eng and not eng.Dead and aiBrain:PlatoonExists(self) and not eng:IsIdleState() and unitToAssist do
+    while eng and not eng.Dead and aiBrain:PlatoonExists(self) and unitToAssist do
         --RNGLOG('EngineerAssistLoop runing for '..aiBrain.Nickname)
         if not unitToAssist or IsDestroyed(unitToAssist) then
             --eng:SetCustomName('assist function break due to no UnitBeingAssist')
             eng.UnitBeingAssist = nil
             break
+        end
+        if eng:IsIdleState() then
+            assistTimeout = assistTimeout + 1
+            if assistTimeout > 5 then
+                break
+            end
         end
         if not aiBrain.EngineerAssistManagerActive then
             --eng:SetCustomName('Got asked to remove myself due to assist manager being false')
@@ -479,6 +496,7 @@ EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
             local ruleMaxBP = aiBrain.EngineerAssistRuleBP[focusLookupValue] or 0
             local removeEngineer = true
             LOG('Engineer is not focused on its primary task '..tostring(focusLookupValue))
+            LOG('Current unit to assist is '..tostring(unitToAssist.UnitId))
             local currentAllocatedBP = aiBrain.EngineerAssistCurrentBPAllocated[focusLookupValue] or 0
             if focusLookupValue ~= 'None' and ruleMaxBP > 0 and currentAllocatedBP >= ruleMaxBP then
                 removeEngineer = false 

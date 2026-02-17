@@ -1803,16 +1803,7 @@ StructureManager = Class {
                         end
                     end
                 end
-                if hq == 'LAND' then
-                    if self.Brain.EngineerAssistManagerFocusCategory == categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY then
-                        self.Brain.EngineerAssistManagerFocusCategory = false
-                        self.Brain.EngineerAssistManagerFocusCategoryLookup = nil
-                    end
-                elseif hq =='AIR' then
-                    if self.Brain.EngineerAssistManagerFocusCategory == categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY then
-                        self.Brain.EngineerAssistManagerFocusCategory = false
-                        self.Brain.EngineerAssistManagerFocusCategoryLookup = nil
-                    end
+                if hq == 'AIR' then
                     if self.Brain.BrainIntel.PlayerStrategy.T3AirRush and upgradedFactory.Blueprint.CategoriesHash.TECH3 then
                         self.Brain.BrainIntel.PlayerStrategy.T3AirRush = false
                     end
