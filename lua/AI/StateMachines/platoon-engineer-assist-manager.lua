@@ -491,18 +491,36 @@ EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
             break
         end
         if aiBrain.EngineerAssistManagerFocusCategory and not EntityCategoryContains(aiBrain.EngineerAssistManagerFocusCategory, unitToAssist) 
-        and aiBrain:IsAnyEngineerBuilding(aiBrain.EngineerAssistManagerFocusCategory) and not unitToAssist.Blueprint.CategoriesHash.ENERGYPRODUCTION then
+        and not unitToAssist.Blueprint.CategoriesHash.ENERGYPRODUCTION then
+            local removeEngineer = true
             local focusLookupValue = aiBrain.EngineerAssistManagerFocusCategoryLookup or 'None'
             local ruleMaxBP = aiBrain.EngineerAssistRuleBP[focusLookupValue] or 0
-            local removeEngineer = true
-            LOG('Engineer is not focused on its primary task '..tostring(focusLookupValue))
-            LOG('Current unit to assist is '..tostring(unitToAssist.UnitId))
-            local currentAllocatedBP = aiBrain.EngineerAssistCurrentBPAllocated[focusLookupValue] or 0
-            if focusLookupValue ~= 'None' and ruleMaxBP > 0 and currentAllocatedBP >= ruleMaxBP then
-                removeEngineer = false 
+            local engManager = eng.BuilderManagerData.EngineerManager
+            if engManager and engManager.NumStructuresBeingBuilt then
+                local beingBuiltCount = engManager:NumStructuresBeingBuilt(aiBrain.EngineerAssistManagerFocusCategory)
+                if beingBuiltCount < 1 then
+                    LOG('Focus category has changed but no structures are being build of that category')
+                    removeEngineer = false
+                end
             end
-            LOG('Assist Platoon Focus Category has changed, aborting current assist. Focus lookup is '..tostring(aiBrain.EngineerAssistManagerFocusCategoryLookup))
             if removeEngineer then
+                if unitToAssist.Blueprint.CategoriesHash.ENGINEER and EntityCategoryContains(aiBrain.EngineerAssistManagerFocusCategory, unitToAssist.UnitBeingAssist) then
+                    LOG('Focus category has changed but the engineer is assisting another engineer that is the correct category')
+                    removeEngineer = false
+                end
+            end
+
+            if removeEngineer then
+                local currentAllocatedBP = aiBrain.EngineerAssistCurrentBPAllocated[focusLookupValue] or 0
+                if focusLookupValue ~= 'None' and ruleMaxBP > 0 and currentAllocatedBP >= ruleMaxBP then
+                    LOG('Focus category has changed but the unit it could assist already has a high build power assigned')
+                    removeEngineer = false 
+                end
+            end
+            if removeEngineer then
+                LOG('Assist Platoon Focus Category has changed, aborting current assist. Focus lookup is '..tostring(aiBrain.EngineerAssistManagerFocusCategoryLookup))
+                LOG('Engineer is not focused on its primary task '..tostring(focusLookupValue))
+                LOG('Current unit to assist is '..tostring(unitToAssist.UnitId))
                 eng.UnitBeingAssist = nil
                 break
             end

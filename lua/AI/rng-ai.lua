@@ -4157,15 +4157,16 @@ AIBrain = Class(RNGAIBrainClass) {
             
             --Lets ponder this one some more
             if self.BrainIntel.LandPhase > 2 then
-                --LOG('LandPhase greater than 2')
-                --LOG('Incomine '..tostring(self.cmanager.income.r.m))
-                --LOG('Core extractor count '..tostring(self.EcoManager.CoreExtractorT3Count))
-                --LOG('Number of high value buildng '..tostring(RUtils.GetNumberUnitsBeingBuilt(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC))))
+                LOG('LandPhase greater than 2')
+                LOG('Incomine '..tostring(self.cmanager.income.r.m))
+                LOG('Core extractor count '..tostring(self.EcoManager.CoreExtractorT3Count))
+                LOG('Number of high value buildng '..tostring(RUtils.GetNumberUnitsBeingBuilt(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC))))
                 if not self.RNGEXP and self.cmanager.income.r.m > (120 * multiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBeingBuilt(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC)) >= 1 then
-                    --LOG('Land Phase > 2 and eco is above 120 and number units building for exp is 1')
-                    self:RequestEngineerAssistFocus('InternalBrain', 'HighValue', 110, 60, true)
+                    LOG('Land Phase > 2 and eco is above 120 and number units building for exp is 1')
+
+                    self:RequestEngineerAssistFocus('HighValueStrategy', 'HighValue', 110, 60, true)
                 elseif self.RNGEXP and self.cmanager.income.r.m > (90 * multiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBeingBuilt(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC)) >= 1 then
-                    self:RequestEngineerAssistFocus('InternalBrain', 'HighValue', 110, 60, true)
+                    self:RequestEngineerAssistFocus('HighValueStrategy', 'HighValue', 110, 60, true)
                 end
             end
             coroutine.yield(600)
@@ -6307,6 +6308,7 @@ AIBrain = Class(RNGAIBrainClass) {
     RequestEngineerAssistFocus = function(self, source, focusKey, priority, ttl, maxAssist)
         self.EngineerAssistManagerRequests = self.EngineerAssistManagerRequests or {}
         local expiry = GetGameTimeSeconds() + (ttl or 60)
+        LOG('RequestEngineerAssistFocus for focusKey'..tostring(focusKey))
         
         self.EngineerAssistManagerRequests[source] = {
             FocusKey = focusKey,
@@ -6320,37 +6322,39 @@ AIBrain = Class(RNGAIBrainClass) {
         local massIncome = self.cmanager.income.r.m
         -- 1. Energy Early / Low Income Check
         if (gameTime < 300 and massIncome < 2.5) then
-            self.EngineerAssistManagerRequests['InternalBrain'] = {
+            self.EngineerAssistManagerRequests['EarlyEco'] = {
                 FocusKey = 'EnergyEarly',
                 Priority = 90,
                 MaxAssistPower = false,
                 Expiry = gameTime + 2
             }
+        end
         -- 2. Energy Required / Survival Check
-        elseif self.EcoManager.EcoPowerPreemptive or self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 then
-            self.EngineerAssistManagerRequests['InternalBrain'] = {
+        if self.EcoManager.EcoPowerPreemptive or self.EconomyOverTimeCurrent.EnergyTrendOverTime < 25.0 then
+            self.EngineerAssistManagerRequests['PowerEco'] = {
                 FocusKey = 'EnergyRequired',
                 Priority = 1000,
                 MaxAssistPower = false,
                 Expiry = gameTime + 2
             }
+        end
         -- 3. T3 Air Rush Strategy Check
-        elseif self.BrainIntel.PlayerStrategy.T3AirRush then
-            self.EngineerAssistManagerRequests['InternalBrain'] = {
+        if self.BrainIntel.PlayerStrategy.T3AirRush then
+            self.EngineerAssistManagerRequests['BrainStrategy'] = {
                 FocusKey = 'T3AirRush',
                 Priority = 80,
                 MaxAssistPower = false,
                 Expiry = gameTime + 2
             }
-        -- 4. Default Fallback (Mass/General)
-        else
-            self.EngineerAssistManagerRequests['InternalBrain'] = {
-                FocusKey = 'General',
-                Priority = 0,
-                MaxAssistPower = false,
-                Expiry = gameTime + 2
-            }
         end
+        -- 4. Default Fallback (Mass/General)
+
+        self.EngineerAssistManagerRequests['BrainDefault'] = {
+            FocusKey = 'General',
+            Priority = 0,
+            MaxAssistPower = false,
+            Expiry = gameTime + 2
+        }
     end,
 
     GetTargetBP = function(self, bestFocus, minAssistPower, maxAssistPower)

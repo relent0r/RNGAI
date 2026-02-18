@@ -881,7 +881,7 @@ EngineerManager = Class(BuilderManager) {
             local numEnemyUnits = aiBrain.emanager.Nuke.T3
             if unitCats.TECH3 and numEnemyUnits and numEnemyUnits > 0 then
                 local currentSMD = self:GetNumUnits('AntiNuke')
-                local beingBuiltSmd = self:NumStructuresBeingBuilt('TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' })
+                local beingBuiltSmd = self:NumStructuresBeingBuiltTechCategory('TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' })
                 local queuedSmdCount = self:NumStructuresQueued('TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' })
                 if currentSMD == 0 and beingBuiltSmd == 0 and queuedSmdCount == 0 then
                     if not aiBrain.IntelManager:IsAssignedStructureRequestPresent(self.Location, 120, 'SMD') then
@@ -922,7 +922,7 @@ EngineerManager = Class(BuilderManager) {
         return structuresQueued
     end,
 
-    NumStructuresBeingBuilt = function(self, techCategory, categoriesTable)
+    NumStructuresBeingBuiltTechCategory = function(self, techCategory, categoriesTable)
         local beingBuiltStructures = self.StructuresBeingBuilt[techCategory]
         local structuresBeingBuilt = 0
         if beingBuiltStructures then
@@ -938,6 +938,20 @@ EngineerManager = Class(BuilderManager) {
                     end
                     if allMatch then
                         --LOG('Found unit with id '..tostring(v.Unit.UnitId)..' completion percent is '..tostring(v.Unit:GetFractionComplete()))
+                        structuresBeingBuilt = structuresBeingBuilt + 1
+                    end
+                end
+            end
+        end
+        return structuresBeingBuilt
+    end,
+
+    NumStructuresBeingBuilt = function(self, categoryUserData)
+        local structuresBeingBuilt = 0
+        for k, cat in self.StructuresBeingBuilt do
+            for l, s in cat do
+                if s.Unit and not s.Unit.Dead then
+                    if EntityCategoryContains(categoryUserData, s.Unit) then
                         structuresBeingBuilt = structuresBeingBuilt + 1
                     end
                 end

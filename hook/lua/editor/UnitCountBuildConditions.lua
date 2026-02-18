@@ -2308,7 +2308,7 @@ function NoStructureOfCategoryQueuedOrBeingBuilt(aiBrain, locationType, techCate
         return false
     end
 
-    if engineerManager:NumStructuresBeingBuilt(techCategory, categoriesTable) > 0 then
+    if engineerManager:NumStructuresBeingBuiltTechCategory(techCategory, categoriesTable) > 0 then
         return false
     end
 

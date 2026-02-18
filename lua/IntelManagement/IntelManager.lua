@@ -4688,7 +4688,7 @@ IntelManager = Class {
                                 if not aiBrain.IntelManager:IsExistingStructureRequestPresent(engineerManager.Location, 45, 'SMD') then
                                     local queuedSmdCount = engineerManager:NumStructuresQueued('TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' })
                                     if queuedSmdCount == 0 then
-                                        local beingBuiltSmd = engineerManager:NumStructuresBeingBuilt('TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' })
+                                        local beingBuiltSmd = engineerManager:NumStructuresBeingBuiltTechCategory('TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' })
                                         if beingBuiltSmd == 0 then
                                             aiBrain.IntelManager:RequestStructureNearPosition(engineerManager.Location, 45, 'SMD')
                                         end
