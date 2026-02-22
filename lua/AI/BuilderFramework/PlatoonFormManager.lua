@@ -182,10 +182,6 @@ PlatoonFormManager = Class(BuilderManager) {
                 hndl:SetPlatoonData(builder:GetBuilderData(self.LocationType))
 
                 for k,v in hndl:GetPlatoonUnits() do
-                    if v.Blueprint.CategoriesHash.INSIGNIFICANTUNIT then
-                        LOG('PlatoonForm manager is trying to add an insignificant unit to a platoon '..tostring(builder.BuilderName))
-
-                    end
                     if not v.PlatoonPlanName then
                         v.PlatoonHandle = hndl
                     end

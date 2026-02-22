@@ -4157,13 +4157,7 @@ AIBrain = Class(RNGAIBrainClass) {
             
             --Lets ponder this one some more
             if self.BrainIntel.LandPhase > 2 then
-                LOG('LandPhase greater than 2')
-                LOG('Incomine '..tostring(self.cmanager.income.r.m))
-                LOG('Core extractor count '..tostring(self.EcoManager.CoreExtractorT3Count))
-                LOG('Number of high value buildng '..tostring(RUtils.GetNumberUnitsBeingBuilt(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC))))
                 if not self.RNGEXP and self.cmanager.income.r.m > (120 * multiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBeingBuilt(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC)) >= 1 then
-                    LOG('Land Phase > 2 and eco is above 120 and number units building for exp is 1')
-
                     self:RequestEngineerAssistFocus('HighValueStrategy', 'HighValue', 110, 60, true)
                 elseif self.RNGEXP and self.cmanager.income.r.m > (90 * multiplier) and self.EcoManager.CoreExtractorT3Count > 2 and RUtils.GetNumberUnitsBeingBuilt(self, (categories.EXPERIMENTAL + categories.TECH3 * categories.STRATEGIC)) >= 1 then
                     self:RequestEngineerAssistFocus('HighValueStrategy', 'HighValue', 110, 60, true)
@@ -5731,7 +5725,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             if self.EngineerAssistManagerMinAssistPower and self.EngineerAssistManagerMinAssistPower > 0 then
-                local approxAssistConsumption = self.EngineerAssistManagerMinAssistPower * (5 * self.EcoManager.BuildMultiplier) * self.BrainIntel.HighestPhase
+                local phaseWeight = 6.25 - (1.25 * self.BrainIntel.HighestPhase)
+                local approxAssistConsumption = self.EngineerAssistManagerMinAssistPower * (phaseWeight * self.EcoManager.BuildMultiplier)
+
                 LOG('approxAssistConsumption is '..tostring(approxAssistConsumption))
                 potentialPowerConsumption = potentialPowerConsumption + approxAssistConsumption
             end
@@ -6374,7 +6370,7 @@ AIBrain = Class(RNGAIBrainClass) {
             targetBp = 5
         elseif self.EngineerAssistManagerBuildPower == targetBp and self.EconomyOverTimeCurrent.MassEfficiencyOverTime > 0.8 then
             --RNGLOG('EngineerAssistManagerBuildPower matches EngineerAssistManagerBuildPowerRequired, not add or removal')
-            coroutine.yield(30)
+            return targetBp
         else
             if self.EngineerAssistManagerBuildPowerRequired > math.max(minAssistPower, 5) then
                 --LOG('Decreasing build power by 1 due to lower requirements')
@@ -6432,10 +6428,8 @@ AIBrain = Class(RNGAIBrainClass) {
             local massIncome = self.cmanager.income.r.m
             
             local bPGeneratedPerMass = 1 * self.EnemyIntel.HighestPhase
-            LOG('Income '..tostring(massIncome))
-            LOG('Ratio desired '..tostring(currentAssistRatio))
-            
-
+            --LOG('Income '..tostring(massIncome))
+            --LOG('Ratio desired '..tostring(currentAssistRatio))
             if massIncome then
                 -- 1. How much mass am I allowed to spend?
                 local massToSpend = massIncome * currentAssistRatio
@@ -6448,8 +6442,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 local maxMassToSpend = massIncome * 0.8
                 maxAssistPower = math.ceil(maxMassToSpend * bPGeneratedPerMass)
             end
-            LOG('minAssistPower '..tostring(minAssistPower))
-            LOG('maxAssistPower '..tostring(maxAssistPower))
+            --LOG('minAssistPower '..tostring(minAssistPower))
+            --LOG('maxAssistPower '..tostring(maxAssistPower))
             local targetBp = minAssistPower
             local bestFocus = 'General'
             local bestPriority = -1
@@ -6480,11 +6474,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 self.EngineerAssistManagerBuildPowerRequired = targetBp
                 lastBP = targetBp
             end
-            LOG('Current build power required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
-            LOG('Current Build Power '..tostring(self.EngineerAssistManagerBuildPower))
-            LOG('LastBP is '..tostring(lastBP))
-            LOG('bestPriority is '..tostring(bestPriority))
-            LOG('bestFocus is '..tostring(bestFocus))
+            --LOG('Current build power required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
+            --LOG('Current Build Power '..tostring(self.EngineerAssistManagerBuildPower))
+            --LOG('LastBP is '..tostring(lastBP))
+            --LOG('bestPriority is '..tostring(bestPriority))
+            --LOG('bestFocus is '..tostring(bestFocus))
             coroutine.yield(10)
         end
     end,

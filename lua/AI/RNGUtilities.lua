@@ -9365,7 +9365,7 @@ function GetBuilldRateOfEngineers(aiBrain, engineers)
     if aiBrain.CheatEnabled then
         buildMultiplier = aiBrain.EcoManager.BuildMultiplier
     end
-    LOG('GetBuildRate cheat multiplier is '..tostring(buildMultiplier))
+    --LOG('GetBuildRate cheat multiplier is '..tostring(buildMultiplier))
     local totalBuildPower = 0
     for _, e in engineers do
         if not e.Dead then
@@ -9373,11 +9373,11 @@ function GetBuilldRateOfEngineers(aiBrain, engineers)
             if not unitCats.INSIGNIFICANTUNIT then
                 -- Sum actual build rate (handles T1, T2, T3, and SCUs naturally)
                 local buildRate = e.Blueprint.Economy.BuildRate or 1
-                LOG('Build rate of engineer is '..tostring(buildRate)..' unit id is '..tostring(e.UnitId))
+                --LOG('Build rate of engineer is '..tostring(buildRate)..' unit id is '..tostring(e.UnitId))
                 totalBuildPower = totalBuildPower + (buildRate * buildMultiplier)
             end
         end
     end
-    LOG('Returning totalBuildPower for engineer group is '..tostring(totalBuildPower))
+    --LOG('Returning totalBuildPower for engineer group is '..tostring(totalBuildPower))
     return totalBuildPower
 end

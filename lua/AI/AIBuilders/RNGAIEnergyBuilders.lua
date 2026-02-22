@@ -64,7 +64,7 @@ BuilderGroup {
         }
     },
     Builder {
-        BuilderName = 'RNGAI T1Engineer Pgen Trend Instant',
+        BuilderName = 'RNGAI T1 Power Engineer Negative Trend',
         PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 1050,
         InstanceCount = 1,
