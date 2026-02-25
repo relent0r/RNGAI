@@ -971,7 +971,7 @@ GuardThread = function(aiBrain, platoon)
         local platoonUnits = platoon:GetPlatoonUnits()
         local intelCoverage = true
         if guardUnits then
-            if IsDestroyed(experimental) or platoon.VentGuardPlatoon then
+            if (IsDestroyed(experimental) or platoon.VentGuardPlatoon ) and not table.empty(guardUnits) then
                 --LOG('Guardplatoon is being disbanded')
                 --LOG('Current Guard units '..repr(guardUnits))
                 -- Return Home
@@ -979,7 +979,10 @@ GuardThread = function(aiBrain, platoon)
                 local plat = aiBrain:MakePlatoon('', '')
                 aiBrain:AssignUnitsToPlatoon(plat, guardUnits, 'attack', 'None')
                 import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ {ZoneType = 'control'}, LocationType = platoon.LocationType}, plat, guardUnits)
-                return
+                if IsDestroyed(experimental) then
+                    return
+                end
+                coroutine.yield(10)
             end
             local experimentalPos = experimental:GetPosition()
             local gridXID, gridZID = im:GetIntelGrid(experimentalPos)

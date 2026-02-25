@@ -662,6 +662,7 @@ EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
         end
         coroutine.yield(30)
     end
+    IssueClearCommands({eng})
     eng.UnitBeingAssist = nil
     eng['rngdata'].IsAssistAssigned = nil
 end
