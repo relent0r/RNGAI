@@ -280,6 +280,20 @@ BuilderGroup {
         },
     },
     Builder {
+        BuilderName = 'RNGAI T3 Tank Demand',
+        PlatoonTemplate = 'T3LandBot',
+        Priority = 757,
+        BuilderConditions = {
+            { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T3', 'tank'} },
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
+        },
+        BuilderType = 'Land',
+        BuilderData = {
+            TechLevel = 3
+        },
+    },
+    Builder {
         BuilderName = 'RNGAI T3 Armoured',
         PlatoonTemplate = 'T3ArmoredAssault',
         Priority = 755,

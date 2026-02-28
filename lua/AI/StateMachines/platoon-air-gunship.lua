@@ -89,6 +89,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                         platoonHealth = platoonHealth + unit:GetHealth()
                     end
                 end
+                --LOG(string.format('GS Decision: Threat %s, PThreat %s, Dist %s, Health %s', self.CurrentEnemyAirThreat, self.CurrentPlatoonThreatAntiAir, homeDist, (platoonHealth or 'nil')))
                 local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.MOBILE + categories.STRUCTURE) * categories.ANTIAIR, platPos, 75, 'Enemy')
                 local totalEnemyAntiAirHealth = 0
                 local totalEnemyAntiAirThreat = 0
@@ -109,6 +110,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 --LOG(string.format('Gunship Total enemy health multiplier: '..tostring(totalEnemyAntiAirHealth * 1.3)))
                 --LOG(string.format('Gunship Total enemy threat: '..tostring(totalEnemyAntiAirThreat)))
                 if totalEnemyAntiAirHealth * 1.3 < platoonHealth and totalEnemyAntiAirThreat < (platoonHealth / 45) then
+                    --LOG('Gunship ignoring threat and attacking new target')
                     if newTarget then
                         self.BuilderData = {
                             AttackTarget = newTarget,
@@ -118,6 +120,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                 else
+                    --LOG('Gunship retreating')
                     self:ChangeState(self.Retreating)
                     return
                 end
@@ -677,10 +680,11 @@ GunshipThreatThreads = function(aiBrain, platoon)
         platoon.Pos = platoon:GetPlatoonPosition()
         if not platoon.BuilderData.Retreat and not aiBrain.BrainIntel.SuicideModeActive then
             local enemyAntiAirThreat = aiBrain:GetThreatsAroundPosition(platoon.Pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+            --LOG('Gunship threat around position '..tostring(enemyAntiAirThreat))
             for _, v in enemyAntiAirThreat do
                 if v[3] > 0 and VDist3Sq({v[1],0,v[2]}, platoon.Pos) < 10000 then
                     platoon.CurrentEnemyAirThreat = v[3]
-                    --platoon:LogDebug(string.format('Gunship DecideWhatToDo triggered due to threat'))
+                    --LOG('Threat has triggered decision state')
                     platoon:ChangeState(platoon.DecideWhatToDo)
                 end
             end
@@ -692,15 +696,24 @@ GunshipThreatThreads = function(aiBrain, platoon)
                 if not unit.Dead then
                     local fuel = unit:GetFuelRatio()
                     local health = unit:GetHealthPercent()
+                    --LOG(string.format('GS Thread: UnitHealth %s, Fuel %s, AirStagingReq %s', health, fuel, tostring(aiBrain.BrainIntel.AirStagingRequired)))
                     if not unit.Loading and ((fuel > -1 and fuel < 0.3) or health < 0.5) then
                         --LOG('Gunship needs refuel')
                         if not aiBrain.BrainIntel.AirStagingRequired and aiBrain:GetCurrentUnits(categories.AIRSTAGINGPLATFORM) < 1 then
                             aiBrain.BrainIntel.AirStagingRequired = true
-                        elseif not aiBrain.BrainIntel.AirStagingRequired and not platoon.BuilderData.AttackTarget or platoon.BuilderData.AttackTarget.Dead then
+                        elseif not aiBrain.BrainIntel.AirStagingRequired then
+                            local needsRefuel
+                            if platoon.BuilderData.AttackTarget and not platoon.BuilderData.AttackTarget.Dead then
+                                local targetHPRatio = (platoon.BuilderData.AttackTarget and not platoon.BuilderData.AttackTarget.Dead) and platoon.BuilderData.AttackTarget:GetHealthPercent() or 1
+                                local dynamicHealthLimit = 0.2 + (targetHPRatio * 0.3) -- Threshold scales from 0.2 (target dying) to 0.5 (target healthy)
+                                needsRefuel = health < dynamicHealthLimit
+                            end
+                            if not platoon.BuilderData.AttackTarget or platoon.BuilderData.AttackTarget.Dead or needsRefuel or (fuel > -1 and fuel < 0.1) then 
                             --platoon:LogDebug(string.format('Gunship is low on fuel or health and is going to refuel'))
-                            local plat = aiBrain:MakePlatoon('', '')
-                            aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
-                            import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Gunship', LocationType = platoon.LocationType}, plat, {unit})
+                                local plat = aiBrain:MakePlatoon('', '')
+                                aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'attack', 'None')
+                                import("/mods/rngai/lua/ai/statemachines/platoon-air-refuel.lua").AssignToUnitsMachine({ StateMachine = 'Gunship', LocationType = platoon.LocationType}, plat, {unit})
+                            end
                         end
                     end
                     if unit['rngdata'].ApproxDPS then

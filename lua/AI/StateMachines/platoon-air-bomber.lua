@@ -274,29 +274,6 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if not target and VDist3Sq(platPos, self.Home) > 900 then
-                self.BuilderData = {
-                    Position = self.Home
-                }
-                --LOG('Bomber has not target and is navigating back home')
-                ----self:LogDebug(string.format('Bomber has no target and is navigating back home'))
-                self:ChangeState(self.Navigating)
-                return
-            end
-            if not target and VDist3Sq(platPos, self.Home) < 900 then
-                ----self:LogDebug(string.format('trying to merge with another platoon'))
-                if self.PlatoonCount < 10 then
-                    local plat = StateUtils.GetClosestPlatoonRNG(self, 'BomberBehavior', false, 60)
-                    if plat and plat.PlatoonCount and plat.PlatoonCount < 10 then
-                        ----self:LogDebug(string.format('Bomber platoon is merging with another'))
-                        local platUnits = plat:GetPlatoonUnits()
-                        aiBrain:AssignUnitsToPlatoon(self, platUnits, 'Attack', 'None')
-                        import("/mods/rngai/lua/ai/statemachines/platoon-air-bomber.lua").AssignToUnitsMachine({ }, plat, platUnits)
-                        ----self:LogDebug(string.format('Merged'))
-                    end
-                end
-            end
-
             if not target and self.PlatoonData.Defensive and not self.retreat then
                 --LOG('Defensive bomber looking for enemy units in adjacent zones')
                 local baseRadius
@@ -312,6 +289,29 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                     local potentialTargetZone = StateUtils.SearchTargetFromZone(aiBrain, basePos, 'land', 'antiair')
                     if potentialTargetZone then
                         target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, potentialTargetZone.pos, self, 'Attack', 120, {categories.STRUCTURE - categories.WALL +  categories.MOBILE * (categories.LAND + categories.AMPHIBIOUS)}, false, self.CurrentPlatoonThreatAntiSurface)
+                    end
+                end
+            end
+            local homeDist = VDist3Sq(platPos, self.Home)
+            if not target and homeDist and homeDist > 900 then
+                self.BuilderData = {
+                    Position = self.Home
+                }
+                --LOG('Bomber has not target and is navigating back home')
+                ----self:LogDebug(string.format('Bomber has no target and is navigating back home'))
+                self:ChangeState(self.Navigating)
+                return
+            end
+            if not target and homeDist < 900 then
+                ----self:LogDebug(string.format('trying to merge with another platoon'))
+                if self.PlatoonCount < 10 then
+                    local plat = StateUtils.GetClosestPlatoonRNG(self, 'BomberBehavior', false, 60)
+                    if plat and plat.PlatoonCount and plat.PlatoonCount < 10 then
+                        ----self:LogDebug(string.format('Bomber platoon is merging with another'))
+                        local platUnits = plat:GetPlatoonUnits()
+                        aiBrain:AssignUnitsToPlatoon(self, platUnits, 'Attack', 'None')
+                        import("/mods/rngai/lua/ai/statemachines/platoon-air-bomber.lua").AssignToUnitsMachine({ }, plat, platUnits)
+                        ----self:LogDebug(string.format('Merged'))
                     end
                 end
             end

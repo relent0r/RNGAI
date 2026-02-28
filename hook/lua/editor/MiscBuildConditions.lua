@@ -253,13 +253,6 @@ function MassPointRatioAvailable(aiBrain)
     return false
 end
 
-function StartReclaimGreaterThan(aiBrain, value)
-    if aiBrain.StartReclaimCurrent > value then
-        return true 
-    end
-    return false
-end
-
 function ReclaimPlatoonsActive(aiBrain, numPlatoon)
     --RNGLOG('Number of reclaim platoons '..aiBrain:GetNumPlatoonsTemplateNamed('EngineerReclaimStateT1RNG'))
     if aiBrain.ReclaimEnabled then

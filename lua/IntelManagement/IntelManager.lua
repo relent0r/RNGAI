@@ -118,6 +118,7 @@ IntelManager = Class {
             T3BomberRushActivated = false,
             EnemyAirSnipeThreat = false,
             EarlyT2AmphibBuilt = false,
+            EarlyT3Built = false,
             RangedAssaultPositions = {}
         }
         self.UnitStats = {
@@ -479,7 +480,6 @@ IntelManager = Class {
 
     Run = function(self)
         --LOG('RNGAI : IntelManager Starting')
-        --self:ForkThread(self.ZoneEnemyIntelMonitorRNG)
         self:ForkThread(self.ZoneAlertThreadRNG)
         self:ForkThread(self.ZoneFriendlyIntelMonitorRNG)
         self:ForkThread(self.ConfigureResourcePointZoneID)
@@ -1683,35 +1683,6 @@ IntelManager = Class {
                 aiBrain.BrainIntel.PlayerZoneControl = 0
             end
             coroutine.yield(40)
-        end
-    end,
-
-    ZoneEnemyIntelMonitorRNG = function(self)
-        -- This is currently disabled as we have migrated to the IntelGridThreatThread thread.
-        local Zones = {
-            'Land',
-            'Naval'
-        }
-        self:WaitForZoneInitialization()
-        coroutine.yield(Random(5,20))
-        local aiBrain = self.Brain
-        while aiBrain.Status ~= "Defeat" do
-            for k, v in Zones do
-                for k1, v1 in aiBrain.Zones[v].zones do
-                    v1.enemylandthreat = GetThreatAtPosition(aiBrain, v1.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Land')
-                    v1.enemyantisurfacethreat = GetThreatAtPosition(aiBrain, v1.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
-                    v1.enemyantiairthreat = GetThreatAtPosition(aiBrain, v1.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
-                    v1.enemyairthreat = GetThreatAtPosition(aiBrain, v1.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Air')
-                    v1.enemystructurethreat = GetThreatAtPosition(aiBrain, v1.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'StructuresNotMex')
-                    v1.status = aiBrain.GridPresence:GetInferredStatus(v1.pos)
-                    coroutine.yield(1)
-                end
-                if v == 'Land' then
-                    self:AssignThreatToFactories(aiBrain.Zones[v].zones, v)
-                end
-                coroutine.yield(2)
-            end
-            coroutine.yield(5)
         end
     end,
 
@@ -3642,6 +3613,17 @@ IntelManager = Class {
                     aiBrain.amanager.Demand.Land.T4.experimentalland = aiBrain.amanager.Current['Land']['T4']['experimentalland'] + 1
                     disableExperimentalLand = false
                 end
+                if not self.StrategyFlags.EarlyT3Built then
+                    local t3DirectBuilt = aiBrain:GetBlueprintStat("Units_History", categories.DIRECTFIRE * categories.LAND * categories.TECH3)
+                    LOG('Early t3 strategy flag is live, build some t3 bots, current built is '..tostring(t3DirectBuilt))
+                    if t3DirectBuilt < 3 then
+                        aiBrain.amanager.Demand.Land.T3.tank = 3
+                    else
+                        LOG('T3 production is met, disable build')
+                        self.StrategyFlags.EarlyT3Built = true
+                        aiBrain.amanager.Demand.Land.T3.tank = 0
+                    end
+                end
             end
             if disableRangedBot and aiBrain.amanager.Current['Land']['T2']['bot'] > 0 then
                 aiBrain.amanager.Demand.Land.T2.bot = 0
@@ -4728,6 +4710,7 @@ IntelManager = Class {
         local aiStartPos = aiBrain.BrainIntel.StartPos
         local distancePropagationCap = 1500
         local enemyStartPos
+        local labelStats = {}
         if aiBrain:GetCurrentEnemy() then
             local enemyX, enemyZ = aiBrain:GetCurrentEnemy():GetArmyStartPos()
             -- if we don't have an enemy position then we can't search for a path. Return until we have an enemy position
@@ -4743,6 +4726,40 @@ IntelManager = Class {
             local friendlyThreatLevel
             local status = tData.status
             local teamValue = tData.teamvalue or 1
+            local label = tData.label
+            if label then
+                labelStats[label] = labelStats[label] or { totalValue = 0, selfCapturedValue = 0, gravity = 0 }
+                local rzValue = tData.resourcevalue or 0
+                labelStats[label].totalValue = labelStats[label].totalValue + rzValue
+
+                -- FACTUAL DATA: Use income instead of inferred status
+                local selfIncome = tData.zoneincome.selfincome or 0
+                local allyIncome = tData.zoneincome.allyincome or 0
+                local enemyIncome = tData.zoneincome.enemyincome or 0
+
+                if selfIncome > 0 then
+                    -- Factual Saturation: We own and are extracting from this zone
+                    labelStats[label].selfCapturedValue = labelStats[label].selfCapturedValue + rzValue
+                else
+                    -- Factual Opportunity: This zone is not paying US. Calculate the "Pull"
+                    local riskWeight = 1.0 + (zonePathSecurity[tID] or 0)
+                    
+                    -- Multipliers to prevent inefficient diversion:
+                    -- 1. Ally Presence: If an ally has it, significantly lower the pull (don't steal)
+                    local allyDampener = (allyIncome > 0) and 0.2 or 1.0
+                    
+                    -- 2. Enemy Presence: If an enemy has a mex, increase gravity (denial target)
+                    local enemyIncentive = (enemyIncome > 0) and 1.5 or 1.0
+
+                    -- 3. Security Depth (derived from target zone relative to frontline)
+                    local targetDepth = zoneSecurityDepth[tID] or 0
+                    local depthMult = (targetDepth == 0) and 2.0 or (1.0 / math.max(targetDepth, 1))
+
+                    local adjustedGravity = rzValue * riskWeight * allyDampener * enemyIncentive * depthMult
+                    labelStats[label].gravity = labelStats[label].gravity + adjustedGravity
+                end
+            end
+
             --LOG('Zone Distance to AI start position '..VDist3(aiStartPos,tData.pos))
             --LOG('Current status of zone '..tostring(status))
             --LOG('Zone Distance to enemy start position '..VDist3(enemyStartPos,tData.pos))
@@ -4825,28 +4842,54 @@ IntelManager = Class {
         for _, pZone in ipairs(productionZones) do
             local fmgr = pZone.BuilderManager.FactoryManager
             local pID = pZone.id
-            
-            -- Apply the security metrics we got from ComputeContainmentState
+            local label = pZone.label
+            local stats = labelStats[label]
+
+            -- 1. These are defined first
             fmgr.SecurityDepth = zoneSecurityDepth[pID] or 0
             fmgr.PathSecurity = zonePathSecurity[pID] or 1.0
-            
-            -- Tone Down Logic
-            if fmgr.PathSecurity > 2.0 and fmgr.SecurityDepth >= 2 then
-                -- Check if the island is actually safe before dampening
-                local islandEnemy = localIslandEnemyThreat[pZone.label] or 0
-                -- Placeholder: Your variable for friendly threat on labels
-                
-                local islandFriendly = aiBrain.GraphZones[pZone.label] or 0 
-                local appliedDampening = false
-    
-                if not (islandFriendly > 0 and islandEnemy > (islandFriendly * 1.25)) then
-                    fmgr.ZoneThreatAssignment = fmgr.ZoneThreatAssignment * 0.2
-                    appliedDampening = true
-                end
-                --LOG(string.format("RNGAI: Factory %s | Depth: %d | PathSec: %.2f | IsldEnemy: %.1f | Dampened: %s | FinalThreat: %.1f", 
-                --pZone.label or "None", fmgr.SecurityDepth, fmgr.PathSecurity, islandEnemy, tostring(appliedDampening), fmgr.ZoneThreatAssignment))
+
+            if stats and stats.totalValue > 0 then
+                fmgr.SaturationRatio = stats.selfCapturedValue / stats.totalValue
+                fmgr.EconomicGravity = stats.gravity
+            else
+                fmgr.EconomicGravity = 0
+                fmgr.SaturationRatio = 1
             end
 
+            -- 2. POLICY CALCULATION (Injected here so variables exist)
+            local modifier = 1.0
+            -- Using your verified BrainIntel values
+            local techLevel = aiBrain.BrainIntel.LandPhase or 1
+            local techBoost = 1.0 + (techLevel * 0.2)
+            
+            if fmgr.SaturationRatio < 0.85 then
+                -- Identify "Desperate Expansion" state
+                local isExpanding = (fmgr.SaturationRatio < 0.4 and fmgr.EconomicGravity > 50)
+                local boostBase = isExpanding and 1.8 or 1.4
+                
+                local massIncome = aiBrain.cmanager.income.r.m
+                local incomeMult = math.min(massIncome / 20, 1.0)
+                if isExpanding then incomeMult = 1.0 end
+                
+                -- modifier = (Base * Tech) + SaturationNeed + PathRisk
+                modifier = (boostBase * techBoost) + ((1.0 - fmgr.SaturationRatio) * incomeMult) + (math.min(fmgr.PathSecurity, 2.0) * 0.2)
+                fmgr.NoStoragePriority = (fmgr.EconomicGravity > 10 and fmgr.SecurityDepth < 3) or isExpanding
+            
+            elseif fmgr.SaturationRatio >= 0.85 and fmgr.SecurityDepth >= 2 and fmgr.PathSecurity < 1.5 then
+                modifier = 0.5
+                fmgr.NoStoragePriority = false
+            end
+
+            fmgr.ProductionModifier = modifier
+
+            LOG(string.format("OBTP Manager %s | Saturation: %.2f | Gravity: %.2f | Modifier: %.2f", 
+                  tostring(fmgr.LocationType), fmgr.SaturationRatio, fmgr.EconomicGravity, fmgr.ProductionModifier))
+
+            -- 3. Your existing Tone Down Logic
+            if fmgr.PathSecurity > 2.0 and fmgr.SecurityDepth >= 2 then
+                -- ... rest of your code ...
+            end
         end
         --[[
         for k, v in aiBrain.BuilderManagers do
@@ -4895,12 +4938,14 @@ IntelManager = Class {
             local nextFrontier = {}
     
             for zoneId, _ in pairs(frontier) do
+                --local currentHopCount = zoneSecurityDepth[zoneId] or 0
                 local zone = zoneLayerSet[zoneId]
                 local currentHops = zoneSecurityDepth[zoneId]
                 for _, neighbor in ipairs(zone.edges or {}) do
                     local edgeId = neighbor.zone.id
                     if not visited[edgeId] then
                         local neighborZone = neighbor.zone
+                        --LOG(string.format("RNGAI_DEBUG: BFS Hop %d | Zone %s -> Neighbor %s | Status: %s", currentHopCount, tostring(zoneId), tostring(edgeId), tostring(neighborZone.status)))
                         if zone.label == neighborZone.label then
                             local fThreat = neighborZone.friendlydirectfireantisurfacethreat or 0
                             local eThreat = neighborZone.gridenemylandthreat or 0

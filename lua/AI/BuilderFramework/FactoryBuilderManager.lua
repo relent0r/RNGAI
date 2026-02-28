@@ -969,11 +969,6 @@ FactoryBuilderManager = Class(BuilderManager) {
                         table.insert(queue, 'T1BuildEngineer')
                         table.insert(queue, 'T1LandScout')
                     end
-                    if self.Brain.StartReclaimCurrent > 500 then
-                        for i=1, 2 do
-                            table.insert(queue, 'T1BuildEngineer')
-                        end
-                    end
                 else
                     for i=1, 3 do
                         table.insert(queue, 'T1BuildEngineer')

@@ -118,11 +118,11 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             aiBrain.EngineerAssistManagerBuildPowerTech1 = self.TotalTechBuildRate[1]
             aiBrain.EngineerAssistManagerBuildPowerTech2 = self.TotalTechBuildRate[2]
             aiBrain.EngineerAssistManagerBuildPowerTech3 = self.TotalTechBuildRate[3]
-            LOG('Updated roster')
-            LOG('TotalTechBuildRate[1] '..tostring(self.TotalTechBuildRate[1]))
-            LOG('TotalTechBuildRate[2] '..tostring(self.TotalTechBuildRate[2]))
-            LOG('TotalTechBuildRate[3] '..tostring(self.TotalTechBuildRate[3]))
-            LOG('TotalBuildRate '..tostring(self.TotalBuildRate))
+            --LOG('Updated roster')
+            --LOG('TotalTechBuildRate[1] '..tostring(self.TotalTechBuildRate[1]))
+            --LOG('TotalTechBuildRate[2] '..tostring(self.TotalTechBuildRate[2]))
+            --LOG('TotalTechBuildRate[3] '..tostring(self.TotalTechBuildRate[3]))
+            --LOG('TotalBuildRate '..tostring(self.TotalBuildRate))
             if self.TotalBuildRate == 0 then
                 self:ChangeState(self.Wait)
                 return
@@ -406,7 +406,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 if bestUnit and not IsDestroyed(bestUnit) then
-                    LOG('Best unit found '..tostring(bestUnit.UnitId))
+                    --LOG('Best unit found '..tostring(bestUnit.UnitId))
                     assistFound = true
 
                     local lookupKey = assistData.bpKey or 'None'
@@ -420,7 +420,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                         --LOG('Unit has a max bp, current allocated is '..tostring(currentBuildPower))
                         currentCommitted= currentCommitted + currentBuildPower
                     end
-                    LOG('Available engineer count is '..tostring(RNGGETN(available)))
+                    --LOG('Available engineer count is '..tostring(RNGGETN(available)))
 
                     for i = RNGGETN(available), 1, -1 do
                         local eng = available[i]
@@ -444,7 +444,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                 else
-                    LOG('No best unit found')
+                    LOG('No best unit found for reclaim manager')
                 end
             end
 

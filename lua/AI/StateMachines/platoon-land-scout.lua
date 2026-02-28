@@ -923,7 +923,7 @@ LandScoutThreatThread = function(aiBrain, platoon)
                         break
                     elseif platoon.StateName == 'Retreating' and not v.Dead then
                         local enemyUnitRange = v['rngdata'].MaxWeaponRange or 20
-                        local threatDistance = math.max(0, enemyDistance - enemyUnitRange)
+                        local threatDistance = math.max(0, enemyDistance - (enemyUnitRange * enemyUnitRange))
                         local oldEnemy = platoon.BuilderData.RetreatFrom
                         if oldEnemy and not IsDestroyed(oldEnemy) then
                             local oldEnemyPos = oldEnemy:GetPosition()

@@ -5839,6 +5839,17 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                                         end
                                     end
                                 end
+                            elseif platoon.PlatoonName == 'GunshipBehavior' then
+                                local isPureFighter = unitCats.AIR and unitCats.ANTIAIR and not unitCats.GROUNDATTACK
+                                if not unitCats.SCOUT and not isPureFighter and (not strategicBomber or (not unitCats.TECH1 or unitCats.COMMAND)) then
+                                    local targetDistance = VDist3Sq(v.Position, homeLocation)
+                                    local tempPoint = (v.priority + (v.danger or 0)) / RNGMAX(targetDistance, 900)
+                                    
+                                    if tempPoint > highestPriority and highestPriority >= 250 then
+                                        highestPriority = tempPoint
+                                        closestTarget = v.unit
+                                    end
+                                end
                             else
                                 if not unitCats.SCOUT and (not strategicBomber or (not unitCats.TECH1 or unitCats.COMMAND)) and not (v.type == 'gunship' or v.type == 'bomber') then
                                     local priorityModifier = 1
@@ -5850,8 +5861,8 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                                         local landZone = aiBrain.Zones.Land.zones[zoneId]
                                         if landZone then
                                             enemyThreat = enemyThreat + landZone.enemylandthreat
-                                            for _, v in landZone.edges do
-                                                enemyThreat = enemyThreat + v.zone.enemylandthreat
+                                            for _, e in landZone.edges do
+                                                enemyThreat = enemyThreat + e.zone.enemylandthreat
                                             end
                                             if landZone.friendlydirectfireantisurfacethreat > enemyThreat * 1.5 then
                                                 priorityModifier = 0.5
@@ -5911,6 +5922,13 @@ CheckPriorityTarget = function(aiBrain, im, platoon, threatType, threatAmount, p
             if airOnly then
                 local unitCats = v.unit.Blueprint.CategoriesHash
                 if not unitCats.AIR then
+                    validated = false
+                end
+            end
+            if platoon.PlatoonName == 'GunshipBehavior' then
+                local unitCats = v.unit.Blueprint.CategoriesHash
+                -- Exclude pure fighters (Air + AntiAir - GroundAttack)
+                if unitCats.AIR and unitCats.ANTIAIR and not unitCats.GROUNDATTACK then
                     validated = false
                 end
             end

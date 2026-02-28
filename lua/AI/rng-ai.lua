@@ -84,7 +84,8 @@ AIBrain = Class(RNGAIBrainClass) {
         --import("/lua/sim/MarkerUtilities.lua").GenerateRallyPointMarkers()
 
         -- requires these datastructures to understand the game
-        
+        -- disabled my own gridreclaim for now as the default prop class seems to only target the normal gridreclaim instance.
+        --self.GridReclaim = import("/mods/RNGAI/lua/AI/GridReclaimRNG.lua").Setup(self) 
         self.GridReclaim = import("/lua/ai/gridreclaim.lua").Setup(self)
         self.GridBrain = import("/lua/ai/gridbrain.lua").Setup()
         self.GridDeposits = import("/lua/ai/griddeposits.lua").Setup()
@@ -1823,7 +1824,6 @@ AIBrain = Class(RNGAIBrainClass) {
         -- Table to holding the starting reclaim
         self.StartReclaimTable = {}
         self.StartMassReclaimTotal = 0
-        self.StartReclaimCurrent = 0
         self.StartReclaimTaken = false
         self.Zones = { }
 
@@ -5725,7 +5725,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             if self.EngineerAssistManagerMinAssistPower and self.EngineerAssistManagerMinAssistPower > 0 then
-                local phaseWeight = 6.25 - (1.25 * self.BrainIntel.HighestPhase)
+                local phaseWeight = 6.25 - (1.2 * self.BrainIntel.HighestPhase)
                 local approxAssistConsumption = self.EngineerAssistManagerMinAssistPower * (phaseWeight * self.EcoManager.BuildMultiplier)
 
                 LOG('approxAssistConsumption is '..tostring(approxAssistConsumption))

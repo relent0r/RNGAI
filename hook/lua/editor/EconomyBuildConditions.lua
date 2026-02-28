@@ -522,56 +522,46 @@ function LessThanEconIncomeOverTimeRNG(aiBrain, massIncome, energyIncome)
     return false
 end
 
-function FactorySpendRatioRNG(aiBrain,LocationType, uType,upgradeType, noStorageCheck, demandBuilder)
-    local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
-    local currentFactorySpend = aiBrain.cmanager.categoryspend.fact[uType] - aiBrain.cmanager.categoryspend.fact[upgradeType]
-    local productionRatio = demandBuilder and math.max(aiBrain.ProductionRatios[uType], aiBrain.DefaultProductionRatios[uType]) or aiBrain.ProductionRatios[uType]
+function FactorySpendRatioRNG(aiBrain, LocationType, uType, upgradeType, noStorageCheck, demandBuilder)
     local fmgr = aiBrain.BuilderManagers[LocationType].FactoryManager
-    if not demandBuilder then
-        if fmgr.ZoneThreatAssignment then
-            local zoneThreat = fmgr.ZoneThreatAssignment
-            if uType == 'Land' then
-                local minThreatForFullProduction = 10.0
-                local highSecurityMultiplier = 0.4
-                local isSpamPlayer = aiBrain.BrainIntel.PlayerRole.SpamPlayer
-                if zoneThreat > 0 then
-                    if zoneThreat < minThreatForFullProduction then
-                        local minFactor = isSpamPlayer and 0.5 or 0.1
-                        local threatFactor = math.max(minFactor, math.min(zoneThreat / minThreatForFullProduction, 1.0))
-                        productionRatio = productionRatio * threatFactor
-                    end
-                else
-                    if not isSpamPlayer then
-                        if (fmgr.SecurityDepth or 0) >= 2 and (fmgr.PathSecurity or 0) > 2.0 then
-                            productionRatio = productionRatio * highSecurityMultiplier
-                            --LOG(string.format("RNGAI Spend: %s %s - Secure Rear Base, applying HighSecurityMultiplier", LocationType, uType))
-                        end
-                    end
-                end
-            end
-        end
+    local cman = aiBrain.cmanager
+    
+    local productionRatio = demandBuilder and math.max(aiBrain.ProductionRatios[uType], aiBrain.DefaultProductionRatios[uType]) or aiBrain.ProductionRatios[uType]
+    
+    -- Single point of entry for the OBTP Policy
+    if not demandBuilder and fmgr.ProductionModifier then
+        productionRatio = productionRatio * fmgr.ProductionModifier
     end
-    local currentRatio = currentFactorySpend / (aiBrain.cmanager.income.r.m - (mexSpend * 0.5))
-    local triggerProduction = currentRatio < productionRatio
-    if triggerProduction then
-        if aiBrain.EnemyIntel.ChokeFlag and uType == 'Land' then 
-            if (GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.10 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.95) then
-                return true
+
+    local mexSpend = (cman.categoryspend.mex.T1 + cman.categoryspend.mex.T2 + cman.categoryspend.mex.T3) or 0
+    local factorySpend = cman.categoryspend.fact[uType] - cman.categoryspend.fact[upgradeType]
+    local availableIncome = cman.income.r.m - (mexSpend * 0.5)
+    
+    local currentRatio = factorySpend / math.max(availableIncome, 0.1)
+    
+    if fmgr.ProductionModifier and fmgr.ProductionModifier ~= 1.0 then
+        RNGLOG(string.format("OBTP_EXEC | %s %s | Mod: %.2f | Target: %.2f | Current: %.2f | NeedUnits: %s", 
+            tostring(LocationType), tostring(uType), fmgr.ProductionModifier, productionRatio, currentRatio, tostring(currentRatio < productionRatio)))
+    end
+
+    if currentRatio < productionRatio then
+        -- Priority flag set in the Intel Manager loop
+        if noStorageCheck or fmgr.NoStoragePriority then return true end
+
+        -- Standard Storage Table
+        local mStored = GetEconomyStored(aiBrain, 'MASS')
+        local eStored = GetEconomyStored(aiBrain, 'ENERGY')
+        
+        if uType == 'Land' then
+            if aiBrain.BrainIntel.PlayerRole.SpamPlayer then return true end
+            if aiBrain.EnemyIntel.ChokeFlag then
+                return GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.10 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.95
             end
-        elseif noStorageCheck then
-            return true
+            return mStored >= 5 and eStored >= 100
         elseif uType == 'Air' then
-            if (GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 1000) then
-                return true
-            end
-        elseif uType == 'Land' then
-            if GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 100 or aiBrain.BrainIntel.PlayerRole.SpamPlayer then
-                return true
-            end
+            return mStored >= 5 and eStored >= 1000
         else
-            if GetEconomyStored(aiBrain, 'MASS') >= 5 and GetEconomyStored(aiBrain, 'ENERGY') >= 500 then
-                return true
-            end
+            return mStored >= 5 and eStored >= 500
         end
     end
     return false
