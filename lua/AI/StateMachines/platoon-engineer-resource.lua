@@ -68,7 +68,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     local zx = engPos[1] - v.pos[1]
                     local zz = engPos[3] - v.pos[3]
                     if zx * zx + zz * zz < maxMarkerDistance then
-                        table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                        table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id, AmphibLabel = v.amphiblabel })
                     end
                 end
             end
@@ -78,9 +78,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     local zx = engPos[1] - v.pos[1]
                     local zz = engPos[3] - v.pos[3]
                     if zx * zx + zz * zz < maxMarkerDistance then
-                        table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                        table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id, AmphibLabel = v.amphiblabel })
                     end
-                    table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
                 end
             end
             self.ZoneMarkers = zoneMarkers
@@ -100,8 +99,10 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
+
             local aiBrain = self:GetBrain()
             local eng = self.eng
+            local noTransportsAvailable = not aiBrain.TransportPool or table.getn(aiBrain.TransportPool) < 1
             self.LastActive = GetGameTimeSeconds()
             -- how should we handle multiple engineers?
             local unit = self:GetPlatoonUnits()[1]
@@ -112,6 +113,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local whatToBuild = blueprints[1]
             self.ExtractorBuildID = whatToBuild
             local platoonPos = self:GetPlatoonPosition()
+            local engLabel = NavUtils.GetLabel('Amphibious', platoonPos) or 0
             local enemyPos
             if aiBrain:GetCurrentEnemy() then
                 local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
@@ -123,18 +125,32 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             maxMarkerDistance = maxMarkerDistance * maxMarkerDistance
 
             eng.EngineerBuildQueue = {}
+            local transportRequired = false
             local enemyWeight = 1.5
+            local transportPenaltySq = 12996
             table.sort(self.ZoneMarkers, function(a, b)
+                local aIsTrapped = (engLabel and noTransportsAvailable and a.AmphibLabel ~= engLabel)
+                local bIsTrapped = (engLabel and noTransportsAvailable and b.AmphibLabel ~= engLabel)
+              
+                -- Update our 'look-ahead' flag
+                if aIsTrapped or bIsTrapped then
+                    transportRequired = true
+                end
                 local aDistanceToPlatoon = VDist2Sq(a.Position[1], a.Position[3], platoonPos[1], platoonPos[3])
+                if aIsTrapped then aDistanceToPlatoon = aDistanceToPlatoon + transportPenaltySq end
                 local aDistanceToEnemy = VDist2Sq(enemyPos[1], enemyPos[3], a.Position[1], a.Position[3]) * enemyWeight
-                local aValue = aDistanceToPlatoon / aDistanceToEnemy / a.ResourceValue / a.ResourceValue
+                local aValue = aDistanceToPlatoon / aDistanceToEnemy / a.ResourceValue / a.ResourceValue 
             
                 local bDistanceToPlatoon = VDist2Sq(b.Position[1], b.Position[3], platoonPos[1], platoonPos[3])
+                if bIsTrapped then bDistanceToPlatoon = bDistanceToPlatoon + transportPenaltySq end
                 local bDistanceToEnemy = VDist2Sq(enemyPos[1], enemyPos[3], b.Position[1], b.Position[3]) * enemyWeight
                 local bValue = bDistanceToPlatoon / bDistanceToEnemy / b.ResourceValue / b.ResourceValue
             
                 return aValue < bValue
             end)
+            if noTransportsAvailable and transportRequired then
+                aiBrain.TransportRequested = true 
+            end
             local currentmarker=nil
             self.CurentZoneIndex=nil
             self.CurrentMarkerIndex=nil

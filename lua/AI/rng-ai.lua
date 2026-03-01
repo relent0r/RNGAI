@@ -7541,6 +7541,7 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('Current Trend '..tostring(self:GetEconomyTrend('MASS')))
             LOG('Current Bias '..tostring(repr(currentBias)))
             ]]
+
         end
     end,
 
