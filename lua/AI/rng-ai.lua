@@ -7499,11 +7499,35 @@ AIBrain = Class(RNGAIBrainClass) {
             local ecoHealthMultiplier = math.max(0.3, math.min(1.5, ecoHealthMultiplier))
             engineerAssistRatio = engineerAssistRatio * ecoHealthMultiplier
 
+            local totalModifier, activeBases = 0, 0
+            for k, v in self.BuilderManagers do if v.FactoryManager.LocationActive then totalModifier = totalModifier + (v.FactoryManager.ProductionModifier or 1.0); activeBases = activeBases + 1 end end
+            RNGLOG(string.format("OBTP_ALLOC_AUDIT | GlobalLandRatio: %.2f | ActiveBases: %d | TotalModSum: %.2f", self.ProductionRatios.Land, activeBases, totalModifier))
+
             -- Assign the final production ratios
             self.ProductionRatios.Land = newLandRatio
             self.ProductionRatios.Air = newAirRatio
             self.ProductionRatios.Naval = newNavalRatio
             self.EngineerAssistRatio = engineerAssistRatio
+
+            local totalWeightedNeed = 0
+            for _, v in self.BuilderManagers do
+                local fmgr = v.FactoryManager
+                if fmgr.LocationActive and (fmgr.LandBuildRate or 0) > 0 then
+                    totalWeightedNeed = totalWeightedNeed + (fmgr.LandBuildRate * (fmgr.ProductionModifier or 1.0))
+                end
+            end
+
+            -- 2. Distribute the Global Land Ratio across all active bases
+            for _, v in self.BuilderManagers do
+                local fmgr = v.FactoryManager
+                if fmgr.LocationActive and totalWeightedNeed > 0 then
+                    local myWeight = (fmgr.LandBuildRate * (fmgr.ProductionModifier or 1.0))
+                    fmgr.BaseLandRatio = (myWeight / totalWeightedNeed) * newLandRatio
+                else
+                    fmgr.BaseLandRatio = 0
+                end
+                LOG('BaseLandRatio is '..tostring(fmgr.BaseLandRatio)..' for base '..tostring(fmgr.LocationType))
+            end
     
             -- Logging
             --[[

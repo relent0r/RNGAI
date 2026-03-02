@@ -4880,24 +4880,16 @@ IntelManager = Class {
                 modifier = 0.5
                 fmgr.NoStoragePriority = false
             end
-
-            fmgr.ProductionModifier = modifier
-
-            LOG(string.format("OBTP Manager %s | Saturation: %.2f | Gravity: %.2f | Modifier: %.2f", 
-                  tostring(fmgr.LocationType), fmgr.SaturationRatio, fmgr.EconomicGravity, fmgr.ProductionModifier))
-
-            -- 3. Your existing Tone Down Logic
-            if fmgr.PathSecurity > 2.0 and fmgr.SecurityDepth >= 2 then
-                -- ... rest of your code ...
+            local tacticalFactor = 1.0
+            local isSpamPlayer = aiBrain.BrainIntel.PlayerRole.SpamPlayer
+            if (fmgr.ZoneThreatAssignment or 0) > 0 then
+                local minFactor = isSpamPlayer and 0.5 or 0.1
+                tacticalFactor = math.max(minFactor, math.min(fmgr.ZoneThreatAssignment / 10.0, 1.0))
+            elseif not isSpamPlayer and fmgr.SecurityDepth >= 2 and fmgr.PathSecurity > 2.0 then
+                tacticalFactor = 0.4
             end
+            fmgr.ProductionModifier = modifier * tacticalFactor
         end
-        --[[
-        for k, v in aiBrain.BuilderManagers do
-            if v.FactoryManager and v.FactoryManager.LocationActive then
-                LOG('Base '..tostring(k)..' ZoneThreatAssignment is '..tostring(v.FactoryManager.ZoneThreatAssignment))
-            end
-        end
-        ]]
         --LOG('---- End AssignThreatToFactories Loop ----')
     end,
 
