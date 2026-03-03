@@ -7251,8 +7251,6 @@ AIBrain = Class(RNGAIBrainClass) {
             coroutine.yield(30)
     
             -- Configurable ratios for economy spend and assist
-            local economySpendRatio = 0.05 -- Reserve 5% of the economy for economic upgrades
-            local assistRatio = 0.05 -- Reserve 5% of the economy for assisting tasks
             local economyUpgradeSpend = self.EconomyUpgradeSpendDefault or 0.05
             local engineerAssistRatio = self.EngineerAssistRatioDefault or 0.05
             if self.BrainIntel.HighestPhase > 1 then
@@ -7348,7 +7346,7 @@ AIBrain = Class(RNGAIBrainClass) {
             end
 
             -- Check for air excess
-            if hasAirProduction and (myThreat.AntiAirNow + myThreat.AllyAirThreat > enemyThreat.AntiAir * threatFactorThreshold) then
+            if hasAirProduction and (myThreat.AntiAirNow + myThreat.AllyAntiAirThreat > enemyThreat.AntiAir * threatFactorThreshold) then
                 local airExcess = math.max(0, (self.ProductionRatios.Air - minAllocation))
                 excessAllocation = excessAllocation + airExcess
                 self.ProductionRatios.Air = minAllocation
@@ -7364,6 +7362,7 @@ AIBrain = Class(RNGAIBrainClass) {
             -- Now, redistribute the excess to the economy and assist ratios
             local additionalEconomyRatio = excessAllocation * 0.5 -- 50% to economy
             local newEconomySpend = economyUpgradeSpend + additionalEconomyRatio
+            local preNudgeEco = economyUpgradeSpend
 
             -- Nudge economyUpgradeSpend
             if newEconomySpend > self.EconomyUpgradeSpendDefault or newEconomySpend > economyUpgradeSpendMax then
@@ -7377,18 +7376,18 @@ AIBrain = Class(RNGAIBrainClass) {
                 economyUpgradeSpend = math.max(newEconomySpend, economyUpgradeSpendMin)
             end
 
-            -- Now, we calculate the production ratios with the redistribution and necessary clamping
+            local ecoConsumed = math.max(0, economyUpgradeSpend - preNudgeEco)
+            excessAllocation = math.max(0, excessAllocation - ecoConsumed)
 
             -- Calculate available budget for production (after reserving for economy and assist)
             local totalThreatRatio = myThreat.LandNow + myThreat.AllyLandThreat + myThreat.AntiAirNow + myThreat.AllyAntiAirThreat + myThreat.NavalNow + myThreat.AllyNavalThreat + enemyThreat.Land + enemyThreat.AntiAir + enemyThreat.Naval
-            local availableRatio = 1 - economyUpgradeSpend  -- Now we are only reserving for economy upgrades here
+            local availableRatio = math.max(0, 1 - (economyUpgradeSpend + engineerAssistRatio))
             if totalThreatRatio == 0 then
                 totalThreatRatio = 1  -- To avoid division by zero
             end
             
             -- Calculate the production allocation first
-            local reservedProductionRatio = economyUpgradeSpend  -- Reserve for economy upgrades only, not engineer assist
-            local productionAllocation = math.max(1 - reservedProductionRatio, 0)  -- What’s left for production
+            local productionAllocation = availableRatio
             
             -- Normalize default production ratios to fit within productionAllocation
             local normalizedLandRatio = self.DefaultProductionRatios['Land'] * productionAllocation
@@ -7456,18 +7455,21 @@ AIBrain = Class(RNGAIBrainClass) {
             if newLandRatio > landMaxRatio then
                 local excessRatio = newLandRatio - landMaxRatio
                 excessAllocation = excessAllocation + excessRatio
+                newLandRatio = landMaxRatio
             end
 
             -- Adjust Air Ratio
             if newAirRatio > airMaxRatio then
                 local excessRatio = newAirRatio - airMaxRatio
                 excessAllocation = excessAllocation + excessRatio
+                newAirRatio = airMaxRatio
             end
 
             -- Adjust Naval Ratio
             if newNavalRatio > navalMaxRatio then
                 local excessRatio = newNavalRatio - navalMaxRatio
                 excessAllocation = excessAllocation + excessRatio
+                newNavalRatio = navalMaxRatio
             end
             
             -- Now that production has been allocated, we can handle the engineer assist
@@ -7495,19 +7497,19 @@ AIBrain = Class(RNGAIBrainClass) {
             end
 
             -- Combine them into a scaling multiplier
-            local ecoHealthMultiplier = trendFactor * storageFactor
-            local ecoHealthMultiplier = math.max(0.3, math.min(1.5, ecoHealthMultiplier))
+            local ecoHealthMultiplier = math.max(0.3, math.min(1.5, trendFactor * storageFactor))
             engineerAssistRatio = engineerAssistRatio * ecoHealthMultiplier
 
-            local totalModifier, activeBases = 0, 0
-            for k, v in self.BuilderManagers do if v.FactoryManager.LocationActive then totalModifier = totalModifier + (v.FactoryManager.ProductionModifier or 1.0); activeBases = activeBases + 1 end end
-            RNGLOG(string.format("OBTP_ALLOC_AUDIT | GlobalLandRatio: %.2f | ActiveBases: %d | TotalModSum: %.2f", self.ProductionRatios.Land, activeBases, totalModifier))
+            --local totalModifier, activeBases = 0, 0
+            --for k, v in self.BuilderManagers do if v.FactoryManager.LocationActive then totalModifier = totalModifier + (v.FactoryManager.ProductionModifier or 1.0); activeBases = activeBases + 1 end end
+            --RNGLOG(string.format("OBTP_ALLOC_AUDIT | GlobalLandRatio: %.2f | ActiveBases: %d | TotalModSum: %.2f", self.ProductionRatios.Land, activeBases, totalModifier))
 
             -- Assign the final production ratios
             self.ProductionRatios.Land = newLandRatio
             self.ProductionRatios.Air = newAirRatio
             self.ProductionRatios.Naval = newNavalRatio
             self.EngineerAssistRatio = engineerAssistRatio
+            self.EconomyUpgradeSpend = economyUpgradeSpend
 
             local totalWeightedNeed = 0
             for _, v in self.BuilderManagers do
@@ -7526,7 +7528,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 else
                     fmgr.BaseLandRatio = 0
                 end
-                LOG('BaseLandRatio is '..tostring(fmgr.BaseLandRatio)..' for base '..tostring(fmgr.LocationType))
+                --LOG('BaseLandRatio is '..tostring(fmgr.BaseLandRatio)..' for base '..tostring(fmgr.LocationType))
             end
     
             -- Logging
