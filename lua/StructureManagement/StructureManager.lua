@@ -164,6 +164,38 @@ StructureManager = Class {
         self.ShieldsRequired = false
         self.StructuresRequiringShields = {}
         self.ExtractorUpgradeQueue = {}
+        self.UpgradeConfig = {
+            SHIELD = {
+                Category = categories.STRUCTURE * categories.SHIELD * categories.TECH2,
+                MaxUpgrading = 2,
+                MinEnergyTech = categories.TECH3 * categories.ENERGYPRODUCTION,
+                Econ = { storage = { 0.07, 0.9 }, trend = 0.0 },
+            },
+            RADAR = {
+                Category = categories.STRUCTURE * categories.RADAR * categories.TECH1,
+                MaxUpgrading = 1,
+                MinTime = 600,
+                MinEnergyTech = categories.TECH2 * categories.ENERGYPRODUCTION,
+                Econ = { storage = { 0.5, 0.8 }, efficiency = 0.9 },
+                OmniCategory = categories.STRUCTURE * (categories.OMNI + (categories.RADAR * categories.TECH2)),
+            },
+            SONAR = {
+                T1 = {
+                    Category = categories.STRUCTURE * categories.SONAR * categories.TECH1,
+                    MinTime = 600,
+                    Econ = { storage = { 0.05, 0.8 }, trend = 0.0 },
+                },
+                T2 = {
+                    Category = categories.STRUCTURE * categories.SONAR * categories.TECH2,
+                    MinTime = 1200,
+                    -- Requirement: Have mobile sonar before upgrading T2 stationary
+                    Prerequisite = categories.MOBILE * categories.SONAR * categories.TECH2,
+                    Econ = { storage = { 0.05, 0.9 }, trend = 0.0 },
+                    Factions = { [1]=true, [2]=true, [3]=true, [5]=true }, -- UEF, Aeon, Cybran, Nomads
+                }
+            }
+        }
+        self.UpgradingStructures = {}
     end,
 
     Run = function(self)
@@ -172,6 +204,7 @@ StructureManager = Class {
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG, self.Brain)
         self:ForkThread(self.EcoTacticalThread, self.Brain) -- tbd
         self:ForkThread(self.CheckDefensiveCoverage)
+        --self:ForkThread(self.StructureUpgradeThreadRNG)
         if self.Debug then
             self:ForkThread(self.StructureDebugThread)
         end
@@ -2088,75 +2121,7 @@ StructureManager = Class {
         end
         return defended
     end,
---[[
-    ValidateExtractorUpgradeRNG = function(self, aiBrain, extractorTable, allTiers)
-        local bestZone, bestExtractor, lowestDist
-        local basePosition = aiBrain.BuilderManagers['MAIN'].Position
-        
-        local zoneExtractors = {
-            Land = {},
-            Naval = {},
-        }
-        for tier, extractors in extractorTable do
-            if allTiers or tier == "TECH1" then
-                for _, c in extractors do
-                    if c and not c.Dead and c.InitialDelayCompleted then
-                        local zoneID = c.zoneid
-                        local layer = c.Water and 'Naval' or 'Land'
-                        if zoneID and layer then
-                            zoneExtractors[layer][zoneID] = zoneExtractors[layer][zoneID] or {}
-                            table.insert(zoneExtractors[layer][zoneID], c)
-                        end
-                    end
-                end
-            end
-        end
-        
-        -- Evaluate zones
-        for layer, zones in zoneExtractors do
-            local zoneGroup = aiBrain.Zones[layer]
-            for zoneID, extractors in zones do
-                local zone = zoneGroup.zones[zoneID]
-                if zone then
-                    local zoneDist = VDist2Sq(basePosition[1], basePosition[3], zone.pos[1], zone.pos[3])
-                    for _, c in extractors do
-                        if not bestExtractor or zoneDist < lowestDist then
-                            bestExtractor = c
-                            bestZone = zoneID
-                            lowestDist = zoneDist
-                        end
-                    end
-                elseif zoneID == -1 then
-                    for _, e in extractors do
-                        local zoneDist = e:GetPosition()
-                        if not bestExtractor or zoneDist < lowestDist then
-                            bestExtractor = e
-                            bestZone = zoneID
-                            lowestDist = zoneDist
-                        end
-                    end
-                end
-            end
-        end
-    
-        -- Upgrade the selected extractor if one was found
-        if bestExtractor then
-            local extractorPos = bestExtractor:GetPosition()
-            local distanceToBase = VDist2Sq(basePosition[1], basePosition[3], extractorPos[1],extractorPos[3])
-            bestExtractor.DistanceToBase = distanceToBase
-            if not aiBrain.ExtractorUpgradeThread then
-                --LOG('Starting Upgrade queue thread')
-                aiBrain.ExtractorUpgradeThread = self:ForkThread(self.UpgradeManagementThread, aiBrain)
-            end
-            aiBrain.CentralBrainExtractorUnitUpgradeClosest = bestExtractor
-            -- Trigger the upgrade process
-            self:ForkThread(self.AddExtractorToUpgradeQueue, aiBrain, bestExtractor, distanceToBase)
-            --LOG('Added Extractor')
-        else
-            --LOG('No valid extractor found for upgrade.')
-        end
-    end,
-]]
+
     ValidateExtractorUpgradeRNG = function(self, aiBrain, extractorTable, allTiers)
         local bestZone, bestExtractor
         local highestScore
@@ -2556,6 +2521,173 @@ StructureManager = Class {
             end
             unit['rngdata'].TMLInRange[tml.object.EntityId] = tml.object
         end
+    end,
+
+    StructureUpgradeThreadRNG = function(self)
+        local aiBrain = self.Brain
+        coroutine.yield(math.random(30,60))
+        while aiBrain.Status ~= 'Defeat' do
+            local gameTime = GetGameTimeSeconds()
+            
+            -- Process Shield Upgrades
+            if self:CheckGlobalEcon(aiBrain, self.UpgradeConfig.SHIELD.Econ) then
+                self:ManageShieldUpgrades(aiBrain)
+            end
+
+            -- Process Intel Upgrades (includes the 600s time lock)
+            if gameTime > self.UpgradeConfig.RADAR.MinTime then
+                if self:CheckGlobalEcon(aiBrain, self.UpgradeConfig.RADAR.Econ) then
+                    self:ManageIntelUpgrades(aiBrain)
+                end
+            end
+
+            coroutine.yield(50) -- Standard 5s tick
+        end
+    end,
+
+    ManageIntelUpgrades = function(self, aiBrain)
+        local config = self.UpgradeConfig.RADAR
+        local radarCount = aiBrain:GetNumUnitsAroundPoint(config.OmniCategory, aiBrain:GetArmyStartPos(), 100, 'Ally') -- LocationType check
+
+        -- Replicate: UnitsLessAtLocationRNG 1 TECH2 RADAR/OMNI
+        if radarCount >= 1 then return end
+
+        -- Replicate: HaveGreaterThanUnitsWithCategory 1 TECH2 ENERGY
+        if aiBrain:GetNumUnitsAroundPoint(config.MinEnergyTech, aiBrain:GetArmyStartPos(), 100, 'Ally') < 1 then return end
+
+        for zoneId, zoneData in self.ZoneStructures do
+            local candidate = self:GetUpgradeCandidate(zoneId, config.Category)
+            if candidate then
+                local upgradeID = candidate.Blueprint.General.UpgradesTo
+                if upgradeID and not candidate:IsUnitState('Upgrading') then
+                    IssueUpgrade({candidate}, upgradeID)
+                    break -- Only one intel upgrade per pass to prevent power stalls
+                end
+            end
+        end
+    end,
+
+    CheckGlobalEcon = function(self, aiBrain, econConfig)
+        local massStorage = GetEconomyStoredRatio(aiBrain, 'MASS')
+        local energyStorage = GetEconomyStoredRatio(aiBrain, 'ENERGY')
+        
+        if massStorage < econConfig.storage[1] or energyStorage < econConfig.storage[2] then
+            return false
+        end
+
+        if econConfig.efficiency then
+            if GetEconomyIncome(aiBrain, 'MASS') / (GetEconomyRequested(aiBrain, 'MASS') + 0.01) < econConfig.efficiency then
+                return false
+            end
+        end
+        
+        return true
+    end,
+
+    ManageShieldUpgrades = function(self, aiBrain)
+        local config = self.UpgradeConfig.SHIELD
+        
+        -- 1. Global Capacity Check (Equivalent to HaveLessThanUnitsInCategoryBeingUpgradedRNG)
+        -- We check if we are already at the max concurrent upgrade limit for shields
+        local currentUpgrading = self:GetUpgradingCount(aiBrain, categories.STRUCTURE * categories.SHIELD)
+        if currentUpgrading >= config.MaxUpgrading then 
+            return 
+        end
+
+        -- 2. Tech Prerequisite Check (Equivalent to UnitsGreaterAtLocation T3 Energy)
+        -- Your builder requires T3 Power to be present before upgrading T2 shields.
+        -- We can check the Brain's recorded position for 'LocationType' or iterate zones.
+        local t3PowerCount = aiBrain:GetNumUnitsAroundPoint(config.MinEnergyTech, aiBrain:GetArmyStartPos(), 100, 'Ally')
+        if t3PowerCount < 1 then
+            return
+        end
+
+        -- 3. Zone-Aware Candidate Selection
+        -- Iterate through your custom ZoneStructures table
+        for zoneId, zoneData in self.ZoneStructures do
+            -- Future Logic: You can insert zone-specific threat checks here
+            -- e.g., if zoneData.enemystructurethreat > 0 then
+            
+            local candidate = self:GetUpgradeCandidate(zoneId, config.Category)
+            
+            if candidate then
+                local upgradeID = candidate.Blueprint.General.UpgradesTo
+                
+                -- Final sanity check on the unit state
+                if upgradeID and not candidate:IsUnitState('Upgrading') then
+                    -- Check for 'T2Shield4' template vs 'T2Shield' logic 
+                    -- as seen in your RNGAIShieldBuilders.lua
+                    IssueUpgrade({candidate}, upgradeID)
+                    
+                    -- We return after one issue to respect the 'InstanceCount' 
+                    -- and prevent a massive mass stall in a single tick.
+                    return 
+                end
+            end
+        end
+    end,
+
+    ManageSonarUpgrades = function(self, aiBrain)
+        local gameTime = GetGameTimeSeconds()
+        
+        -- T1 -> T2 Sonar Upgrade (Time > 600s)
+        if gameTime > 600 then
+            if self:CheckEconForUpgrade(aiBrain, 0.05, 0.80) then
+                -- We search for T1 Sonars to upgrade
+                local t1Sonars = aiBrain:GetListOfUnits(self.UpgradeConfig.SONAR.T1, false)
+                for _, unit in t1Sonars do
+                    if not unit.Dead and not unit:IsUnitState('Upgrading') and not self.UpgradingStructures[unit.EntityId] then
+                        IssueUpgrade({unit}, unit.Blueprint.General.UpgradesTo)
+                        self.UpgradingStructures[unit.EntityId] = unit
+                        return -- One per tick
+                    end
+                end
+            end
+        end
+
+        -- T2 -> T3 Sonar Upgrade (Time > 1200s + Faction + Mobile Prereq)
+        if gameTime > 1200 then
+            local fIdx = aiBrain:GetFactionIndex()
+            -- 1: UEF, 2: Aeon, 3: Cybran, 5: Nomads (Seraphim excluded as per builder)
+            if fIdx == 1 or fIdx == 2 or fIdx == 3 or fIdx == 5 then
+                -- Check for Mobile T2 Sonar presence (UCBC requirement)
+                local mobileSonar = aiBrain:GetNumUnitsAroundPoint(self.UpgradeConfig.SONAR.MobileT2, aiBrain:GetArmyStartPos(), 9999, 'Ally')
+                if mobileSonar > 0 and self:CheckEconForUpgrade(aiBrain, 0.05, 0.90) then
+                    local t2Sonars = aiBrain:GetListOfUnits(self.UpgradeConfig.SONAR.T2, false)
+                    for _, unit in t2Sonars do
+                        if not unit.Dead and not unit:IsUnitState('Upgrading') and not self.UpgradingStructures[unit.EntityId] then
+                            IssueUpgrade({unit}, unit.Blueprint.General.UpgradesTo)
+                            self.UpgradingStructures[unit.EntityId] = unit
+                            return
+                        end
+                    end
+                end
+            end
+        end
+    end,
+
+    GetUpgradingCount = function(self, aiBrain, category)
+        local units = aiBrain:GetListOfUnits(category, false)
+        local count = 0
+        for _, v in units do
+            if not v.Dead and v:IsUnitState('Upgrading') then
+                count = count + 1
+            end
+        end
+        return count
+    end,
+
+    GetUpgradeCandidate = function(self, zoneId, category)
+        -- This uses your ZoneStructures table for high-speed lookup
+        if self.ZoneStructures[zoneId] and self.ZoneStructures[zoneId].Units then
+            for _, unit in self.ZoneStructures[zoneId].Units do
+                if not unit.Dead and EntityCategoryContains(category, unit) and not unit:IsUnitState('Upgrading') then
+                    -- Future logic: check zoneData.enemystructurethreat here
+                    return unit
+                end
+            end
+        end
+        return nil
     end,
 }
 
