@@ -2689,6 +2689,20 @@ StructureManager = Class {
         end
         return nil
     end,
+
+    IssueStructureUpgrade = function(self, unit)
+        if not unit or unit.Dead or unit:IsUnitState('Upgrading') then return false end
+        
+        local upgradeID = unit.Blueprint.General.UpgradesTo
+        if upgradeID then
+            IssueUpgrade({unit}, upgradeID)
+            -- Atomic lock: prevents the thread from picking this unit again 
+            -- before the engine registers the 'Upgrading' state.
+            self.UpgradingStructures[unit.EntityId] = unit
+            return true
+        end
+        return false
+    end,
 }
 
 DummyManager = Class {
