@@ -32,7 +32,7 @@ BaseBuilderTemplate {
 
         -- Intel Builders --
         'RNGAI RadarBuilders',
-        'RNGAI RadarUpgrade',
+        --'RNGAI RadarUpgrade',
         'RNGAI Intel Formers',
         
         -- Economy Builder --
@@ -62,7 +62,6 @@ BaseBuilderTemplate {
         -- Land Unit Builders --
         'RNGAI TankLandBuilder Large',
         'RNGAI Land AntiAir Response',
-        'RNGAI T3 AttackLandBuilder Large',
         'RNGAI Island Large FormBuilders',
 
 

@@ -527,9 +527,6 @@ function FactorySpendRatioRNG(aiBrain, LocationType, uType, upgradeType, noStora
     
     -- 1. Budget Gate (Command Economy for Land, Global for others)
     local productionRatio = (uType == 'Land') and (fmgr.BaseLandRatio or 0) or aiBrain.ProductionRatios[uType]
-    if uType == 'Land' then
-        LOG('productionRatio '..tostring(productionRatio)..'for base '..tostring(LocationType))
-    end
 
     if demandBuilder then
         productionRatio = math.max(productionRatio, aiBrain.DefaultProductionRatios[uType] or 0)
@@ -542,15 +539,11 @@ function FactorySpendRatioRNG(aiBrain, LocationType, uType, upgradeType, noStora
 
     -- If we are over our allocated budget, stop here
     if currentRatio >= productionRatio then
-        if uType == 'Land' then
-            LOG('currentRatio '..tostring(currentRatio)..'for base '..tostring(LocationType)..' greater than productionRatio '..tostring(productionRatio))
-        end
         return false 
     end
 
     -- 2. Immediate Overrides
     if noStorageCheck or fmgr.NoStoragePriority then
-        LOG('FactorySpendRatioRNG set to no storage check returning true for base '..tostring(LocationType))
         return true
     end
 
@@ -561,21 +554,18 @@ function FactorySpendRatioRNG(aiBrain, LocationType, uType, upgradeType, noStora
     if uType == 'Land' then
         -- Spam players ignore storage constraints for land units
         if aiBrain.BrainIntel.PlayerRole.SpamPlayer then 
-            LOG('FactorySpendRatioRNG returning true for base '..tostring(LocationType))
             return true 
         end
         
         -- Stricter requirements if the AI is being choked/contained
         if aiBrain.EnemyIntel.ChokeFlag then
             if GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.10 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.95 then
-                LOG('FactorySpendRatioRNG returning true for base '..tostring(LocationType))
                 return true
             end
         end
         
         -- Standard Land Floor
         if mStored >= 5 and eStored >= 100 then
-            LOG('FactorySpendRatioRNG returning true for base '..tostring(LocationType))
             return true
         end
     elseif uType == 'Air' then

@@ -165,33 +165,38 @@ StructureManager = Class {
         self.StructuresRequiringShields = {}
         self.ExtractorUpgradeQueue = {}
         self.UpgradeConfig = {
-            SHIELD = {
+            Shield = {
                 Category = categories.STRUCTURE * categories.SHIELD * categories.TECH2,
                 MaxUpgrading = 2,
                 MinEnergyTech = categories.TECH3 * categories.ENERGYPRODUCTION,
                 Econ = { storage = { 0.07, 0.9 }, trend = 0.0 },
             },
-            RADAR = {
-                Category = categories.STRUCTURE * categories.RADAR * categories.TECH1,
-                MaxUpgrading = 1,
-                MinTime = 600,
-                MinEnergyTech = categories.TECH2 * categories.ENERGYPRODUCTION,
-                Econ = { storage = { 0.5, 0.8 }, efficiency = 0.9 },
-                OmniCategory = categories.STRUCTURE * (categories.OMNI + (categories.RADAR * categories.TECH2)),
+            Radar = {
+                T1 = {
+                    Category = categories.STRUCTURE * categories.RADAR * categories.TECH1,
+                    TargetTechCategory = categories.TECH2 + categories.TECH3, 
+                    Econ = { storage = { 0.05, 0.8 }, efficiency = 0.9 },
+                    MaintenanceCost = 150,
+                },
+                T2 = {
+                    Category = categories.STRUCTURE * categories.RADAR * categories.TECH2, 
+                    TargetTechCategory = categories.TECH3 * categories.OMNI,
+                    Econ = { storage = { 0.05, 0.8 }, efficiency = 0.9 },
+                    MaintenanceCost = 2000,
+                }
             },
-            SONAR = {
+            Sonar = {
                 T1 = {
                     Category = categories.STRUCTURE * categories.SONAR * categories.TECH1,
-                    MinTime = 600,
-                    Econ = { storage = { 0.05, 0.8 }, trend = 0.0 },
+                    TargetTechCategory = categories.TECH2 + categories.TECH3,
+                    Econ = { storage = { 0.05, 0.8 } },
+                    MaintenanceCost = 100,
                 },
                 T2 = {
                     Category = categories.STRUCTURE * categories.SONAR * categories.TECH2,
-                    MinTime = 1200,
-                    -- Requirement: Have mobile sonar before upgrading T2 stationary
-                    Prerequisite = categories.MOBILE * categories.SONAR * categories.TECH2,
-                    Econ = { storage = { 0.05, 0.9 }, trend = 0.0 },
-                    Factions = { [1]=true, [2]=true, [3]=true, [5]=true }, -- UEF, Aeon, Cybran, Nomads
+                    TargetTechCategory = categories.TECH3 * categories.SONAR,
+                    Econ = { storage = { 0.05, 0.8 } },
+                    MaintenanceCost = 500,
                 }
             }
         }
@@ -204,7 +209,7 @@ StructureManager = Class {
         self:ForkThread(self.EcoExtractorUpgradeCheckRNG, self.Brain)
         self:ForkThread(self.EcoTacticalThread, self.Brain) -- tbd
         self:ForkThread(self.CheckDefensiveCoverage)
-        --self:ForkThread(self.StructureUpgradeThreadRNG)
+        self:ForkThread(self.StructureUpgradeThreadRNG)
         if self.Debug then
             self:ForkThread(self.StructureDebugThread)
         end
@@ -460,6 +465,8 @@ StructureManager = Class {
 
         if cat.RADAR then
             return 'RADAR'
+        elseif cat.SONAR then
+            return 'SONAR'
         elseif cat.TACTICALMISSILEDEFENSE then
             return 'TACTICALMISSILEDEFENSE'
         elseif cat.SHIELD then
@@ -2525,63 +2532,234 @@ StructureManager = Class {
 
     StructureUpgradeThreadRNG = function(self)
         local aiBrain = self.Brain
-        coroutine.yield(math.random(30,60))
-        while aiBrain.Status ~= 'Defeat' do
-            local gameTime = GetGameTimeSeconds()
-            
-            -- Process Shield Upgrades
-            if self:CheckGlobalEcon(aiBrain, self.UpgradeConfig.SHIELD.Econ) then
-                self:ManageShieldUpgrades(aiBrain)
-            end
+        coroutine.yield(math.random(30, 60))
 
-            -- Process Intel Upgrades (includes the 600s time lock)
-            if gameTime > self.UpgradeConfig.RADAR.MinTime then
-                if self:CheckGlobalEcon(aiBrain, self.UpgradeConfig.RADAR.Econ) then
-                    self:ManageIntelUpgrades(aiBrain)
-                end
-            end
+        while aiBrain.Status ~= 'Defeat' do
+            local im = aiBrain.IntelManager
+            
+            -- 1. Get current Economy Profile (Standard, Wealthy, or Stalled)
+            -- This helps the managers decide if they can 'batch' multiple upgrades
+            local profile, econState = self:GetEconProfile(aiBrain)
+            
+            -- 2. Process Shield Upgrades
+            -- Shields are handled separately because they are often position-critical
+            --if im.StrategyFlags.T3ShieldsAllowed then
+            --    if self:CheckGlobalEcon(aiBrain, self.UpgradeConfig.SHIELD.Econ) then
+            --        self:ManageShieldUpgrades(aiBrain, im)
+            --    end
+            --end
+
+            -- 3. Unified Intelligence Pass (Radar + Sonar)
+            -- This replaces the 4 separate IF blocks you had.
+            -- It handles Land/Naval separation and tiering internally.
+            self:ManageIntelligenceUpgrades(aiBrain, im, profile, econState)
 
             coroutine.yield(50) -- Standard 5s tick
         end
     end,
 
-    ManageIntelUpgrades = function(self, aiBrain)
-        local config = self.UpgradeConfig.RADAR
-        local radarCount = aiBrain:GetNumUnitsAroundPoint(config.OmniCategory, aiBrain:GetArmyStartPos(), 100, 'Ally') -- LocationType check
+    GetEconProfile = function(self, aiBrain)
+        local econ = aiBrain.EconomyOverTimeCurrent
+        local econState = {
+            MassStorageRatio = GetEconomyStoredRatio(aiBrain, 'MASS'),
+            EnergyStorageRatio = GetEconomyStoredRatio(aiBrain, 'ENERGY'),
+            MassEfficiencyOverTime = econ.MassEfficiencyOverTime or 0,
+            EnergyEfficiencyOverTime = econ.EnergyEfficiencyOverTime or 0,
+            MassTrendOverTime = aiBrain.EconomyOverTimeCurrent.MassTrendOverTime or 0,
+            EnergyTrendOverTime = aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime or 0,
+        }
+        LOG('GetEconProfile check for '..tostring(aiBrain.Nickname))
+        LOG('MassStorageRatio : '..tostring(econState.MassStorageRatio)..' EnergyStorageRatio : '..tostring(econState.EnergyStorageRatio)..' MassEfficiency : '..tostring(econState.MassEfficiencyOverTime)..' EnergyEfficnecy : '..tostring(econState.EnergyEfficiencyOverTime))
 
-        -- Replicate: UnitsLessAtLocationRNG 1 TECH2 RADAR/OMNI
-        if radarCount >= 1 then return end
+        -- PROFILE: WEALTHY
+        -- If we are overflowing and efficient, we allow 'Batching' (multiple upgrades per tick)
+        if econState.MassStorageRatio > 0.65 and econState.EnergyStorageRatio >= 1.0 and econState.MassEfficiencyOverTime > 1.05 and econState.EnergyEfficiencyOverTime > 1.2 then
+            LOG('EconProfile is Wealthy')
+            return 'Wealthy', econState
+        end
 
-        -- Replicate: HaveGreaterThanUnitsWithCategory 1 TECH2 ENERGY
-        if aiBrain:GetNumUnitsAroundPoint(config.MinEnergyTech, aiBrain:GetArmyStartPos(), 100, 'Ally') < 1 then return end
+        -- PROFILE: STALLED
+        -- If we are dangerously low, we block all non-emergency upgrades
+        if econState.MassStorageRatio < 0.05 or econState.EnergyStorageRatio < 0.45 or econState.MassEfficiencyOverTime < 0.5 or econState.EnergyEfficiencyOverTime < 0.5 then
+            LOG('EconProfile is Stalled')
+            return 'Stalled', econState
+        end
 
-        for zoneId, zoneData in self.ZoneStructures do
-            local candidate = self:GetUpgradeCandidate(zoneId, config.Category)
-            if candidate then
-                local upgradeID = candidate.Blueprint.General.UpgradesTo
-                if upgradeID and not candidate:IsUnitState('Upgrading') then
-                    IssueUpgrade({candidate}, upgradeID)
-                    break -- Only one intel upgrade per pass to prevent power stalls
+        -- PROFILE: STANDARD
+        -- Normal operation (one upgrade per tick max)
+        LOG('EconProfile is Standard')
+        return 'Standard', econState
+    end,
+
+    ManageIntelligenceUpgrades = function(self, aiBrain, im, profile, econState)
+        local mainZoneID = aiBrain.BuilderManagers['MAIN'].ZoneID
+        LOG('Manageintelligenceupgrades, main zone is '..tostring(mainZoneID))
+        
+        -- Process Land (Radar) and Naval (Sonar) independently
+        local layerConfigs = {
+            { 
+                ZoneTable = aiBrain.Zones.Land.zones, 
+                ZoneType = 'Land',
+                ThreatKey = 'enemyantisurfacethreat' 
+            },
+            { 
+                ZoneTable = aiBrain.Zones.Naval.zones, 
+                ZoneType = 'Naval',
+                ThreatKey = 'enemynavalthreat' -- As assigned in AssignIMAPThreat
+            }
+        }
+        local countTable = self:GetIntelUpgradingCount(aiBrain)
+        local currentUpgradingDrain = 0
+        -- Placeholder: Assuming we add 'Maintenance' to your config
+        -- Hardcoded taxes for audit: T2 (250), T3 (2000)
+        local cfg = self.UpgradeConfig
+        local futureEnergyCost = (countTable.RadarT1 * cfg.Radar.T1.MaintenanceCost) + (countTable.RadarT2 * cfg.Radar.T2.MaintenanceCost) + (countTable.SonarT1 * cfg.Sonar.T1.MaintenanceCost) + (countTable.SonarT2 * cfg.Sonar.T2.MaintenanceCost)
+        local netTrend = econState.EnergyTrendOverTime - futureEnergyCost
+
+        local maxRTier = 0 -- Default to Emergency Only
+        if netTrend > cfg.Radar.T2.MaintenanceCost then maxRTier = 2
+        elseif netTrend > cfg.Radar.T1.MaintenanceCost then maxRTier = 1 end
+
+        local maxSTier = 0
+        if netTrend > cfg.Sonar.T2.MaintenanceCost then maxSTier = 2
+        elseif netTrend > cfg.Sonar.T1.MaintenanceCost then maxSTier = 1 end
+
+        RNGLOG(string.format("TIER_LIMITS: NetTrend=%0.1f | MaxRadar=%d | MaxSonar=%d", netTrend, maxRTier, maxSTier))
+
+        local intelUpgradeCount = 0
+        for _, config in layerConfigs do
+            -- Sort zones within this layer by threat/importance
+            local sortedZones = self:GetPrioritizedLayerZones(config.ZoneTable, mainZoneID, config.ThreatKey)
+            
+            for _, zone in sortedZones do
+                intelUpgradeCount = intelUpgradeCount + self:ProcessZoneUpgrades(aiBrain, zone, config.ZoneType, im, profile, econState, futureEnergyCost)
+                if intelUpgradeCount > 1 then
+                    break
                 end
+                coroutine.yield(1)
             end
         end
     end,
 
-    CheckGlobalEcon = function(self, aiBrain, econConfig)
-        local massStorage = GetEconomyStoredRatio(aiBrain, 'MASS')
-        local energyStorage = GetEconomyStoredRatio(aiBrain, 'ENERGY')
+    GetAppropriateIntelConfig = function(self, intelType, im, currentTech)
+        local cfg = self.UpgradeConfig[intelType]
+        if not cfg then return nil end
+
+        -- If unit is T1, check if we are allowed to go to T2+
+        if currentTech == 'TECH1' and (im.StrategyFlags['T2'..intelType..'Allowed'] or im.StrategyFlags['T3'..intelType..'Allowed']) then
+            return cfg.T1
+        end
+
+        -- If unit is T2, check if we are allowed to go to T3
+        if currentTech == 'TECH2' and im.StrategyFlags['T3'..intelType..'Allowed'] then
+            return cfg.T2
+        end
+
+        return nil
+    end,
+
+    ProcessZoneUpgrades = function(self, aiBrain, zone, envType, im, profile, econState, futureEnergyCost)
+        local intel = zone.intelassignment
+        if not intel then return 0 end
+
+        local intelType = (envType == 'Naval') and 'Sonar' or 'Radar'
+        local searchTable = (intelType == 'Sonar') and (intel.SonarUnits or {}) or (intel.RadarUnits or {})
         
-        if massStorage < econConfig.storage[1] or energyStorage < econConfig.storage[2] then
+        for _, unit in searchTable do
+            if not unit.Dead and not unit:IsUnitState('Upgrading') and unit.Blueprint.General.UpgradesTo then
+                -- Determine tech of the current unit
+                local currentTech = unit.Blueprint.CategoriesHash.TECH1 and 'TECH1' or unit.Blueprint.CategoriesHash.TECH2 and 'TECH2' or 'TECH3'
+                
+                -- Get config specific to this unit's upgrade path
+                local upgradeConfig = self:GetAppropriateIntelConfig(intelType, im, currentTech)
+                
+                if upgradeConfig then
+                    -- Emergency Check
+                    local isEmergency = false
+                    if envType == 'Naval' then isEmergency = (zone.enemynavalthreat or 0) > 15
+                    else isEmergency = (zone.enemyantisurfacethreat or 0) > 40 end
+
+                    -- Econ and Redundancy Check
+                    if self:CheckGlobalEcon(aiBrain, upgradeConfig, isEmergency, econState, futureEnergyCost) then
+                        -- Check if the zone already has the TARGET tech (the tier this unit would become)
+                        if not self:ZoneHasSufficientIntel(zone, upgradeConfig) then
+                            if self:IssueStructureUpgrade(unit) then
+                                return 1
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        return 0
+    end,
+
+    CheckGlobalEcon = function(self, aiBrain, upgradeConfig, isEmergency, econState, futureEnergyCost)
+        local scaledMaint = upgradeConfig.MaintenanceCost / 10
+        local nTrend = (econState.EnergyTrendOverTime or 0) - ((futureEnergyCost or 0) / 10)
+
+        local hasBudget = (nTrend > (scaledMaint * 0.75)) or (isEmergency and (nTrend > (scaledMaint * 0.25) and (econState.EnergyStorageRatio or 0) > 0.6))
+        if not hasBudget then
+            return false
+        end
+        local econConfig = upgradeConfig.Econ
+        
+        if econState.MassStorageRatio < econConfig.storage[1] or econState.EnergyStorageRatio < econConfig.storage[2] then
             return false
         end
 
         if econConfig.efficiency then
-            if GetEconomyIncome(aiBrain, 'MASS') / (GetEconomyRequested(aiBrain, 'MASS') + 0.01) < econConfig.efficiency then
+            if econState.MassEfficiencyOverTime < econConfig.efficiency then
                 return false
             end
         end
         
         return true
+    end,
+
+    ZoneHasSufficientIntel = function(self, zone, config)
+        local intel = zone.intelassignment
+        if not intel then return false end
+        
+        -- Map the search to the correct sub-table based on the config's primary category
+        local unitList = EntityCategoryContains(categories.SONAR, config.Category) 
+                         and intel.SonarUnits or intel.RadarUnits
+        
+        if not unitList then return false end
+
+        for _, unit in unitList do
+            -- We check if ANY unit in the zone matches the goal tech level
+            -- e.g. If we want T2, and we find a T2 or T3, we are "Sufficient"
+            if not unit.Dead and EntityCategoryContains(config.TargetTechCategory, unit) then
+                return true 
+            end
+        end
+        return false
+    end,
+
+    GetUpgradeCandidateInZone = function(self, zone, category)
+        local intel = zone.intelassignment
+        if not intel then return nil end
+        
+        -- Determine which table to search based on the requested category
+        local searchTable = EntityCategoryContains(categories.SONAR, category) 
+                            and (intel.SonarUnits or {}) 
+                            or (intel.RadarUnits or {})
+
+        for _, unit in searchTable do
+            -- 1. Is it the right type (e.g. T1 Radar)?
+            -- 2. Is it alive?
+            -- 3. Is it already upgrading?
+            if not unit.Dead and EntityCategoryContains(category, unit) then
+                if not unit:IsUnitState('Upgrading') then
+                    -- Bonus check: ensure the unit actually HAS an upgrade path
+                    if unit.Blueprint.General.UpgradesTo then
+                        return unit
+                    end
+                end
+            end
+        end
+        return nil
     end,
 
     ManageShieldUpgrades = function(self, aiBrain)
@@ -2627,45 +2805,6 @@ StructureManager = Class {
         end
     end,
 
-    ManageSonarUpgrades = function(self, aiBrain)
-        local gameTime = GetGameTimeSeconds()
-        
-        -- T1 -> T2 Sonar Upgrade (Time > 600s)
-        if gameTime > 600 then
-            if self:CheckEconForUpgrade(aiBrain, 0.05, 0.80) then
-                -- We search for T1 Sonars to upgrade
-                local t1Sonars = aiBrain:GetListOfUnits(self.UpgradeConfig.SONAR.T1, false)
-                for _, unit in t1Sonars do
-                    if not unit.Dead and not unit:IsUnitState('Upgrading') and not self.UpgradingStructures[unit.EntityId] then
-                        IssueUpgrade({unit}, unit.Blueprint.General.UpgradesTo)
-                        self.UpgradingStructures[unit.EntityId] = unit
-                        return -- One per tick
-                    end
-                end
-            end
-        end
-
-        -- T2 -> T3 Sonar Upgrade (Time > 1200s + Faction + Mobile Prereq)
-        if gameTime > 1200 then
-            local fIdx = aiBrain:GetFactionIndex()
-            -- 1: UEF, 2: Aeon, 3: Cybran, 5: Nomads (Seraphim excluded as per builder)
-            if fIdx == 1 or fIdx == 2 or fIdx == 3 or fIdx == 5 then
-                -- Check for Mobile T2 Sonar presence (UCBC requirement)
-                local mobileSonar = aiBrain:GetNumUnitsAroundPoint(self.UpgradeConfig.SONAR.MobileT2, aiBrain:GetArmyStartPos(), 9999, 'Ally')
-                if mobileSonar > 0 and self:CheckEconForUpgrade(aiBrain, 0.05, 0.90) then
-                    local t2Sonars = aiBrain:GetListOfUnits(self.UpgradeConfig.SONAR.T2, false)
-                    for _, unit in t2Sonars do
-                        if not unit.Dead and not unit:IsUnitState('Upgrading') and not self.UpgradingStructures[unit.EntityId] then
-                            IssueUpgrade({unit}, unit.Blueprint.General.UpgradesTo)
-                            self.UpgradingStructures[unit.EntityId] = unit
-                            return
-                        end
-                    end
-                end
-            end
-        end
-    end,
-
     GetUpgradingCount = function(self, aiBrain, category)
         local units = aiBrain:GetListOfUnits(category, false)
         local count = 0
@@ -2694,6 +2833,7 @@ StructureManager = Class {
         if not unit or unit.Dead or unit:IsUnitState('Upgrading') then return false end
         
         local upgradeID = unit.Blueprint.General.UpgradesTo
+        LOG('Upgrade to '..tostring(upgradeID))
         if upgradeID then
             IssueUpgrade({unit}, upgradeID)
             -- Atomic lock: prevents the thread from picking this unit again 
@@ -2702,6 +2842,56 @@ StructureManager = Class {
             return true
         end
         return false
+    end,
+
+    GetPrioritizedLayerZones = function(self, zoneTable, mainZoneID, threatKey)
+        local sorted = {}
+        for id, zone in zoneTable do
+            local priority = 0
+            -- Essential: Main base always gets first dibs on intel/shields
+            if id == mainZoneID then
+                priority = priority + 1000
+            end
+            -- Add threat weight (enemylandthreat or enemyantisurfacethreat)
+            priority = priority + (zone[threatKey] or 0)
+            
+            table.insert(sorted, { id = id, data = zone, score = priority })
+        end
+        
+        table.sort(sorted, function(a, b) return a.score > b.score end)
+        
+        -- Return just the data objects in order
+        local result = {}
+        for _, v in sorted do table.insert(result, v.data) end
+        return result
+    end,
+
+    GetIntelUpgradingCount = function(self, aiBrain)
+        local intelUnits = aiBrain:GetListOfUnits(categories.STRUCTURE * (categories.RADAR + categories.SONAR), true)
+        local counts = { RadarT1 = 0, RadarT2 = 0, SonarT1 = 0, SonarT2 = 0, Total = 0 }
+        
+        for _, unit in intelUnits do
+            if unit and not unit.Dead then
+                if unit:IsUnitState('Upgrading') then
+                    local unitCats = unit.Blueprint.CategoriesHash
+                    if unitCats.RADAR then
+                        if unitCats.TECH1 then
+                            counts.RadarT1 = counts.RadarT1 + 1
+                        elseif unitCats.TECH2 then
+                            counts.RadarT2 = counts.RadarT2 + 1
+                        end
+                    elseif unitCats.SONAR then
+                        if unitCats.TECH1 then
+                            counts.SonarT1 = counts.SonarT1 + 1
+                        elseif unitCats.TECH2 then
+                            counts.SonarT2 = counts.SonarT2 + 1
+                        end
+                    end
+                    counts.Total = counts.Total + 1
+                end
+            end
+        end
+        return counts
     end,
 }
 

@@ -10,7 +10,7 @@ BaseBuilderTemplate {
     Builders = {       
                 -- Intel Builders --
                 'RNGAI RadarBuilders Expansion',
-                'RNGAI RadarUpgrade T1 Expansion',
+                --'RNGAI RadarUpgrade T1 Expansion',
         
                 -- Economy Builders --
                 'RNGAI Energy Builder Expansion',

@@ -10,7 +10,7 @@ BuilderGroup {
         BuilderName = 'RNGAI T1 Scout',
         PlatoonTemplate = 'T1LandScout',
         --UnitCategory = categories.LAND * categories.SCOUT,
-        Priority = 755,
+        Priority = 745,
         BuilderConditions = {
             { MIBC, 'PathCheckToCurrentEnemyRNG', { 'LocationType', 'LAND' } },
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading'}},

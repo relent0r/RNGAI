@@ -13,7 +13,6 @@ BaseBuilderTemplate {
 
         -- Sea Unit Builders
         'RNGAI SonarBuilders',
-        'RNGAI SonarUpgrade',
         -- Sea Unit Formers
         'RNGAI Sea Builders T1',
         'RNGAI Sea Builders T23',

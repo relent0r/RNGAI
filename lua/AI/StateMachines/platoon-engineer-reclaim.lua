@@ -1288,6 +1288,7 @@ AssignToUnitsMachine = function(data, platoon, units)
                     eng.UnitBeingAssist = nil
                     eng.ReclaimInProgress = nil
                     eng.CaptureInProgress = nil
+                    eng.BuildFailedCount = 0
                     if not eng.Dead and eng:IsPaused() then
                         eng:SetPaused(false)
                     end

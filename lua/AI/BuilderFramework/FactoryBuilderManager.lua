@@ -246,7 +246,6 @@ FactoryBuilderManager = Class(BuilderManager) {
                 unit.Zone = zone
                 local label = self.Brain.BuilderManagers[self.LocationType].Label
                 if not label then
-                    LOG('Label wasnt defined')
                     if unitCats.NAVAL then
                         label = NavUtils.GetLabel('Water', unit:GetPosition())
                     else
@@ -254,7 +253,6 @@ FactoryBuilderManager = Class(BuilderManager) {
                     end
                 end
                 unit.Label = label
-                LOG('Factory Managet label is '..tostring(label))
             end
         end
     end,
@@ -517,7 +515,7 @@ FactoryBuilderManager = Class(BuilderManager) {
                 end
             else
                 local template = self:GetFactoryTemplate(builder:GetPlatoonTemplate(), factory)
-                --LOG('*AI DEBUG: ARMY '..tostring(self.Brain:GetArmyIndex())..': Factory Builder Manager Building - '..tostring(builder.BuilderName)..' at base '..tostring(self.LocationType))
+                LOG('*AI DEBUG: ARMY '..tostring(self.Brain:GetArmyIndex())..': Factory Builder Manager Building - '..tostring(builder.BuilderName)..' at base '..tostring(self.LocationType))
                 self.Brain:BuildPlatoon(template, {factory}, 1)
             end
         else

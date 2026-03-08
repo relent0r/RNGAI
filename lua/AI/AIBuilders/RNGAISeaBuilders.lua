@@ -366,7 +366,7 @@ BuilderGroup {
         Priority = 310,
         InstanceCount = 20,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ENGINEER} },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ENGINEER - categories.MOBILESONAR} },
             --{ SeaAttackCondition, { 'LocationType', 14 } },
         },
         BuilderData = {

@@ -14,13 +14,10 @@ GridReclaimRNG = Class(GridReclaim) {
         LOG('Init GridReclaimRNG')
         GridReclaim.__init(self)
         
-        -- Initialize our RNG-specific tables
-        self.ZoneTotals = {}
-        self.CellToZoneMap = {}
+
         self.ZonesMapped = false
     end,
 
-    --- Fast-access getter for zone-based reclaim values
     ---@param self AIGridReclaimRNG
     ---@param zoneID number
     ---@return number

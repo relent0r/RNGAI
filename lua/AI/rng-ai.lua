@@ -917,7 +917,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 }
             },
             categoryspend = {
-                eng = 0,
+                eng = {
+                    T1 = 0,
+                    T2 = 0,
+                    T3 = 0,
+                    com = 0
+                },
                 fact = {
                     Land = 0,
                     LandUpgrading=0,
@@ -926,7 +931,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     Naval = 0,
                     NavalUpgrading=0
                 },
-                silo = 0,
+                silo = {
+                    T2 = 0,
+                    T3 = 0
+                },
                 mex = {
                       T1 = 0,
                       T2 = 0,
@@ -2570,6 +2578,14 @@ AIBrain = Class(RNGAIBrainClass) {
         
         for _, v in massMarkers do
             if v.type == 'Mass' then
+                if not v.zoneid and self.ZonesInitialized then
+                    if RUtils.PositionOnWater(v.position[1], v.position[3]) then
+                        -- tbd define water based zones
+                        v.zoneid = MAP:GetZoneID(v.position,self.Zones.Naval.index)
+                    else
+                        v.zoneid = MAP:GetZoneID(v.position,self.Zones.Land.index)
+                    end
+                end
                 if v.Label and not self.GraphZones.FirstRun and not self.GraphZones.HasRun then
                     graphCheck = true
                     if not self.GraphZones[v.Label] then
@@ -2594,19 +2610,26 @@ AIBrain = Class(RNGAIBrainClass) {
                     end
                     
                 end
-                if CanBuildStructureAt(self, 'ueb1103', v.position) then
+                local teamValueLow = false
+                if v.zoneid then
+                    if v.Water then
+                        local zone = self.Zones.Naval.zones[v.zoneid]
+                        if zone.teamvalue < 0.7 then
+                            teamValueLow = true
+                        end
+                    else
+                        local zone = self.Zones.Land.zones[v.zoneid]
+                        if zone.teamvalue < 0.7 then
+                            teamValueLow = true
+                        end
+                    end
+                end
+
+                if not teamValueLow  and CanBuildStructureAt(self, 'ueb1103', v.position) then
                     massMarkerBuildable = massMarkerBuildable + 1
                     RNGINSERT(MassMarker, v)
                 end
                 markerCount = markerCount + 1
-            end
-            if not v.zoneid and self.ZonesInitialized then
-                if RUtils.PositionOnWater(v.position[1], v.position[3]) then
-                    -- tbd define water based zones
-                    v.zoneid = MAP:GetZoneID(v.position,self.Zones.Naval.index)
-                else
-                    v.zoneid = MAP:GetZoneID(v.position,self.Zones.Land.index)
-                end
             end
         end
         for _, v in self.GraphZones do
@@ -5728,7 +5751,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local phaseWeight = 6.25 - (1.2 * self.BrainIntel.HighestPhase)
                 local approxAssistConsumption = self.EngineerAssistManagerMinAssistPower * (phaseWeight * self.EcoManager.BuildMultiplier)
 
-                LOG('approxAssistConsumption is '..tostring(approxAssistConsumption))
+                --LOG('approxAssistConsumption is '..tostring(approxAssistConsumption))
                 potentialPowerConsumption = potentialPowerConsumption + approxAssistConsumption
             end
             if potentialPowerConsumption > 0 then
@@ -5750,7 +5773,7 @@ AIBrain = Class(RNGAIBrainClass) {
         --RNGLOG('Eco selector manager for '..priorityUnit..' is '..action..' Type is '..type)
         local engineerCats
         local totalResourceSaved = 0
-        local engineerCats = categories.STRUCTURE * (categories.ENERGYPRODUCTION + categories.TACTICALMISSILEPLATFORM + (categories.TECH3 * categories.ANTIMISSILE) + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS)
+        local engineerCats = categories.STRUCTURE * (categories.ENERGYPRODUCTION + categories.TACTICALMISSILEPLATFORM + (categories.TECH3 * categories.ANTIMISSILE) + categories.MASSSTORAGE + categories.ENERGYSTORAGE + categories.SHIELD + categories.GATE + categories.OPTICS + categories.RADAR + categories.SONAR)
         
         for k, v in units do
             if not v.Dead then  
@@ -7253,9 +7276,14 @@ AIBrain = Class(RNGAIBrainClass) {
             -- Configurable ratios for economy spend and assist
             local economyUpgradeSpend = self.EconomyUpgradeSpendDefault or 0.05
             local engineerAssistRatio = self.EngineerAssistRatioDefault or 0.05
+            local phaseBonus = 0
             if self.BrainIntel.HighestPhase > 1 then
-                economyUpgradeSpend = economyUpgradeSpend + (0.03 * self.BrainIntel.HighestPhase)
+                local storageMass = self:GetEconomyStored('MASS')
+                if self.EconomyOverTimeCurrent.MassTrendOverTime > -1.0 or storageMass > 50 then
+                    phaseBonus = 0.03 * self.BrainIntel.HighestPhase
+                end
             end
+            economyUpgradeSpend = economyUpgradeSpend + phaseBonus
             if self.BrainIntel.PlayerStrategy.T3AirRush then
                 engineerAssistRatio = engineerAssistRatio + 0.2
             end
@@ -7380,6 +7408,8 @@ AIBrain = Class(RNGAIBrainClass) {
             excessAllocation = math.max(0, excessAllocation - ecoConsumed)
 
             -- Calculate available budget for production (after reserving for economy and assist)
+            LOG('myThreat.LandNow '..tostring(myThreat.LandNow))
+            LOG('myThreat.AllyLandThreat '..tostring(myThreat.AllyLandThreat))
             local totalThreatRatio = myThreat.LandNow + myThreat.AllyLandThreat + myThreat.AntiAirNow + myThreat.AllyAntiAirThreat + myThreat.NavalNow + myThreat.AllyNavalThreat + enemyThreat.Land + enemyThreat.AntiAir + enemyThreat.Naval
             local availableRatio = math.max(0, 1 - (economyUpgradeSpend + engineerAssistRatio))
             if totalThreatRatio == 0 then
@@ -7496,6 +7526,21 @@ AIBrain = Class(RNGAIBrainClass) {
                 storageFactor = math.max(0.3, 0.5 + (drainTime / 120))
             end
 
+            -- This tempers the assist ratio to take into account normal construction spending since we don't currently track it.    
+            local assistConsumption = self.EngineerAssistManagerCurrentConsumption or 0
+            local totalEngSpend = (self.cmanager.categoryspend.eng.T1 + self.cmanager.categoryspend.eng.T2 + 
+                                self.cmanager.categoryspend.eng.T3 + self.cmanager.categoryspend.eng.com)
+            local constructionSpend = math.max(0, totalEngSpend - assistConsumption)
+            local constructionRatio = constructionSpend / (totalIncome > 0 and totalIncome or 1)
+
+            -- This is your tuning knob. 
+            -- 0.2 means: "Reduce assist budget by 20% of whatever we are spending on construction."
+            local assistNudgeWeight = 0.2 
+            local assistNudge = constructionRatio * assistNudgeWeight
+
+            -- Apply the nudge
+            engineerAssistRatio = math.max(engineerAssistRatioMin, engineerAssistRatio - assistNudge)
+
             -- Combine them into a scaling multiplier
             local ecoHealthMultiplier = math.max(0.3, math.min(1.5, trendFactor * storageFactor))
             engineerAssistRatio = engineerAssistRatio * ecoHealthMultiplier
@@ -7510,6 +7555,7 @@ AIBrain = Class(RNGAIBrainClass) {
             self.ProductionRatios.Naval = newNavalRatio
             self.EngineerAssistRatio = engineerAssistRatio
             self.EconomyUpgradeSpend = economyUpgradeSpend
+            --LOG('Total Economy Consumption '..tostring(assistConsumption)..' current income '..tostring(self.cmanager.income.r.m)..' current brain assist ratio '..tostring(self.EngineerAssistRatio)..' assist nudge is '..tostring(assistNudge)..' current engineer consumption '..tostring(totalEngSpend))
 
             local totalWeightedNeed = 0
             for _, v in self.BuilderManagers do
@@ -7528,11 +7574,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 else
                     fmgr.BaseLandRatio = 0
                 end
-                --LOG('BaseLandRatio is '..tostring(fmgr.BaseLandRatio)..' for base '..tostring(fmgr.LocationType))
+                LOG('BaseLandRatio is '..tostring(fmgr.BaseLandRatio)..' for base '..tostring(fmgr.LocationType)..' local zone threat assignment is :'..tostring(fmgr.ZoneThreatAssignment)..' saturation ratio :'..tostring(fmgr.SaturationRatio)..'EconomicGravity :'..tostring(fmgr.EconomicGravity))
             end
     
             -- Logging
-            --[[
+            
             LOG('AI Name : '..tostring(self.Nickname)..' Current game time : '..tostring(GetGameTimeSeconds()))
             LOG('Current Best Army ownership is '..tostring(brainIntel.PlayerZoneControl))
             LOG('Are we a naval map '..tostring(isNavalMap)..' Map water ratio '..tostring(self.MapWaterRatio))
@@ -7564,10 +7610,16 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG('Current Engineer Spend T1 : '..tostring(self.cmanager.categoryspend.eng.T1)..' Current Engineer Spend T2 : '..tostring(self.cmanager.categoryspend.eng.T2)..' Current Engineer Spend T3 : '..tostring(self.cmanager.categoryspend.eng.T3)..' Current Engineer Spend COM : '..tostring(self.cmanager.categoryspend.eng.com))
             LOG('Current Engineer Spend Distribution '..tostring(repr(self.EngineerSpendDistributionTable)))
             LOG('Excess Allocation at the end of loop was '..tostring(excessAllocation))
-            LOG('Current Trend '..tostring(self:GetEconomyTrend('MASS')))
+            LOG('Current Mass Trend '..tostring(self:GetEconomyTrend('MASS')))
             LOG('Current Bias '..tostring(repr(currentBias)))
-            ]]
 
+            local actualTotalSpend = (self.cmanager.categoryspend.eng.T1 + self.cmanager.categoryspend.eng.T2 + self.cmanager.categoryspend.eng.T3 + self.cmanager.categoryspend.eng.com)
+            local theoreticalBudget = (newLandRatio + newAirRatio + newNavalRatio + engineerAssistRatio + economyUpgradeSpend) * totalIncome
+            LOG(string.format("ECON_GAP_AUDIT | ActualEngSpend: %.2f | TheoBudget: %.2f | LeakageRatio: %.2f", actualTotalSpend, theoreticalBudget, (1.0 - (newLandRatio + newAirRatio + newNavalRatio + engineerAssistRatio + economyUpgradeSpend))))
+            local constructionSpend = actualTotalSpend - (self.EngineerAssistManagerBuildPower or 0)
+            local constructionRatio = constructionSpend / (totalIncome > 0 and totalIncome or 1)
+            RNGLOG(string.format("DERIVATION_AUDIT | Income: %.2f | ActualConstructionRatio: %.2f | IntendedAssistRatio: %.2f", totalIncome, constructionRatio, engineerAssistRatio))
+            
         end
     end,
 

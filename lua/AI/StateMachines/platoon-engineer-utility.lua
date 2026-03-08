@@ -484,6 +484,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
+            LOG('Engineer has not construction job, what is it? '..tostring(self.BuilderName)..' platoon data is '..tostring(repr(self.PlatoonData)))
             coroutine.yield(10)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -1454,6 +1455,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 local engPos = eng:GetPosition()
                 local movementRequired = true
                 eng.PerformingBuildTask = true
+                if whatToBuild == 'urb1201' then
+                    LOG('We are going to build a t2 pgen')
+                end
                 IssueClearCommands({eng})
 
                 if VDist3Sq(engPos, buildLocation) < 225 then
@@ -1917,10 +1921,10 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             --LOG('Entering Contructing for '..self.BuilderName)
             local eng = self.eng
             local aiBrain = self:GetBrain()
-
             while not IsDestroyed(eng) and (eng.GetCommandQueue and (0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving"))) do
                 --LOG('Constructing Loop Check: Commands='..tostring(RNGGETN(eng:GetCommandQueue()))..', Building='..tostring(eng:IsUnitState('Building'))..', Moving='..tostring(eng:IsUnitState("Moving")))
                 coroutine.yield(1)
+                --LOG(string.format("RNGLOG: Engineer %s in Constructing state. EconStall: %s. DistanceToTarget: %s", self:GetPlatoonUnits()[1]:GetEntityId(), aiBrain:GetEconomyStoredRatio('MASS'), VDist3(self:GetPlatoonUnits()[1]:GetPosition(), self.Pos or self:GetPlatoonUnits()[1]:GetPosition())))
                 local platPos = eng:GetPosition()
                 if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
                     if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, platPos, 30, 'Enemy') > 0 then
@@ -2087,6 +2091,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             end
             if eng:IsIdleState() then
                 coroutine.yield(2)
+                --LOG('Build queue is '..tostring(repr(eng.EngineerBuildQueue)))
                 self:ChangeState(self.PerformBuildTask)
                 return
             else
@@ -2139,6 +2144,7 @@ AssignToUnitsMachine = function(data, platoon, units)
             for _, unit in platoonUnits do
                 IssueClearCommands({unit})
                 unit.PlatoonHandle = platoon
+                unit.BuildFailedCount = 0
                 if not unit.Dead and unit:TestToggleCaps('RULEUTC_StealthToggle') then
                     unit:SetScriptBit('RULEUTC_StealthToggle', false)
                 end

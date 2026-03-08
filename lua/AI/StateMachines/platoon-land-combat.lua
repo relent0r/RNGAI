@@ -805,6 +805,32 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
             else
                 --self:LogDebug(string.format('Platoon tried but didnt use transports'))
                 coroutine.yield(20)
+                if self.MovementLayer == 'Land' and self:CalculatePlatoonThreat('Surface', categories.AMPHIBIOUS + categories.HOVER) > 0 then
+                    LOG('This platoon has no transport but amphib surface threat')
+                    if NavUtils.CanPathTo('Amphibious', self.Pos, self.dest) then
+                        LOG('This platoon can path to the position via amphib')
+                        local amphibiousSurfaceUnits = {}
+                        local amphibiousAntiAirUnits = {}
+                        local units = self:GetPlatoonUnits()
+                        for _, unit in units do
+                            local unitCats = unit.Blueprint.CategoriesHash
+                            if (unitCats.AMPHIBIOUS or unitCats.HOVER) and unitCats.DIRECTFIRE and not unitCats.ANTIAIR then
+                                table.insert(amphibiousSurfaceUnits, unit)
+                            elseif (unitCats.AMPHIBIOUS or unitCats.HOVER) and unitCats.ANTIAIR then
+                                table.insert(amphibiousAntiAirUnits, unit)
+                            end
+                        end
+                        LOG('This platoon has this count of amphib surface fire units '..tostring(table.getn(amphibiousSurfaceUnits)))
+                        if table.getn(amphibiousSurfaceUnits) > 0 then
+                            LOG('Creating new platoon')
+                            local plat = brain:MakePlatoon('', 'none')
+                            brain:AssignUnitsToPlatoon(plat, amphibiousSurfaceUnits, 'Attack', 'None')
+                            brain:AssignUnitsToPlatoon(plat, amphibiousAntiAirUnits, 'Guard', 'None')
+                            import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, plat, plat:GetPlatoonUnits())
+                            coroutine.yield(2)
+                        end
+                    end
+                end
                 if self.Home and self.LocationType then
                     local hx = self.Pos[1] - self.Home[1]
                     local hz = self.Pos[3] - self.Home[3]

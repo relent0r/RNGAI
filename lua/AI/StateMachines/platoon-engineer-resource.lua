@@ -666,6 +666,7 @@ AssignToUnitsMachine = function(data, platoon, units)
             for _, unit in platoonUnits do
                 IssueClearCommands({unit})
                 unit.PlatoonHandle = platoon
+                unit.BuildFailedCount = 0
                 if not unit.Dead and unit:TestToggleCaps('RULEUTC_StealthToggle') then
                     unit:SetScriptBit('RULEUTC_StealthToggle', false)
                 end

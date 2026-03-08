@@ -119,7 +119,12 @@ IntelManager = Class {
             EnemyAirSnipeThreat = false,
             EarlyT2AmphibBuilt = false,
             EarlyT3Built = false,
-            RangedAssaultPositions = {}
+            RangedAssaultPositions = {},
+            T2RadarAllowed = false,
+            T3RadarAllowed = false,
+            T2SonarAllowed = false,
+            T3SonarAllowed = false,
+            T3ShieldsAllowed = false,
         }
         self.UnitStats = {
             Land = {
@@ -1976,14 +1981,16 @@ IntelManager = Class {
 
     AssignIntelUnit = function(self, unit)
         local aiBrain = self.Brain
-        local intelRadius = unit.Blueprint.Intel.RadarRadius
-        local radarPosition = unit:GetPosition()
+        
+        local intelPosition = unit:GetPosition()
         if unit.Blueprint.CategoriesHash.RADAR then
+            
+            local intelRadius = unit.Blueprint.Intel.RadarRadius
             --LOG('Zone set for radar that has been built '..unit.UnitId)
-            unit.zoneid = MAP:GetZoneID(radarPosition,aiBrain.Zones.Land.index)
+            unit.zoneid = MAP:GetZoneID(intelPosition,aiBrain.Zones.Land.index)
             if unit.zoneid then
                 local zone = aiBrain.Zones.Land.zones[unit.zoneid]
-                if VDist3Sq(radarPosition, zone.pos) < intelRadius * intelRadius then
+                if VDist3Sq(intelPosition, zone.pos) < intelRadius * intelRadius then
                     if not zone.intelassignment.RadarUnits then
                         zone.intelassignment.RadarUnits = {}
                     end
@@ -1995,14 +2002,34 @@ IntelManager = Class {
             end
             local gridSearch = math.floor(unit.Blueprint.Intel.RadarRadius / self.MapIntelGridSize)
             --RNGLOG('GridSearch for IntelCoverage is '..gridSearch)
-            self:InfectGridPosition(radarPosition, gridSearch, 'Radar', 'IntelCoverage', true, unit)
-            self:FlushExistingStructureRequest(radarPosition, math.ceil(intelRadius * 0.7), 'RADAR')
+            self:InfectGridPosition(intelPosition, gridSearch, 'Radar', 'IntelCoverage', true, unit)
+            self:FlushExistingStructureRequest(intelPosition, math.ceil(intelRadius * 0.7), 'RADAR')
+        elseif unit.Blueprint.CategoriesHash.SONAR then
+            local intelRadius = unit.Blueprint.Intel.SonarRadius
+            --LOG('Zone set for radar that has been built '..unit.UnitId)
+            unit.zoneid = MAP:GetZoneID(intelPosition,aiBrain.Zones.Naval.index)
+            if unit.zoneid then
+                local zone = aiBrain.Zones.Naval.zones[unit.zoneid]
+                if VDist3Sq(intelPosition, zone.pos) < intelRadius * intelRadius then
+                    if not zone.intelassignment.SonarUnits then
+                        zone.intelassignment.SonarUnits = {}
+                    end
+                    RNGINSERT(zone.intelassignment.SonarUnits, unit)
+                    zone.intelassignment.SonarCoverage = true
+                end
+            else
+                WARN('No ZoneID for Sonar, unable to set coverage area')
+            end
+            local gridSearch = math.floor(unit.Blueprint.Intel.SonarRadius / self.MapIntelGridSize)
+            --RNGLOG('GridSearch for IntelCoverage is '..gridSearch)
+            self:InfectGridPosition(intelPosition, gridSearch, 'Sonar', 'IntelCoverage', true, unit)
+            self:FlushExistingStructureRequest(intelPosition, math.ceil(intelRadius * 0.7), 'SONAR')
         end
     end,
 
     UnassignIntelUnit = function(self, unit)
         local aiBrain = self.Brain
-        local radarPosition = unit:GetPosition()
+        local intelPosition = unit:GetPosition()
         if unit.Blueprint.CategoriesHash.RADAR then
             --LOG('Unassigning Radar Unit '..tostring(unit.UnitId))
             if unit.zoneid then
@@ -2021,7 +2048,26 @@ IntelManager = Class {
                 end
             end
             local gridSearch = math.floor(unit.Blueprint.Intel.RadarRadius / self.MapIntelGridSize)
-            self:DisinfectGridPosition(radarPosition, gridSearch, 'Radar', 'IntelCoverage', false, unit)
+            self:DisinfectGridPosition(intelPosition, gridSearch, 'Radar', 'IntelCoverage', false, unit)
+        elseif unit.Blueprint.CategoriesHash.SONAR then
+            --LOG('Unassigning Sonar Unit '..tostring(unit.UnitId))
+            if unit.zoneid then
+                local zone = aiBrain.Zones.Land.zones[unit.zoneid]
+                if zone.intelassignment.SonarUnits then
+                    for c, b in zone.intelassignment.SonarUnits do
+                        if b == unit then
+                            --RNGLOG('Found Sonar that was covering zone '..k..' removing')
+                            RNGREMOVE(zone.intelassignment.SonarUnits, c)
+                        end
+                    end
+                    if zone.intelassignment.SonarCoverage and table.empty(zone.intelassignment.SonarUnits) then
+                        --RNGLOG('No Sonars in range for zone '..k..' setting radar coverage to false')
+                        zone.intelassignment.SonarCoverage = false
+                    end
+                end
+            end
+            local gridSearch = math.floor(unit.Blueprint.Intel.SonarRadius / self.MapIntelGridSize)
+            self:DisinfectGridPosition(intelPosition, gridSearch, 'Sonar', 'IntelCoverage', false, unit)
         end
     end,
 
@@ -2418,7 +2464,7 @@ IntelManager = Class {
         return false
     end,
 
-    ZoneSetIntelAssignment = function(self, key, zone)
+    ZoneSetIntelAssignment = function(self, key, zone) 
         local IntelAssignment = { Zone = key, Position = zone.pos, RadarCoverage = false, RadarUnits = { }, ScoutUnit = false, StartPosition = zone.startpositionclose}
         return IntelAssignment
     end,
@@ -2933,6 +2979,12 @@ IntelManager = Class {
             self.MapIntelGrid[gridX][gridZ].IntelCoverage = true
             --aiBrain:ForkThread(self.DrawInfection, self.MapIntelGrid[gridX][gridZ].Position)
             gridsSet = gridsSet + 1
+        elseif type == 'Sonar' then
+            self.MapIntelGrid[gridX][gridZ].Sonars[unit.EntityId] = {}
+            self.MapIntelGrid[gridX][gridZ].Sonars[unit.EntityId] = unit
+            self.MapIntelGrid[gridX][gridZ].SonarCoverage = true
+            --aiBrain:ForkThread(self.DrawInfection, self.MapIntelGrid[gridX][gridZ].Position)
+            gridsSet = gridsSet + 1
         end
         for x = math.max(self.MapIntelGridXMin, gridX - gridSize), math.min(self.MapIntelGridXMax, gridX + gridSize), 1 do
             for z = math.max(self.MapIntelGridZMin, gridZ - gridSize), math.min(self.MapIntelGridZMax, gridZ + gridSize), 1 do
@@ -2940,6 +2992,9 @@ IntelManager = Class {
                 if type == 'Radar' then
                     self.MapIntelGrid[x][z].Radars[unit.EntityId] = {}
                     self.MapIntelGrid[x][z].Radars[unit.EntityId] = unit
+                elseif type == 'Sonar' then
+                    self.MapIntelGrid[x][z].Sonars[unit.EntityId] = {}
+                    self.MapIntelGrid[x][z].Sonars[unit.EntityId] = unit
                 end
                 --aiBrain:ForkThread(self.DrawInfection, self.MapIntelGrid[x][z].Position)
                 gridsSet = gridsSet + 1
@@ -2948,13 +3003,13 @@ IntelManager = Class {
         --RNGLOG('Number of grids set '..gridsSet..'with property '..property..' with the value '..repr(value))
     end,
 
-    DisinfectGridPosition = function (self, position, gridSize, type, property, value, unit)
+    DisinfectGridPosition = function (self, position, gridSize, intelType, property, value, unit)
         local gridX, gridZ = self:GetIntelGrid(position)
         local gridsSet = 0
         local intelRadius
         local needSort = false
         --RNGLOG('Disinfecting Grid Positions, grid size is '..gridSize)
-        if type == 'Radar' then
+        if intelType == 'Radar' then
             self.MapIntelGrid[gridX][gridZ].Radars[unit.EntityId] = nil
             needSort = true
             local radarCoverage = false
@@ -2972,10 +3027,28 @@ IntelManager = Class {
             end
             --aiBrain:ForkThread(self.DrawInfection, self.MapIntelGrid[gridX][gridZ].Position)
             gridsSet = gridsSet + 1
+        elseif intelType == 'Sonar' then
+            self.MapIntelGrid[gridX][gridZ].Radars[unit.EntityId] = nil
+            needSort = true
+            local sonarCoverage = false
+            for k, v in self.MapIntelGrid[gridX][gridZ].Sonars do
+                if v and not v.Dead then
+                    sonarCoverage = true
+                    break
+                end
+            end
+            if needSort then
+                self.MapIntelGrid[gridX][gridZ].Sonars = self:RebuildTable(self.MapIntelGrid[gridX][gridZ].Sonars)
+            end
+            if not sonarCoverage then
+                self.MapIntelGrid[gridX][gridZ][property] = value
+            end
+            --aiBrain:ForkThread(self.DrawInfection, self.MapIntelGrid[gridX][gridZ].Position)
+            gridsSet = gridsSet + 1
         end
         for x = math.max(1, gridX - gridSize), math.min(self.MapIntelGridXRes, gridX + gridSize) do
             for z = math.max(1, gridZ - gridSize), math.min(self.MapIntelGridZRes, gridZ + gridSize) do
-                if type == 'Radar' then
+                if intelType == 'Radar' then
                     --RNGLOG('Check for another radar and then confirm radius is same or greater?')
                     local radarCoverage = false
                     for k, v in self.MapIntelGrid[x][z].Radars do
@@ -2986,6 +3059,19 @@ IntelManager = Class {
                         end
                     end
                     if not radarCoverage then
+                        self.MapIntelGrid[x][z][property] = value
+                    end
+                elseif intelType == 'Sonar' then
+                    --RNGLOG('Check for another sonar and then confirm radius is same or greater?')
+                    local sonarCoverage = false
+                    for k, v in self.MapIntelGrid[x][z].Sonar do
+                        if v and not v.Dead then
+                            --RNGLOG('Found another sonar, dont set this grid to false')
+                            sonarCoverage = true
+                            break
+                        end
+                    end
+                    if not sonarCoverage then
                         self.MapIntelGrid[x][z][property] = value
                     end
                 end
@@ -3295,6 +3381,13 @@ IntelManager = Class {
                                 local gridX, gridZ = self:GetIntelGrid(targetPos)
                                 desiredStrikeDamage = desiredStrikeDamage + (150 * 120)
                                 table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = targetPos, Type = 'AntiNavy'} )
+                            elseif unitCats.AMPHIBIOUS then
+                                local targetPos = v.object:GetPosition()
+                                if RUtils.PositionInWater(targetPos) then
+                                    local gridX, gridZ = self:GetIntelGrid(targetPos)
+                                    desiredStrikeDamage = desiredStrikeDamage + (150 * 120)
+                                    table.insert( potentialStrikes, { GridID = {GridX = gridX, GridZ = gridZ}, Position = targetPos, Type = 'AntiNavy'} )
+                                end
                             end
                         end
                     end
@@ -3965,6 +4058,20 @@ IntelManager = Class {
             else
                 aiBrain.smanager.Demand.Structure.intel.Optics = 0
             end
+            LOG('Check intelstructure game time is '..tostring(gameTime)..' and T2RadarAllowed is '..tostring(self.StrategyFlags.T2RadarAllowed))
+            if self.StrategyFlags.T2RadarAllowed == false and gameTime > 360 then
+                self.StrategyFlags.T2RadarAllowed = true
+            end
+            if self.StrategyFlags.T3RadarAllowed == false and gameTime > 720 then
+                self.StrategyFlags.T3RadarAllowed = true
+            end
+            if self.StrategyFlags.T2SonarAllowed == false and gameTime > 360 then
+                self.StrategyFlags.T2SonarAllowed = true
+            end
+            if self.StrategyFlags.T3SonarAllowed == false and gameTime > 720 then
+                self.StrategyFlags.T3SonarAllowed = true
+            end
+
         elseif productiontype == 'LandIndirectFire' then
             local threatDillutionRatio = 15
             local threatDefenseDillutionRatio = 8
@@ -5749,6 +5856,7 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z] = { }
             intelGrid[x][z].Position = { }
             intelGrid[x][z].Radars = setmetatable({}, WeakValueTable)
+            intelGrid[x][z].Sonars = setmetatable({}, WeakValueTable)
             intelGrid[x][z].Size = { }
             intelGrid[x][z].DistanceToMain = 0
             intelGrid[x][z].AssignedScout = false

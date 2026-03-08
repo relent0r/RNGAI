@@ -1857,18 +1857,34 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                         coroutine.yield(2)
                         local pauseTimeOut = 0
+                        local failureCount = 0
+                        local hasPgen = brain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.ENERGYPRODUCTION, engPos, 60, 'Ally') > 1
+                        local hasFactory = brain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, engPos, 60, 'Ally') > 0
                         while not eng.Dead and eng:IsUnitState('Building') or 0 < RNGGETN(eng:GetCommandQueue()) do
-                            --[[local massStateCaution = brain:EcoManagerMassStateCheck()
-                            local acuPauseState = eng:IsPaused()
-                            if massStateCaution and pauseTimeOut < 10 then
-                                pauseTimeOut = pauseTimeOut + 1
-                                if not acuPauseState then 
-                                    eng:SetPaused(true)
-                                    coroutine.yield(5)
+                            --[[
+                            local structure = eng.UnitBeingBuilt
+
+                            if structure and not structure.Dead then
+                                local structureCat = structure.Blueprint.CategoriesHash
+                                local isEssential = (structureCat.ENERGYPRODUCTION and not hasPgen) or (structureCat.FACTORY and not hasFactory) or structureCat.MASSEXTRACTION
+                                if not isEssential and structure:GetFractionComplete() < 0.85 then
+                                    if failureCount < 10 and GetEconomyStored(brain, 'MASS') < 12 and GetEconomyTrend(brain, 'MASS') <= 0 then
+                                        failureCount = failureCount + 1
+                                        if failureCount >= 10 then
+                                            IssueClearCommands({eng})
+                                            eng:SetPaused(false)
+                                            break
+                                        end
+                                        if not eng:IsPaused() then
+                                            eng:SetPaused( true )
+                                            coroutine.yield(7)
+                                        end
+                                    elseif eng:IsPaused() then
+                                        eng:SetPaused( false )
+                                    end
                                 end
-                            elseif acuPauseState then
-                                eng:SetPaused(false)
-                            end]]
+                            end
+                            ]]
                             coroutine.yield(5)
                         end
                     end

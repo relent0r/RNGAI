@@ -247,7 +247,9 @@ function CanBuildOnMassLessThanDistanceRNG(aiBrain, locationType, distance, thre
 end
 
 function MassPointRatioAvailable(aiBrain)
-    if aiBrain.BrainIntel.SelfThreat.MassMarkerBuildable / (aiBrain.EnemyIntel.EnemyCount + aiBrain.BrainIntel.AllyCount) > 0 then
+    local buildable = aiBrain.BrainIntel.SelfThreat.MassMarkerBuildable or 0
+    local share = aiBrain.BrainIntel.MassSharePerPlayer or 1
+    if buildable > 0 and buildable >= (share * 0.5) then
         return true
     end
     return false

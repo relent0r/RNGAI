@@ -138,7 +138,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.DEFENSE * categories.ANTIAIR}},
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 0.8 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.6, 0.8 }},
             { UCBC, 'EnemyThreatGreaterThanPointAtRestrictedRNG', {'LocationType', 1, 'AIR'}},
             { UCBC, 'UnitCapCheckLess', { .8 } },
         },

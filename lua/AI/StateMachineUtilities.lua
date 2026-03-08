@@ -1624,15 +1624,16 @@ end
 BuildAIFailedRNG = function(unit, params)
     if unit.Active or unit.Dead then return end
     if not unit.AIPlatoonReference then return end
-    --RNGLOG("*AI DEBUG: MexBuildAIRNG removing queue item")
-    --RNGLOG('Queue Size is '..RNGGETN(unit.EngineerBuildQueue))
+    --LOG('BuildFailed triggered Platoon was '..tostring(unit.PlatoonHandle.BuilderName))
+    -- RNGLOG: Capture callback context
     if not unit.BuildFailedCount then
         unit.BuildFailedCount = 0
     end
-    if unit.CustomState then return end
+    if unit.CustomState then 
+        return 
+    end
     unit.BuildFailedCount = unit.BuildFailedCount + 1
-    --LOG('Current fail count is '..unit.FailedCount)
-    if unit.BuildFailedCount > 2 and not table.empty(unit.EngineerBuildQueue) then
+    if unit.BuildFailedCount > 4 and not table.empty(unit.EngineerBuildQueue) then
         table.remove(unit.EngineerBuildQueue, 1)
         unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.PerformBuildTask)
     elseif not unit.PlatoonHandle.HighValueDiscard then
@@ -1640,6 +1641,7 @@ BuildAIFailedRNG = function(unit, params)
             unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
         else
             unit.PerformingBuildTask = false
+            unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
         end
     end
 end

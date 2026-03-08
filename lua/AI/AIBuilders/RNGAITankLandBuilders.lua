@@ -24,14 +24,6 @@ local DefensivePosture = function(self, aiBrain, builderManager, builderData)
     return builderData.Priority
 end
 
-local ACUClosePriority = function(self, aiBrain)
-    if aiBrain.EnemyIntel.ACUEnemyClose then
-        return 800
-    else
-        return 0
-    end
-end
-
 local NoSmallFrys = function (self, aiBrain)
     if (aiBrain.BrainIntel.SelfThreat.LandNow + aiBrain.BrainIntel.SelfThreat.AllyLandThreat) * 1.2 > aiBrain.EnemyIntel.EnemyThreatCurrent.Land then
         return 0
@@ -314,10 +306,10 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandAA',
         Priority = 855,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'ANTISURFACEAIR' }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.LAND * categories.ANTIAIR } },
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH2 }},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ANTIAIR } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ANTIAIR } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -328,11 +320,11 @@ BuilderGroup {
         PlatoonTemplate = 'T2LandAA',
         Priority = 900,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'ANTISURFACEAIR' }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH2 }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -343,46 +335,11 @@ BuilderGroup {
         PlatoonTemplate = 'T3LandAA',
         Priority = 920,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'ANTISURFACEAIR' }},
+            { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
             { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
+            { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ANTIAIR * (categories.TECH2 + categories.TECH3) } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .85 } },
-        },
-        BuilderType = 'Land',
-    },
-}
-
-BuilderGroup {
-    BuilderGroupName = 'RNGAI T3 AttackLandBuilder Small',
-    BuildersType = 'FactoryBuilder',
-    Builder {
-        BuilderName = 'RNGAI T3 Mobile Arty ACUClose Small',
-        PlatoonTemplate = 'T3LandArtillery',
-        PriorityFunction = ACUClosePriority,
-        Priority = 0,
-        BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.LAND * categories.MOBILE * categories.ARTILLERY * categories.TECH3 } },
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
-            { UCBC, 'UnitCapCheckLess', { .85 } },
-        },
-        BuilderType = 'Land',
-    },
-}
-BuilderGroup {
-    BuilderGroupName = 'RNGAI T3 AttackLandBuilder Large',
-    BuildersType = 'FactoryBuilder',
-    Builder {
-        BuilderName = 'RNGAI T3 Mobile Arty ACUClose Large',
-        PlatoonTemplate = 'T3LandArtillery',
-        PriorityFunction = ACUClosePriority,
-        Priority = 0,
-        BuilderConditions = {
-            { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.LAND * categories.MOBILE * categories.ARTILLERY * categories.TECH3 } },
-            { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.FACTORY * categories.LAND * categories.TECH3 }},
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Land',
