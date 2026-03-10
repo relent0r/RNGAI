@@ -483,26 +483,27 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
         end
          
         local availableResources = math.max(resourceCount * 2, rawIncome)
-        --LOG('Zone based factory spend availability for '..tostring(aiBrain.Nickname)..' at location '..tostring(locationType)..' for layer '..tostring(layer))
-        --LOG('massSpendTotal '..tostring(massSpendTotal))
-        --LOG('mexSpend '..tostring(mexSpend))
-        --LOG('rawIncome '..tostring(rawIncome))
-        --LOG('resourceBased income potential '..tostring(resourceCount * 2))
-        --LOG('availableResources '..tostring(availableResources))
-        --LOG('Current ratio '..tostring(massSpendTotal / availableResources))
-        --LOG('Expected ratio '..tostring(aiBrain.ProductionRatios[layer]))
+        LOG('Zone based factory spend availability for '..tostring(aiBrain.Nickname)..' at location '..tostring(locationType)..' for layer '..tostring(layer))
+        LOG('massSpendTotal '..tostring(massSpendTotal))
+        LOG('mexSpend '..tostring(mexSpend))
+        LOG('rawIncome '..tostring(rawIncome))
+        LOG('resourceBased income potential '..tostring(resourceCount * 2))
+        LOG('availableResources '..tostring(availableResources))
+        LOG('Current ratio '..tostring(massSpendTotal / availableResources))
+        LOG('Expected ratio '..tostring(aiBrain.ProductionRatios[layer]))
         local productionRatio 
         if aiBrain.ProductionRatios[layer] == 0 then
-            productionRatio = aiBrain.DefaultProductionRatios[layer]
+            productionRatio = aiBrain.DefaultProductionRatios[layer] 
         else
-            productionRatio = aiBrain.ProductionRatios[layer]
+            productionRatio = aiBrain.ProductionIntent[layer]
         end
-        --LOG('Production rato is '..tostring(productionRatio))
+        LOG('Production rato is '..tostring(productionRatio))
         local currentRatio = massSpendTotal / availableResources
         
         if storageBuild then
             currentRatio = currentRatio * 1.5
         end
+        LOG('currentRatio '..tostring(currentRatio)..' productionRatio '..tostring(productionRatio)..' compareType '..tostring(compareType))
         return CompareBody(currentRatio, productionRatio, compareType)
     end
     return false

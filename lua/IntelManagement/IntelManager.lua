@@ -1662,32 +1662,61 @@ IntelManager = Class {
         coroutine.yield(Random(5,20))
         local aiBrain = self.Brain
         local selfIndex = aiBrain:GetArmyIndex()
-        local ownedZones = 0
-        local totalZones = 0
+        local homeLabel = aiBrain.BuilderManagers['MAIN'].Label or 0
+        if homeLabel == 0 then
+            WARN('WARNING RNGAI home label is zero indicating the label is not set yet or there is an error')
+        end
+
+
         while aiBrain.Status ~= "Defeat" do
+            
+            local globalFairTotal, globalInferredAllied, globalFactualIncome = 0, 0, 0
+            local labelFairTotal, labelInferredAllied, labelFactualIncome = 0, 0, 0
+            local ownedZones = 0
+            local incomeZones = 0
+            local totalZones = 0
             for k, v in Zones do
                 for k1, v1 in aiBrain.Zones[v].zones do
                     local status = aiBrain.GridPresence:GetInferredStatus(v1.pos)
-                    if v1.bestarmy == selfIndex then
-                        totalZones = totalZones + 1
-                        if status == 'Allied' then
-                            ownedZones = ownedZones + 1
-                        end
+                    local hasIncome = (v1.zoneincome.selfincome or 0) > 0
+                    local isFairShare = (v1.bestarmy == selfIndex)
+                    local isHomeLabel = (homeLabel and v1.label == homeLabel)
+                    -- Global Metrics (Your fair share across the whole map)
+                    if isFairShare then
+                        globalFairTotal = globalFairTotal + 1
+                        if status == 'Allied' then globalInferredAllied = globalInferredAllied + 1 end
+                        if hasIncome then globalFactualIncome = globalFactualIncome + 1 end
+                    end
+
+                    -- Label Metrics (The island/continent you actually live on)
+                    if isHomeLabel and isFairShare then
+                        labelFairTotal = labelFairTotal + 1
+                        if status == 'Allied' then labelInferredAllied = labelInferredAllied + 1 end
+                        if hasIncome then labelFactualIncome = labelFactualIncome + 1 end
                     end
                     if not v1.startpositionclose and status == 'Allied' and v1.enemylandthreat > 0 then
                         --RNGLOG('Try create zone alert for threat')
                         aiBrain:BaseMonitorZoneThreatRNG(v1.id, v1.enemylandthreat)
                     end
-                    coroutine.yield(5)
+                    coroutine.yield(2)
                 end
                 coroutine.yield(3)
             end
-            if ownedZones > 0 then
-                aiBrain.BrainIntel.PlayerZoneControl = ownedZones / totalZones
-            else 
-                aiBrain.BrainIntel.PlayerZoneControl = 0
+            if globalFairTotal > 0 then
+                -- Use INFERRED for "Am I safe?" checks
+                aiBrain.BrainIntel.PlayerZoneControl = globalInferredAllied / globalFairTotal
+                LOG('Player Zone Control is '..tostring(aiBrain.BrainIntel.PlayerZoneControl)..' game time is '..tostring(GetGameTimeSeconds()))
+                -- Use INCOME for "Do I need more factories?" checks
+                aiBrain.BrainIntel.PlayerZoneOwnership = globalFactualIncome / globalFairTotal
+                LOG('Player Zone Ownership is '..tostring(aiBrain.BrainIntel.PlayerZoneOwnership))
             end
-            coroutine.yield(40)
+
+            if labelFairTotal > 0 then
+                -- Island-specific drive
+                aiBrain.BrainIntel.LabelZoneOwnership = labelFactualIncome / labelFairTotal
+                LOG('Player Label Zone Ownership is '..tostring(aiBrain.BrainIntel.LabelZoneOwnership))
+            end
+            coroutine.yield(30)
         end
     end,
 
