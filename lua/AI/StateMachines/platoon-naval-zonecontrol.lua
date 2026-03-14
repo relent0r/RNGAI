@@ -147,14 +147,14 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                 --LOG('Naval Threat at position is '..aiBrain:GetThreatAtPosition({attackPosition[1], 0, attackPosition[3]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Naval'))
                                 --LOG('Air Threat at position is '..aiBrain:GetThreatAtPosition({attackPosition[1], 0, attackPosition[3]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Air'))
                                 --LOG('Threat table amount was '..tostring(v[3]))
-                                LOG('GetBestNavalTarget found, navigating to position '..tostring(repr(attackPosition)))
+                                --LOG('GetBestNavalTarget found, navigating to position '..tostring(repr(attackPosition)))
                                 self.path = path
                                 self:LogDebug(string.format('Navigating to attack position'..tostring(attackPosition[1])..':'..tostring(attackPosition[3])))
                                 self:ChangeState(self.Navigating)
                                 return
                             end
                         else
-                            LOG('GetBestNavalTarget found, position is within 6400, find a simple target ')
+                            --LOG('GetBestNavalTarget found, position is within 6400, find a simple target ')
                             if StateUtils.SimpleNavalTarget(self,aiBrain) then
                                 self:LogDebug(string.format('DecideWhatToDo found simple target'))
                                 self:ChangeState(self.CombatLoop)
@@ -206,7 +206,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                             self.dest = self.BuilderData.Position
                             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', self.Pos, self.BuilderData.Position, 1000, 160)
                             if path and RNGGETN(path) > 0 then
-                                LOG('GetClosestTargetByIMAP found, position at '..tostring(repr(closestTargetPos)))
+                                --LOG('GetClosestTargetByIMAP found, position at '..tostring(repr(closestTargetPos)))
                                 self.path = path
                                 self:ChangeState(self.Navigating)
                                 return
@@ -215,7 +215,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                             end
                         else
                             --self:LogDebug(string.format('target is close, combat loop'))
-                            LOG('GetClosestTargetByIMAP found, position is closer than 6400')
+                            --LOG('GetClosestTargetByIMAP found, position is closer than 6400')
                             self.targetcandidates = {target}
                             self:ChangeState(self.CombatLoop)
                             return
@@ -228,7 +228,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not target and self.CurrentPlatoonThreatDirectFireAntiSurface > 0 then
-                LOG('Platoon is looking for frigate raid markers')
+                --LOG('Platoon is looking for frigate raid markers')
                 local frigateRaidMarkers = aiBrain.EnemyIntel.FrigateRaidMarkers
                 --LOG('Frigate raid maker table size is '..tostring(table.getn(frigateRaidMarkers)))
                 local gameTime = GetGameTimeSeconds()
@@ -785,7 +785,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                     if target then
                         -- This trys to detect if units in the platoon are getting blocked by terrain without consuming alot of compute. 
                         if lofCheckCount < 1 and unitRange > 10 and closestTarget < (unitRange*unitRange) then
-                            LOG('Checking if terrain is blocking shots')
+                            --LOG('Checking if terrain is blocking shots')
                             local altMoveMade = false
                             local muzzlePos = StateUtils.GetDFWeaponPos(v)
                             local weaponArc = v['rngdata'].WeaponArc or 'low'
@@ -796,7 +796,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                 
                                 local potentialPos, count = NavUtils.GetPositionsInRadius('Water', targetPos, unitRange - 5)
                                 if potentialPos and count > 0 then
-                                    LOG('looking at alternative positions for naval unit to fire from, count is '..tostring(count))
+                                    --LOG('looking at alternative positions for naval unit to fire from, count is '..tostring(count))
                                     -- make the start offset random so that all the units dont pick the same pos
                                     local startOffset = math.random(1, count)
                                     for i = 1, count do
@@ -806,7 +806,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                         local testMuzzle = {testPos[1], muzzlePos[2], testPos[3]}
                                         
                                         if not aiBrain:CheckBlockingTerrain(testMuzzle, targetHeightPos, weaponArc) then
-                                            LOG('we have a position to fire from '..tostring(repr(testPos)))
+                                            --LOG('we have a position to fire from '..tostring(repr(testPos)))
                                             IssueClearCommands({v})
                                             IssueMove({v}, testPos)
                                             altMoveMade = true
@@ -816,7 +816,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                             if altMoveMade then
-                                LOG('altMoveMade, increment lofCheckCount by 1')
+                                --LOG('altMoveMade, increment lofCheckCount by 1')
                                 lofCheckCount = lofCheckCount + 1
                                 continue
                             end
@@ -835,14 +835,14 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                         end
     
                         if unitRole == 'Cruiser' then
-                            LOG('NavalZoneControl cruiser the unit role, weapon arc is '..tostring(v['rngdata'].WeaponArc))
+                            --LOG('NavalZoneControl cruiser the unit role, weapon arc is '..tostring(v['rngdata'].WeaponArc))
                             local platoonMaxRange = self['rngdata'].MaxPlatoonWeaponRange or 0
                             local unitMaxRange = unitRange or 0
                             local platoonAA = (self.CurrentPlatoonThreatAntiAir or 0)
                             local platoonAS = (self.CurrentPlatoonThreatDirectFireAntiSurface or 0)
     
                             if platoonMaxRange > unitMaxRange + 1 and platoonAA and platoonAS and platoonAA > platoonAS * 1.25 then
-                                LOG('NavalZoneControl cruiser is performing kite move, is terrain blocking '..tostring(aiBrain:CheckBlockingTerrain(v:GetPosition(), target:GetPosition(), v['rngdata'].WeaponArc)))
+                                --LOG('NavalZoneControl cruiser is performing kite move, is terrain blocking '..tostring(aiBrain:CheckBlockingTerrain(v:GetPosition(), target:GetPosition(), v['rngdata'].WeaponArc)))
                                 StateUtils.VariableKite(self, v, target, nil, true)
                                 continue
                             end
@@ -851,7 +851,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                 local intelRange = (bp.Intel and (bp.Intel.RadarRadius or bp.Intel.SonarRadius)) or (unitMaxRange * 1.2)
                                 local desired = math.min((self['rngdata'].MaxPlatoonWeaponRange or platoonMaxRange) - 2, intelRange + 5)
                                 -- build a safe lerp dest similar to land loop behavior
-                                LOG('NavalZoneControl cruiser lerping, is terrain blocking '..tostring(aiBrain:CheckBlockingTerrain(v:GetPosition(), target:GetPosition(), v['rngdata'].WeaponArc)))
+                                --LOG('NavalZoneControl cruiser lerping, is terrain blocking '..tostring(aiBrain:CheckBlockingTerrain(v:GetPosition(), target:GetPosition(), v['rngdata'].WeaponArc)))
                                 local lerpFrom = closestTarget or (desired * desired)
                                 local dest = RUtils.lerpy(unitPos, target:GetPosition(), {lerpFrom, math.max((desired * desired) - 4, unitMaxRange)})
                                 StateUtils.IssueNavigationMove(v, dest)
@@ -870,7 +870,7 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                     skipKite = true
                                     if not v:IsUnitState("Attacking") then
                                         IssueClearCommands({v})
-                                        LOG('NavalZoneControl missileship is attack, is terrain blocking '..tostring(aiBrain:CheckBlockingTerrain(v:GetPosition(), target:GetPosition(), v['rngdata'].WeaponArc)))
+                                        --LOG('NavalZoneControl missileship is attack, is terrain blocking '..tostring(aiBrain:CheckBlockingTerrain(v:GetPosition(), target:GetPosition(), v['rngdata'].WeaponArc)))
                                         IssueAttack({v}, target)
                                     end
                                 end
@@ -879,16 +879,12 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
     
                         if not skipKite then
                             if approxThreat and approxThreat.allyTotal and approxThreat.enemyTotal and approxThreat.allyTotal > approxThreat.enemyTotal * 1.5 and (not targetCats.INDIRECTFIRE) and targetCats.MOBILE and (unitRange <= targetRange) then
-                                LOG('NavalZoneControl is aggressive move, unit id is '..tostring(v.UnitId))
+                                --LOG('NavalZoneControl is aggressive move, unit id is '..tostring(v.UnitId))
                                 IssueClearCommands({v})
                                 IssueAggressiveMove({v}, targetPos)
                                 continue
                             else
-                                LOG('NavalZoneControl is performing kite, unit id is '..tostring(v.UnitId))
-                                if v.UnitId == 'xss0202' then
-                                    LOG('Sera Cruiser weapon arc is '..tostring(v['rngdata'].WeaponArc))
-                                    LOG('NavalZoneControl sera cruiser is terrain blocking '..tostring(aiBrain:CheckBlockingTerrain(v:GetPosition(), target:GetPosition(), v['rngdata'].WeaponArc)))
-                                end
+                                --LOG('NavalZoneControl is performing kite, unit id is '..tostring(v.UnitId))
                                 StateUtils.VariableKite(self, v, target, nil, true)
                                 continue
                             end
@@ -907,8 +903,6 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                                 continue
                             end
                         end
-                    else
-                        LOG('NavalZoneControl has no target in combat loop')
                     end
                 end
             end

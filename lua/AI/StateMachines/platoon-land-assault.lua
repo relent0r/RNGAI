@@ -444,9 +444,9 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 --self:LogDebug(string.format('Platoon tried but didnt use transports'))
                 coroutine.yield(20)
                 if self.MovementLayer == 'Land' and self:CalculatePlatoonThreat('Surface', categories.AMPHIBIOUS + categories.HOVER) > 0 then
-                    LOG('This platoon has no transport but amphib surface threat')
+                    --LOG('This platoon has no transport but amphib surface threat')
                     if NavUtils.CanPathTo('Amphibious', self.Pos, builderData.Position) then
-                        LOG('This platoon can path to the position via amphib')
+                        --LOG('This platoon can path to the position via amphib')
                         local amphibiousSurfaceUnits = {}
                         local amphibiousAntiAirUnits = {}
                         local units = self:GetPlatoonUnits()
@@ -458,9 +458,9 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                                 table.insert(amphibiousAntiAirUnits, unit)
                             end
                         end
-                        LOG('This platoon has this count of amphib surface fire units '..tostring(table.getn(amphibiousSurfaceUnits)))
+                        --LOG('This platoon has this count of amphib surface fire units '..tostring(table.getn(amphibiousSurfaceUnits)))
                         if table.getn(amphibiousSurfaceUnits) > 0 then
-                            LOG('Creating new platoon')
+                            --LOG('Creating new platoon')
                             local plat = brain:MakePlatoon('', 'none')
                             brain:AssignUnitsToPlatoon(plat, amphibiousSurfaceUnits, 'Attack', 'None')
                             brain:AssignUnitsToPlatoon(plat, amphibiousAntiAirUnits, 'Guard', 'None')

@@ -481,6 +481,7 @@ IntelManager = Class {
                 }
             },
         }
+        self.ProductionZones = {}
     end,
 
     Run = function(self)
@@ -1646,6 +1647,8 @@ IntelManager = Class {
             --LOG(string.format("Smart Logic: %s platoon (Threat: %.1f) rejected Zone %s. Score %.2f < Need %.2f", zonetype, platoon.CurrentPlatoonThreatAntiSurface, tostring(bestZone), bestScore, minThreshold))
             return nil
         end
+        local logZone = bestZone or {id = 'None'}
+        LOG(string.format("ZONE_DECISION: Plat=%s | BestZone=%s | Score=%.2f | MinReq=%.2f | PlatThreat=%.1f  | Current Zone=%s", platoon.PlatoonName, logZone.id, bestScore or 0, minThreshold, (platoon.CurrentPlatoonThreatAntiSurface or 0), tostring(platoon.ZoneID)))
         return bestZone.id
     end,
 
@@ -1705,16 +1708,16 @@ IntelManager = Class {
             if globalFairTotal > 0 then
                 -- Use INFERRED for "Am I safe?" checks
                 aiBrain.BrainIntel.PlayerZoneControl = globalInferredAllied / globalFairTotal
-                LOG('Player Zone Control is '..tostring(aiBrain.BrainIntel.PlayerZoneControl)..' game time is '..tostring(GetGameTimeSeconds()))
+                --LOG('Player Zone Control is '..tostring(aiBrain.BrainIntel.PlayerZoneControl)..' game time is '..tostring(GetGameTimeSeconds()))
                 -- Use INCOME for "Do I need more factories?" checks
                 aiBrain.BrainIntel.PlayerZoneOwnership = globalFactualIncome / globalFairTotal
-                LOG('Player Zone Ownership is '..tostring(aiBrain.BrainIntel.PlayerZoneOwnership))
+                --LOG('Player Zone Ownership is '..tostring(aiBrain.BrainIntel.PlayerZoneOwnership))
             end
 
             if labelFairTotal > 0 then
                 -- Island-specific drive
                 aiBrain.BrainIntel.LabelZoneOwnership = labelFactualIncome / labelFairTotal
-                LOG('Player Label Zone Ownership is '..tostring(aiBrain.BrainIntel.LabelZoneOwnership))
+                --LOG('Player Label Zone Ownership is '..tostring(aiBrain.BrainIntel.LabelZoneOwnership))
             end
             coroutine.yield(30)
         end
@@ -3737,11 +3740,11 @@ IntelManager = Class {
                 end
                 if not self.StrategyFlags.EarlyT3Built then
                     local t3DirectBuilt = aiBrain:GetBlueprintStat("Units_History", categories.DIRECTFIRE * categories.LAND * categories.TECH3)
-                    LOG('Early t3 strategy flag is live, build some t3 bots, current built is '..tostring(t3DirectBuilt))
+                    --LOG('Early t3 strategy flag is live, build some t3 bots, current built is '..tostring(t3DirectBuilt))
                     if t3DirectBuilt < 3 then
                         aiBrain.amanager.Demand.Land.T3.tank = 3
                     else
-                        LOG('T3 production is met, disable build')
+                        --LOG('T3 production is met, disable build')
                         self.StrategyFlags.EarlyT3Built = true
                         aiBrain.amanager.Demand.Land.T3.tank = 0
                     end
@@ -4087,7 +4090,7 @@ IntelManager = Class {
             else
                 aiBrain.smanager.Demand.Structure.intel.Optics = 0
             end
-            LOG('Check intelstructure game time is '..tostring(gameTime)..' and T2RadarAllowed is '..tostring(self.StrategyFlags.T2RadarAllowed))
+            --LOG('Check intelstructure game time is '..tostring(gameTime)..' and T2RadarAllowed is '..tostring(self.StrategyFlags.T2RadarAllowed))
             if self.StrategyFlags.T2RadarAllowed == false and gameTime > 360 then
                 self.StrategyFlags.T2RadarAllowed = true
             end
@@ -4837,7 +4840,7 @@ IntelManager = Class {
                 localIslandEnemyThreat[zData.label] = (localIslandEnemyThreat[zData.label] or 0) + (zData.gridenemylandthreat or 0)
             end
             if zData.BuilderManager and zData.BuilderManager.FactoryManager and zData.BuilderManager.FactoryManager.LocationActive then
-                totalBuildRate = totalBuildRate + (zData.BuilderManager.FactoryManager.LandBuildRate or 1)
+                totalBuildRate = totalBuildRate + (zData.BuilderManager.FactoryManager.LandBuildRate or 0)
                 zData.BuilderManager.FactoryManager.ZoneThreatAssignment = 0
                 table.insert(productionZones, zData)
             end
@@ -4864,7 +4867,7 @@ IntelManager = Class {
             local teamValue = tData.teamvalue or 1
             local label = tData.label
             if label then
-                labelStats[label] = labelStats[label] or { totalValue = 0, selfCapturedValue = 0, gravity = 0 }
+                labelStats[label] = labelStats[label] or { totalValue = 0, selfCapturedValue = 0, teamCapturedValue = 0, gravity = 0 }
                 local rzValue = tData.resourcevalue or 0
                 labelStats[label].totalValue = labelStats[label].totalValue + rzValue
 
@@ -4876,6 +4879,9 @@ IntelManager = Class {
                 if selfIncome > 0 then
                     -- Factual Saturation: We own and are extracting from this zone
                     labelStats[label].selfCapturedValue = labelStats[label].selfCapturedValue + rzValue
+                    labelStats[label].teamCapturedValue = labelStats[label].teamCapturedValue + rzValue
+                elseif allyIncome > 0 then
+                    labelStats[label].teamCapturedValue = labelStats[label].teamCapturedValue + rzValue
                 else
                     -- Factual Opportunity: This zone is not paying US. Calculate the "Pull"
                     local riskWeight = 1.0 + (zonePathSecurity[tID] or 0)
@@ -4968,7 +4974,7 @@ IntelManager = Class {
                     if fmgr and fmgr.LocationActive then
                         local landBuildRate = fmgr.LandBuildRate or 1  -- ensure fallback
                         local share = (weight / totalWeight) * effectiveThreat
-                        local weightedShare = share * (landBuildRate / avgLandBuildRate)  -- normalize relative to all bases
+                        local weightedShare = share * (landBuildRate / math.max(avgLandBuildRate, 0.1)) -- normalize relative to all bases
                         fmgr.ZoneThreatAssignment = (fmgr.ZoneThreatAssignment or 0) + weightedShare
                     end
                 end
@@ -4987,10 +4993,12 @@ IntelManager = Class {
 
             if stats and stats.totalValue > 0 then
                 fmgr.SaturationRatio = stats.selfCapturedValue / stats.totalValue
+                fmgr.TeamSaturationRatio = stats.teamCapturedValue / stats.totalValue
                 fmgr.EconomicGravity = stats.gravity
             else
                 fmgr.EconomicGravity = 0
                 fmgr.SaturationRatio = 1
+                fmgr.TeamSaturationRatio = 1
             end
 
             -- 2. POLICY CALCULATION (Injected here so variables exist)
@@ -5025,7 +5033,9 @@ IntelManager = Class {
                 tacticalFactor = 0.4
             end
             fmgr.ProductionModifier = modifier * tacticalFactor
+            --LOG(string.format("RNGLOG_ZONE_DATA | ID: %s | Sat: %.2f | TeamSat: %.2f | Gravity: %.2f | Mod: %.2f", tostring(pID), fmgr.SaturationRatio, fmgr.TeamSaturationRatio, fmgr.EconomicGravity, fmgr.ProductionModifier))
         end
+        self.ProductionZones = productionZones
         --LOG('---- End AssignThreatToFactories Loop ----')
     end,
 

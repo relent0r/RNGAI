@@ -2061,7 +2061,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 5)})
                         end
                         if not snipeAttempt and currentACULayer ~= 'Seabed' and brain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
-                            LOG('Terrain is blocked, look for an alternative firing position, original move pos is '..tostring(repr(movePos)))
+                            --LOG('Terrain is blocked, look for an alternative firing position, original move pos is '..tostring(repr(movePos)))
                             local checkPoints = ACUFunc.DrawCirclePoints(6, 15, movePos)
                             local alternateFirePos = false
                             for k, v in checkPoints do
@@ -2072,7 +2072,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                             if alternateFirePos then
-                                LOG('We have an alternative firing position of '..tostring(repr(alternateFirePos)))
+                                --LOG('We have an alternative firing position of '..tostring(repr(alternateFirePos)))
                                 StateUtils.IssueNavigationMove(cdr, movePos)
                             else
                                 StateUtils.IssueNavigationMove(cdr, cdr.CDRHome)
@@ -2088,7 +2088,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 local direction = math.random(2) == 1 and 1 or -1
                                 local cdrNewPos = RUtils.GetLateralMovePos(targetPos, cdrPos, 6, direction)
                                 if brain:CheckBlockingTerrain(cdrNewPos, targetPos, 'none') then
-                                    LOG('ACU is being blocked after selecting the move pos, trying to pick a new pos of '..tostring(repr(cdrNewPos)))
+                                    --LOG('ACU is being blocked after selecting the move pos, trying to pick a new pos of '..tostring(repr(cdrNewPos)))
                                     if direction == 1 then
                                         cdrNewPos = RUtils.GetLateralMovePos(cdrNewPos, targetPos, 6, -1)
                                     else
@@ -2271,7 +2271,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 5)})
                         end
                         if not snipeAttempt and currentACULayer ~= 'Seabed' and brain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
-                            LOG('ACU is being blocked after the second half, trying to pick a new pos of '..tostring(repr(movePos)))
+                            --LOG('ACU is being blocked after the second half, trying to pick a new pos of '..tostring(repr(movePos)))
                             local checkPoints = ACUFunc.DrawCirclePoints(6, 15, movePos)
                             local alternateFirePos = false
                             for k, v in checkPoints do
@@ -2282,7 +2282,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                             if alternateFirePos then
-                                LOG('ACU found new pos of '..tostring(repr(movePos)))
+                                --LOG('ACU found new pos of '..tostring(repr(movePos)))
                                 StateUtils.IssueNavigationMove(cdr, movePos)
                             else
                                 StateUtils.IssueNavigationMove(cdr, cdr.CDRHome)
@@ -2298,7 +2298,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 local direction = math.random(2) == 1 and 1 or -1
                                 local cdrNewPos = RUtils.GetLateralMovePos(targetPos, cdrPos, 6, direction)
                                 if brain:CheckBlockingTerrain(cdrNewPos, targetPos, 'none') then
-                                    LOG('ACU blocked by terrain after 3 second wait second half '..tostring(repr(movePos)))
+                                    --LOG('ACU blocked by terrain after 3 second wait second half '..tostring(repr(movePos)))
                                     if direction == 1 then
                                         cdrNewPos = RUtils.GetLateralMovePos(cdrNewPos, targetPos, 6, -1)
                                     else

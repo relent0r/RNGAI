@@ -746,7 +746,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                             local platoonAS = (self.CurrentPlatoonThreatDirectFireAntiSurface or 0)
     
                             if platoonMaxRange > unitMaxRange + 1 and platoonAA and platoonAS and platoonAA > platoonAS * 1.25 then
-                                LOG('NavalCombat cruiser is performing kite move, is terrain blocking '..tostring(aiBrain:CheckBlockingTerrain(v:GetPosition(), target:GetPosition(), v['rngdata'].WeaponArc)))
+                                --LOG('NavalCombat cruiser is performing kite move, is terrain blocking '..tostring(aiBrain:CheckBlockingTerrain(v:GetPosition(), target:GetPosition(), v['rngdata'].WeaponArc)))
                                 StateUtils.VariableKite(self, v, target, nil, true)
                                 continue
                             end
@@ -755,7 +755,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                                 local intelRange = (bp.Intel and (bp.Intel.RadarRadius or bp.Intel.SonarRadius)) or (unitMaxRange * 1.2)
                                 local desired = math.min((self['rngdata'].MaxPlatoonWeaponRange or platoonMaxRange) - 2, intelRange + 5)
                                 -- build a safe lerp dest similar to land loop behavior
-                                LOG('NavalCombat cruiser lerping, is terrain blocking '..tostring(aiBrain:CheckBlockingTerrain(v:GetPosition(), target:GetPosition(), v['rngdata'].WeaponArc)))
+                                --LOG('NavalCombat cruiser lerping, is terrain blocking '..tostring(aiBrain:CheckBlockingTerrain(v:GetPosition(), target:GetPosition(), v['rngdata'].WeaponArc)))
                                 local lerpFrom = closestTarget or (desired * desired)
                                 local dest = RUtils.lerpy(unitPos, target:GetPosition(), {lerpFrom, math.max((desired * desired) - 4, unitMaxRange)})
                                 StateUtils.IssueNavigationMove(v, dest)
@@ -773,7 +773,7 @@ AIPlatoonNavalCombatBehavior = Class(AIPlatoonRNG) {
                                 if unitRange > targetRange and closestTarget and closestTarget > unitRange * unitRange + 25 then
                                     skipKite = true
                                     if not v:IsUnitState("Attacking") then
-                                        LOG('NavalCombat missileship is attack, is terrain blocking '..tostring(aiBrain:CheckBlockingTerrain(v:GetPosition(), target:GetPosition(), v['rngdata'].WeaponArc)))
+                                        --LOG('NavalCombat missileship is attack, is terrain blocking '..tostring(aiBrain:CheckBlockingTerrain(v:GetPosition(), target:GetPosition(), v['rngdata'].WeaponArc)))
                                         IssueClearCommands({v})
                                         IssueAttack({v}, target)
                                     end

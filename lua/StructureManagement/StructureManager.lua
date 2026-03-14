@@ -2568,32 +2568,32 @@ StructureManager = Class {
             MassTrendOverTime = aiBrain.EconomyOverTimeCurrent.MassTrendOverTime or 0,
             EnergyTrendOverTime = aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime or 0,
         }
-        LOG('GetEconProfile check for '..tostring(aiBrain.Nickname))
-        LOG('MassStorageRatio : '..tostring(econState.MassStorageRatio)..' EnergyStorageRatio : '..tostring(econState.EnergyStorageRatio)..' MassEfficiency : '..tostring(econState.MassEfficiencyOverTime)..' EnergyEfficnecy : '..tostring(econState.EnergyEfficiencyOverTime))
+        --LOG('GetEconProfile check for '..tostring(aiBrain.Nickname))
+        --LOG('MassStorageRatio : '..tostring(econState.MassStorageRatio)..' EnergyStorageRatio : '..tostring(econState.EnergyStorageRatio)..' MassEfficiency : '..tostring(econState.MassEfficiencyOverTime)..' EnergyEfficnecy : '..tostring(econState.EnergyEfficiencyOverTime))
 
         -- PROFILE: WEALTHY
         -- If we are overflowing and efficient, we allow 'Batching' (multiple upgrades per tick)
         if econState.MassStorageRatio > 0.65 and econState.EnergyStorageRatio >= 1.0 and econState.MassEfficiencyOverTime > 1.05 and econState.EnergyEfficiencyOverTime > 1.2 then
-            LOG('EconProfile is Wealthy')
+            --LOG('EconProfile is Wealthy')
             return 'Wealthy', econState
         end
 
         -- PROFILE: STALLED
         -- If we are dangerously low, we block all non-emergency upgrades
         if econState.MassStorageRatio < 0.05 or econState.EnergyStorageRatio < 0.45 or econState.MassEfficiencyOverTime < 0.5 or econState.EnergyEfficiencyOverTime < 0.5 then
-            LOG('EconProfile is Stalled')
+            --LOG('EconProfile is Stalled')
             return 'Stalled', econState
         end
 
         -- PROFILE: STANDARD
         -- Normal operation (one upgrade per tick max)
-        LOG('EconProfile is Standard')
+        --LOG('EconProfile is Standard')
         return 'Standard', econState
     end,
 
     ManageIntelligenceUpgrades = function(self, aiBrain, im, profile, econState)
         local mainZoneID = aiBrain.BuilderManagers['MAIN'].ZoneID
-        LOG('Manageintelligenceupgrades, main zone is '..tostring(mainZoneID))
+        --LOG('Manageintelligenceupgrades, main zone is '..tostring(mainZoneID))
         
         -- Process Land (Radar) and Naval (Sonar) independently
         local layerConfigs = {
@@ -2624,7 +2624,7 @@ StructureManager = Class {
         if netTrend > cfg.Sonar.T2.MaintenanceCost then maxSTier = 2
         elseif netTrend > cfg.Sonar.T1.MaintenanceCost then maxSTier = 1 end
 
-        RNGLOG(string.format("TIER_LIMITS: NetTrend=%0.1f | MaxRadar=%d | MaxSonar=%d", netTrend, maxRTier, maxSTier))
+        --RNGLOG(string.format("TIER_LIMITS: NetTrend=%0.1f | MaxRadar=%d | MaxSonar=%d", netTrend, maxRTier, maxSTier))
 
         local intelUpgradeCount = 0
         for _, config in layerConfigs do
@@ -2667,22 +2667,20 @@ StructureManager = Class {
         
         for _, unit in searchTable do
             if not unit.Dead and not unit:IsUnitState('Upgrading') and unit.Blueprint.General.UpgradesTo then
-                -- Determine tech of the current unit
-                local currentTech = unit.Blueprint.CategoriesHash.TECH1 and 'TECH1' or unit.Blueprint.CategoriesHash.TECH2 and 'TECH2' or 'TECH3'
-                
-                -- Get config specific to this unit's upgrade path
+                local currentTech = unit.Blueprint.CategoriesHash.TECH1 and 'TECH1' or 'TECH2'
                 local upgradeConfig = self:GetAppropriateIntelConfig(intelType, im, currentTech)
                 
                 if upgradeConfig then
-                    -- Emergency Check
-                    local isEmergency = false
-                    if envType == 'Naval' then isEmergency = (zone.enemynavalthreat or 0) > 15
-                    else isEmergency = (zone.enemyantisurfacethreat or 0) > 40 end
+                    local isEmergency = (envType == 'Naval') and (zone.enemynavalthreat or 0) > 15 or (zone.enemyantisurfacethreat or 0) > 40
 
-                    -- Econ and Redundancy Check
                     if self:CheckGlobalEcon(aiBrain, upgradeConfig, isEmergency, econState, futureEnergyCost) then
-                        -- Check if the zone already has the TARGET tech (the tier this unit would become)
-                        if not self:ZoneHasSufficientIntel(zone, upgradeConfig) then
+                        -- Capture specific unit data to avoid redundant engine calls downstream
+                        local unitPos = unit:GetPosition()
+                        local unitId = unit.EntityId
+                        local targetTech = (currentTech == 'TECH1') and 'TECH2' or 'TECH3'
+
+                        -- Use the unit's actual position instead of the zone's center
+                        if not self:IsUpgradeRedundant(aiBrain, unitId, unitPos, intelType, targetTech) then
                             if self:IssueStructureUpgrade(unit) then
                                 return 1
                             end
@@ -2717,23 +2715,54 @@ StructureManager = Class {
         return true
     end,
 
-    ZoneHasSufficientIntel = function(self, zone, config)
-        local intel = zone.intelassignment
-        if not intel then return false end
+    IsUpgradeRedundant = function(self, aiBrain, unitId, unitPos, intelType, targetTech)
+        local redundancyMultiplier = 0.64 
         
-        -- Map the search to the correct sub-table based on the config's primary category
-        local unitList = EntityCategoryContains(categories.SONAR, config.Category) 
-                         and intel.SonarUnits or intel.RadarUnits
-        
-        if not unitList then return false end
-
-        for _, unit in unitList do
-            -- We check if ANY unit in the zone matches the goal tech level
-            -- e.g. If we want T2, and we find a T2 or T3, we are "Sufficient"
-            if not unit.Dead and EntityCategoryContains(config.TargetTechCategory, unit) then
-                return true 
+        -- 1. Check existing finished units via Brain Tables
+        local techLevelsToCheck = (targetTech == 'TECH2') and {'TECH2', 'TECH3'} or {'TECH3'}
+        for _, tier in techLevelsToCheck do
+            local existingRadars = aiBrain.Radars[tier] or {}
+            for _, other in existingRadars do
+                if other and not other.Dead and other.EntityId ~= unitId then
+                    local range = other.Blueprint.Intel[intelType .. 'Radius']
+                    if range then
+                        local thresholdSq = redundancyMultiplier * (range * range)
+                        local op = other:GetPosition() 
+                        local dx, dz = unitPos[1] - op[1], unitPos[3] - op[3]
+                        
+                        if (dx * dx + dz * dz) < thresholdSq then
+                            --LOG('Radar upgrade no required, distance is '..tostring(dx * dx + dz * dz)..' threshold is '..tostring(thresholdSq))
+                            return true
+                        end
+                    end
+                end
             end
         end
+
+        -- 2. Check "Intent" from Structure Manager
+        for entityID, upgradingUnit in self.UpgradingStructures do
+            if not upgradingUnit.Dead and entityID ~= unitId then
+                local upgradeID = upgradingUnit.Blueprint.General.UpgradesTo
+                if upgradeID then
+                    local targetBP = __blueprints[upgradeID]
+                    local isHighEnough = (targetTech == 'TECH2' and (targetBP.CategoriesHash.TECH2 or targetBP.CategoriesHash.TECH3)) 
+                                         or (targetTech == 'TECH3' and targetBP.CategoriesHash.TECH3)
+                    
+                    if isHighEnough and targetBP.Intel[intelType .. 'Radius'] then
+                        local range = targetBP.Intel[intelType .. 'Radius']
+                        local thresholdSq = redundancyMultiplier * (range * range)
+                        local op = upgradingUnit:GetPosition()
+                        local dx, dz = unitPos[1] - op[1], unitPos[3] - op[3]
+                        
+                        if (dx * dx + dz * dz) < thresholdSq then
+                            --LOG('Radar upgrade no required, distance is '..tostring(dx * dx + dz * dz)..' threshold is '..tostring(thresholdSq))
+                            return true
+                        end
+                    end
+                end
+            end
+        end
+        --LOG('Radar Upgrade is required')
         return false
     end,
 
@@ -2833,7 +2862,7 @@ StructureManager = Class {
         if not unit or unit.Dead or unit:IsUnitState('Upgrading') then return false end
         
         local upgradeID = unit.Blueprint.General.UpgradesTo
-        LOG('Upgrade to '..tostring(upgradeID))
+        --LOG('Upgrade to '..tostring(upgradeID))
         if upgradeID then
             IssueUpgrade({unit}, upgradeID)
             -- Atomic lock: prevents the thread from picking this unit again 

@@ -362,6 +362,10 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
     if aiBrain.CheatEnabled then 
         ecoMultiplier = aiBrain.EcoManager.EcoMultiplier
     end
+    local spendableStorage = 0
+    if storageBuild then
+        spendableStorage = math.max(0, aiBrain:GetEconomyStored('MASS') - 250)
+    end
     local baseLocation = manager.Position or aiBrain.BrainIntel.StartPos
     local pathableZones = manager.PathableZones
     local expansionSize = math.min((aiBrain.MapDimension / 2), 160)
@@ -482,28 +486,24 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
             rawIncome = zoneBasedIncome * highValue
         end
          
-        local availableResources = math.max(resourceCount * 2, rawIncome)
-        LOG('Zone based factory spend availability for '..tostring(aiBrain.Nickname)..' at location '..tostring(locationType)..' for layer '..tostring(layer))
-        LOG('massSpendTotal '..tostring(massSpendTotal))
-        LOG('mexSpend '..tostring(mexSpend))
-        LOG('rawIncome '..tostring(rawIncome))
-        LOG('resourceBased income potential '..tostring(resourceCount * 2))
-        LOG('availableResources '..tostring(availableResources))
-        LOG('Current ratio '..tostring(massSpendTotal / availableResources))
-        LOG('Expected ratio '..tostring(aiBrain.ProductionRatios[layer]))
+        local availableResources = math.max(resourceCount * 2, rawIncome, spendableStorage)
+        --LOG('Zone based factory spend availability for '..tostring(aiBrain.Nickname)..' at location '..tostring(locationType)..' for layer '..tostring(layer))
+        --LOG('massSpendTotal '..tostring(massSpendTotal))
+        --LOG('mexSpend '..tostring(mexSpend))
+        --LOG('rawIncome '..tostring(rawIncome))
+        --LOG('resourceBased income potential '..tostring(resourceCount * 2))
+        --LOG('availableResources '..tostring(availableResources))
+        --LOG('Current ratio '..tostring(massSpendTotal / availableResources))
+        --LOG('Expected ratio '..tostring(aiBrain.ProductionRatios[layer]))
         local productionRatio 
         if aiBrain.ProductionRatios[layer] == 0 then
             productionRatio = aiBrain.DefaultProductionRatios[layer] 
         else
             productionRatio = aiBrain.ProductionIntent[layer]
         end
-        LOG('Production rato is '..tostring(productionRatio))
+        --LOG('Production rato is '..tostring(productionRatio))
         local currentRatio = massSpendTotal / availableResources
-        
-        if storageBuild then
-            currentRatio = currentRatio * 1.5
-        end
-        LOG('currentRatio '..tostring(currentRatio)..' productionRatio '..tostring(productionRatio)..' compareType '..tostring(compareType))
+        --LOG('currentRatio '..tostring(currentRatio)..' productionRatio '..tostring(productionRatio)..' compareType '..tostring(compareType))
         return CompareBody(currentRatio, productionRatio, compareType)
     end
     return false
@@ -527,7 +527,7 @@ function FactorySpendRatioRNG(aiBrain, LocationType, uType, upgradeType, noStora
     local fmgr = aiBrain.BuilderManagers[LocationType].FactoryManager
     
     -- 1. Budget Gate (Command Economy for Land, Global for others)
-    local productionRatio = (uType == 'Land') and (fmgr.BaseLandRatio or 0) or aiBrain.ProductionRatios[uType]
+    local productionRatio = fmgr["Base"..uType.."Ratio"] or aiBrain.ProductionRatios[uType] or 0
 
     if demandBuilder then
         productionRatio = math.max(productionRatio, aiBrain.DefaultProductionRatios[uType] or 0)
@@ -537,9 +537,13 @@ function FactorySpendRatioRNG(aiBrain, LocationType, uType, upgradeType, noStora
     local factorySpend = cman.categoryspend.fact[uType] - cman.categoryspend.fact[upgradeType]
     local availableIncome = math.max(cman.income.r.m, 0.1)
     local currentRatio = factorySpend / math.max(availableIncome, 0.1)
+    local mStored = GetEconomyStored(aiBrain, 'MASS')
+    local eStored = GetEconomyStored(aiBrain, 'ENERGY')
+    local isSpamLandException = (uType == 'Land' and aiBrain.BrainIntel.PlayerRole.SpamPlayer and mStored > 100)
 
     -- If we are over our allocated budget, stop here
-    if currentRatio >= productionRatio then
+    if currentRatio >= productionRatio and not isSpamLandException then
+        --LOG('Ratio is false, our current mass stored is '..tostring(GetEconomyStored(aiBrain, 'MASS')..' enemy stored is '..tostring(GetEconomyStored(aiBrain, 'ENERGY'))))
         return false 
     end
 
@@ -547,10 +551,6 @@ function FactorySpendRatioRNG(aiBrain, LocationType, uType, upgradeType, noStora
     if noStorageCheck or fmgr.NoStoragePriority then
         return true
     end
-
-    -- 3. Unique Storage Logic (Restored from your snippet)
-    local mStored = GetEconomyStored(aiBrain, 'MASS')
-    local eStored = GetEconomyStored(aiBrain, 'ENERGY')
 
     if uType == 'Land' then
         -- Spam players ignore storage constraints for land units

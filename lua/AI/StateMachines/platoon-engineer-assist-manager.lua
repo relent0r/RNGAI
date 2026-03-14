@@ -181,13 +181,6 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                     --LOG('We have going to try Removing Engineers to allow space for T3, build power is '..tostring(aiBrain.EngineerAssistManagerBuildPower))
                     --LOG('We have a pool count greater than 2 and a tech 3 builderRate')
                     local t3BuildRate = builderRates[3] or self.DefaultTechBuilderRate[3]
-                    if not t3BuildRate then
-                        LOG('builderRates[3] '..tostring(builderRates[3]))
-                        LOG('self.DefaultTechBuilderRate[3] '..tostring(self.DefaultTechBuilderRate[3]))
-                    end
-                    if not poolCount then
-                        LOG('no pool count '..tostring(poolCount))
-                    end
                     local maxBuildPowerToGain = (poolCount - 2) * t3BuildRate
                     --LOG('maxBuildPowerToGain is '..tostring(maxBuildPowerToGain))
                     if maxBuildPowerToGain > 0 and aiBrain.EngineerAssistManagerBuildPowerTech1 > 0 then
@@ -492,128 +485,146 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             if tech > 0 then
                 if aiBrain.EngineerAssistManagerFocusCategoryLookup == 'EnergyRequired' then
                     --LOG('Attempt to reallocate engineer for power building')
+                    local higherTierAvailable
                     local em = aiBrain.BuilderManagers[self.LocationType].EngineerManager
                     local techKey = 'T'..tech
-                    local buildCat = {categories.ENERGYPRODUCTION}
-                    
-                    -- Hard Grounded: Using verified NumStructuresBeingBuilt and NumStructuresQueued from EngineerManager.lua
-                    if em:NumStructuresBeingBuilt(buildCat[1]) == 0 and em:NumStructuresQueued(techKey, buildCat) == 0 then
-                        local builderName = 'RNGAI '..techKey..' Power Engineer Negative Trend'
-                        local builder = em:GetBuilder(builderName)
+                    if tech < 3 then
+                        if tech == 2 then
+                            local managerUnits = em:GetUnits('Engineers', categories.TECH3)
+                            if table.getn(managerUnits) > 0 then
+                                higherTierAvailable = true
+                            end
+                        elseif tech == 1 then
+                            local managerUnits = em:GetUnits('Engineers', categories.TECH3 + categories.TECH2)
+                            if table.getn(managerUnits) > 0 then
+                                higherTierAvailable = true
+                            end
+                        end
+                    end
+                    if not higherTierAvailable then
 
-                        if not builder then
-                            -- FAILURE LOG: This alerts you if you renamed the builder but forgot to update the reallocation state
-                            WARN('RNGAI: Engineer Assist Manager Reallocation failed - Builder not found: ' .. tostring(builderName))
-                        else
-                            local maxInstances = builder.InstanceCount or 1
-                            
-                            if builder:CheckInstanceCount() then
-                                --OG('Check instance count returned true for '..tostring(builderName))
-                                -- Source unit from TechEngineers
-                                local eng = nil
-                                for _, v in self.TechEngineers[tech] do
-                                    if v and not v.Dead then eng = v break end
-                                end
 
-                                if eng then
-                                    self.LastSeedTime = GetGameTimeSeconds()
-                                    --LOG('RNGAI: Reallocating ' .. techKey .. ' Engineer to ' .. builderName)
-                                    eng.PlatoonHandle = nil
-                                    eng.AssistSet = nil
-                                    eng.AssistPlatoon = nil
-                                    eng.UnitBeingBuilt = nil
-                                    eng.ReclaimInProgress = nil
-                                    eng.CaptureInProgress = nil
-                                    eng.UnitBeingAssist = nil
-                                    eng['rngdata'].IsAssistAssigned = nil
-                                    eng.Active = false
-                                    eng.CustomState = nil
-                                    if aiBrain.RNGDEBUG then
-                                        eng:SetCustomName('I should be exiting the assist manager')
-                                    end
-                                    if not eng.Dead and eng:IsPaused() then
-                                        eng:SetPaused( false )
-                                    end
-                                    local bp = eng.Blueprint
-                                    aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - (bp.Economy.BuildRate * self.BuildMultiplier)
-                                    self.TotalBuildRate = self.TotalBuildRate - (bp.Economy.BuildRate * self.BuildMultiplier)
-                                    if bp.CategoriesHash.TECH1 then
-                                        aiBrain.EngineerAssistManagerBuildPowerTech1 = aiBrain.EngineerAssistManagerBuildPowerTech1 - (bp.Economy.BuildRate * self.BuildMultiplier)
-                                        self.TotalTechBuildRate[1] = self.TotalTechBuildRate[1] - (bp.Economy.BuildRate * self.BuildMultiplier)
-                                    elseif bp.CategoriesHash.TECH2 then
-                                        aiBrain.EngineerAssistManagerBuildPowerTech2 = aiBrain.EngineerAssistManagerBuildPowerTech2 - (bp.Economy.BuildRate * self.BuildMultiplier)
-                                        self.TotalTechBuildRate[2] = self.TotalTechBuildRate[2] - (bp.Economy.BuildRate * self.BuildMultiplier)
-                                    elseif bp.CategoriesHash.TECH3 then
-                                        aiBrain.EngineerAssistManagerBuildPowerTech3 = aiBrain.EngineerAssistManagerBuildPowerTech3 - (bp.Economy.BuildRate * self.BuildMultiplier)
-                                        self.TotalTechBuildRate[3] = self.TotalTechBuildRate[3] - (bp.Economy.BuildRate * self.BuildMultiplier)
-                                    end
+                        local buildCat = {categories.ENERGYPRODUCTION}
+                        
+                        -- Hard Grounded: Using verified NumStructuresBeingBuilt and NumStructuresQueued from EngineerManager.lua
+                        if em:NumStructuresBeingBuilt(buildCat[1]) == 0 and em:NumStructuresQueued(techKey, buildCat) == 0 then
+                            local builderName = 'RNGAI '..techKey..' Power Engineer Negative Trend'
+                            local builder = em:GetBuilder(builderName)
 
-                                    local template = em:GetEngineerPlatoonTemplate(builder:GetPlatoonTemplate())
-                                    local hndl = aiBrain:MakePlatoon(template[1], template[2])
-                                    aiBrain:AssignUnitsToPlatoon(hndl, {eng}, 'support', 'none')
-                                    eng.PlatoonHandle = hndl
-                                    hndl.PlanName = template[2]
-
-                                    --If we have specific AI, fork that AI thread
-                                    if builder:GetPlatoonAIFunction() then
-                                        hndl:StopAI()
-                                        local aiFunc = builder:GetPlatoonAIFunction()
-                                        hndl:ForkAIThread(import(aiFunc[1])[aiFunc[2]])
-                                    end
-                                    if builder:GetPlatoonAIPlan() then
-                                        hndl.PlanName = builder:GetPlatoonAIPlan()
-                                        hndl:SetAIPlanRNG(hndl.PlanName)
-                                    end
-
-                                    --If we have additional threads to fork on the platoon, do that as well.
-                                    if builder:GetPlatoonAddPlans() then
-                                        for papk, papv in builder:GetPlatoonAddPlans() do
-                                            hndl:ForkThread(hndl[papv])
-                                        end
-                                    end
-
-                                    if builder:GetPlatoonAddFunctions() then
-                                        for pafk, pafv in builder:GetPlatoonAddFunctions() do
-                                            hndl:ForkThread(import(pafv[1])[pafv[2]])
-                                        end
-                                    end
-
-                                    if builder:GetPlatoonAddBehaviors() then
-                                        for pafk, pafv in builder:GetPlatoonAddBehaviors() do
-                                            hndl:ForkThread(import('/lua/ai/AIBehaviors.lua')[pafv])
-                                        end
-                                    end
-
-                                    hndl.Priority = builder:GetPriority()
-                                    hndl.BuilderName = builder:GetBuilderName()
-
-                                    hndl:SetPlatoonData(builder:GetBuilderData(self.LocationType))
-
-                                    if hndl.PlatoonData.DesiresAssist then
-                                        eng.DesiresAssist = eng.PlatoonData.DesiresAssist
-                                    else
-                                        eng.DesiresAssist = true
-                                    end
-
-                                    if hndl.PlatoonData.NumAssistees then
-                                        eng.NumAssistees = hndl.PlatoonData.NumAssistees
-                                    end
-
-                                    if hndl.PlatoonData.MinNumAssistees then
-                                        eng.MinNumAssistees = hndl.PlatoonData.MinNumAssistees
-                                    end
-                                    if hndl.PlatoonData.JobType then
-                                        eng.JobType = hndl.PlatoonData.JobType
-                                    end
-                                    builder:StoreHandle(hndl)
-                                end
+                            if not builder then
+                                -- FAILURE LOG: This alerts you if you renamed the builder but forgot to update the reallocation state
+                                WARN('RNGAI: Engineer Assist Manager Reallocation failed - Builder not found: ' .. tostring(builderName))
                             else
-                                --LOG('Check instance count returned false for '..tostring(builderName))
-                                -- INFORMATIONAL LOG: Helps debug why reallocation isn't happening despite focus
-                                -- Use a throttle or lower priority log to avoid spamming the console
-                                if (self.LastInstanceLog or 0) + 60 < GetGameTimeSeconds() then
-                                    --LOG('RNGAI: Reallocation skipped - ' .. builderName .. ' is already at instance cap')
-                                    self.LastInstanceLog = GetGameTimeSeconds()
+                                local maxInstances = builder.InstanceCount or 1
+                                
+                                if builder:CheckInstanceCount() then
+                                    --OG('Check instance count returned true for '..tostring(builderName))
+                                    -- Source unit from TechEngineers
+                                    local eng = nil
+                                    for _, v in self.TechEngineers[tech] do
+                                        if v and not v.Dead then eng = v break end
+                                    end
+
+                                    if eng then
+                                        self.LastSeedTime = GetGameTimeSeconds()
+                                        --LOG('RNGAI: Reallocating ' .. techKey .. ' Engineer to ' .. builderName)
+                                        eng.PlatoonHandle = nil
+                                        eng.AssistSet = nil
+                                        eng.AssistPlatoon = nil
+                                        eng.UnitBeingBuilt = nil
+                                        eng.ReclaimInProgress = nil
+                                        eng.CaptureInProgress = nil
+                                        eng.UnitBeingAssist = nil
+                                        eng['rngdata'].IsAssistAssigned = nil
+                                        eng.Active = false
+                                        eng.CustomState = nil
+                                        if aiBrain.RNGDEBUG then
+                                            eng:SetCustomName('I should be exiting the assist manager')
+                                        end
+                                        if not eng.Dead and eng:IsPaused() then
+                                            eng:SetPaused( false )
+                                        end
+                                        local bp = eng.Blueprint
+                                        aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - (bp.Economy.BuildRate * self.BuildMultiplier)
+                                        self.TotalBuildRate = self.TotalBuildRate - (bp.Economy.BuildRate * self.BuildMultiplier)
+                                        if bp.CategoriesHash.TECH1 then
+                                            aiBrain.EngineerAssistManagerBuildPowerTech1 = aiBrain.EngineerAssistManagerBuildPowerTech1 - (bp.Economy.BuildRate * self.BuildMultiplier)
+                                            self.TotalTechBuildRate[1] = self.TotalTechBuildRate[1] - (bp.Economy.BuildRate * self.BuildMultiplier)
+                                        elseif bp.CategoriesHash.TECH2 then
+                                            aiBrain.EngineerAssistManagerBuildPowerTech2 = aiBrain.EngineerAssistManagerBuildPowerTech2 - (bp.Economy.BuildRate * self.BuildMultiplier)
+                                            self.TotalTechBuildRate[2] = self.TotalTechBuildRate[2] - (bp.Economy.BuildRate * self.BuildMultiplier)
+                                        elseif bp.CategoriesHash.TECH3 then
+                                            aiBrain.EngineerAssistManagerBuildPowerTech3 = aiBrain.EngineerAssistManagerBuildPowerTech3 - (bp.Economy.BuildRate * self.BuildMultiplier)
+                                            self.TotalTechBuildRate[3] = self.TotalTechBuildRate[3] - (bp.Economy.BuildRate * self.BuildMultiplier)
+                                        end
+
+                                        local template = em:GetEngineerPlatoonTemplate(builder:GetPlatoonTemplate())
+                                        local hndl = aiBrain:MakePlatoon(template[1], template[2])
+                                        aiBrain:AssignUnitsToPlatoon(hndl, {eng}, 'support', 'none')
+                                        eng.PlatoonHandle = hndl
+                                        hndl.PlanName = template[2]
+
+                                        --If we have specific AI, fork that AI thread
+                                        if builder:GetPlatoonAIFunction() then
+                                            hndl:StopAI()
+                                            local aiFunc = builder:GetPlatoonAIFunction()
+                                            hndl:ForkAIThread(import(aiFunc[1])[aiFunc[2]])
+                                        end
+                                        if builder:GetPlatoonAIPlan() then
+                                            hndl.PlanName = builder:GetPlatoonAIPlan()
+                                            hndl:SetAIPlanRNG(hndl.PlanName)
+                                        end
+
+                                        --If we have additional threads to fork on the platoon, do that as well.
+                                        if builder:GetPlatoonAddPlans() then
+                                            for papk, papv in builder:GetPlatoonAddPlans() do
+                                                hndl:ForkThread(hndl[papv])
+                                            end
+                                        end
+
+                                        if builder:GetPlatoonAddFunctions() then
+                                            for pafk, pafv in builder:GetPlatoonAddFunctions() do
+                                                hndl:ForkThread(import(pafv[1])[pafv[2]])
+                                            end
+                                        end
+
+                                        if builder:GetPlatoonAddBehaviors() then
+                                            for pafk, pafv in builder:GetPlatoonAddBehaviors() do
+                                                hndl:ForkThread(import('/lua/ai/AIBehaviors.lua')[pafv])
+                                            end
+                                        end
+
+                                        hndl.Priority = builder:GetPriority()
+                                        hndl.BuilderName = builder:GetBuilderName()
+
+                                        hndl:SetPlatoonData(builder:GetBuilderData(self.LocationType))
+
+                                        if hndl.PlatoonData.DesiresAssist then
+                                            eng.DesiresAssist = eng.PlatoonData.DesiresAssist
+                                        else
+                                            eng.DesiresAssist = true
+                                        end
+
+                                        if hndl.PlatoonData.NumAssistees then
+                                            eng.NumAssistees = hndl.PlatoonData.NumAssistees
+                                        end
+
+                                        if hndl.PlatoonData.MinNumAssistees then
+                                            eng.MinNumAssistees = hndl.PlatoonData.MinNumAssistees
+                                        end
+                                        if hndl.PlatoonData.JobType then
+                                            eng.JobType = hndl.PlatoonData.JobType
+                                        end
+                                        builder:StoreHandle(hndl)
+                                    end
+                                else
+                                    --LOG('Check instance count returned false for '..tostring(builderName))
+                                    -- INFORMATIONAL LOG: Helps debug why reallocation isn't happening despite focus
+                                    -- Use a throttle or lower priority log to avoid spamming the console
+                                    if (self.LastInstanceLog or 0) + 60 < GetGameTimeSeconds() then
+                                        --LOG('RNGAI: Reallocation skipped - ' .. builderName .. ' is already at instance cap')
+                                        self.LastInstanceLog = GetGameTimeSeconds()
+                                    end
                                 end
                             end
                         end

@@ -484,7 +484,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            LOG('Engineer has not construction job, what is it? '..tostring(self.BuilderName)..' platoon data is '..tostring(repr(self.PlatoonData)))
+            --LOG('Engineer has not construction job, what is it? '..tostring(self.BuilderName)..' platoon data is '..tostring(repr(self.PlatoonData)))
             coroutine.yield(10)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -1455,9 +1455,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 local engPos = eng:GetPosition()
                 local movementRequired = true
                 eng.PerformingBuildTask = true
-                if whatToBuild == 'urb1201' then
-                    LOG('We are going to build a t2 pgen')
-                end
                 IssueClearCommands({eng})
 
                 if VDist3Sq(engPos, buildLocation) < 225 then
