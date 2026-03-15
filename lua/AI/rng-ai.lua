@@ -7837,7 +7837,7 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG(string.format("RNGLOG_PROJECTION_AUDIT | Label: %s | LandProj: %.2f | NavProj: %.2f", tostring(myLabel), landProjection, navalProjection))
             LOG(string.format("RNGLOG_RISK_AUDIT | LandRisk: %.2f | NavRisk: %.2f | ExpPress: %.2f | Combined: %.2f", projectedLandRisk, projectedNavalRisk, expansionPressure, combinedPressure))
             -- Bump maxProd to 0.90 to ensure expansion has 'teeth' when needed
-            local minProd, maxProd = 0.65, 0.90
+            local minProd, maxProd = 0.45, 0.90
             local productionAllocation = minProd + (combinedPressure * (maxProd - minProd))
 
             -- High pressure disables capacity clamps to “signal expansion”
@@ -7941,74 +7941,52 @@ AIBrain = Class(RNGAIBrainClass) {
 
 
             ----------------------------------------------------------------------
-            -- 7) ECO & ASSIST REDISTRIBUTION (BUDGET-SAFE)
+            -- 7) ECO & ASSIST REDISTRIBUTION (PARALLEL SPLIT)
             ----------------------------------------------------------------------
             local totalUnitAllocation = newLand + newAir + newNaval
             local leftover = math.max(0, 1.0 - totalUnitAllocation)
 
-            -- Eco allowance computed from leftover (cannot exceed leftover)
-            local extractorValues = self.EcoManager and self.EcoManager.ExtractorValues
-            local maxEcoAlloc = 0
-            if extractorValues and extractorValues.TECH1 and extractorValues.TECH2 then
-                maxEcoAlloc =
-                    (extractorValues.TECH1.TeamValue or 0) * (extractorValues.TECH1.ConsumptionValue or 0)
-                + (extractorValues.TECH2.TeamValue or 0) * (extractorValues.TECH2.ConsumptionValue or 0)
-            end
-
-            local baseEcoAllowance = math.min(leftover, math.max(0.12, leftover * 0.4))
-            local ecoMaxByMex = (maxEcoAlloc > 0 and totalIncome > 0) and (maxEcoAlloc / totalIncome) or 0.45
-            local economyUpgradeSpendMax = math.min(leftover, 0.45, ecoMaxByMex)
-
-            local ecoMin = highestPhase > 1 and math.max(0.12, leftover) or math.min(0.02, leftover)
-            local preNudgeEco = economyUpgradeSpend
-            local targetedEco = baseEcoAllowance + (excessAllocation * 0.5)
-
+            -- Use a percentage of leftover for the minimums, never the whole thing
+            local ecoMin = highestPhase > 1 and (leftover * 0.3) or (leftover * 0.05)
+            local assistMin = (leftover * 0.1) -- Protect 10% for Assist no matter what
+            
+            local economyUpgradeSpendMax = math.min(leftover * 0.7, 0.45)
+            
+            -- Targeted Eco calculation
+            local targetedEco = (leftover * 0.5) + (excessAllocation * 0.4)
             economyUpgradeSpend = clamp(targetedEco, ecoMin, economyUpgradeSpendMax)
 
-            -- Reduce excess by how much we increased eco relative to starting baseline (optional)
-            local ecoDelta = math.max(0, economyUpgradeSpend - preNudgeEco)
-            excessAllocation = math.max(0, excessAllocation - ecoDelta)
-
-            -- Assist uses remaining leftover after eco
+            -- Remaining budget for Assist
             local leftoverAfterEco = math.max(0, leftover - economyUpgradeSpend)
-
-            local assistMin = math.min(0.02, leftoverAfterEco)
-            local assistMax = math.min(0.60, leftoverAfterEco)
-
-            local baseAssistAllowance = leftoverAfterEco
-            local newAssist = baseAssistAllowance + excessAllocation
-            engineerAssistRatio = clamp(newAssist, assistMin, assistMax)
-
-            LOG(string.format("RNGLOG_DEBUG_RATIO | Phase: %d | NeedsSum: %.2f | LandDes: %.2f | AirDes: %.2f | DefaultL: %.2f", highestPhase, totalUnitNeeds, desiredLand, desiredAir, defaultLand))
-            LOG(string.format("RNGLOG_DEBUG_FLOW | Excess: %.2f | BaseEco: %.2f | TargetedEco: %.2f | FinalEco: %.2f", excessAllocation, baseEcoAllowance, targetedEco, economyUpgradeSpend))
+            
+            -- Targeted Assist calculation
+            local targetedAssist = leftoverAfterEco + (excessAllocation * 0.6)
+            engineerAssistRatio = clamp(targetedAssist, assistMin, leftover)
 
             ----------------------------------------------------------------------
-            -- 8) CONSTRUCTION / ECO HEALTH TEMPERING (ASSIST)
+            -- 8) CONSTRUCTION / ECO HEALTH TEMPERING
             ----------------------------------------------------------------------
-            local massTrend = (self.EconomyOverTimeCurrent and self.EconomyOverTimeCurrent.MassTrendOverTime) or 0
-            local storageMass = GetEconomyStored(self, 'MASS') or 0
-
-            local trendFactor = clamp(1 + safeDiv(massTrend, math.max(1, totalIncome), 0), 0.3, 1.5)
-
-            local drainTime = (massTrend < 0 and storageMass > 0) and (storageMass / -massTrend) or 999999
-            local storageFactor = (drainTime < 60) and math.max(0.3, 0.5 + (drainTime / 120)) or 1.0
-
             local assistConsumption = self.EngineerAssistManagerCurrentConsumption or 0
             local spend = (self.cmanager and self.cmanager.categoryspend and self.cmanager.categoryspend.eng) or {}
             local totalEngSpend = (spend.T1 or 0) + (spend.T2 or 0) + (spend.T3 or 0) + (spend.com or 0)
-
             local constructionRatio = safeDiv(math.max(0, totalEngSpend - assistConsumption), math.max(1, totalIncome), 0)
+            local massTrend = (self.EconomyOverTimeCurrent and self.EconomyOverTimeCurrent.MassTrendOverTime) or 0
+            local trendFactor = clamp(1 + safeDiv(massTrend, math.max(1, totalIncome), 0), 0.5, 1.2)
+            
+            -- The Nudge: We reduce assist if building heavily, but we CLAMP it to assistMin
+            -- This ensures the "Nudge" can never zero out the assist budget.
+            local nudgeValue = (constructionRatio * 0.15)
+            local temperedAssist = math.max(assistMin, engineerAssistRatio - nudgeValue)
 
-            -- Assist nudge down if already spending heavily on construction
-            engineerAssistRatio = math.max(assistMin, engineerAssistRatio - (constructionRatio * 0.2))
+            -- Final eco health scaling
+            engineerAssistRatio = clamp(temperedAssist * trendFactor, assistMin, leftoverAfterEco)
 
-            -- Apply eco health multiplier
-            local ecoHealth = clamp(trendFactor * storageFactor, 0.3, 1.5)
-            engineerAssistRatio = engineerAssistRatio * ecoHealth
-
-            -- Final budget safety: do not exceed leftoverAfterEco
-            if engineerAssistRatio > leftoverAfterEco then
-                engineerAssistRatio = leftoverAfterEco
+            -- Final Safety: If the two together somehow exceed leftover, scale them back
+            local combined = economyUpgradeSpend + engineerAssistRatio
+            if combined > leftover and leftover > 0 then
+                local scale = leftover / combined
+                economyUpgradeSpend = economyUpgradeSpend * scale
+                engineerAssistRatio = engineerAssistRatio * scale
             end
 
             ----------------------------------------------------------------------
@@ -8027,6 +8005,8 @@ AIBrain = Class(RNGAIBrainClass) {
             LOG(string.format("AI: %s | Time: %s | Income: %.2f",tostring(self.Nickname), tostring(GetGameTimeSeconds()), totalIncome))
             LOG(string.format("Ratios - Land: %.2f, Air: %.2f, Naval: %.2f, Assist: %.2f, Eco: %.2f",newLand, newAir, newNaval, engineerAssistRatio, economyUpgradeSpend))
             LOG(string.format("OBTP_SQUEEZE | ProdAlloc: %.2f | EcoSpend: %.2f | LandWanted: %.2f",productionAllocation, economyUpgradeSpend, newLand))
+
+            
 
             -- Distribute Land ratio to bases (same approach, condensed)
             local totalLandNeed, totalAirNeed, totalNavalNeed = 0, 0, 0
@@ -8050,7 +8030,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     fmgr.BaseLandRatio, fmgr.BaseAirRatio, fmgr.BaseNavalRatio = 0, 0, 0
                 end
             end
-
+            LOG(string.format("RNGLOG_CITIZEN_AUDIT | Leftover:%f | EcoTook:%f | PostEcoRemaining:%f | ConstRatioNudge:%f | FinalAssist:%f", leftover, economyUpgradeSpend, leftoverAfterEco, (constructionRatio * 0.2), engineerAssistRatio))
             LOG(string.format("RNGLOG_ALLOCATION_AUDIT | FinalProdAlloc: %.2f | Land: %.2f | Air: %.2f | Naval: %.2f | EcoSpend: %.2f | Assist: %.2f",productionAllocation, newLand, newAir, newNaval, economyUpgradeSpend, engineerAssistRatio))
         end
     end,

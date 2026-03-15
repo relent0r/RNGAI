@@ -1284,8 +1284,16 @@ function EngineerAssistManagerNeedsEngineers(aiBrain, locationType, tier, minPoo
     end
     --LOG('Calculated Assist Spend '..tostring(aiBrain.EngineerAssistRatio * aiBrain.cmanager.income.r.m))
     --LOG('Required Build power for engineer manager '..tostring(aiBrain.EngineerAssistManagerBuildPowerRequired)..' current '..tostring(aiBrain.EngineerAssistManagerBuildPower))
-    if aiBrain.EconomyOverTimeCurrent.MassIncome > 1.0 and aiBrain.EngineerAssistManagerActive and aiBrain.EngineerAssistManagerBuildPowerRequired > aiBrain.EngineerAssistManagerBuildPower then
+    local requiredPower = aiBrain.EngineerAssistManagerBuildPowerRequired or 0
+    local currentBuildPower = aiBrain.EngineerAssistManagerBuildPower or 0
+    if aiBrain.EconomyOverTimeCurrent.MassIncome > 1.0 and aiBrain.EngineerAssistManagerActive and requiredPower > currentBuildPower then
         if tier == 1 then
+            local t2Power = aiBrain.EngineerAssistManagerBuildPowerTech2 or 0
+            local t3Power = aiBrain.EngineerAssistManagerBuildPowerTech3 or 0
+            local highTierPower = t2Power + t3Power
+            if requiredPower > 0 and highTierPower >= (requiredPower * 0.6) then
+                return false
+            end
             local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
             local numUnits = poolPlatoon:GetNumCategoryUnits(categories.ENGINEER * categories.MOBILE * (categories.TECH2 + categories.TECH3), engineerManager.Location, engineerManager.Radius)
             if numUnits > minHigherTier then
@@ -1293,6 +1301,10 @@ function EngineerAssistManagerNeedsEngineers(aiBrain, locationType, tier, minPoo
             end
             return true
         elseif tier == 2 then
+            local t3Power = aiBrain.EngineerAssistManagerBuildPowerTech3 or 0
+            if requiredPower > 0 and t3Power >= (requiredPower * 0.8) then
+                return false
+            end
             local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
             local numUnits = poolPlatoon:GetNumCategoryUnits(categories.ENGINEER * categories.MOBILE * categories.TECH2, engineerManager.Location, engineerManager.Radius)
             if numUnits < minPool then
