@@ -8,34 +8,6 @@ local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMa
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 
-function CanBuildOnMassMexPlatoon(aiBrain, engPos, distance)
-    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
-    distance = distance * distance
-    local adaptiveResourceMarkers = GetMarkersRNG()
-    local MassMarker = {}
-    for _, v in adaptiveResourceMarkers do
-        if v.type == 'Mass' then
-            if v.position[1] > playableArea[1] and v.position[1] < playableArea[3] and v.position[3] > playableArea[2] and v.position[3] < playableArea[4] then
-                local mexBorderWarn = false
-                if v.position[1] <= 8 or v.position[1] >= ScenarioInfo.size[1] - 8 or v.position[3] <= 8 or v.position[3] >= ScenarioInfo.size[2] - 8 then
-                    mexBorderWarn = true
-                end 
-                local mexDistance = VDist2Sq( v.position[1],v.position[3], engPos[1], engPos[3] )
-                if mexDistance < distance and CanBuildStructureAt(aiBrain, 'ueb1103', v.position) and NavUtils.CanPathTo('Amphibious', engPos, v.position) then
-                    --RNGLOG('mexDistance '..mexDistance)
-                    table.insert(MassMarker, {Position = v.position, Distance = mexDistance , MassSpot = v, BorderWarning = mexBorderWarn})
-                end
-            end
-        end
-    end
-    table.sort(MassMarker, function(a,b) return a.Distance < b.Distance end)
-    if not table.empty(MassMarker) then
-        return true, MassMarker
-    else
-        return false
-    end
-end
-
 function CanBuildOnMassEng(aiBrain, engPos, distance, threatMin, threatMax, threatRings, threatType, maxNum )
     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
     local gameTime = GetGameTimeSeconds()

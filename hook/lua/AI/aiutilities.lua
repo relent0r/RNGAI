@@ -8,8 +8,8 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local MarkerUtils = import("/lua/sim/MarkerUtilities.lua")
-local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local RNGINSERT = table.insert
 local RNGGETN = table.getn
@@ -308,7 +308,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
             IssueClearCommands({eng})
             for i=currentPathNode, pathLength do
                 if i>=3 then
-                    local bool,markers=MABC.CanBuildOnMassMexPlatoon(aiBrain, path[i], 25)
+                    local bool,markers=StateUtils.CanBuildOnMassMexPlatoon(aiBrain, path[i], 25)
                     if bool then
                         --RNGLOG('We can build on a mass marker within 30')
                         --local massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, waypointPath)

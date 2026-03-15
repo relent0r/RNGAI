@@ -1053,7 +1053,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local avoidRange = math.max(minTargetRange or 60)
                 local targetPos = target:GetPosition()
                 avoidTargetPos = targetPos
-                IssueClearCommands(GetPlatoonUnits(self))
+                --IssueClearCommands(GetPlatoonUnits(self))
                 local rx = self.Pos[1] - targetPos[1]
                 local rz = self.Pos[3] - targetPos[3]
                 local targetDistance = rx * rx + rz * rz
@@ -1070,7 +1070,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         coroutine.yield(30)
                     else
                         local retreatPos = RUtils.AvoidLocation(targetPos, self.Pos, avoidRange)
-                        self:LogDebug(string.format('We are moving to the avoid position'))
                         for _, v in platUnits do
                             StateUtils.IssueNavigationMove(v, retreatPos)
                         end

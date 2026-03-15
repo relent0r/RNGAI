@@ -753,16 +753,19 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 end
                 local avoidRange = math.max(targetRange or 60)
                 local targetPos = target:GetPosition()
+                local platUnits = self:GetPlatoonUnits()
                 avoidTargetPos = targetPos
                 IssueClearCommands(GetPlatoonUnits(self))
                 local rx = self.Pos[1] - targetPos[1]
                 local rz = self.Pos[3] - targetPos[3]
                 if rx * rx + rz * rz < targetRange * targetRange then
-                    self:MoveToLocation(RUtils.AvoidLocation(targetPos, self.Pos, avoidRange), false)
+                    local retreatPos = RUtils.AvoidLocation(targetPos, self.Pos, avoidRange)
+                    for _, v in platUnits do
+                        StateUtils.IssueNavigationMove(v, retreatPos)
+                    end
                 else
                     local targetCats = target.Blueprint.CategoriesHash
                     local attackStructure = false
-                    local platUnits = self:GetPlatoonUnits()
                     if targetCats.STRUCTURE and targetCats.DEFENSE then
                         if targetRange < self['rngdata'].MaxPlatoonWeaponRange then
                             attackStructure = true
@@ -780,17 +783,19 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                         for _, v in platUnits do
                             if v['rngdata'].Role ~= 'Artillery' and v['rngdata'].Role ~= 'Silo' then
                                 if zoneRetreat.pos then
-                                    IssueMove({v}, zoneRetreat.pos)
+                                    StateUtils.IssueNavigationMove(v, zoneRetreat.pos)
                                 else
-                                    IssueMove({v}, self.Home)
+                                    StateUtils.IssueNavigationMove(v, self.Home)
                                 end
                             end
                         end
                     else
-                        if zoneRetreat.pos then
-                            self:MoveToLocation(zoneRetreat.pos, false)
-                        else
-                            self:MoveToLocation(self.Home, false)
+                        for _, v in platUnits do
+                            if zoneRetreat.pos then
+                                StateUtils.IssueNavigationMove(v, zoneRetreat.pos)
+                            else
+                                StateUtils.IssueNavigationMove(v, self.Home)
+                            end
                         end
                     end
                 end

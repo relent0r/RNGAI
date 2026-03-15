@@ -512,6 +512,7 @@ function LerpyRotate(vec1, vec2, distance)
 end
 
 -- This is softles, I was curious to see what it looked like compared to lerpy. Used in scouts avoiding enemy tanks.
+--[[
 function AvoidLocation(pos,target,dist)
     if not target then
         return pos
@@ -525,6 +526,31 @@ function AvoidLocation(pos,target,dist)
     x = math.min(ScenarioInfo.size[1]-5,math.max(5,x))
     z = math.min(ScenarioInfo.size[2]-5,math.max(5,z))
     return {x,GetTerrainHeight(x,z),z}
+end
+]]
+
+function AvoidLocation(pos, target, dist)
+    if not target then
+        return pos
+    elseif not pos then
+        return target
+    end
+
+    -- 1. Calculate the vector from the target TO the platoon (The escape vector)
+    -- VDiff(target, pos) gives (pos - target), which points away from the threat
+    local delta = VDiff(target, pos)
+    local norm = math.max(VDist2(delta[1], delta[3], 0, 0), 1)
+
+    -- 2. RELATIVE OFFSET: Take current position and add the 'dist' along that vector
+    -- This ensures we always move 'dist' units further back from where we are now
+    local x = pos[1] + (dist * delta[1] / norm)
+    local z = pos[3] + (dist * delta[3] / norm)
+
+    -- 3. BOUNDARY SAFEGUARD: Keep the result within the map play area
+    x = math.min(ScenarioInfo.size[1] - 5, math.max(5, x))
+    z = math.min(ScenarioInfo.size[2] - 5, math.max(5, z))
+
+    return {x, GetTerrainHeight(x, z), z}
 end
 
 function HaveUnitVisual(aiBrain, unit, checkBlipOnly)
@@ -5855,8 +5881,9 @@ CheckPriorityTarget = function(aiBrain, im, platoon, threatType, threatAmount, p
             end
             if platoon.PlatoonName == 'GunshipBehavior' then
                 local unitCats = v.unit.Blueprint.CategoriesHash
+                local isPureFighter = unitCats.AIR and unitCats.ANTIAIR and not unitCats.GROUNDATTACK
                 -- Exclude pure fighters (Air + AntiAir - GroundAttack)
-                if unitCats.AIR and unitCats.ANTIAIR and not unitCats.GROUNDATTACK then
+                if unitCats.SCOUT or isPureFighter then
                     validated = false
                 end
             end

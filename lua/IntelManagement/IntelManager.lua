@@ -1090,17 +1090,20 @@ IntelManager = Class {
                 if angleToEnemyBase and angleToEnemyBase < 0.4 then return end
                 if angleToUnit and angleToUnit < 0.35 then return end
                 if zone.status == 'Hostile' then return end
-                local aggroBonus = 25
+                local aggroBonus = 18
+                local baseWeight = 0
                 local consolidationWeight = 0.5
-                if not zone.BuilderManager.FactoryManager.LocationActive then
-                    aggroBonus = 18
+                local factoryManager = zone.BuilderManager.FactoryManager
+                if factoryManager and factoryManager.LocationActive then
+                    baseWeight = 10
+                    aggroBonus = 20
                 end
             
                 local _, baseDist = StateUtils.GetClosestBaseManager(aiBrain, zone.pos)
 
-                local dist = math.sqrt(distSq)
-                score = -(math.min(300, dist) * 0.1) 
-                score = score + (baseDist * 0.05)
+                score = -(math.min(90000, distSq) * 0.0001)
+                score = score - (baseDist * 0.00005)
+                score = score + baseWeight
                 --LOG('Score after distances applied '..tostring(score))
             
                 if zone.teamvalue and zone.teamvalue >= 1.0 then
@@ -1648,7 +1651,7 @@ IntelManager = Class {
             return nil
         end
         local logZone = bestZone or {id = 'None'}
-        LOG(string.format("ZONE_DECISION: Plat=%s | BestZone=%s | Score=%.2f | MinReq=%.2f | PlatThreat=%.1f  | Current Zone=%s", platoon.PlatoonName, logZone.id, bestScore or 0, minThreshold, (platoon.CurrentPlatoonThreatAntiSurface or 0), tostring(platoon.ZoneID)))
+        --LOG(string.format("ZONE_DECISION: Plat=%s | BestZone=%s | Score=%.2f | MinReq=%.2f | PlatThreat=%.1f  | Current Zone=%s", platoon.PlatoonName, logZone.id, bestScore or 0, minThreshold, (platoon.CurrentPlatoonThreatAntiSurface or 0), tostring(platoon.ZoneID)))
         return bestZone.id
     end,
 
@@ -1801,15 +1804,32 @@ IntelManager = Class {
                 total.count = total.count + 1
             end
     
-            if total.count > 0 then
-                -- For each type: If current is 0, use a decayed version of the PEAK.
-                -- This keeps the "memory" of the threat without the 400+ inflation.
-                zone.enemylandthreat = (total.Land > 0) and total.Land or (historicalPeak.Land * 0.5)
-                zone.enemyairthreat  = (total.Air > 0) and total.Air or (historicalPeak.Air * 0.5)
-                zone.enemyantiairthreat = (total.AntiAir > 0) and total.AntiAir or (historicalPeak.AntiAir * 0.5)
-                zone.enemynavalthreat = (total.Naval > 0) and total.Naval or (historicalPeak.Naval * 0.5)
-                zone.enemyantisurfacethreat = (total.AntiSurface > 0) and total.AntiSurface or (historicalPeak.AntiSurface * 0.5)
-                zone.enemystructurethreat = (total.StructuresNotMex > 0) and total.StructuresNotMex or (historicalPeak.StructuresNotMex * 0.5)
+           if total.count > 0 then
+                -- Apply Noise Floor to prevent floating point remnants (the "0.1" ghosts)
+                -- from blocking the historical decay branch.
+                local landThreat = (total.Land > 0.5) and total.Land or 0
+                local airThreat = (total.Air > 0.5) and total.Air or 0
+                local antiAirThreat = (total.AntiAir > 0.5) and total.AntiAir or 0
+                local navalThreat = (total.Naval > 0.5) and total.Naval or 0
+                local antiSurfaceThreat = (total.AntiSurface > 0.5) and total.AntiSurface or 0
+                local structThreat = (total.StructuresNotMex > 0.5) and total.StructuresNotMex or 0
+
+                -- For each type: If filtered current is 0, use a decayed version of the PEAK.
+                zone.enemylandthreat = (landThreat > 0) and landThreat or (historicalPeak.Land * 0.5)
+                zone.enemyairthreat  = (airThreat > 0) and airThreat or (historicalPeak.Air * 0.5)
+                zone.enemyantiairthreat = (antiAirThreat > 0) and antiAirThreat or (historicalPeak.AntiAir * 0.5)
+                zone.enemynavalthreat = (navalThreat > 0) and navalThreat or (historicalPeak.Naval * 0.5)
+                zone.enemyantisurfacethreat = (antiSurfaceThreat > 0) and antiSurfaceThreat or (historicalPeak.AntiSurface * 0.5)
+                zone.enemystructurethreat = (structThreat > 0) and structThreat or (historicalPeak.StructuresNotMex * 0.5)
+                
+                -- Zero out the value entirely if it falls below the absolute minimum visibility threshold
+                if zone.enemylandthreat < 0.1 then zone.enemylandthreat = 0 end
+                if zone.enemyairthreat < 0.1 then zone.enemyairthreat = 0 end
+                if zone.enemyantiairthreat < 0.1 then zone.enemyantiairthreat = 0 end
+                if zone.enemynavalthreat < 0.1 then zone.enemynavalthreat = 0 end
+                if zone.enemyantisurfacethreat < 0.1 then zone.enemyantisurfacethreat = 0 end
+                if zone.enemystructurethreat < 0.1 then zone.enemystructurethreat = 0 end
+
                 if not labelTable[zone.label] then
                     labelTable[zone.label] = {
                         enemylandthreat = 0,
@@ -1821,8 +1841,8 @@ IntelManager = Class {
                     }
                 end
                 labelTable[zone.label].enemylandthreat = labelTable[zone.label].enemylandthreat + zone.enemylandthreat
-                labelTable[zone.label].enemyairthreat = labelTable[zone.label].enemyairthreat +zone.enemyairthreat
-                labelTable[zone.label].enemyantiairthreat = labelTable[zone.label].enemyantiairthreat +zone.enemyantiairthreat
+                labelTable[zone.label].enemyairthreat = labelTable[zone.label].enemyairthreat + zone.enemyairthreat
+                labelTable[zone.label].enemyantiairthreat = labelTable[zone.label].enemyantiairthreat + zone.enemyantiairthreat
                 labelTable[zone.label].enemynavalthreat = labelTable[zone.label].enemynavalthreat + zone.enemynavalthreat
                 labelTable[zone.label].enemyantisurfacethreat = labelTable[zone.label].enemyantisurfacethreat + zone.enemyantisurfacethreat
                 labelTable[zone.label].enemystructurethreat = labelTable[zone.label].enemystructurethreat + zone.enemystructurethreat

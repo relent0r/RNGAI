@@ -1148,7 +1148,6 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 local targetPos = target:GetPosition()
                 avoidTargetPos = targetPos
                 local platUnits = self:GetPlatoonUnits()
-                IssueClearCommands(platUnits)
                 local rx = self.Pos[1] - targetPos[1]
                 local rz = self.Pos[3] - targetPos[3]
                 local targetDistance = rx * rx + rz * rz
