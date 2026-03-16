@@ -7682,6 +7682,8 @@ AIBrain = Class(RNGAIBrainClass) {
             local totalGravity = 0
             local teamWeightedSat = 0
             local totalFactories = 0
+            local massStored = self:GetEconomyStored('MASS') or 0
+            local massTrend = (self.EconomyOverTimeCurrent and self.EconomyOverTimeCurrent.MassTrendOverTime) or 0
             local countedLabels = {}
             for _, pZone in productionZones do
                 local fmgr = pZone.BuilderManager.FactoryManager
@@ -7714,9 +7716,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
             -- Strategy/Phase bonuses
             if (brainIntel.HighestPhase or 0) > 1 then
-                local storageMass = self:GetEconomyStored('MASS') or 0
-                local massTrend = (self.EconomyOverTimeCurrent and self.EconomyOverTimeCurrent.MassTrendOverTime) or 0
-                if massTrend > -1.0 or storageMass > 50 then
+                if massTrend > -1.0 or massStored > 50 then
                     economyUpgradeSpend = economyUpgradeSpend + (0.03 * (brainIntel.HighestPhase or 0))
                 end
             end
@@ -7736,11 +7736,6 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif brainIntel.AverageSaturation < 0.85 and highestPhase < 2 and not ignoreZoneControl then
                 economyUpgradeSpend = 0.05
                 engineerAssistRatio = 0.05
-            end
-
-            -- Tactical greed should affect the *local* economy spend (not self.* mid-loop)
-            if self.EcoManager and self.EcoManager.TacticalGreedAllowed and not brainIntel.PlayerRole.SpamPlayer then
-                economyUpgradeSpend = economyUpgradeSpend * 1.5
             end
 
             ----------------------------------------------------------------------
@@ -7816,8 +7811,8 @@ AIBrain = Class(RNGAIBrainClass) {
             local airGap   = (enemyThreat.AntiAir or 0) - ((myThreat.AntiAirNow or 0) + (myThreat.AllyAntiAirThreat or 0))
             local navalGap = (enemyThreat.Naval or 0)   - ((myThreat.NavalNow or 0)   + (myThreat.AllyNavalThreat or 0))
             LOG(string.format("RNGLOG_FFA_AUDIT | LandGap: %.2f | RawEnemyLand: %.2f | MyLand: %.2f", landGap, (enemyThreat.Land or 0), (myThreat.LandNow or 0)))
-            LOG(string.format("RNGLOG_FFA_AUDIT | AirGap: %.2f | RawEnemyAir: %.2f | MyAir: %.2f", landGap, (enemyThreat.AntiAir or 0), (myThreat.AntiAirNow or 0)))
-            LOG(string.format("RNGLOG_FFA_AUDIT | NavalGap: %.2f | RawEnemyNaval: %.2f | MyNaval: %.2f", landGap, (enemyThreat.Naval or 0), (myThreat.NavalNow or 0)))
+            LOG(string.format("RNGLOG_FFA_AUDIT | AirGap: %.2f | RawEnemyAir: %.2f | MyAir: %.2f", airGap, (enemyThreat.AntiAir or 0), (myThreat.AntiAirNow or 0)))
+            LOG(string.format("RNGLOG_FFA_AUDIT | NavalGap: %.2f | RawEnemyNaval: %.2f | MyNaval: %.2f", navalGap, (enemyThreat.Naval or 0), (myThreat.NavalNow or 0)))
 
             -- Pressure factor in [0..1]
             local projectedLandRisk  = clamp(safeDiv(landGap * landProjection, math.max(1, enemyThreat.Land or 0), 0), 0, 1)
@@ -7946,22 +7941,32 @@ AIBrain = Class(RNGAIBrainClass) {
             local totalUnitAllocation = newLand + newAir + newNaval
             local leftover = math.max(0, 1.0 - totalUnitAllocation)
 
-            -- Use a percentage of leftover for the minimums, never the whole thing
-            local ecoMin = highestPhase > 1 and (leftover * 0.3) or (leftover * 0.05)
-            local assistMin = (leftover * 0.1) -- Protect 10% for Assist no matter what
-            
-            local economyUpgradeSpendMax = math.min(leftover * 0.7, 0.45)
-            
-            -- Targeted Eco calculation
-            local targetedEco = (leftover * 0.5) + (excessAllocation * 0.4)
-            economyUpgradeSpend = clamp(targetedEco, ecoMin, economyUpgradeSpendMax)
+            -- Absolute Floors (Use constants, not percentages of leftover)
+            local ecoFloor = 0.04    -- Double your previous effective floor
+            local assistFloor = 0.02
 
-            -- Remaining budget for Assist
+            -- 1) Weights (The "Desire" signals)
+            local phaseNorm   = clamp((highestPhase - 1) / 2, 0, 1) 
+            local trendNorm   = clamp(0.5 + safeDiv(massTrend, math.max(1, totalIncome), 0) * 0.5, 0, 1)
+            local storageNorm = clamp(massStored / 200, 0, 1)
+
+            -- Eco wants to grow. We give it a high base weight.
+            local ecoWeight = 0.30 + (0.20 * phaseNorm) + (0.20 * trendNorm) + (0.20 * expansionPressure)
+                        -- Tactical greed should affect the *local* economy spend (not self.* mid-loop)
+            if self.EcoManager and self.EcoManager.TacticalGreedAllowed and not brainIntel.PlayerRole.SpamPlayer then
+                ecoWeight = ecoWeight * 1.5
+            end
+            -- Assist is a luxury unless there is a 'Window'
+            local assistWeight = 0.10 + (0.15 * combinedPressure)
+
+            local totalWeight = ecoWeight + assistWeight + 0.01
+            economyUpgradeSpend = clamp(leftover * (ecoWeight / totalWeight), ecoFloor, 0.45)
             local leftoverAfterEco = math.max(0, leftover - economyUpgradeSpend)
-            
-            -- Targeted Assist calculation
-            local targetedAssist = leftoverAfterEco + (excessAllocation * 0.6)
-            engineerAssistRatio = clamp(targetedAssist, assistMin, leftover)
+            engineerAssistRatio = clamp(leftover - economyUpgradeSpend, assistFloor, leftover)
+            if excessAllocation > 0 then
+                economyUpgradeSpend = clamp(economyUpgradeSpend + (excessAllocation * 0.4), ecoFloor, 0.45)
+                engineerAssistRatio = clamp(engineerAssistRatio + (excessAllocation * 0.6), assistFloor, 1.0)
+            end
 
             ----------------------------------------------------------------------
             -- 8) CONSTRUCTION / ECO HEALTH TEMPERING
@@ -7970,16 +7975,15 @@ AIBrain = Class(RNGAIBrainClass) {
             local spend = (self.cmanager and self.cmanager.categoryspend and self.cmanager.categoryspend.eng) or {}
             local totalEngSpend = (spend.T1 or 0) + (spend.T2 or 0) + (spend.T3 or 0) + (spend.com or 0)
             local constructionRatio = safeDiv(math.max(0, totalEngSpend - assistConsumption), math.max(1, totalIncome), 0)
-            local massTrend = (self.EconomyOverTimeCurrent and self.EconomyOverTimeCurrent.MassTrendOverTime) or 0
             local trendFactor = clamp(1 + safeDiv(massTrend, math.max(1, totalIncome), 0), 0.5, 1.2)
             
-            -- The Nudge: We reduce assist if building heavily, but we CLAMP it to assistMin
+            -- The Nudge: We reduce assist if building heavily, but we CLAMP it to assistFloor
             -- This ensures the "Nudge" can never zero out the assist budget.
             local nudgeValue = (constructionRatio * 0.15)
-            local temperedAssist = math.max(assistMin, engineerAssistRatio - nudgeValue)
+            local temperedAssist = math.max(assistFloor, engineerAssistRatio - nudgeValue)
 
             -- Final eco health scaling
-            engineerAssistRatio = clamp(temperedAssist * trendFactor, assistMin, leftoverAfterEco)
+            engineerAssistRatio = clamp(temperedAssist * trendFactor, assistFloor, leftoverAfterEco)
 
             -- Final Safety: If the two together somehow exceed leftover, scale them back
             local combined = economyUpgradeSpend + engineerAssistRatio
