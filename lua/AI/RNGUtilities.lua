@@ -140,9 +140,18 @@ function EngFindReclaimCell(aiBrain, eng, movementLayer, searchType)
         searchRadius = 8
     end
     if searchType == 'MAIN' then
-        searchRadius = aiBrain.BrainIntel.IMAPConfig.Rings
+        local ringLimit = aiBrain.BuilderManagers[searchType] and aiBrain.BuilderManagers[searchType].FactoryManager and aiBrain.BuilderManagers[searchType].FactoryManager.ReclaimRingLimit
+        if ringLimit then
+            searchRadius = ringLimit
+        else
+            searchRadius = aiBrain.BrainIntel.IMAPConfig.Rings
+        end
     end
    --('Find reclaim cell, search radius is '..searchRadius)
+    local buildRate = eng.Blueprint.Economy.BuildRate or 5
+    local workRate = buildRate * 5
+    local engSpeed = eng.Blueprint.Physics.MaxSpeed or 1.9
+    local engSpeedSq = engSpeed * engSpeed
     local searchLoop = 0
     local reclaimTargetX, reclaimTargetZ
     local engPos = eng:GetPosition()
@@ -156,12 +165,22 @@ function EngFindReclaimCell(aiBrain, eng, movementLayer, searchType)
         for k = 1, count do
             local cell = cells[k] --[[@as AIGridReclaimCell]]
             local centerOfCell = reclaimGridInstance:ToWorldSpace(cell.X, cell.Z)
-            local maxEngineers = math.min(math.ceil(cell.TotalMass / 500), 5)
+            local maxEngineers = math.min(math.ceil(cell.TotalMass / 750), 3)
             -- make sure we can path to it and it doesnt have high threat e.g Point Defense
             if CanPathTo(movementLayer, engPos, centerOfCell) and aiBrain:GetThreatAtPosition(centerOfCell, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 10 then
                 local brainCell = brainGridInstance:ToCellFromGridSpace(cell.X, cell.Z)
                 local engineersInCell = brainGridInstance:CountReclaimingEngineers(brainCell)
-                if engineersInCell < maxEngineers then
+                local bx = engPos[1] - centerOfCell[1]
+                local bz = engPos[3] - centerOfCell[3]
+                local cellDistance = bx * bx + bz * bz
+                local currentWorkSpeed = engineersInCell * workRate
+                local secondsUntilEmpty = 9999
+                if currentWorkSpeed > 0 then
+                    secondsUntilEmpty = cell.TotalMass / currentWorkSpeed
+                end
+                local maxTravelDistSq = (secondsUntilEmpty * secondsUntilEmpty) * engSpeedSq
+                --LOG('engineersInCell '..tostring(engineersInCell)..' x :'..tostring(cell.X)..' z :'..tostring(cell.Z)..' max engineers '..tostring(maxEngineers)..' maxTravelDist '..tostring(math.sqrt(maxTravelDistSq))..' current distance '..tostring(math.sqrt(cellDistance)))
+                if cellDistance < maxTravelDistSq and engineersInCell < maxEngineers then
                     reclaimTargetX, reclaimTargetZ = cell.X, cell.Z
                     break
                 end
@@ -8999,7 +9018,7 @@ function CalculateTeamCentroidAndSpread(aiBrain, allyStartLocations)
 
     -- 2. Include Allies
     for _, allyData in allyStartLocations do
-        if allyData.Active and allyData.Position then
+        if allyData.Position then
             table.insert(positions, allyData.Position)
             totalX = totalX + allyData.Position[1]
             totalZ = totalZ + allyData.Position[3]
@@ -9353,4 +9372,97 @@ function GetBuilldRateOfEngineers(aiBrain, engineers)
     end
     --LOG('Returning totalBuildPower for engineer group is '..tostring(totalBuildPower))
     return totalBuildPower
+end
+
+function GetInitialReclaimRings(factoryManager, aiBrain)
+    LOG('Current Game Time is '..tostring(GetGameTimeSeconds()))
+
+    local startPos = aiBrain.BrainIntel.StartPos
+    LOG('AI start position is '..tostring(repr(startPos)))
+    local enemyDistSq = aiBrain.EnemyIntel.ClosestEnemyBase
+    local armyIndex = aiBrain:GetArmyIndex()
+   
+    -- If enemyDist is 0 or nil, it's a cold start or no enemy markers. Use a huge number.
+    if not enemyDistSq or enemyDistSq == 0 then enemyDistSq = 100000 end
+    local allyStartLocations = aiBrain.BrainIntel.AllyStartLocations
+    local allyCount = 0
+    for _, allyData in allyStartLocations do
+        if allyData.Index ~= armyIndex and allyData.Position then
+            local dx = startPos[1] - allyData.Position[1]
+            local dz = startPos[3] - allyData.Position[3]
+            local distSq = dx*dx + dz*dz
+            if distSq < 160000 then
+                allyCount = allyCount + 1
+            end
+        end
+    end
+    LOG('AllyCount '..tostring(allyCount))
+    local shareMultiplier = 1 / (1 + allyCount)   
+    local secondsPerRing = 40 
+    local maxTravelTime = 90
+    local timeBasedLimit = math.floor(maxTravelTime / secondsPerRing)
+    LOG('timeBasedLimit '..tostring(timeBasedLimit))
+    
+    local reclaimGreed = false
+    -- We know 1 grid square = 40 seconds of travel.
+    -- We want to find the 'Safe Rings' limit.
+    -- 1000 units distance / 6 (safety divisor) = ~166 units of 'Safe Wander'
+    -- 166 units / OgridRadius(45) = ~3.7 rings.
+    local ogrid = aiBrain.BrainIntel.IMAPConfig.OgridRadius or 45
+    LOG('ogrid '..tostring(ogrid))
+    local safeTravelDistance = math.sqrt(enemyDistSq) / 6 
+    LOG('safeTravelDistance '..tostring(safeTravelDistance))
+
+    -- Store this as a static limit for the reclaim logic
+    local ringLimit = math.max(1, math.floor(safeTravelDistance / ogrid))
+
+    -- Clamp by Ally distance to prevent overlap
+    ringLimit = math.min(timeBasedLimit, ringLimit)
+    factoryManager.ReclaimRingLimit = ringLimit
+    LOG('Ring Limit is '..tostring(ringLimit))
+    local reclaimGridInstance = aiBrain.GridReclaim
+    local gx, gz = reclaimGridInstance:ToGridSpace(startPos[1],startPos[3])
+    local cells, count = reclaimGridInstance:FilterAndSortInRadius(gx, gz, ringLimit, 25)
+    local totalMassRequired = 0
+    local totalEnergyRequired = 0
+    local reclaimAvailable = false
+    for k = 1, count do
+        local cell = cells[k] --[[@as AIGridReclaimCell]]
+        if cell.TotalMass > 0 or cell.TotalEnergy > 0 then
+            local centerOfCell = reclaimGridInstance:ToWorldSpace(cell.X, cell.Z)
+            if NavUtils.CanPathTo('Amphibious', startPos, centerOfCell) then
+                totalMassRequired = totalMassRequired + cell.TotalMass
+                totalEnergyRequired = totalEnergyRequired + cell.TotalEnergy
+            end
+        end
+    end
+    LOG('Total Mass in Ring Limit is '..tostring(totalMassRequired))
+    LOG('Total Energy in Ring Limit is '..tostring(totalEnergyRequired))
+    local myMassShare = totalMassRequired * shareMultiplier
+    local myEnergyShare = totalEnergyRequired * shareMultiplier
+    local reclaimGreed = (myMassShare > 1000 or myEnergyShare > 15000)
+    local enemyFar = (enemyDistSq > 160000) 
+    local allyClear = (allyCount == 0)
+    return reclaimGreed, enemyFar, allyClear
+end
+
+function CheckSMDAssistRequirements(aiBrain, engineerManager)
+    local currentSMDs = engineerManager:GetUnits('AntiNuke', categories.STRUCTURE)
+    local currentMissiles = 0
+    local smdPresent = 0
+    for _, unit in currentSMDs do
+        if not unit.Dead then
+            smdPresent = smdPresent + 1
+            local ammoCount = unit:GetNukeSiloAmmoCount()
+            -- If no missiles are loaded and the unit is actually building one
+            if ammoCount > 0 then
+                currentMissiles = currentMissiles + 1
+                break
+            end
+        end
+    end
+    if smdPresent > 0 and currentMissiles == 0 then
+        LOG('Requesting SMD assist')
+        aiBrain:RequestEngineerAssistFocus('SMDLoading', 'SMDLoading', 950, 120, false)
+    end
 end

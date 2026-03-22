@@ -64,16 +64,18 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
         if reason == 'Unpathable' then
             transportWait = transportWait * 2
         end
+        --LOG('Engineer wants to use a transport to get to location '..tostring(repr(destination)))
         bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, unit.PlatoonHandle, destination, transportWait, true)
         unit.WaitingForTransport = false
 
         if bUsedTransports then
             return true
-        elseif VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 512 * 512 then
+        elseif VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 640 * 640 then
             -- If over 512 and no transports dont try and walk!
             --if unit.PlatoonHandle.ZoneExpansionSet and aiBrain.TransportRequested and aiBrain:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then
             --    aiBrain.ZoneExpansionTransportRequested = true
             --end
+            --LOG('Engineer wanted a transport but didnt get one')
             return false
         end
         --LOG('Distance to location was '..tostring(VDist2Sq(pos[1], pos[3], destination[1], destination[3]))..' number of transports available is '..tostring(aiBrain:GetCurrentUnits(categories.TRANSPORTFOCUS)))

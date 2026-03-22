@@ -84,7 +84,7 @@ BaseBuilderTemplate {
         'RNGAI Air Platoon Builder',
 
         -- Land Factory Builders --
-        'RNGAI Factory Builder Land Large',
+        'RNGAI Factory Builder Land',
         'RNGAI Reaction Tanks',
         'RNGAI LandBuilder T1',
         'RNGAI LandBuilder T2',
@@ -92,7 +92,7 @@ BaseBuilderTemplate {
         'RNGAI LandBuilder T1 Islands',
 
         -- Air Factory Builders --
-        'RNGAI Factory Builder Air Large',
+        'RNGAI Factory Builder Air',
 
         -- RNGAI Air Support Builders --
         'RNGAI Air Staging Platform',

@@ -850,7 +850,7 @@ end
 ---@param aiBrain AIBrain
 ---@param platoon AIPlatoon
 LandScoutThreatThread = function(aiBrain, platoon)
-    local checkRadius = platoon['rngdata'].IntelRange + 10
+    local checkRadius = platoon['rngdata'].IntelRange + 15
     local unitCatCheck
     local scout = platoon.ScoutUnit
     if scout.UnitId == 'xsl0101' then
@@ -891,7 +891,8 @@ LandScoutThreatThread = function(aiBrain, platoon)
                         --LOG('Seraphim scout vsself.engineer')
                         unitToAttack = v
                         attackUnitDistance = enemyDistance
-                    elseif (not attackUnitDistance or (enemyDistance < attackUnitDistance and not attackCategory)) and platoon.StateName ~= 'Retreating' and not v.Dead and ( platoon.StateName ~= 'SupportUnit' and platoon.StateName ~= 'Navigating' and not platoon.BuilderData.Retreat ) then
+                    elseif (not attackUnitDistance or (enemyDistance < attackUnitDistance and not attackCategory)) and not v.Dead 
+                    and ( platoon.StateName ~= 'Retreating' and platoon.StateName ~= 'SupportUnit' and platoon.StateName ~= 'Navigating' and not platoon.BuilderData.Retreat ) then
                         if not v['rngdata'].MaxWeaponRange then
                             StateUtils.GetUnitMaxWeaponRange(v)
                         end
@@ -1011,13 +1012,13 @@ LandScoutThreatThread = function(aiBrain, platoon)
                             local originLocation
                             if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
                                 supportUnit = platoon.BuilderData.SupportUnit
-                                if enemyDistance > enemyUnitRange * enemyUnitRange + 64 then
+                                if enemyDistance > enemyUnitRange * enemyUnitRange + 100 then
                                     ignoreUnit = true
                                 end
                             end
                             if platoon.BuilderData.SupportPlatoon and not IsDestroyed(platoon.BuilderData.SupportPlatoon) then
                                 supportPlatoon = platoon.BuilderData.SupportPlatoon
-                                if enemyDistance > enemyUnitRange * enemyUnitRange + 64 then
+                                if enemyDistance > enemyUnitRange * enemyUnitRange + 100 then
                                     ignoreUnit = true
                                 end
                             end

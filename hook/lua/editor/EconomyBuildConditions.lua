@@ -373,12 +373,6 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
     local resourceCount = 0
     local massSpendTotal = 0
     local zoneBasedIncome = 0
-    local locationZone = aiBrain.BuilderManagers[locationType].ZoneID
-    local highValue = 1
-    local landZones = aiBrain.Zones.Land.zones
-    if landZones[locationZone].teamvalue and landZones[locationZone].teamvalue < 1 then
-        highValue = 2 - landZones[locationZone].teamvalue
-    end
     if pathableZones and not table.empty(pathableZones.Zones) then
         for _, z in pathableZones.Zones do
             if z.ZoneID then
@@ -483,27 +477,35 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
         elseif manager.Layer == 'Water' then
             rawIncome = ( aiBrain.cmanager.income.r.m - (mexSpend * 0.5)) or 0
         else
-            rawIncome = zoneBasedIncome * highValue
+            rawIncome = zoneBasedIncome
         end
          
         local availableResources = math.max(resourceCount * 2, rawIncome, spendableStorage)
-        --LOG('Zone based factory spend availability for '..tostring(aiBrain.Nickname)..' at location '..tostring(locationType)..' for layer '..tostring(layer))
-        --LOG('massSpendTotal '..tostring(massSpendTotal))
-        --LOG('mexSpend '..tostring(mexSpend))
-        --LOG('rawIncome '..tostring(rawIncome))
-        --LOG('resourceBased income potential '..tostring(resourceCount * 2))
-        --LOG('availableResources '..tostring(availableResources))
-        --LOG('Current ratio '..tostring(massSpendTotal / availableResources))
-        --LOG('Expected ratio '..tostring(aiBrain.ProductionRatios[layer]))
         local productionRatio 
         if aiBrain.ProductionRatios[layer] == 0 then
             productionRatio = aiBrain.DefaultProductionRatios[layer] 
+        elseif aiBrain.BrainIntel.HighestPhase > 2 then
+            productionRatio = aiBrain.ProductionRatios[layer]
         else
             productionRatio = aiBrain.ProductionIntent[layer]
         end
         --LOG('Production rato is '..tostring(productionRatio))
         local currentRatio = massSpendTotal / availableResources
         --LOG('currentRatio '..tostring(currentRatio)..' productionRatio '..tostring(productionRatio)..' compareType '..tostring(compareType))
+        local globalTrend = aiBrain.EconomyOverTimeCurrent.MassTrendOverTime or 0
+        --------
+        local actualTrend = aiBrain:GetEconomyTrend('MASS')
+        local zonePotential = resourceCount * 2
+        local isMaskingDeficit = (actualTrend < 0 and zonePotential > rawIncome)
+        --[[
+        LOG(string.format('ZONE_LOGIC_AUDIT: Loc: %s | ZonePot: %.2f | RawInc: %.2f | ActualTrend: %.2f | Masking: %s', tostring(locationType), zonePotential, rawIncome, actualTrend, tostring(isMaskingDeficit)))
+        local willReturnTrue = (massSpendTotal / availableResources) < productionRatio
+        if isMaskingDeficit and willReturnTrue then
+            LOG(string.format('ECON_TRAP_TRIGGERED: Stalling at %.2f but logic says "Build More" due to ZonePot!', actualTrend))
+        end
+        ----------
+        LOG(string.format("RNGLOG_T3_STALL_AUDIT | Loc: %s | Intent: %.2f | CurrRatio: %.2f | AvailRes: %.2f | GlobalTrend: %.2f", tostring(locationType), productionRatio, currentRatio, availableResources, globalTrend))
+        ]]
         return CompareBody(currentRatio, productionRatio, compareType)
     end
     return false

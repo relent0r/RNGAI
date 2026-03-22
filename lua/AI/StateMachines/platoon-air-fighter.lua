@@ -169,6 +169,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                                         target = nil
                                     end
                                 end
+                                --LOG(string.format('FIGHTER_DECISION: Target: %s, Score: %.1f, MaxAllowed: %.1f, PlatoonThreat: %.1f', tostring(target.UnitId), threatScore, maxAllowableThreat, self.CurrentPlatoonThreatAntiAir))
                             end
                         end
                     end
@@ -635,6 +636,7 @@ FighterThreatThreads = function(aiBrain, platoon)
                 platoon.MaxRadius = aiBrain.IntelManager.SafeAirThreatRadius
             end
         end
+        --LOG(string.format('FIGHTER_STATE: Radius: %d, LocalEnemyThreat: %.1f, SelfThreat: %.1f', platoon.MaxRadius, enemyThreat, platoon.CurrentPlatoonThreatAntiAir))
         if not aiBrain.BrainIntel.SuicideModeActive then
             for _, unit in GetPlatoonUnits(platoon) do
                 if unit and not IsDestroyed(unit) then

@@ -2505,6 +2505,9 @@ StructureManager = Class {
             else
                 self.ShieldsRequired = false
             end
+            if self.Brain.BuilderManagers['MAIN'].EngineerManager then
+                RUtils.CheckSMDAssistRequirements(self.Brain, self.Brain.BuilderManagers['MAIN'].EngineerManager)
+            end
         end
     end,
 

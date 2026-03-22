@@ -800,6 +800,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistRuleBP = {
             Energy = 320,
             Mass= 320,
+            SMD= 320,
             None = 999999999
         }
         self.EngineerAssistCurrentBPAllocated = {
@@ -857,6 +858,13 @@ AIBrain = Class(RNGAIBrainClass) {
                 {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'LandUpgrade mass', bpKey = 'Mass'}, 
                 {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'LandUpgrade structure * energy', bpKey = 'Energy'}, 
                 {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'LandUpgrade factory'},
+                {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'LandUpgrade experimental'},
+                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'LandUpgrade mass storage'}
+            },
+            ['SMDLoading'] = {
+                {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'MissileAssist', debug = 'Assist SMD', bpKey = 'SMD'}, 
+                {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'LandUpgrade mass', bpKey = 'Mass'}, 
+                {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'LandUpgrade structure * energy', bpKey = 'Energy'}, 
                 {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'LandUpgrade experimental'},
                 {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'LandUpgrade mass storage'}
             },
@@ -1695,6 +1703,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SuicideModeActive = false
         self.BrainIntel.SuicideModeTarget = false
         self.BrainIntel.TeamCount = 0
+        self.BrainIntel.ClosestAllyBase = 0
         self.BrainIntel.SMLReady = false
         self.BrainIntel.SMLTargetPositions = {}
         self.EnemyIntel.NavalRange = {
@@ -2830,7 +2839,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 local engineerManager = v.EngineerManager
                 local currentReclaimPlatoonCount = engineerManager and engineerManager:GetEngineerStateMachineCount('Engineers', 'ReclaimEngineer') or 0
                 local gx, gz = reclaimGridInstance:ToGridSpace(v.Position[1],v.Position[3])
-                local cells, count = reclaimGridInstance:FilterAndSortInRadius(gx, gz, self.BrainIntel.IMAPConfig.Rings, 50)
+                local searchRings = self.BrainIntel.IMAPConfig.Rings
+                if v.FactoryManager.ReclaimRingLimit then
+                    --LOG('Ring limit is present, set this for the manager '..tostring(k)..' it is '..tostring(v.FactoryManager.ReclaimRingLimit))
+                    searchRings = v.FactoryManager.ReclaimRingLimit
+                end
+                local cells, count = reclaimGridInstance:FilterAndSortInRadius(gx, gz, searchRings, 25)
                 local maxEngineersRequired = 0
                 local totalMassRequired = 0
                 local totalEnergyRequired = 0
@@ -2841,9 +2855,6 @@ AIBrain = Class(RNGAIBrainClass) {
                         local centerOfCell = reclaimGridInstance:ToWorldSpace(cell.X, cell.Z)
                         totalMassRequired = totalMassRequired + cell.TotalMass
                         totalEnergyRequired = totalEnergyRequired + cell.TotalEnergy
-                        -- Setup a path check for the cell, but make it a flag since the base position never changes. Where will I put this data? GridBrain?
-                        --[[if NavUtils.CanPathTo('AMPHIBIOUS', v.Position, centerOfCell) then
-                        end]]
                     end
                 end
                 local maxEngineersRequired = math.max(math.ceil(totalMassRequired / 300), math.ceil(totalEnergyRequired / 700))
@@ -2859,6 +2870,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     self.StartMassReclaimTotal = totalMassRequired
                     self.StartEnergyReclaimTotal = totalEnergyRequired
                 end
+                --
+                --RNGLOG('RECLAIM_AUDIT: Base: '..k..' | Radius: '..self.BrainIntel.IMAPConfig.Rings..' | CellsFound: '..count..' | TotalMass: '..totalMassRequired)
             end
         end
     end,
@@ -2997,6 +3010,10 @@ AIBrain = Class(RNGAIBrainClass) {
                         local startPos = { startPosX, GetSurfaceHeight(startPosX, startPosZ), startPosZ }
                         allyTempStarts[armyIndex] = {Position = startPos, Index = armyIndex, WaterLabels = {}}
                         allyStarts['ARMY_' .. armyIndex] = startPos
+                        local playerDistance = VDist3Sq(self.BrainIntel.StartPos, startPos)
+                        if armyIndex ~= myIndex and (self.BrainIntel.ClosestAllyBase == 0 or playerDistance < self.BrainIntel.ClosestAllyBase) then
+                            self.BrainIntel.ClosestAllyBase = playerDistance
+                        end
                     end
                 end
                 self.EnemyIntel.EnemyStartLocations = enemyStarts
@@ -3020,13 +3037,14 @@ AIBrain = Class(RNGAIBrainClass) {
                         local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
                         if army and startPos then
                             RNGINSERT(startLocations, {Position = startPos, Index = army.ArmyIndex})
+                            local playerDistance = VDist3Sq(self.BrainIntel.StartPos, startPos)
                             if army.ArmyIndex ~= myArmy.ArmyIndex and (army.Team ~= myArmy.Team or army.Team == 1) then
                                 -- Add the army start location to the list of interesting spots.
                                 opponentStarts['ARMY_' .. i] = startPos
                                 numOpponents = numOpponents + 1
                                 -- I would rather use army ndexes for the table keys of the enemyStarts so I can easily reference them in queries. To be pondered.
-                                local enemyDistance = VDist3Sq(self.BrainIntel.StartPos, startPos)
-                                enemyStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex, Distance = enemyDistance, WaterLabels = {}}
+                                
+                                enemyStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex, Distance = playerDistance, WaterLabels = {}}
                                 local gridXID, gridZID = im:GetIntelGrid(startPos)
                                 if im.MapIntelGrid[gridXID][gridZID].Enabled then
                                     im.MapIntelGrid[gridXID][gridZID].ScoutPriority = 150
@@ -3036,12 +3054,15 @@ AIBrain = Class(RNGAIBrainClass) {
                                     --LOG('Grid Location Details '..repr(im.MapIntelGrid[gridXID][gridZID]))
                                     --self:ForkThread(self.drawMarker, im.MapIntelGrid[gridXID][gridZID].Position)
                                 end
-                                if self.EnemyIntel.ClosestEnemyBase == 0 or enemyDistance < self.EnemyIntel.ClosestEnemyBase then
-                                    self.EnemyIntel.ClosestEnemyBase = enemyDistance
+                                if self.EnemyIntel.ClosestEnemyBase == 0 or playerDistance < self.EnemyIntel.ClosestEnemyBase then
+                                    self.EnemyIntel.ClosestEnemyBase = playerDistance
                                 end
                             else
                                 allyTempStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex, WaterLabels = {}}
                                 allyStarts['ARMY_' .. i] = startPos
+                                if self.BrainIntel.ClosestAllyBase == 0 or playerDistance < self.BrainIntel.ClosestAllyBase then
+                                    self.BrainIntel.ClosestAllyBase = playerDistance
+                                end
                             end
                         end
                     end
@@ -3097,11 +3118,17 @@ AIBrain = Class(RNGAIBrainClass) {
                                 allyStarts['ARMY_' .. i] = startPos
                                 local allyDistance = VDist3Sq(self.BrainIntel.StartPos, startPos)
                                 allyTempStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex, Distance = allyDistance }
+                                if army.ArmyIndex ~= myArmy.ArmyIndex and (self.BrainIntel.ClosestAllyBase == 0 or allyDistance < self.BrainIntel.ClosestAllyBase) then
+                                    self.BrainIntel.ClosestAllyBase = allyDistance
+                                end
                                 --allyTempStarts[army.ArmyIndex] = {Position = startPos}
                             else
                                 numOpponents = numOpponents + 1
                                 local enemyDistance = VDist3Sq(self.BrainIntel.StartPos, startPos)
                                 enemyStarts[army.ArmyIndex] = {Position = startPos, Index = army.ArmyIndex, Distance = enemyDistance }
+                                if self.EnemyIntel.ClosestEnemyBase == 0 or enemyDistance < self.EnemyIntel.ClosestEnemyBase then
+                                    self.EnemyIntel.ClosestEnemyBase = enemyDistance
+                                end
                                 --startLocations[army.ArmyIndex] = {Position = startPos}
                             end
                         end
@@ -5629,7 +5656,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 return ALLBPS[projBp].Economy.BuildCostEnergy / ALLBPS[projBp].Economy.BuildTime * (ALLBPS[unitId].Economy.BuildRate * buildMultiplier)
             end
             return false
-
         end
         local ALLBPS = __blueprints
         local multiplier = self.EcoManager.BuildMultiplier
@@ -6329,7 +6355,7 @@ AIBrain = Class(RNGAIBrainClass) {
     RequestEngineerAssistFocus = function(self, source, focusKey, priority, ttl, maxAssist)
         self.EngineerAssistManagerRequests = self.EngineerAssistManagerRequests or {}
         local expiry = GetGameTimeSeconds() + (ttl or 60)
-        LOG('RequestEngineerAssistFocus for focusKey'..tostring(focusKey))
+        LOG('RequestEngineerAssistFocus for focusKey'..tostring(source))
         
         self.EngineerAssistManagerRequests[source] = {
             FocusKey = focusKey,
@@ -6430,6 +6456,7 @@ AIBrain = Class(RNGAIBrainClass) {
             ['T3AirRush'] = categories.FACTORY * categories.AIR * categories.TECH3,
             ['HighValue'] = categories.MOBILE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.TECH3 * (categories.STRATEGIC + categories.ANTIMISSILE),
             ['General'] = categories.STRUCTURE + categories.EXPERIMENTAL + categories.MOBILE,
+            ['SMDLoading'] = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3,
         }
 
         local buildPowerTable = {
@@ -7268,369 +7295,6 @@ AIBrain = Class(RNGAIBrainClass) {
             end
         end
     end,
-    --[[
-    AdjustEconomicAllocation = function (self)
-        coroutine.yield(50)
-    
-        while self.Status ~= 'Defeat' do
-            coroutine.yield(30)
-    
-            -- Configurable ratios for economy spend and assist
-            local economyUpgradeSpend = self.EconomyUpgradeSpendDefault or 0.05
-            local engineerAssistRatio = self.EngineerAssistRatioDefault or 0.05
-            local phaseBonus = 0
-            if self.BrainIntel.HighestPhase > 1 then
-                local storageMass = self:GetEconomyStored('MASS')
-                if self.EconomyOverTimeCurrent.MassTrendOverTime > -1.0 or storageMass > 50 then
-                    phaseBonus = 0.03 * self.BrainIntel.HighestPhase
-                end
-            end
-            economyUpgradeSpend = economyUpgradeSpend + phaseBonus
-            if self.BrainIntel.PlayerStrategy.T3AirRush then
-                engineerAssistRatio = engineerAssistRatio + 0.2
-            end
-
-            local economyUpgradeSpendMin = 0.02 -- Minimum economy allocation
-            local economyUpgradeSpendMax = 0.45 -- Maximum economy allocation
-            local engineerAssistRatioMin = 0.02 -- Minimum assist allocation
-            local engineerAssistRatioMax = 0.60 -- Maximum assist allocation
-            local brainIntel = self.BrainIntel
-            local highestPhase =  math.max(brainIntel.LandPhase, brainIntel.AirPhase, brainIntel.NavalPhase)
-            local ignoreZoneControl = not brainIntel.PlayerRole.AirPlayer and not brainIntel.PlayerRole.ExperimentalPlayer
-    
-            local isNavalMap = false
-            if self.MapWaterRatio > 0.50 then
-                local currentEnemy = self:GetCurrentEnemy()
-                if currentEnemy then
-                    local enemyIndex = currentEnemy:GetArmyIndex()
-                    local ownIndex = self:GetArmyIndex()
-                    local labelCount = brainIntel.NavalBaseLabelCount
-                    if self.CanPathToEnemyRNG[ownIndex][enemyIndex]['MAIN'] ~= 'LAND' and self.MapWaterRatio > 0.50 and labelCount and labelCount > 0 then
-                        isNavalMap = true
-                    end
-                end
-            end
-            local playerBiases = {
-                Default = { Land = 1.0, Air = 1.0, Naval = 1.0 },
-                Land = { Land = 1.5, Air = 0.8, Naval = 0.7 },
-                Air = { Land = 0.7, Air = 1.5, Naval = 0.8 },
-                Naval = { Land = 0.7, Air = 0.8, Naval = 1.5 },
-                ChokePoint = { Land = 0.3, Air = 1.0, Naval = 1.0 }
-            }
-            local currentBias = brainIntel.PlayerRole.AirPlayer and playerBiases.Air or brainIntel.PlayerRole.SpamPlayer and playerBiases.Land or isNavalMap and playerBiases.Naval 
-            or self.EnemyIntel.ChokeFlag and playerBiases.ChokePoint or playerBiases.Default
-    
-            local minAllocation = 0.20
-            local maxShiftLandRatio = 0.75
-            local maxShiftAirRatio = 0.75
-            local maxShiftNavalRatio = 0.75
-            if brainIntel.PlayerRole.SpamPlayer then
-                maxShiftLandRatio = 0.80
-                economyUpgradeSpend = 0.05
-                engineerAssistRatio = 0.05
-            elseif brainIntel.PlayerZoneControl < 0.70 and highestPhase < 2 and not ignoreZoneControl then
-                economyUpgradeSpend = 0.05
-                engineerAssistRatio = 0.05
-            end
-            local landBias = 0.3 -- Reduction for land allocation on naval maps
-            local navalBias = 1.5 -- Boost for naval allocation on naval maps
-            local threatFactorThreshold = 1.4 -- Threshold for reallocating excess
-
-            if self.EcoManager.TacticalGreedAllowed and not self.BrainIntel.PlayerRole.SpamPlayer then
-                self.EconomyUpgradeSpend = self.EconomyUpgradeSpendDefault * 1.5
-            else
-                self.EconomyUpgradeSpend = self.EconomyUpgradeSpendDefault
-            end
-    
-            -- Factory production capabilities
-            local sm = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua').GetStructureManager(self)
-            local smFactories = sm.Factories
-            local hasLandProduction = smFactories.LAND[1].Total > 0 or smFactories.LAND[2].Total > 0 or smFactories.LAND[3].Total > 0
-            local hasAirProduction = smFactories.AIR[1].Total > 0 or smFactories.AIR[2].Total > 0 or smFactories.AIR[3].Total > 0
-            local hasNavalProduction = smFactories.NAVAL[1].Total > 0 or smFactories.NAVAL[2].Total > 0 or smFactories.NAVAL[3].Total > 0
-            local navalBiasMultiplier = 1.0
-            if self.IntelManager.NavalFocusSafe then
-                navalBiasMultiplier = 1.75  -- double naval weighting
-            end
-    
-            -- Total Income
-            local totalIncome = self.cmanager.income.r.m
-            local extractorValues = self.EcoManager.ExtractorValues
-            local maxEconomyAllocation = (extractorValues.TECH1.TeamValue * extractorValues.TECH1.ConsumptionValue) + (extractorValues.TECH2.TeamValue * extractorValues.TECH2.ConsumptionValue)
-            if maxEconomyAllocation > 0 and totalIncome > 0 then
-                economyUpgradeSpendMax = math.min(self.EconomyUpgradeSpend, maxEconomyAllocation / totalIncome)
-            end
-    
-            -- Threat Ratios
-            local myThreat = brainIntel.SelfThreat
-            local enemyThreat = self.EnemyIntel.EnemyThreatCurrent
-    
-            -- First, calculate the excess allocation for all categories:
-            local excessAllocation = 0
-
-            local totalLandThreat = (myThreat.LandNow + myThreat.AllyLandThreat)
-
-            -- Use the Domain-Specific ratio to confirm dominance
-            if hasLandProduction and (totalLandThreat > (enemyThreat.Land * threatFactorThreshold)) then
-                local currentLandRatio = self.ProductionRatios['Land']
-                local landExcess = math.max(0, currentLandRatio - minAllocation)
-                
-                excessAllocation = excessAllocation + landExcess
-                self.ProductionRatios['Land'] = minAllocation
-            end
-
-            if hasAirProduction and ((myThreat.AntiAirNow + myThreat.AllyAntiAirThreat) > (enemyThreat.Air * threatFactorThreshold)) then
-                local currentAirRatio = self.ProductionRatios['Air']
-                local airExcess = math.max(0, currentAirRatio - minAllocation)
-                
-                excessAllocation = excessAllocation + airExcess
-                self.ProductionRatios['Air'] = minAllocation
-            end
-
-            if hasNavalProduction and ((myThreat.NavalNow + myThreat.AllyNavalThreat) > (enemyThreat.Naval * threatFactorThreshold)) then
-                local currentNavalRatio = self.ProductionRatios['Naval']
-                local navalExcess = math.max(0, currentNavalRatio - minAllocation)
-                
-                excessAllocation = excessAllocation + navalExcess
-                self.ProductionRatios['Naval'] = minAllocation
-            end
-
-            -- Now, redistribute the excess to the economy and assist ratios
-            local additionalEconomyRatio = excessAllocation * 0.5 -- 50% to economy
-            local newEconomySpend = economyUpgradeSpend + additionalEconomyRatio
-            local preNudgeEco = economyUpgradeSpend
-
-            -- Nudge economyUpgradeSpend
-            if newEconomySpend > self.EconomyUpgradeSpendDefault or newEconomySpend > economyUpgradeSpendMax then
-                -- Nudge upward toward max if excess is available
-                economyUpgradeSpend = math.min(newEconomySpend, economyUpgradeSpendMax)
-                if economyUpgradeSpend < newEconomySpend then
-                    excessAllocation = excessAllocation + math.max(0, (newEconomySpend - economyUpgradeSpend))
-                end
-            else
-                -- Nudge downward toward default or min if no excess
-                economyUpgradeSpend = math.max(newEconomySpend, economyUpgradeSpendMin)
-            end
-
-            local ecoConsumed = math.max(0, economyUpgradeSpend - preNudgeEco)
-            excessAllocation = math.max(0, excessAllocation - ecoConsumed)
-
-            -- Calculate available budget for production (after reserving for economy and assist)
-            LOG('myThreat.LandNow '..tostring(myThreat.LandNow))
-            LOG('myThreat.AllyLandThreat '..tostring(myThreat.AllyLandThreat))
-            local totalThreatRatio = myThreat.LandNow + myThreat.AllyLandThreat + myThreat.AntiAirNow + myThreat.AllyAntiAirThreat + myThreat.NavalNow + myThreat.AllyNavalThreat + enemyThreat.Land + enemyThreat.AntiAir + enemyThreat.Naval
-            local availableRatio = math.max(0, 1 - (economyUpgradeSpend + engineerAssistRatio))
-            if totalThreatRatio == 0 then
-                totalThreatRatio = 1  -- To avoid division by zero
-            end
-            
-            -- Calculate the production allocation first
-            local productionAllocation = availableRatio
-            
-            -- Normalize default production ratios to fit within productionAllocation
-            local normalizedLandRatio = self.DefaultProductionRatios['Land'] * productionAllocation
-            local normalizedAirRatio = self.DefaultProductionRatios['Air'] * productionAllocation
-            local normalizedNavalRatio = self.DefaultProductionRatios['Naval'] * productionAllocation
-            
-            -- Calculate the new production ratios, clamping them as needed
-            local newLandRatio = hasLandProduction and math.max(
-                minAllocation,
-                math.min(
-                    normalizedLandRatio + (
-                        (enemyThreat.Land > myThreat.LandNow and (enemyThreat.Land - (myThreat.LandNow + myThreat.AllyLandThreat)) / totalThreatRatio or 0)
-                        * maxShiftLandRatio
-                        * currentBias.Land
-                    ),
-                    maxShiftLandRatio
-                )
-            ) or 0
-            
-            local newAirRatio = hasAirProduction and math.max(
-                minAllocation,
-                math.min(
-                    normalizedAirRatio - (
-                        (myThreat.AntiAirNow > enemyThreat.AntiAir and (enemyThreat.AntiAir - (myThreat.AntiAirNow + myThreat.AllyAntiAirThreat)) / totalThreatRatio or 0)
-                        * maxShiftAirRatio
-                        * currentBias.Air
-                    ),
-                    maxShiftAirRatio
-                )
-            ) or 0
-            
-            local newNavalRatio = hasNavalProduction and math.max(
-                minAllocation,
-                math.min(
-                    normalizedNavalRatio + (
-                        (enemyThreat.Naval > myThreat.NavalNow and (enemyThreat.Naval - (myThreat.NavalNow + myThreat.AllyNavalThreat)) / totalThreatRatio or 0)
-                        * maxShiftNavalRatio
-                        * currentBias.Naval
-                        * navalBiasMultiplier
-                    ),
-                    maxShiftNavalRatio
-                )
-            ) or 0
-            
-            -- Now we have production ratios, let's calculate the excess resources for engineer assists
-            local totalProductionRatio = newLandRatio + newAirRatio + newNavalRatio
-            
-            -- Normalize the production ratios and apply availableRatio and maxShiftRatios clamping
-            if totalProductionRatio > 0 then
-                newLandRatio = math.min((newLandRatio / totalProductionRatio) * availableRatio, maxShiftLandRatio)
-                newAirRatio = math.min((newAirRatio / totalProductionRatio) * availableRatio, maxShiftAirRatio)
-                newNavalRatio = math.min((newNavalRatio / totalProductionRatio) * availableRatio, maxShiftNavalRatio)
-            end
-
-            local landMaxRatio = 0
-            local airMaxRatio = 0
-            local navalMaxRatio = 0
-            if totalIncome > 0 then
-                landMaxRatio = self.EcoManager.ApproxLandFactoryMassConsumption / totalIncome
-                airMaxRatio = self.EcoManager.ApproxAirFactoryMassConsumption / totalIncome
-                navalMaxRatio = self.EcoManager.ApproxNavalFactoryMassConsumption / totalIncome
-            end
-
-            -- Adjust Land Ratio
-            if newLandRatio > landMaxRatio then
-                local excessRatio = newLandRatio - landMaxRatio
-                excessAllocation = excessAllocation + excessRatio
-                newLandRatio = landMaxRatio
-            end
-
-            -- Adjust Air Ratio
-            if newAirRatio > airMaxRatio then
-                local excessRatio = newAirRatio - airMaxRatio
-                excessAllocation = excessAllocation + excessRatio
-                newAirRatio = airMaxRatio
-            end
-
-            -- Adjust Naval Ratio
-            if newNavalRatio > navalMaxRatio then
-                local excessRatio = newNavalRatio - navalMaxRatio
-                excessAllocation = excessAllocation + excessRatio
-                newNavalRatio = navalMaxRatio
-            end
-            
-            -- Now that production has been allocated, we can handle the engineer assist
-            local newAssistRatio = engineerAssistRatio + excessAllocation -- Use remaining allocation for assists
-            
-            -- Nudge engineerAssistRatio
-            if newAssistRatio > self.EngineerAssistRatioDefault then
-                -- Nudge upward toward max if excess is available
-                engineerAssistRatio = math.min(newAssistRatio, engineerAssistRatioMax)
-            else
-                -- Nudge downward toward default or min if no excess
-                engineerAssistRatio = math.max(newAssistRatio, engineerAssistRatioMin)
-            end
-            local massTrend = self.EconomyOverTimeCurrent.MassTrendOverTime or 0
-            local storageMass = GetEconomyStored(self, 'MASS') or 0
-
-            local trendRatio = massTrend / (totalIncome > 0 and totalIncome or 1)
-            local trendFactor = math.max(0.3, math.min(1.5, 1 + trendRatio))
-            
-            -- Storage safety factor based on drain time
-            local drainTime = (massTrend < 0 and storageMass > 0) and storageMass / -massTrend or 999999
-            local storageFactor = 1.0
-            if drainTime < 60 then
-                storageFactor = math.max(0.3, 0.5 + (drainTime / 120))
-            end
-
-            -- This tempers the assist ratio to take into account normal construction spending since we don't currently track it.    
-            local assistConsumption = self.EngineerAssistManagerCurrentConsumption or 0
-            local totalEngSpend = (self.cmanager.categoryspend.eng.T1 + self.cmanager.categoryspend.eng.T2 + 
-                                self.cmanager.categoryspend.eng.T3 + self.cmanager.categoryspend.eng.com)
-            local constructionSpend = math.max(0, totalEngSpend - assistConsumption)
-            local constructionRatio = constructionSpend / (totalIncome > 0 and totalIncome or 1)
-
-            -- This is your tuning knob. 
-            -- 0.2 means: "Reduce assist budget by 20% of whatever we are spending on construction."
-            local assistNudgeWeight = 0.2 
-            local assistNudge = constructionRatio * assistNudgeWeight
-
-            -- Apply the nudge
-            engineerAssistRatio = math.max(engineerAssistRatioMin, engineerAssistRatio - assistNudge)
-
-            -- Combine them into a scaling multiplier
-            local ecoHealthMultiplier = math.max(0.3, math.min(1.5, trendFactor * storageFactor))
-            engineerAssistRatio = engineerAssistRatio * ecoHealthMultiplier
-
-            --local totalModifier, activeBases = 0, 0
-            --for k, v in self.BuilderManagers do if v.FactoryManager.LocationActive then totalModifier = totalModifier + (v.FactoryManager.ProductionModifier or 1.0); activeBases = activeBases + 1 end end
-            --RNGLOG(string.format("OBTP_ALLOC_AUDIT | GlobalLandRatio: %.2f | ActiveBases: %d | TotalModSum: %.2f", self.ProductionRatios.Land, activeBases, totalModifier))
-
-            -- Assign the final production ratios
-            self.ProductionRatios.Land = newLandRatio
-            self.ProductionRatios.Air = newAirRatio
-            self.ProductionRatios.Naval = newNavalRatio
-            self.EngineerAssistRatio = engineerAssistRatio
-            self.EconomyUpgradeSpend = economyUpgradeSpend
-            --LOG('Total Economy Consumption '..tostring(assistConsumption)..' current income '..tostring(self.cmanager.income.r.m)..' current brain assist ratio '..tostring(self.EngineerAssistRatio)..' assist nudge is '..tostring(assistNudge)..' current engineer consumption '..tostring(totalEngSpend))
-
-            local totalWeightedNeed = 0
-            for _, v in self.BuilderManagers do
-                local fmgr = v.FactoryManager
-                if fmgr.LocationActive and (fmgr.LandBuildRate or 0) > 0 then
-                    totalWeightedNeed = totalWeightedNeed + (fmgr.LandBuildRate * (fmgr.ProductionModifier or 1.0))
-                end
-            end
-
-            -- 2. Distribute the Global Land Ratio across all active bases
-            for _, v in self.BuilderManagers do
-                local fmgr = v.FactoryManager
-                if fmgr.LocationActive and totalWeightedNeed > 0 then
-                    local myWeight = (fmgr.LandBuildRate * (fmgr.ProductionModifier or 1.0))
-                    fmgr.BaseLandRatio = (myWeight / totalWeightedNeed) * newLandRatio
-                else
-                    fmgr.BaseLandRatio = 0
-                end
-                LOG('BaseLandRatio is '..tostring(fmgr.BaseLandRatio)..' for base '..tostring(fmgr.LocationType)..' local zone threat assignment is :'..tostring(fmgr.ZoneThreatAssignment)..' saturation ratio :'..tostring(fmgr.SaturationRatio)..'EconomicGravity :'..tostring(fmgr.EconomicGravity))
-            end
-    
-            -- Logging
-            
-            LOG('AI Name : '..tostring(self.Nickname)..' Current game time : '..tostring(GetGameTimeSeconds()))
-            LOG('Current Best Army ownership is '..tostring(brainIntel.PlayerZoneControl))
-            LOG('Are we a naval map '..tostring(isNavalMap)..' Map water ratio '..tostring(self.MapWaterRatio))
-            LOG('Has Land Production: '..tostring(hasLandProduction)..' Has Air Production: '..tostring(hasAirProduction)..' Has Naval Production: '..tostring(hasNavalProduction))
-            LOG('----- Threat Metrics -----')
-            LOG('EnemyThreatCurrent.Land '..tostring(enemyThreat.Land)..' EnemyThreatCurrent.AntiAir '..tostring(enemyThreat.AntiAir)..' EnemyThreatCurrent.Naval '..tostring(enemyThreat.Naval))
-            LOG('SelfThreat.LandNow '..tostring(myThreat.LandNow)..' SelfThreat.AllyLandThreat '..tostring(myThreat.AllyLandThreat))
-            LOG('SelfThreat.AntiAirNow '..tostring(myThreat.AntiAirNow)..' SelfThreat.AllyAntiAirThreat '..tostring(myThreat.AllyAntiAirThreat))
-            LOG('SelfThreat.NavalNow '..tostring(myThreat.NavalNow)..' SelfThreat.AllyNavalThreat '..tostring(myThreat.AllyNavalThreat))
-            LOG('----- Production Metrics -----')
-            LOG('Default Land Ratio '..tostring(self.DefaultProductionRatios['Land'])..' Default Air Ratio '..tostring(self.DefaultProductionRatios['Air'])..' Default Naval Ratio '..tostring(self.DefaultProductionRatios['Naval']))
-            LOG('Current Land Ratio: '..tostring(self.ProductionRatios.Land)..' Current Air Ratio: '..tostring(self.ProductionRatios.Air)..' Current Naval Ratio: '..tostring(self.ProductionRatios.Naval))
-            LOG('----- Economy Metrics -----')
-            LOG('TotalExtractors.TECH1 : '..tostring(self.EcoManager.TotalExtractors.TECH1)..' TotalExtractors.TECH2 : '..tostring(self.EcoManager.TotalExtractors.TECH2))
-            LOG('ExtractorsUpgrading.TECH1 : '..tostring(self.EcoManager.ExtractorsUpgrading.TECH1)..' ExtractorsUpgrading.TECH2 : '..tostring(self.EcoManager.ExtractorsUpgrading.TECH2))
-            LOG('TotalMexSpend : '..tostring(self.EcoManager.TotalMexSpend)..' In theory we can allocate this much spend max : '..tostring((self.EcoManager.ExtractorValues.TECH1.TeamValue * self.EcoManager.ExtractorValues.TECH1.ConsumptionValue) + (self.EcoManager.ExtractorValues.TECH2.TeamValue * self.EcoManager.ExtractorValues.TECH2.ConsumptionValue)))
-            LOG('EconomyUpdate Spend Max Ratio is '..tostring(economyUpgradeSpendMax))
-            LOG('----- Spend Metrics ------')
-            LOG('RequestedSpendLand * totalIncome: '..tostring(self.ProductionRatios.Land * totalIncome))
-            LOG('RequestedSpendAir * totalIncome: '..tostring(self.ProductionRatios.Air * totalIncome))
-            LOG('RequestedSpendNaval * totalIncome: '..tostring(self.ProductionRatios.Naval * totalIncome))
-            LOG('Economy Spend Ratio: '..tostring(economyUpgradeSpend))
-            LOG('Current Spend desired: '..tostring(self.cmanager.income.r.m*self.EconomyUpgradeSpend))
-            LOG('Current Extractor upgrade Spend to allocate: '..tostring(economyUpgradeSpend * totalIncome))
-            LOG('Current Extractor upgrade Spend actual: '..tostring(self.EcoManager.TotalMexSpend))
-            LOG('Assist Ratio : '..tostring(engineerAssistRatio)..' Assist Economy allocation : '..tostring(engineerAssistRatio * totalIncome))
-            LOG('Eco Health assist multiplier '..tostring(ecoHealthMultiplier))
-            LOG('EngineerAssist Builder Power '..tostring(self.EngineerAssistManagerBuildPower)..' EngineerAssist Required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
-            LOG('Current Engineer Spend T1 : '..tostring(self.cmanager.categoryspend.eng.T1)..' Current Engineer Spend T2 : '..tostring(self.cmanager.categoryspend.eng.T2)..' Current Engineer Spend T3 : '..tostring(self.cmanager.categoryspend.eng.T3)..' Current Engineer Spend COM : '..tostring(self.cmanager.categoryspend.eng.com))
-            LOG('Current Engineer Spend Distribution '..tostring(repr(self.EngineerSpendDistributionTable)))
-            LOG('Excess Allocation at the end of loop was '..tostring(excessAllocation))
-            LOG('Current Mass Trend '..tostring(self:GetEconomyTrend('MASS')))
-            LOG('Current Bias '..tostring(repr(currentBias)))
-
-            local actualTotalSpend = (self.cmanager.categoryspend.eng.T1 + self.cmanager.categoryspend.eng.T2 + self.cmanager.categoryspend.eng.T3 + self.cmanager.categoryspend.eng.com)
-            local theoreticalBudget = (newLandRatio + newAirRatio + newNavalRatio + engineerAssistRatio + economyUpgradeSpend) * totalIncome
-            LOG(string.format("ECON_GAP_AUDIT | ActualEngSpend: %.2f | TheoBudget: %.2f | LeakageRatio: %.2f", actualTotalSpend, theoreticalBudget, (1.0 - (newLandRatio + newAirRatio + newNavalRatio + engineerAssistRatio + economyUpgradeSpend))))
-            local constructionSpend = actualTotalSpend - (self.EngineerAssistManagerBuildPower or 0)
-            local constructionRatio = constructionSpend / (totalIncome > 0 and totalIncome or 1)
-            RNGLOG(string.format("DERIVATION_AUDIT | Income: %.2f | ActualConstructionRatio: %.2f | IntendedAssistRatio: %.2f", totalIncome, constructionRatio, engineerAssistRatio))
-            
-        end
-    end,
-    ]]
 
     AdjustEconomicAllocation = function (self)
         coroutine.yield(50)
@@ -7761,7 +7425,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
                 if mainPath ~= 'LAND' then
                     
-                    LOG('Default lower landProjection because main path is not land')
+                    --LOG('Default lower landProjection because main path is not land')
                     landProjection = 0.2 -- Default: Over the horizon / Stalled
                     
                     -- Check LabelIMAPThreat for the specific label where our production is located
@@ -7773,15 +7437,15 @@ AIBrain = Class(RNGAIBrainClass) {
                         if labelThreat then
                             if (labelThreat.enemystructurethreat or 0) > 0 then
                                 landProjection = 0.8 -- Enemy has a base on our island
-                                LOG('Base Detected on our island, structure threat is '..tostring(labelThreat.enemystructurethreat))
+                                --LOG('Base Detected on our island, structure threat is '..tostring(labelThreat.enemystructurethreat))
                             elseif (labelThreat.enemylandthreat or 0) > 0 then
                                 landProjection = 0.5 -- Units detected on our island (Drops)
-                                LOG('Units Detected on our island, land threat is '..tostring(labelThreat.enemylandthreat))
+                                --LOG('Units Detected on our island, land threat is '..tostring(labelThreat.enemylandthreat))
                             end
                         end
                     end
                 end
-                LOG(string.format("RNGLOG_PATH_AUDIT | IsNavalMap: %s | CanPathLand: %s | landProjection: %s", tostring(isNavalMap), tostring(mainPath), tostring(landProjection)))
+                --LOG(string.format("RNGLOG_PATH_AUDIT | IsNavalMap: %s | CanPathLand: %s | landProjection: %s", tostring(isNavalMap), tostring(mainPath), tostring(landProjection)))
             end
 
             
@@ -7810,9 +7474,9 @@ AIBrain = Class(RNGAIBrainClass) {
             local landGap  = (enemyThreat.Land or 0)    - ((myThreat.LandNow or 0)    + (myThreat.AllyLandThreat or 0))
             local airGap   = (enemyThreat.AntiAir or 0) - ((myThreat.AntiAirNow or 0) + (myThreat.AllyAntiAirThreat or 0))
             local navalGap = (enemyThreat.Naval or 0)   - ((myThreat.NavalNow or 0)   + (myThreat.AllyNavalThreat or 0))
-            LOG(string.format("RNGLOG_FFA_AUDIT | LandGap: %.2f | RawEnemyLand: %.2f | MyLand: %.2f", landGap, (enemyThreat.Land or 0), (myThreat.LandNow or 0)))
-            LOG(string.format("RNGLOG_FFA_AUDIT | AirGap: %.2f | RawEnemyAir: %.2f | MyAir: %.2f", airGap, (enemyThreat.AntiAir or 0), (myThreat.AntiAirNow or 0)))
-            LOG(string.format("RNGLOG_FFA_AUDIT | NavalGap: %.2f | RawEnemyNaval: %.2f | MyNaval: %.2f", navalGap, (enemyThreat.Naval or 0), (myThreat.NavalNow or 0)))
+            --LOG(string.format("RNGLOG_FFA_AUDIT | LandGap: %.2f | RawEnemyLand: %.2f | MyLand: %.2f", landGap, (enemyThreat.Land or 0), (myThreat.LandNow or 0)))
+            --LOG(string.format("RNGLOG_FFA_AUDIT | AirGap: %.2f | RawEnemyAir: %.2f | MyAir: %.2f", airGap, (enemyThreat.AntiAir or 0), (myThreat.AntiAirNow or 0)))
+            --LOG(string.format("RNGLOG_FFA_AUDIT | NavalGap: %.2f | RawEnemyNaval: %.2f | MyNaval: %.2f", navalGap, (enemyThreat.Naval or 0), (myThreat.NavalNow or 0)))
 
             -- Pressure factor in [0..1]
             local projectedLandRisk  = clamp(safeDiv(landGap * landProjection, math.max(1, enemyThreat.Land or 0), 0), 0, 1)
@@ -7829,8 +7493,8 @@ AIBrain = Class(RNGAIBrainClass) {
             
             -- Combined Pressure: Always stay high if there is a local threat
             local combinedPressure = math.max(threatPressure, expansionPressure)
-            LOG(string.format("RNGLOG_PROJECTION_AUDIT | Label: %s | LandProj: %.2f | NavProj: %.2f", tostring(myLabel), landProjection, navalProjection))
-            LOG(string.format("RNGLOG_RISK_AUDIT | LandRisk: %.2f | NavRisk: %.2f | ExpPress: %.2f | Combined: %.2f", projectedLandRisk, projectedNavalRisk, expansionPressure, combinedPressure))
+            --LOG(string.format("RNGLOG_PROJECTION_AUDIT | Label: %s | LandProj: %.2f | NavProj: %.2f", tostring(myLabel), landProjection, navalProjection))
+            --LOG(string.format("RNGLOG_RISK_AUDIT | LandRisk: %.2f | NavRisk: %.2f | ExpPress: %.2f | Combined: %.2f", projectedLandRisk, projectedNavalRisk, expansionPressure, combinedPressure))
             -- Bump maxProd to 0.90 to ensure expansion has 'teeth' when needed
             local minProd, maxProd = 0.45, 0.90
             local productionAllocation = minProd + (combinedPressure * (maxProd - minProd))
@@ -7838,7 +7502,7 @@ AIBrain = Class(RNGAIBrainClass) {
             -- High pressure disables capacity clamps to “signal expansion”
             local isHighPressure = combinedPressure > 0.50
 
-            LOG(string.format("RNGLOG_PIVOT_AUDIT | Gravity: %.2f | AvgSat: %.2f | SatNeed: %.2f | ExpPress: %.2f | ThreatPress: %.2f", brainIntel.GlobalEconomicGravity, brainIntel.AverageSaturation, saturationNeed, expansionPressure, projectedLandRisk))
+            --LOG(string.format("RNGLOG_PIVOT_AUDIT | Gravity: %.2f | AvgSat: %.2f | SatNeed: %.2f | ExpPress: %.2f | ThreatPress: %.2f", brainIntel.GlobalEconomicGravity, brainIntel.AverageSaturation, saturationNeed, expansionPressure, projectedLandRisk))
 
             ----------------------------------------------------------------------
             -- 5) DOMAIN RATIOS (DESIRE -> DOMINANCE CLAMP -> NORMALIZE)
@@ -7911,7 +7575,7 @@ AIBrain = Class(RNGAIBrainClass) {
             ----------------------------------------------------------------------
             -- 6) THROUGHPUT CLAMPING (SAFE MODE ONLY)
             ----------------------------------------------------------------------
-            if totalIncome > 0 and not isHighPressure and self.EcoManager then
+            if totalIncome > 0 and (not isHighPressure or highestPhase > 2) and self.EcoManager then
                 local caps = {
                     Land  = safeDiv(self.EcoManager.ApproxLandFactoryMassConsumption or 0, totalIncome, 0),
                     Air   = safeDiv(self.EcoManager.ApproxAirFactoryMassConsumption or 0, totalIncome, 0),
@@ -7931,8 +7595,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     newNaval = caps.Naval
                 end
                 
-                LOG(string.format("RNGLOG_EXPANSION_AUDIT | Intent: %.2f | Cap: %.2f | Final: %.2f", landIntent, (caps and caps.Land or 0), self.ProductionRatios.Land))
+                --LOG(string.format("RNGLOG_EXPANSION_AUDIT | Intent: %.2f | Cap: %.2f | Final: %.2f", landIntent, (caps and caps.Land or 0), self.ProductionRatios.Land))
             end
+
+            --local phantomLand = math.max(0, (newLand or 0) - (self.EcoManager and self.EcoManager.ApproxLandFactoryMassConsumption or 0)/math.max(1, totalIncome))
+            --LOG(string.format("RNGLOG_SQUEEZE_AUDIT | Pressure: %.2f | LandIntent: %.2f | LandCap: %.2f | PhantomWaste: %.2f | AssistRatio: %.2f", combinedPressure, (newLand or 0), (self.EcoManager and self.EcoManager.ApproxLandFactoryMassConsumption or 0)/math.max(1, totalIncome), phantomLand, engineerAssistRatio))
 
 
             ----------------------------------------------------------------------
@@ -8003,12 +7670,12 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EconomyUpgradeSpend = economyUpgradeSpend
 
             -- Logging (kept)
-            LOG(string.format('RNGLOG: Pressure=%0.2f | Units=%0.2f | ProdAlloc=%0.2f | Leftover=%0.2f',combinedPressure, totalUnitAllocation, productionAllocation, leftover))
-            LOG(string.format('RNGLOG_ECO: UnitClaim=%.2f | Eco=%.2f | Assist=%.2f | Excess=%.2f',totalUnitAllocation, economyUpgradeSpend, engineerAssistRatio, excessAllocation))
+            --LOG(string.format('RNGLOG: Pressure=%0.2f | Units=%0.2f | ProdAlloc=%0.2f | Leftover=%0.2f',combinedPressure, totalUnitAllocation, productionAllocation, leftover))
+            --LOG(string.format('RNGLOG_ECO: UnitClaim=%.2f | Eco=%.2f | Assist=%.2f | Excess=%.2f',totalUnitAllocation, economyUpgradeSpend, engineerAssistRatio, excessAllocation))
 
-            LOG(string.format("AI: %s | Time: %s | Income: %.2f",tostring(self.Nickname), tostring(GetGameTimeSeconds()), totalIncome))
-            LOG(string.format("Ratios - Land: %.2f, Air: %.2f, Naval: %.2f, Assist: %.2f, Eco: %.2f",newLand, newAir, newNaval, engineerAssistRatio, economyUpgradeSpend))
-            LOG(string.format("OBTP_SQUEEZE | ProdAlloc: %.2f | EcoSpend: %.2f | LandWanted: %.2f",productionAllocation, economyUpgradeSpend, newLand))
+            --LOG(string.format("AI: %s | Time: %s | Income: %.2f",tostring(self.Nickname), tostring(GetGameTimeSeconds()), totalIncome))
+            --LOG(string.format("Ratios - Land: %.2f, Air: %.2f, Naval: %.2f, Assist: %.2f, Eco: %.2f",newLand, newAir, newNaval, engineerAssistRatio, economyUpgradeSpend))
+            --LOG(string.format("OBTP_SQUEEZE | ProdAlloc: %.2f | EcoSpend: %.2f | LandWanted: %.2f",productionAllocation, economyUpgradeSpend, newLand))
 
             
 
@@ -8034,7 +7701,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     fmgr.BaseLandRatio, fmgr.BaseAirRatio, fmgr.BaseNavalRatio = 0, 0, 0
                 end
             end
-            LOG(string.format("RNGLOG_CITIZEN_AUDIT | Leftover:%f | EcoTook:%f | PostEcoRemaining:%f | ConstRatioNudge:%f | FinalAssist:%f", leftover, economyUpgradeSpend, leftoverAfterEco, (constructionRatio * 0.2), engineerAssistRatio))
+            --LOG(string.format("RNGLOG_CITIZEN_AUDIT | Leftover:%f | EcoTook:%f | PostEcoRemaining:%f | ConstRatioNudge:%f | FinalAssist:%f", leftover, economyUpgradeSpend, leftoverAfterEco, (constructionRatio * 0.2), engineerAssistRatio))
             LOG(string.format("RNGLOG_ALLOCATION_AUDIT | FinalProdAlloc: %.2f | Land: %.2f | Air: %.2f | Naval: %.2f | EcoSpend: %.2f | Assist: %.2f",productionAllocation, newLand, newAir, newNaval, economyUpgradeSpend, engineerAssistRatio))
         end
     end,

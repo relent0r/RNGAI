@@ -90,46 +90,6 @@ BuilderGroup {
             }
         }
     },
-    --[[
-    Builder {
-        BuilderName = 'RNGAI T1 Defence Engineer Adjacent Land',
-        PlatoonTemplate = 'EngineerStateT1RNG',
-        Priority = 950,
-        InstanceCount = 1,
-        BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.7, 0.8 }},
-            { UCBC, 'UnitCapCheckLess', { .8 } },
-        },
-        BuilderType = 'Any',
-        BuilderData = {
-            StateMachine = 'EngineerBuilder',
-            JobType = 'BuildStructure',
-            DesiresAssist = true,
-            NumAssistees = 5,
-            Construction = {
-                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIT1PDTemplate.lua',
-                BaseTemplate = 'T1PDTemplate',
-                BuildClose = true,
-                OrderedTemplate = true,
-                EmergencyBuild = true,
-                AdjacentZone = true,
-                Type = 'Land',
-                Tier = 1,
-                BuildStructures = {
-                    { Unit = 'T1GroundDefense', Categories = categories.STRUCTURE * categories.DIRECTFIRE * categories.DEFENSE * categories.TECH1 },
-                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
-                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
-                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
-                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
-                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
-                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
-                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
-                    { Unit = 'Wall', Categories = categories.STRUCTURE * categories.WALL * categories.DEFENSE * categories.TECH1 - categories.CIVILIAN},
-                },
-                LocationType = 'LocationType',
-            }
-        }
-    },]]
     Builder {
         BuilderName = 'RNGAI T1 Defence Engineer Restricted Breach Air Single',
         PlatoonTemplate = 'EngineerStateT1RNG',

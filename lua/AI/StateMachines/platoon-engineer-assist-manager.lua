@@ -412,6 +412,68 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
+                elseif assistData.type == 'MissileAssist' then
+                    if assistDesc then
+                        LOG('MissileAssist detection')
+                        --LOG('Number of units we can assist '..tostring(RNGGETN(assistDesc)))
+                        local bestWeight
+                        --LOG('Number of units in table '..tostring(table.getn(assistDesc)))
+                        for _, unit in assistDesc do
+                            if EntityCategoryContains(assistData.cat, unit) then
+                                if not unit.Dead and not unit.ReclaimInProgress and not unit:BeenDestroyed() and unit:GetAIBrain():GetArmyIndex() == armyIndex then
+                                    local ammoCount = unit:GetNukeSiloAmmoCount()
+                                    if ammoCount < 1 then
+                                        local currentProgress = unit:GetWorkProgress()
+                                        if currentProgress > 0 then
+                                            local unitPos = unit:GetPosition()
+                                            local engAssist = unit:GetGuards()
+                                            local currentBuildPower = RUtils.GetBuilldRateOfEngineers(aiBrain, engAssist)
+                                            --LOG('Checking unit '..tostring(unit.UnitId)..' current build power on unit being built is '..tostring(currentBuildPower))
+                                            --LOG('Assist platoon total build power is '..tostring(self.TotalBuildRate))
+                                            if currentBuildPower <= 0 then
+                                                currentBuildPower = 1
+                                            end
+                                            
+                                            --LOG('unitCompletion of completion unit '..tostring(unit.UnitId)..' : '..tostring(unitCompletion))
+                                            local econBuildTime = unit.Blueprint.Economy.BuildTime or 0
+                                            --LOG('econBuildTime '..tostring(econBuildTime))
+                                            --LOG('currentBuildPower '..tostring(currentBuildPower))
+                                            local remainingTime = (econBuildTime * (1 - currentProgress)) / currentBuildPower
+                                            local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
+                                            --LOG('Remaining build time '..tostring(remainingTime))
+
+                                            if remainingTime > 4 then
+                                                --LOG('remainingTime is greater than 4')
+                                                -- The weighting was added to try and help the scenario where a t4 structure was being built and ignored for cheaper experimentals.
+                                                local ALLBPS = __blueprints
+                                                local unitId = unit.UnitId
+                                                local massCost
+                                                if ALLBPS[unitId].Weapon[1].ProjectileId then
+                                                    local projBp = ALLBPS[unitId].Weapon[1].ProjectileId
+                                                    --RNGLOG('EcoPowerPreemptive return consumption number is '..(ALLBPS[projBp].Economy.BuildCostEnergy / ALLBPS[projBp].Economy.BuildTime * (ALLBPS[unitId].Economy.BuildRate * buildMultiplier)))
+                                                    massCost = ALLBPS[projBp].Economy.BuildCostMass 
+                                                end
+                                                if massCost < 1 then massCost = 1 end
+                                                local weight = massCost * currentProgress
+                                                if currentProgress > 0.75 then
+                                                    weight = weight + 30000
+                                                elseif currentProgress > 0.40 then
+                                                    weight = weight + 10000
+                                                end
+                                                local linearDistFactor = dist / engineerRadiusSq
+                                                weight = weight - (linearDistFactor * 2500)
+                                                --LOG('Unit weight is '..tostring(weight)..' current bestWeight is '..tostring(bestWeight))
+                                                if not bestWeight or weight > bestWeight then
+                                                    bestWeight = weight
+                                                    bestUnit = unit
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
                 end
                 if bestUnit and not IsDestroyed(bestUnit) then
                     --LOG('Best unit found '..tostring(bestUnit.UnitId))
@@ -452,7 +514,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                 else
-                    LOG('No best unit found for reclaim manager')
+                    LOG('No best unit found for assist manager, we will loop back again')
                 end
             end
 
@@ -478,6 +540,8 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
 
 
             -- Identify tech tier from your local tallies
+            LOG('Check assist manager reallocation T1 build rate '..tostring(self.TotalTechBuildRate[1])..' T2 build rate '..tostring(self.TotalTechBuildRate[2])..' T3 build rate '..tostring(self.TotalTechBuildRate[3]))
+            LOG('Desired Build rate '..tostring(aiBrain.EngineerAssistManagerBuildPowerRequired))
             local tech = 0
             if self.TotalTechBuildRate[3] > 0 then tech = 3
             elseif self.TotalTechBuildRate[2] > 0 then tech = 2
@@ -716,6 +780,18 @@ EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
             --LOG('Upgrading unit is destroyed, break from assist thread')
             eng.UnitBeingAssist = nil
             break
+        end
+        if jobType == 'MissileAssist' then
+            -- Exit if a missile is finished
+            if unitToAssist:GetNukeSiloAmmoCount() > 0 then
+                eng.UnitBeingAssist = nil
+                break
+            end
+            -- Exit if the silo is no longer working on a missile (canceled/paused)
+            if unitToAssist:GetWorkProgress() == 0 then
+                eng.UnitBeingAssist = nil
+                break
+            end
         end
         if aiBrain.EngineerAssistManagerFocusCategory and not EntityCategoryContains(aiBrain.EngineerAssistManagerFocusCategory, unitToAssist) 
         and not unitToAssist.Blueprint.CategoriesHash.ENERGYPRODUCTION then

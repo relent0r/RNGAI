@@ -194,7 +194,7 @@ function GreaterThanAlliedThreatInAdjacentZones(aiBrain, locationType, threat)
     return false
 end
 
-function BaseNeedsMoreFactoryBuildRate(aiBrain, locationType, buildRateType)
+function BaseNeedsMoreFactoryBuildRate(aiBrain, locationType, buildRateType, bpBuildRate)
     local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
     if factoryManager then
         local threatAssignment = factoryManager.ZoneThreatAssignment or 0
@@ -202,9 +202,14 @@ function BaseNeedsMoreFactoryBuildRate(aiBrain, locationType, buildRateType)
         if not buildRate or buildRate <= 0 then
             buildRate = 1
         end
+        local unitPower = bpBuildRate or 20
+        -- Figure out a count of factories we have so we can deny building too many.
+        local effectiveCount = math.max(1, buildRate / unitPower)
+        local dynamicThreshold = 1.5 + (0.17 * (effectiveCount * effectiveCount))
         local loadRatio = threatAssignment / buildRate
         --LOG('Base '..tostring(locationType)..' Load Ratio '..tostring(loadRatio)..' Threat Assignment was '..tostring(threatAssignment)..' BuildRate was '..tostring(buildRate))
-        if loadRatio > 2 then
+        --LOG(string.format("RNGLOG_EXPANSION_AUDIT | Loc: %s | Threat: %0.2f | BR: %0.2f | Ratio: %0.2f | Dynamic Threshold: %0.2f", tostring(locationType), threatAssignment, buildRate, loadRatio, dynamicThreshold))
+        if loadRatio > dynamicThreshold then
             --LOG('Base Deemed as needing more factories at position '..tostring(tostring(repr(aiBrain.BuilderManagers[locationType].FactoryManager.Location))))
             return true
         end

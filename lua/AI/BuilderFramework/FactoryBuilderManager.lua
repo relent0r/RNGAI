@@ -515,7 +515,11 @@ FactoryBuilderManager = Class(BuilderManager) {
                 end
             else
                 local template = self:GetFactoryTemplate(builder:GetPlatoonTemplate(), factory)
-                --LOG('*AI DEBUG: ARMY '..tostring(self.Brain:GetArmyIndex())..': Factory Builder Manager Building - '..tostring(builder.BuilderName)..' at base '..tostring(self.LocationType))
+                if factory.Blueprint.CategoriesHash.AIR then
+                  LOG('*AI DEBUG: ARMY '..tostring(self.Brain:GetArmyIndex())..': Factory Builder Manager Building - '..tostring(builder.BuilderName)..' at base '..tostring(self.LocationType))
+                  LOG('Enemy Air threat'..tostring(self.Brain.EnemyIntel.EnemyThreatCurrent.Air)..' Enemy AntiAir threat'..tostring(self.Brain.EnemyIntel.EnemyThreatCurrent.AntiAir))
+                  LOG('RNG Air threat'..tostring(self.Brain.BrainIntel.SelfThreat.AirNow)..' RNG AntiAir threat'..tostring(self.Brain.BrainIntel.SelfThreat.AntiAirNow))
+                end
                 self.Brain:BuildPlatoon(template, {factory}, 1)
             end
         else
@@ -804,6 +808,7 @@ FactoryBuilderManager = Class(BuilderManager) {
             'T1BuildEngineer',
             'T1BuildEngineer',
         }
+        local reclaimGreed, enemyFar, allyGreed = RUtils.GetInitialReclaimRings(self, self.Brain)
         if faction then
             local EnemyIndex
             local mapSizeX, mapSizeZ = GetMapSize()
@@ -812,106 +817,16 @@ FactoryBuilderManager = Class(BuilderManager) {
             if EnemyArmy then
                 EnemyIndex = EnemyArmy:GetArmyIndex()
             end
-            if mapSizeX >= 4000 and mapSizeZ >= 4000 then
-                --RNGLOG('20 KM Map Check true')
-                if EnemyIndex and self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
-                    for i=1, 4 do
-                        table.insert(queue, 'T1BuildEngineer')
-                    end
-                    if faction == 'SERAPHIM' then
-                        table.insert(queue, 'T1LandDFTank')
-                        table.insert(queue, 'T1LandScout')
-                        table.insert(queue, 'T1LandDFTank')
-                        table.insert(queue, 'T1LandScout')
-                        table.insert(queue, 'T1LandDFTank')
-                        table.insert(queue, 'T1LandScout')
-                    else
-                        table.insert(queue, 'T1LandDFBot')
-                        table.insert(queue, 'T1LandScout')
-                        table.insert(queue, 'T1LandDFBot')
-                        table.insert(queue, 'T1LandScout')
-                        table.insert(queue, 'T1LandDFTank')
-                        table.insert(queue, 'T1LandScout')
-                    end
-                    if self.Brain.BrainIntel.RestrictedMassMarker > 6 then
-                        for i=1, 4 do
-                            table.insert(queue, 'T1BuildEngineer')
-                        end
-                    end
-                else
-                    for i=1, 6 do
-                        table.insert(queue, 'T1BuildEngineer')
-                    end
-                end
-            elseif mapSizeX >= 2000 and mapSizeZ >= 2000 then
-                --RNGLOG('20 KM Map Check true')
-                if EnemyIndex and self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
-                    for i=1, 4 do
-                        table.insert(queue, 'T1BuildEngineer')
-                    end
-                    if faction == 'SERAPHIM' then
-                        table.insert(queue, 'T1LandDFTank')
-                        table.insert(queue, 'T1LandScout')
-                        table.insert(queue, 'T1LandDFTank')
-                        table.insert(queue, 'T1LandScout')
-                        table.insert(queue, 'T1LandDFTank')
-                        table.insert(queue, 'T1LandScout')
-                    else
-                        table.insert(queue, 'T1LandDFBot')
-                        table.insert(queue, 'T1LandScout')
-                        table.insert(queue, 'T1LandDFBot')
-                        table.insert(queue, 'T1LandScout')
-                        table.insert(queue, 'T1LandDFTank')
-                        table.insert(queue, 'T1LandScout')
-                    end
-                    if self.Brain.BrainIntel.RestrictedMassMarker > 6 then
-                        for i=1, 4 do
-                            table.insert(queue, 'T1BuildEngineer')
-                        end
-                    end
-                else
-                    for i=1, 6 do
-                        table.insert(queue, 'T1BuildEngineer')
-                    end
-                end
-            elseif mapSizeX >= 1000 and mapSizeZ >= 1000 then
-                --RNGLOG('20 KM Map Check true')
+
+            if mapSizeX >= 500 and mapSizeZ >= 500 then
                 if EnemyIndex and self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
                     for i=1, 2 do
                         table.insert(queue, 'T1BuildEngineer')
                     end
-                    if faction == 'SERAPHIM' then
-                        table.insert(queue, 'T1LandDFTank')
-                        table.insert(queue, 'T1LandScout')
-                        table.insert(queue, 'T1LandDFTank')
-                        table.insert(queue, 'T1LandScout')
-                        table.insert(queue, 'T1BuildEngineer')
-                        table.insert(queue, 'T1BuildEngineer')
-                        table.insert(queue, 'T1LandScout')
-                    else
-                        table.insert(queue, 'T1LandDFBot')
-                        table.insert(queue, 'T1LandScout')
-                        table.insert(queue, 'T1LandDFBot')
-                        table.insert(queue, 'T1LandScout')
-                        table.insert(queue, 'T1BuildEngineer')
-                        table.insert(queue, 'T1BuildEngineer')
-                        table.insert(queue, 'T1LandScout')
-                    end
-                else
-                    for i=1, 4 do
-                        table.insert(queue, 'T1BuildEngineer')
-                    end
-                    table.insert(queue, 'T1LandScout')
-                    table.insert(queue, 'T1LandDFTank')
-                    table.insert(queue, 'T1LandDFTank')
-                    for i=1, 3 do
-                        table.insert(queue, 'T1BuildEngineer')
-                    end
-                end
-            elseif mapSizeX >= 500 and mapSizeZ >= 500 then
-                if EnemyIndex and self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
-                    for i=1, 2 do
-                        table.insert(queue, 'T1BuildEngineer')
+                    if enemyFar and reclaimGreed then
+                        for i=1, 4 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
                     end
                     if faction == 'SERAPHIM' then
                         table.insert(queue, 'T1LandDFTank')
@@ -935,6 +850,11 @@ FactoryBuilderManager = Class(BuilderManager) {
                 else
                     for i=1, 3 do
                         table.insert(queue, 'T1BuildEngineer')
+                    end
+                    if enemyFar and reclaimGreed then
+                        for i=1, 4 do
+                            table.insert(queue, 'T1BuildEngineer')
+                        end
                     end
                     table.insert(queue, 'T1LandScout')
                     table.insert(queue, 'T1LandDFTank')

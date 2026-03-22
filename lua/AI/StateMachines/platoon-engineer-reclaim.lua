@@ -34,6 +34,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
         ---@param self AIPlatoonAdaptiveReclaimBehavior
         Main = function(self)
             self:LogDebug(string.format('Welcome to the EngineerReclaimBehavior StateMachine'))
+            --LOG('Welcome to the EngineerReclaimBehavior StateMachine')
             local aiBrain = self:GetBrain()
             self.LocationType = self.PlatoonData.LocationType or 'FLOATING'
 
@@ -142,6 +143,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                 self:ChangeState(self.GetReclaimTable)
                 return
             end
+            --LOG('We did not perform a reclaim table state, self.BuilderData.ReclaimTableFailed is '..tostring(self.BuilderData.ReclaimTableFailed)..' reclaim table '..tostring(self.PlatoonData.ReclaimTable))
             if aiBrain.ReclaimEnabled then
                 if self.BuilderData.ReclaimTableFailed then
                     self.BuilderData = {}
@@ -152,6 +154,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
             end
 
             coroutine.yield(30)
+            --LOG('Exiting state machine after decidewhattodo')
             self:ExitStateMachine()
             return
         end,
@@ -253,6 +256,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
             local eng = self.eng
             local maxReclaimRadius = (eng.Blueprint.Economy.MaxBuildDistance or 5) * (eng.Blueprint.Economy.MaxBuildDistance or 5)
             local tableSize = RNGGETN(aiBrain.StartReclaimTable)
+            LOG('Start reclaim table size is '..tostring(tableSize))
             self:LogDebug(string.format('Reclaim Table size is '..tostring(tableSize)))
             if tableSize > 0 then
                 IssueClearCommands({eng})
@@ -426,7 +430,6 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
             end
             local aiBrain = self:GetBrain()
             local eng = self.eng
-           
             local searchType
             local reclaimGridInstance = aiBrain.GridReclaim
             local brainGridInstance = aiBrain.GridBrain
@@ -655,6 +658,9 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                 coroutine.yield(20)
                 self:LogDebug(string.format('Nothing returned from EngFindReclaimCell'))
             end
+            if self.PlatoonData.Early then
+                self.PlatoonData.Early = false
+            end
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -710,7 +716,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
             local reclaim = {}
             
             if reclaimRect and not table.empty( reclaimRect ) then
-                local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.8
+                local needEnergy = aiBrain:GetEconomyStoredRatio('ENERGY') < 0.5
                 for k,v in reclaimRect do
                     if not IsProp(v) or self.BadReclaimables[v] then continue end
                     local rpos = v.CachePosition
@@ -747,17 +753,19 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                 end
             else
                 self.InitialRange = self.InitialRange + 100
-                if self.InitialRange > 300 then
+                if self.InitialRange > 500 then
                     RNGAIGLOBALS.PropBlacklist = {}
                     aiBrain.ReclaimEnabled = false
                     aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
                     coroutine.yield(1)
+                    LOG('Exiting state machine after initial range got too large')
                     self:ExitStateMachine()
                     return
+                else
+                    coroutine.yield(5)
+                    self:ChangeState(self.GetGenericReclaim)
+                    return
                 end
-                coroutine.yield(2)
-                self:ChangeState(self.DecideWhatToDo)
-                return
             end
             if closestDistance == 10000 then
                 self.InitialRange = self.InitialRange + 100
@@ -766,6 +774,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                     aiBrain.ReclaimEnabled = false
                     aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
                     coroutine.yield(1)
+                    LOG('Exiting state machine after closest distance hit 10000')
                     self:ExitStateMachine()
                     return
                 end
@@ -779,6 +788,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
             IssueClearCommands({eng})
             if not closestReclaim and not furtherestReclaim then
                 coroutine.yield(5)
+                LOG('Exiting state machine after no closest or furtherest reclaim')
                 self:ExitStateMachine()
                 return
             end
@@ -829,6 +839,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
             self.GenericReclaimLoop = self.GenericReclaimLoop + 1
             if self.GenericReclaimLoop == 5 then
                 coroutine.yield(1)
+                LOG('Exiting state machine after reclaim loop hit 5')
                 self:ExitStateMachine()
                 return
             end
@@ -1090,6 +1101,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
                 else
                     if reason == 'TooMuchThreat' then
                         coroutine.yield(30)
+                        LOG('Exiting state machine after too much threat')
                         self:ExitStateMachine()
                         return
                     end

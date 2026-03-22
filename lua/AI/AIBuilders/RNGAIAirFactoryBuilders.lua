@@ -112,7 +112,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T2 Ratio',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI T2 FighterBomber',
+        BuilderName = 'RNGAI T2 FighterBomber Demand',
         PlatoonTemplate = 'T2FighterBomber',
         Priority = 891,
         BuilderConditions = {
@@ -126,7 +126,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI T2 Mercy',
+        BuilderName = 'RNGAI T2 Mercy Demand',
         PlatoonTemplate = 'T2AirMissile',
         Priority = 895,
         BuilderType = 'Air',
@@ -138,7 +138,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI T2 Torp Bomber',
+        BuilderName = 'RNGAI T2 Torp Bomber Demand',
         PlatoonTemplate = 'T2AirTorpedoBomber',
         Priority = 893,
         PriorityFunction = ACUUnderNavalAttack,
@@ -150,7 +150,7 @@ BuilderGroup {
         BuilderType = 'Air',
     },
     Builder {
-        BuilderName = 'RNGAI T2 Gunship',
+        BuilderName = 'RNGAI T2 Gunship Demand',
         PlatoonTemplate = 'T2AirGunship',
         Priority = 889,
         BuilderConditions = {
@@ -169,7 +169,7 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T3 Ratio',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI T3 Scout',
+        BuilderName = 'RNGAI T3 Scout Demand',
         PlatoonTemplate = 'T3AirScout',
         Priority = 755,
         BuilderConditions = {
@@ -197,7 +197,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI T3 Bomber',
+        BuilderName = 'RNGAI T3 Bomber Demand',
         PlatoonTemplate = 'T3AirBomber',
         Priority = 896,
         PriorityFunction = T3BomberRushActivated,
@@ -212,7 +212,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI T3 Gunship',
+        BuilderName = 'RNGAI T3 Gunship Demand',
         PlatoonTemplate = 'T3AirGunship',
         Priority = 890,
         BuilderConditions = {
@@ -226,7 +226,7 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI T3 Torp Bomber',
+        BuilderName = 'RNGAI T3 Torp Bomber Demand',
         PlatoonTemplate = 'T3TorpedoBomber',
         Priority = 891,
         BuilderConditions = {

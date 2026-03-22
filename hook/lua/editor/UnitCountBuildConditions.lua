@@ -1849,47 +1849,6 @@ function DefensiveClusterCloseRNG(aiBrain, locationType)
     return false
 end
 
-function MinimumFactoryCheckRNG(aiBrain, locationType, structureType)
-    if not aiBrain.BrainIntel.PlayerRole.AirPlayer then
-        local factoryCount = 0
-        if not aiBrain:GetCurrentEnemy() then
-            return true
-        end
-        local EnemyIndex = aiBrain:GetCurrentEnemy():GetArmyIndex()
-        local OwnIndex = aiBrain:GetArmyIndex()
-        if aiBrain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
-            --RNGLOG('Can Path to enemy')
-            if structureType == 'Air' then
-                if aiBrain.MapSize == 5 then
-                    --RNGLOG('Map size is 5')
-                    if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive then
-                        factoryCount = factoryCount + aiBrain.BuilderManagers[locationType].FactoryManager:GetNumCategoryFactories(categories.LAND * categories.FACTORY)
-                        --RNGLOG('Land factory count is '..factoryCount)
-                    end
-                    if factoryCount < 5 then
-                        return false
-                    end
-                elseif aiBrain.MapSize == 10 then
-                    if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive then
-                        factoryCount = factoryCount + aiBrain.BuilderManagers[locationType].FactoryManager:GetNumCategoryFactories(categories.LAND * categories.FACTORY)
-                    end
-                    if factoryCount < 4 then
-                        return false
-                    end
-                elseif aiBrain.MapSize == 20 then
-                    if aiBrain.BuilderManagers[locationType].FactoryManager.LocationActive then
-                        factoryCount = factoryCount + aiBrain.BuilderManagers[locationType].FactoryManager:GetNumCategoryFactories(categories.LAND * categories.FACTORY)
-                    end
-                    if factoryCount < 3 then
-                        return false
-                    end
-                end
-            end
-        end
-    end
-    return true
-end
-
 function ExpansionBaseCheckRNG(aiBrain)
     -- Removed automatic setting of Land-Expasions-allowed. We have a Game-Option for this.
     local checkNum = tonumber(ScenarioInfo.Options.LandExpansionsAllowed) or 3
@@ -2359,6 +2318,45 @@ function T4StrategicArtilleryRequirementRNG(aiBrain, locationType)
         return true
     end
     return false
+end
+
+function MinimumFactoryCheckRNG(aiBrain, locationType, structureType)
+    if aiBrain.BrainIntel.PlayerRole.AirPlayer then return true end
+    
+    local currentEnemy = aiBrain:GetCurrentEnemy()
+    if not currentEnemy then return true end
+    local mapSizeX = ScenarioInfo.size[1]
+    local distSq = aiBrain.EnemyIntel.ClosestEnemyBase or mapSizeX
+    local dist = math.sqrt(distSq)
+    
+    -- Use the dynamic mapping tool you provided
+    local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+    local playableSize = mapSizeX - (playableArea and playableArea[1] or 0) 
+    
+    local ownIndex = aiBrain:GetArmyIndex()
+    local enemyIndex = currentEnemy:GetArmyIndex()
+    local effectiveDist = math.min(dist, playableSize)
+
+    if aiBrain.CanPathToEnemyRNG[ownIndex][enemyIndex]['MAIN'] == 'LAND' then
+        if structureType == 'Air' then
+            local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+            if not factoryManager.LocationActive then return true end
+            
+            local landFactories = factoryManager:GetNumCategoryFactories(categories.LAND * categories.FACTORY)
+            
+            -- Dynamic Threshold: 
+            -- At 5km (256): 5 Land req
+            -- At 10km (512): 4 Land req
+            -- At 20km (1024): 2 Land req (Lowering the bar for Air)
+            local landThreshold = math.max(2, math.floor(7.0 - (effectiveDist / 133)))
+            
+            if landFactories < landThreshold then
+                LOG('landFactories '..tostring(landFactories)..' less than landThreshold '..tostring(landThreshold))
+                return false
+            end
+        end
+    end
+    return true
 end
 
 --[[

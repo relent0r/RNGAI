@@ -4628,6 +4628,9 @@ IntelManager = Class {
 
     AssignEngineerToStructureRequestNearPosition = function(self, eng, position, radius, structureType)
         local radiusSq = radius * radius
+        if structureType == 'SMD' then
+            LOG('Requesting an SMD to be build at '..tostring(repr(position)))
+        end
         --LOG('Checking for an existing requests, current request count '..tostring(table.getn(self.StructureRequests)))
         if self.StructureRequests[structureType] then
             for _, v in self.StructureRequests[structureType] do
@@ -4704,6 +4707,9 @@ IntelManager = Class {
     IsAssignedStructureRequestPresent = function(self, pos, radius, structureType)
         local rSq = radius * radius
         --LOG('IsExistingStructureRequestPresent, source position is '..tostring(repr(pos)))
+        if structureType == 'SMD' then
+            LOG('Checking if we already have an SMD being build')
+        end
         if self.StructureRequests[structureType] then
             for _, data in self.StructureRequests[structureType] do
                 if data.Assigned then
@@ -4711,6 +4717,7 @@ IntelManager = Class {
                     local dx = pos[1] - ap[1]
                     local dz = pos[3] - ap[3]
                     if dx*dx + dz*dz < rSq then
+                        LOG('Yes we already have one')
                         return true
                     end
                 end
@@ -4718,6 +4725,7 @@ IntelManager = Class {
         else
             WARN('AI-RNG: Invalid structure type passed to IsAssignedStructureRequestPresent, passed value was '..tostring(structureType))
         end
+        LOG('No we dont already have one')
         return false
     end,
 
