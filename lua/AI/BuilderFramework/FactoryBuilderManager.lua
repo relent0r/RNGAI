@@ -808,7 +808,7 @@ FactoryBuilderManager = Class(BuilderManager) {
             'T1BuildEngineer',
             'T1BuildEngineer',
         }
-        local reclaimGreed, enemyFar, allyGreed = RUtils.GetInitialReclaimRings(self, self.Brain)
+        local reclaimEngineerCount = RUtils.GetInitialReclaimRings(self, self.Brain)
         if faction then
             local EnemyIndex
             local mapSizeX, mapSizeZ = GetMapSize()
@@ -823,10 +823,8 @@ FactoryBuilderManager = Class(BuilderManager) {
                     for i=1, 2 do
                         table.insert(queue, 'T1BuildEngineer')
                     end
-                    if enemyFar and reclaimGreed then
-                        for i=1, 4 do
-                            table.insert(queue, 'T1BuildEngineer')
-                        end
+                    for i=1, reclaimEngineerCount do
+                        table.insert(queue, 'T1BuildEngineer')
                     end
                     if faction == 'SERAPHIM' then
                         table.insert(queue, 'T1LandDFTank')
@@ -851,10 +849,8 @@ FactoryBuilderManager = Class(BuilderManager) {
                     for i=1, 3 do
                         table.insert(queue, 'T1BuildEngineer')
                     end
-                    if enemyFar and reclaimGreed then
-                        for i=1, 4 do
-                            table.insert(queue, 'T1BuildEngineer')
-                        end
+                    for i=1, reclaimEngineerCount do
+                        table.insert(queue, 'T1BuildEngineer')
                     end
                     table.insert(queue, 'T1LandScout')
                     table.insert(queue, 'T1LandDFTank')
@@ -863,7 +859,7 @@ FactoryBuilderManager = Class(BuilderManager) {
                 end
             elseif mapSizeX >= 200 and mapSizeZ >= 200 then
                 if EnemyIndex and self.Brain.CanPathToEnemyRNG[OwnIndex][EnemyIndex]['MAIN'] == 'LAND' then
-                    for i=1, 1 do
+                    for i=1, reclaimEngineerCount do
                         table.insert(queue, 'T1BuildEngineer')
                     end
                     if faction == 'SERAPHIM' then
@@ -889,6 +885,9 @@ FactoryBuilderManager = Class(BuilderManager) {
                     end
                 else
                     for i=1, 3 do
+                        table.insert(queue, 'T1BuildEngineer')
+                    end
+                    for i=1, reclaimEngineerCount do
                         table.insert(queue, 'T1BuildEngineer')
                     end
                     table.insert(queue, 'T1LandScout')

@@ -531,7 +531,16 @@ EngineerManager = Class(BuilderManager) {
             RUtils.AddDefenseUnitToSpoke(self.Brain, self.LocationType, unit)
         end
         for k,v in self.ConsumptionUnits do
+            local alreadyExists
             if EntityCategoryContains(v.Category, unit) then
+                for _, con in v.UnitsList do
+                    if con.EntityId == unit.EntityId then
+                        alreadyExists = true
+                    end
+                end
+                if alreadyExists then
+                    return
+                end
                 table.insert(v.Units, { Unit = unit, Status = true })
                 table.insert(v.UnitsList, unit)
                 v.Count = v.Count + 1
@@ -597,7 +606,7 @@ EngineerManager = Class(BuilderManager) {
     ---@param manager EngineerManager
     ---@param unit Unit
     TaskFinished = function(manager, unit)
-        if manager.LocationType ~= 'FLOATING' and VDist3(manager.Location, unit:GetPosition()) > manager.Radius and not EntityCategoryContains(categories.COMMAND, unit) then
+        if manager.LocationType ~= 'FLOATING' and VDist3Sq(manager.Location, unit:GetPosition()) > (manager.Radius * manager.Radius) and not EntityCategoryContains(categories.COMMAND, unit) then
             manager:ReassignUnit(unit)
         else
             manager:ForkEngineerTask(unit)
@@ -611,13 +620,15 @@ EngineerManager = Class(BuilderManager) {
         local bestManager = false
         local distance = false
         local unitPos = unit:GetPosition()
+        
         for k,v in managers do
             if (v.FactoryManager.LocationActive and v.FactoryManager:GetNumCategoryFactories(categories.ALLUNITS) > 0) or v == 'MAIN' then
-                local checkDistance = VDist3(v.EngineerManager:GetLocationCoords(), unitPos)
+                local checkDistance = VDist3Sq(v.EngineerManager.Location, unitPos)
+                local managerRadius = v.EngineerManager.Radius
                 if not distance then
                     distance = checkDistance
                 end
-                if checkDistance < v.EngineerManager.Radius and checkDistance < distance then
+                if checkDistance < (managerRadius * managerRadius) and checkDistance < distance then
                     distance = checkDistance
                     bestManager = v.EngineerManager
                 end

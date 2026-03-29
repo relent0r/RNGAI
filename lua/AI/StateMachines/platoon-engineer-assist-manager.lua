@@ -540,8 +540,8 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
 
 
             -- Identify tech tier from your local tallies
-            LOG('Check assist manager reallocation T1 build rate '..tostring(self.TotalTechBuildRate[1])..' T2 build rate '..tostring(self.TotalTechBuildRate[2])..' T3 build rate '..tostring(self.TotalTechBuildRate[3]))
-            LOG('Desired Build rate '..tostring(aiBrain.EngineerAssistManagerBuildPowerRequired))
+            --LOG('Check assist manager reallocation T1 build rate '..tostring(self.TotalTechBuildRate[1])..' T2 build rate '..tostring(self.TotalTechBuildRate[2])..' T3 build rate '..tostring(self.TotalTechBuildRate[3]))
+            --LOG('Desired Build rate '..tostring(aiBrain.EngineerAssistManagerBuildPowerRequired))
             local tech = 0
             if self.TotalTechBuildRate[3] > 0 then tech = 3
             elseif self.TotalTechBuildRate[2] > 0 then tech = 2
@@ -783,7 +783,7 @@ EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
         end
         if jobType == 'MissileAssist' then
             -- Exit if a missile is finished
-            if unitToAssist:GetNukeSiloAmmoCount() > 0 then
+            if unitToAssist:GetTacticalSiloAmmoCount() > 0 then
                 eng.UnitBeingAssist = nil
                 break
             end

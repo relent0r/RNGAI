@@ -486,7 +486,6 @@ function GetTransports( platoon, aiBrain)
 				Medium = bp.SlotsMedium or 0,
 				Small = bp.SlotsSmall or 0,
 			}
-			LOG('Building bones from buildprints '..tostring(repr(bones)))
 			aiBrain.TransportSlotTable[id] = bones
 			return bones
 		end

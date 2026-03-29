@@ -905,6 +905,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     return
                 end
                 if reference and refZone and refName then
+                    if aiBrain.Nickname == 'DFS (AI: RNG Standard)' then
+                        LOG('DFS has naval expansion for position '..tostring(repr(aiBrain.Zones.Naval.zones[refZone].pos))..' label is '..tostring(aiBrain.Zones.Naval.zones[refZone].label))
+                    end
                     aiBrain.Zones.Naval.zones[refZone].lastexpansionattempt = GetGameTimeSeconds()
                     aiBrain.Zones.Naval.zones[refZone].engineerplatoonallocated = self
                     --[[if aiBrain.Zones.Naval.zones[refZone].resourcevalue > 3 then

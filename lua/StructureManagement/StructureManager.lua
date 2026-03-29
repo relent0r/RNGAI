@@ -2178,7 +2178,7 @@ StructureManager = Class {
                     -- The order of this is important. Since it can otherwise skip the frontlinezones check.
                     -- 1. Check for the absolute Safest (highest score)
                     if homeZone and zoneID == homeZone and not isFrontline then
-                        zoneScore = 2500
+                        zoneScore = 2750
                     elseif safeZones[zoneID] then
                         zoneScore = 2000
 
@@ -2506,8 +2506,32 @@ StructureManager = Class {
                 self.ShieldsRequired = false
             end
             if self.Brain.BuilderManagers['MAIN'].EngineerManager then
-                RUtils.CheckSMDAssistRequirements(self.Brain, self.Brain.BuilderManagers['MAIN'].EngineerManager)
+                self:CheckSMDAssistRequirements(self.Brain, self.Brain.BuilderManagers['MAIN'].EngineerManager)
             end
+        end
+    end,
+
+    CheckSMDAssistRequirements = function(self, aiBrain, engineerManager)
+        local currentSMDs = engineerManager:GetUnits('AntiNuke', categories.STRUCTURE)
+        local currentMissiles = 0
+        local smdPresent = 0
+        for _, unit in currentSMDs do
+            if not unit.Dead then
+                smdPresent = smdPresent + 1
+                LOG('ssd exist, count '..tostring(smdPresent)..' unit id is '..tostring(unit.UnitId)..' entityid is '..tostring(unit.EntityId))
+                local ammoCount = unit:GetTacticalSiloAmmoCount()
+                LOG('Ammo count '..tostring(ammoCount))
+                -- If no missiles are loaded and the unit is actually building one
+                if ammoCount > 0 then
+                    currentMissiles = currentMissiles + 1
+                    LOG('We have a missile already')
+                    break
+                end
+            end
+        end
+        if smdPresent > 0 and currentMissiles == 0 then
+            LOG('Requesting SMD assist for '..tostring(aiBrain.Nickname))
+            aiBrain:RequestEngineerAssistFocus('SMDLoading', 'SMDLoading', 950, 120, false)
         end
     end,
 

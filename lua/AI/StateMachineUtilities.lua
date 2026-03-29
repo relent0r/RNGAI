@@ -872,7 +872,7 @@ ZoneUpdate = function(aiBrain, platoon)
         if platoon.MovementLayer == 'Land' or platoon.MovementLayer == 'Amphibious' then
             SetZone(platPos, aiBrain.Zones.Land.index)
         elseif platoon.MovementLayer == 'Water' then
-            --SetZone(PlatoonPosition, aiBrain.Zones.Naval.index)
+            SetZone(platPos, aiBrain.Zones.Naval.index)
         end
         platoon.Label = NavUtils.GetLabel(platoon.MovementLayer, platPos)
         WaitTicks(30)

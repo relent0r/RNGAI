@@ -3759,7 +3759,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 coroutine.yield(5)
                             end
                             if eng.Dead then return end
-                            if not aiBrain:IsAnyEngineerBuilding(categories.FACTORY * categories.AIR) then
+                            if not aiBrain:IsAnyEngineerBuilding(categories.FACTORY * categories.AIR) and aiBrain:GetCurrentUnits(categories.FACTORY * categories.AIR) < 1 then
                                 if aiBrain.MapSize > 5 then
                                     --RNGLOG("Attempt to build air factory")
                                     buildLocation, whatToBuild, borderWarning = RUtils.GetBuildLocationRNG(aiBrain, buildingTmpl, baseTmplDefault['BaseTemplates'][factionIndex], 'T1AirFactory', eng, true, categories.HYDROCARBON, 25, true)

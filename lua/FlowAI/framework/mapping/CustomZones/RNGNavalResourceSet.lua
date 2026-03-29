@@ -170,6 +170,7 @@ RNGNavalResourceSet = Class(ZoneSet){
                 friendlyantisurfacethreat=0, 
                 friendlylandantiairthreat=0, 
                 friendlydirectfireantisurfacethreat=0, 
+                friendlyantinavythreat=0, 
                 friendlyindirectfireantisurfacethreat=0,
                 friendlydefenseantisurfacethreat=0,
                 friendlydefenseantiairthreat=0,

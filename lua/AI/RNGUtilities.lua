@@ -1039,6 +1039,8 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
             end
             
             local score = rawDist * (distMult * distMult)
+
+            local unitIsCivilian = ArmyIsCivilian(target.Army)
             
             local targetData = { 
                 unit = target, 
@@ -1046,7 +1048,8 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
                 distance = rawDist,
                 score = score,
                 zone = zone,
-                allowedThreat = allowedThreat
+                allowedThreat = allowedThreat,
+                civilian = unitIsCivilian
             }
             
             -- Categorize
@@ -1072,7 +1075,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
             end
             
             -- Keep track of raw closest for return values
-            if rawDist < closestDistance then
+            if not unitIsCivilian and rawDist < closestDistance then
                 closestDistance = rawDist
                 closestTarget = target
                 closestTargetPosition = targetPos
@@ -1092,8 +1095,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
         -- we are confident these are likely reachable, but we still do a path check
         -- on the winner to be 100% sure.
         for _, v in sortedList do
-            local validTarget = false
-            
+            local validTarget = false           
             local surfaceThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
             local enemyCdrThreat = GetThreatAtPosition(aiBrain, v.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Commander')
             
@@ -1122,25 +1124,47 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
                         -- Because we filtered by Label, this should pass most of the time
                         if NavUtils.CanPathTo('Land', v.position, cdrPos) then
                             validTarget = true
-                        elseif NavUtils.CanPathTo('Amphibious', v.position, cdrPos) and v.distance < (operatingArea * operatingArea) then
-                            validTarget = true
-                            local highValue = false
-                            if v.zone then
-                                local zoneStrategicValue = (v.zone.resourcevalue or 0) + (v.zone.teamvalue or 0)
-                                local isHighValueZone = zoneStrategicValue > 5
-                                if isHighValueZone then
-                                    -- If the zone is important, we take ANY target there (even a T1 Mex)
-                                    highValue = true
-                                elseif v.distance < 2500 then
-                                    -- If it's a low-value zone, we only go if it's very close (shoreline expansion)
-                                    highValue = true
-                                elseif v.unit.Blueprint.CategoriesHash.FACTORY then
-                                    -- Or if the specific unit is a 'High Value Target' despite being in a 'trash' zone
-                                    highValue = true
-                                end
-                            end
-                            if not highValue then
+                            if v.distance > 14400 and v.civilian then
                                 validTarget = false
+                            end  
+                        elseif NavUtils.CanPathTo('Amphibious', v.position, cdrPos) and v.distance < (operatingArea * operatingArea) then
+                            local targetLandLabel = NavUtils.GetLabel('Land', v.position)
+                            local baseLandLabel = aiBrain.BuilderManagers['MAIN'].Label
+                            local isDefendingHome = (targetLandLabel == baseLandLabel)
+
+                            -- 1. SURVIVAL GATE
+                            local survivalThreatLimit = isDefendingHome and (v.allowedThreat * 0.7) or (v.allowedThreat * 0.25)
+                            
+                            -- Hard Distance Cap for "Away" missions (120 units squared = 14400)
+                            -- If it's NOT our home land, and it's further than 120 units, it's a "No."
+                            local isTooFar = (not isDefendingHome and v.distance > 14400)
+                            local canSurvive = (surfaceThreat < survivalThreatLimit) and (not isTooFar)
+                            local isNavalOrEngineer = v.unit and not v.unit.Dead and v.unit.Blueprint and (v.unit.Blueprint.CategoriesHash.NAVAL or v.unit.Blueprint.CategoriesHash.ENGINEER)
+                            if canSurvive then
+                                -- 2. VALUE GATE (With Distance Context)
+                                local highValue = false
+                                if v.zone then
+                                    local zoneStrategicValue = (v.zone.resourcevalue or 0) + (v.zone.teamvalue or 0)
+                                    
+                                    -- If it's our Home Land, we go anywhere on it to kill the threat.
+                                    if isDefendingHome then
+                                        highValue = true
+                                    -- If it's an Away mission, only go if it's high value AND within reach.
+                                    elseif zoneStrategicValue > 5 or v.unit.Blueprint.CategoriesHash.FACTORY then
+                                        -- Even for a Factory, don't walk half the map. 
+                                        -- 120 units is already a long swim for an ACU.
+                                        highValue = true
+                                    elseif v.distance < 2500 then -- 50 units (Shoreline cleanup)
+                                        highValue = true
+                                    end
+                                end
+                                if (isNavalOrEngineer or v.civilian) and v.distance > 14400 then
+                                    highValue = false
+                                end
+                                if highValue then
+                                    LOG('Returning valid target via amphib'..tostring(v.unit.UnitId)..' distance was '..tostring(v.distance)..' is defending home? '..tostring(isDefendingHome))
+                                    validTarget = true
+                                end
                             end
                         end
                     end
@@ -3277,6 +3301,13 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
     if zoneType == 'Naval' then
         if not table.empty(im.ZoneExpansions.Naval) then
             for _, v in im.ZoneExpansions.Naval do
+                if aiBrain.Nickname == 'DFS (AI: RNG Standard)' then
+                    LOG('Naval DFS Evaluating zone '..tostring(v.ZoneID)..' Is Factory Manager Location active? '..tostring(zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive)..' last expansion attempt '..tostring(zoneSet[v.ZoneID].lastexpansionattempt)..' current time '..tostring(currentTime)..' position '..tostring(repr(zoneSet[v.ZoneID].pos)))
+                    LOG('AI Start pos is '..tostring(repr(aiBrain.BrainIntel.StartPos))..' Distance to AI is '..tostring(VDist3(zoneSet[v.ZoneID].pos, aiBrain.BrainIntel.StartPos)))
+                    if zoneSet[v.ZoneID].engineerplatoonallocated and not IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated) then
+                        LOG('Already an engineer allocated to this zone')
+                    end
+                end
                 local skipPos = false
                 if avoidZones and avoidZones[v.ZoneID] then
                     skipPos = true
@@ -3287,6 +3318,9 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
                     retName = 'NAVAL_ZONE_'..v.ZoneID
                     refZone = v.ZoneID
                     zoneFound = true
+                    if aiBrain.Nickname == 'DFS (AI: RNG Standard)' then
+                        LOG('Naval Zone found '..tostring(v.ZoneID))
+                    end
                     break
                 end
             end
@@ -7599,15 +7633,48 @@ GetStartRaidPositions = function(aiBrain, startPos, enemyIndex)
     return selectedPos, shortList, filteredPositions
 end
 
-CalculateAveragePosition = function(positions, playerCount)
-    local totalX, totalZ = 0, 0
-    for _, pos in positions do
-        totalX = totalX + pos.Position[1]
-        totalZ = totalZ + pos.Position[3]
+function CalculateAveragePosition(positions)
+    if not positions then return nil end
+
+    local anchorPos = nil
+    local shortestDist
+
+    for _, p in positions do
+        if p.Position then
+            if p.Distance and (not shortestDist or p.Distance < shortestDist )then
+                shortestDist = p.Distance
+                anchorPos = p.Position
+            elseif not anchorPos then
+                anchorPos = p.Position
+            end
+        end
     end
-    local averageX = totalX / playerCount
-    local averageZ = totalZ / playerCount
-    return {x = averageX, z = averageZ}
+
+    if not anchorPos then return nil end
+
+    local localSumX = 0
+    local localSumZ = 0
+    local localCount = 0
+    local rangeLimitSq = 62500 -- 250 units squared
+
+    for _, p in positions do
+        if p.Position then
+            local dx = p.Position[1] - anchorPos[1]
+            local dz = p.Position[3] - anchorPos[3]
+            local distSq = dx * dx + dz * dz
+
+            if distSq < rangeLimitSq then
+                localSumX = localSumX + p.Position[1]
+                localSumZ = localSumZ + p.Position[3]
+                localCount = localCount + 1
+            end
+        end
+    end
+
+    if localCount > 0 then
+        return {x = (localSumX / localCount), z = (localSumZ / localCount)}
+    end
+    return nil
 end
 
 CalculateRelativeDistanceValue = function(a_distance, b_distance)
@@ -9375,10 +9442,8 @@ function GetBuilldRateOfEngineers(aiBrain, engineers)
 end
 
 function GetInitialReclaimRings(factoryManager, aiBrain)
-    LOG('Current Game Time is '..tostring(GetGameTimeSeconds()))
 
     local startPos = aiBrain.BrainIntel.StartPos
-    LOG('AI start position is '..tostring(repr(startPos)))
     local enemyDistSq = aiBrain.EnemyIntel.ClosestEnemyBase
     local armyIndex = aiBrain:GetArmyIndex()
    
@@ -9396,12 +9461,10 @@ function GetInitialReclaimRings(factoryManager, aiBrain)
             end
         end
     end
-    LOG('AllyCount '..tostring(allyCount))
     local shareMultiplier = 1 / (1 + allyCount)   
     local secondsPerRing = 40 
     local maxTravelTime = 90
     local timeBasedLimit = math.floor(maxTravelTime / secondsPerRing)
-    LOG('timeBasedLimit '..tostring(timeBasedLimit))
     
     local reclaimGreed = false
     -- We know 1 grid square = 40 seconds of travel.
@@ -9409,9 +9472,7 @@ function GetInitialReclaimRings(factoryManager, aiBrain)
     -- 1000 units distance / 6 (safety divisor) = ~166 units of 'Safe Wander'
     -- 166 units / OgridRadius(45) = ~3.7 rings.
     local ogrid = aiBrain.BrainIntel.IMAPConfig.OgridRadius or 45
-    LOG('ogrid '..tostring(ogrid))
     local safeTravelDistance = math.sqrt(enemyDistSq) / 6 
-    LOG('safeTravelDistance '..tostring(safeTravelDistance))
 
     -- Store this as a static limit for the reclaim logic
     local ringLimit = math.max(1, math.floor(safeTravelDistance / ogrid))
@@ -9419,7 +9480,6 @@ function GetInitialReclaimRings(factoryManager, aiBrain)
     -- Clamp by Ally distance to prevent overlap
     ringLimit = math.min(timeBasedLimit, ringLimit)
     factoryManager.ReclaimRingLimit = ringLimit
-    LOG('Ring Limit is '..tostring(ringLimit))
     local reclaimGridInstance = aiBrain.GridReclaim
     local gx, gz = reclaimGridInstance:ToGridSpace(startPos[1],startPos[3])
     local cells, count = reclaimGridInstance:FilterAndSortInRadius(gx, gz, ringLimit, 25)
@@ -9436,33 +9496,37 @@ function GetInitialReclaimRings(factoryManager, aiBrain)
             end
         end
     end
-    LOG('Total Mass in Ring Limit is '..tostring(totalMassRequired))
-    LOG('Total Energy in Ring Limit is '..tostring(totalEnergyRequired))
     local myMassShare = totalMassRequired * shareMultiplier
     local myEnergyShare = totalEnergyRequired * shareMultiplier
     local reclaimGreed = (myMassShare > 1000 or myEnergyShare > 15000)
     local enemyFar = (enemyDistSq > 160000) 
-    local allyClear = (allyCount == 0)
-    return reclaimGreed, enemyFar, allyClear
-end
 
-function CheckSMDAssistRequirements(aiBrain, engineerManager)
-    local currentSMDs = engineerManager:GetUnits('AntiNuke', categories.STRUCTURE)
-    local currentMissiles = 0
-    local smdPresent = 0
-    for _, unit in currentSMDs do
-        if not unit.Dead then
-            smdPresent = smdPresent + 1
-            local ammoCount = unit:GetNukeSiloAmmoCount()
-            -- If no missiles are loaded and the unit is actually building one
-            if ammoCount > 0 then
-                currentMissiles = currentMissiles + 1
-                break
-            end
-        end
-    end
-    if smdPresent > 0 and currentMissiles == 0 then
-        LOG('Requesting SMD assist')
-        aiBrain:RequestEngineerAssistFocus('SMDLoading', 'SMDLoading', 950, 120, false)
-    end
+    local targetTime = reclaimGreed and 90 or 180
+    local massRate = 25    -- 5 BP * 5 Mass/BP
+    local energyRate = 500 -- 5 BP * 100 Energy/BP
+    local efficiency = 0.4 -- Travel/Pathing Penalty (40s per ring)
+
+    -- 2. Calculate Workload in Seconds
+    -- We assume the engineer consumes mass and energy from a prop concurrently.
+    local massWorkSeconds = myMassShare / (massRate * efficiency)
+    local energyWorkSeconds = myEnergyShare / (energyRate * efficiency)
+    local totalWorkSeconds = math.max(massWorkSeconds, energyWorkSeconds)
+
+    -- 3. Dynamic Engineer Count (Linear Scaling)
+    -- This will naturally produce 0.3 for your 967 mass, or 3.2 for 10k mass.
+    local calculatedCount = totalWorkSeconds / targetTime
+
+    -- 4. Apply Tactical Envelopes (Clamping)
+    local minEngs = 1
+    local maxEngs = enemyFar and 8 or 2
+
+    -- 5. Final Result
+    -- We ceil the calculated count to get a whole unit, then clamp it 
+    -- between our dynamic min/max envelopes.
+    local finalEngCount = math.clamp(math.ceil(calculatedCount), minEngs, maxEngs)
+
+
+    LOG('Final Engineer Count '..tostring(finalEngCount))
+    LOG(string.format('RNGAI_RECLAIM_AUDIT: Mass=%d, Energy=%d, Rings=%d, Multiplier=%.2f, EnemyDistSq=%d', totalMassRequired, totalEnergyRequired, ringLimit, shareMultiplier, enemyDistSq))
+    return finalEngCount
 end

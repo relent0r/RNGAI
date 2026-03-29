@@ -801,7 +801,9 @@ AIBrain = Class(RNGAIBrainClass) {
             Energy = 320,
             Mass= 320,
             SMD= 320,
-            None = 999999999
+            None = 999999999,
+            Shield = 320,
+            MassStorage = 320,
         }
         self.EngineerAssistCurrentBPAllocated = {
             Energy = 0,
@@ -834,7 +836,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'snipe upgrade factory'}, 
                 {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'snipe mass upgrade', bpKey = 'Mass'}, 
                 {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'snipe factory'},
-                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'snipe mass storage'}
+                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'snipe mass storage', bpKey = 'MassStorage'}
             },
             ['HighValue'] = {
                 {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion', debug = 'HighValue smd'},
@@ -843,7 +845,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'HighValue mass', bpKey = 'Mass'}, 
                 {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'HighValue structure * energyproduction', bpKey = 'Energy'}, 
                 {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'HighValue factory'},
-                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'HighValue mass storage'}
+                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'HighValue mass storage', bpKey = 'MassStorage'}
             },
             ['AirUpgrade'] = {
                 {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'AirUpgrade air hsq upgrade'}, 
@@ -851,7 +853,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'AirUpgrade structure * energyproduction', bpKey = 'Energy'}, 
                 {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'AirUpgrade factory'},
                 {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'AirUpgrade experimental'},
-                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'AirUpgrade mass storage'} 
+                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'AirUpgrade mass storage', bpKey = 'MassStorage'} 
             },
             ['LandUpgrade'] = {
                 {cat = categories.FACTORY * categories.LAND - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'LandUpgrade hq factory'}, 
@@ -859,27 +861,27 @@ AIBrain = Class(RNGAIBrainClass) {
                 {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'LandUpgrade structure * energy', bpKey = 'Energy'}, 
                 {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'LandUpgrade factory'},
                 {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'LandUpgrade experimental'},
-                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'LandUpgrade mass storage'}
+                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'LandUpgrade mass storage', bpKey = 'MassStorage'}
             },
             ['SMDLoading'] = {
                 {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'MissileAssist', debug = 'Assist SMD', bpKey = 'SMD'}, 
                 {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'LandUpgrade mass', bpKey = 'Mass'}, 
                 {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'LandUpgrade structure * energy', bpKey = 'Energy'}, 
                 {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'LandUpgrade experimental'},
-                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'LandUpgrade mass storage'}
+                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'LandUpgrade mass storage', bpKey = 'MassStorage'}
             },
             ['General'] = {
                 {cat = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, type = 'Completion', debug = 'Mass smd'},
                 {cat = categories.MASSEXTRACTION, type = 'Upgrade', debug = 'Mass mass', bpKey = 'Mass'},
-                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'Mass mass storage'},
+                {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'Mass mass storage', bpKey = 'MassStorage'},
                 {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'Mass mobile experimental'},
                 {cat = categories.STRUCTURE * categories.EXPERIMENTAL, type = 'Completion', debug = 'Mass structure experimental'},
                 {cat = categories.STRUCTURE * categories.TECH3 * categories.STRATEGIC, type = 'Completion', debug = 'Mass strategic'},
                 {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'Mass energy', bpKey = 'Energy'}, 
                 {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade', debug = 'Mass factory upgrade'}, 
                 {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'Mass factory complete'}, 
-                {cat = categories.STRUCTURE * categories.SHIELD, type = 'Completion', debug = 'Mass shield complete'}, 
-                {cat = categories.STRUCTURE * categories.SHIELD, type = 'Upgrade', debug = 'Mass shield upgrade'},
+                {cat = categories.STRUCTURE * categories.SHIELD, type = 'Completion', debug = 'Mass shield complete', bpKey = 'Shield'}, 
+                {cat = categories.STRUCTURE * categories.SHIELD, type = 'Upgrade', debug = 'Mass shield upgrade', bpKey = 'Shield'},
             }
         }
         self.EngineerSpendDistributionTable = {
@@ -7323,8 +7325,17 @@ AIBrain = Class(RNGAIBrainClass) {
             local enemyThreat = (self.EnemyIntel and self.EnemyIntel.EnemyThreatCurrent) or {}
 
             local totalIncome = (self.cmanager and self.cmanager.income and self.cmanager.income.r and self.cmanager.income.r.m) or 0
-            local highestPhase = math.max(brainIntel.LandPhase or 0, brainIntel.AirPhase or 0, brainIntel.NavalPhase or 0)
-            local ignoreZoneControl = not brainIntel.PlayerRole.AirPlayer and not brainIntel.PlayerRole.ExperimentalPlayer
+            local highestPhase = math.max(brainIntel.LandPhase or 1, brainIntel.AirPhase or 1, brainIntel.NavalPhase or 1)
+            local economyUpgradeSpend = self.EconomyUpgradeSpendDefault or 0.05
+            local engineerAssistRatio = self.EngineerAssistRatioDefault or 0.05
+
+            -- Economic Values
+            local maxEcoSpend = 0.40
+            local maxAssistSpend = 1.0
+            local ecoFloor = 0.05
+            local assistFloor = 0.02 * highestPhase
+
+            local ignoreZoneControl = brainIntel.PlayerRole.AirPlayer or brainIntel.PlayerRole.ExperimentalPlayer
 
             -- Factory capabilities
             local sm = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua').GetStructureManager(self)
@@ -7375,8 +7386,6 @@ AIBrain = Class(RNGAIBrainClass) {
             ----------------------------------------------------------------------
             -- 2) ECONOMY & ASSIST BASELINE
             ----------------------------------------------------------------------
-            local economyUpgradeSpend = self.EconomyUpgradeSpendDefault or 0.05
-            local engineerAssistRatio = self.EngineerAssistRatioDefault or 0.05
 
             -- Strategy/Phase bonuses
             if (brainIntel.HighestPhase or 0) > 1 then
@@ -7609,8 +7618,6 @@ AIBrain = Class(RNGAIBrainClass) {
             local leftover = math.max(0, 1.0 - totalUnitAllocation)
 
             -- Absolute Floors (Use constants, not percentages of leftover)
-            local ecoFloor = 0.04    -- Double your previous effective floor
-            local assistFloor = 0.02
 
             -- 1) Weights (The "Desire" signals)
             local phaseNorm   = clamp((highestPhase - 1) / 2, 0, 1) 
@@ -7627,12 +7634,12 @@ AIBrain = Class(RNGAIBrainClass) {
             local assistWeight = 0.10 + (0.15 * combinedPressure)
 
             local totalWeight = ecoWeight + assistWeight + 0.01
-            economyUpgradeSpend = clamp(leftover * (ecoWeight / totalWeight), ecoFloor, 0.45)
+            economyUpgradeSpend = clamp(leftover * (ecoWeight / totalWeight), ecoFloor, maxEcoSpend)
             local leftoverAfterEco = math.max(0, leftover - economyUpgradeSpend)
             engineerAssistRatio = clamp(leftover - economyUpgradeSpend, assistFloor, leftover)
             if excessAllocation > 0 then
-                economyUpgradeSpend = clamp(economyUpgradeSpend + (excessAllocation * 0.4), ecoFloor, 0.45)
-                engineerAssistRatio = clamp(engineerAssistRatio + (excessAllocation * 0.6), assistFloor, 1.0)
+                economyUpgradeSpend = clamp(economyUpgradeSpend + (excessAllocation * 0.4), ecoFloor, maxEcoSpend)
+                engineerAssistRatio = clamp(engineerAssistRatio + (excessAllocation * 0.6), assistFloor, maxAssistSpend)
             end
 
             ----------------------------------------------------------------------
@@ -7701,8 +7708,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     fmgr.BaseLandRatio, fmgr.BaseAirRatio, fmgr.BaseNavalRatio = 0, 0, 0
                 end
             end
-            --LOG(string.format("RNGLOG_CITIZEN_AUDIT | Leftover:%f | EcoTook:%f | PostEcoRemaining:%f | ConstRatioNudge:%f | FinalAssist:%f", leftover, economyUpgradeSpend, leftoverAfterEco, (constructionRatio * 0.2), engineerAssistRatio))
-            LOG(string.format("RNGLOG_ALLOCATION_AUDIT | FinalProdAlloc: %.2f | Land: %.2f | Air: %.2f | Naval: %.2f | EcoSpend: %.2f | Assist: %.2f",productionAllocation, newLand, newAir, newNaval, economyUpgradeSpend, engineerAssistRatio))
+            
+            --LOG(string.format("RNGLOG_CITIZEN_AUDIT | Leftover:%f | EcoTook:%f | PostEcoRemaining:%f | ConstRatioNudge:%f | FinalAssist:%f | EngSpend:%f", leftover, economyUpgradeSpend, leftoverAfterEco, nudgeValue, engineerAssistRatio, totalEngSpend))
+            --LOG(string.format("RNGLOG_ALLOCATION_AUDIT | FinalProdAlloc: %.2f | Land: %.2f | Air: %.2f | Naval: %.2f | EcoSpend: %.2f | Assist: %.2f",productionAllocation, newLand, newAir, newNaval, economyUpgradeSpend, engineerAssistRatio))
         end
     end,
 

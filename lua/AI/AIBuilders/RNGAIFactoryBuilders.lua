@@ -74,7 +74,6 @@ local LandLogisticsPriority = function(self, aiBrain)
 
     -- If enemy is > 10km (500 units) away, drop priority so Air/Expansions take over
     if effectiveDist > 500 then
-        LOG('Dropping land priority')
         return 850 
     end
     return 1010 -- Standard high-aggression
