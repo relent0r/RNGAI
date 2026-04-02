@@ -466,7 +466,8 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                 WARN('No position passed to LandAssault')
                 return false
             end
-            local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, self.dest, 3, false)
+            --local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, self.dest, 3, false)
+            local usedTransports = StateUtils.RequestTransportRNG(self, self.dest)
             if usedTransports then
                 --self:LogDebug(string.format('Platoon used transports'))
                 self:ChangeState(self.Navigating)

@@ -205,7 +205,8 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local unitPathing = false
                 if not NavUtils.CanPathTo(self.MovementLayer, GetPlatoonPosition(self), movePosition) then
                     if not NavUtils.CanPathTo(self.MovementLayer, GetPlatoonUnits(self)[1]:GetPosition(), movePosition) then
-                        usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, movePosition, 3, true)
+                        --usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, movePosition, 3, true)
+                        usedTransports = StateUtils.RequestTransportRNG(self, movePosition)
                     else 
                         unitPathing = true
                     end

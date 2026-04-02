@@ -4,7 +4,7 @@ local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
 
-AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
+local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import("/lua/sim/navutils.lua")

@@ -925,7 +925,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
-            local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
+            --local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
+            local usedTransports = StateUtils.RequestTransportRNG(self, builderData.Position)
             if usedTransports then
                 --self:LogDebug(string.format('platoon used transports'))
                 self:ChangeState(self.Navigating)
@@ -973,7 +974,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.DecideWhatToDo)
                 return false
             end
-            local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
+            --local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
+            local usedTransports = StateUtils.RequestTransportRNG(self, builderData.Position)
             if usedTransports then
                 --self:LogDebug(string.format('platoon used transports'))
                 if not self.BuilderData.Position then

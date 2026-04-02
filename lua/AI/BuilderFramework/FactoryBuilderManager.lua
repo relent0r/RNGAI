@@ -566,10 +566,7 @@ FactoryBuilderManager = Class(BuilderManager) {
 			end
         elseif EntityCategoryContains(categories.TRANSPORTFOCUS - categories.uea0203, finishedUnit ) then
             self.Brain.TransportRequested = nil
-            finishedUnit:ForkThread( import('/lua/ai/transportutilities.lua').AssignTransportToPool, finishedUnit:GetAIBrain() )
-            --if self.Brain.ZoneExpansionTransportRequested then
-            --    finishedUnit:ForkThread( import('/lua/ai/transportutilities.lua').FindEngineerToTransport, finishedUnit:GetAIBrain() )
-            --end
+            finishedUnit:ForkThread( import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua').AssignTransportToPool, finishedUnit:GetAIBrain() )
             if self.InitialTransportRequested and self.Brain.amanager.Demand.Air.T1.transport and self.Brain.amanager.Demand.Air.T1.transport > 0 then
                 self.Brain.amanager.Demand.Air.T1.transport = 0
                 factory:SetPaused(true)

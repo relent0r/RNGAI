@@ -65,10 +65,12 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
             transportWait = transportWait * 2
         end
         --LOG('Engineer wants to use a transport to get to location '..tostring(repr(destination)))
-        bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, unit.PlatoonHandle, destination, transportWait, true)
+        --bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, unit.PlatoonHandle, destination, transportWait, true)
+        bUsedTransports = StateUtils.RequestTransportRNG(unit.PlatoonHandle, destination)
         unit.WaitingForTransport = false
 
         if bUsedTransports then
+            LOG('Engineer used transports returned true from the EngineerMoveWithSafePathRNG function')
             return true
         elseif VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 640 * 640 then
             -- If over 512 and no transports dont try and walk!
@@ -269,7 +271,8 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
 
         -- Skip the last move... we want to return and do a build
         eng.WaitingForTransport = true
-        bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, eng.PlatoonHandle, destination, 2, true)
+        --bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, eng.PlatoonHandle, destination, 2, true)
+        bUsedTransports = StateUtils.RequestTransportRNG(eng.PlatoonHandle, destination)
         eng.WaitingForTransport = false
 
         if bUsedTransports then

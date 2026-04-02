@@ -1,4 +1,4 @@
-AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
+local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 
 local RNGINSERT = table.insert

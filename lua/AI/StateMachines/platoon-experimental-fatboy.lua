@@ -3,7 +3,7 @@ local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local RNGGETN = table.getn
 
-AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
+local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local NavUtils = import("/lua/sim/navutils.lua")
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')

@@ -780,6 +780,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
         self.ExtractorUpgradeThread = false
         self.EconomyOverTimeCurrent = {}
+        self.TransportSlotTable = {} -- Cache slots sizes for transports by unit id
         self.ACUData = {}
         --self.EconomyOverTimeThread = self:ForkThread(self.EconomyOverTimeRNG)
         self.EngineerAssistManagerActive = false

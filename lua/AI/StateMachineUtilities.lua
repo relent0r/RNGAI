@@ -8,6 +8,9 @@ local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 
+local IsBeingBuilt = moho.unit_methods.IsBeingBuilt
+local GetFuelRatio = moho.unit_methods.GetFuelRatio
+
 local ALLBPS = __blueprints
 local RNGGETN = table.getn
 local RNGINSERT = table.insert
@@ -2926,4 +2929,165 @@ function GetDFWeaponPos(unit)
     end
 
     return weaponPos
+end
+
+-- Transport functions
+local TransportDialog = true
+function CreateTransportPool( aiBrain )
+    
+    if TransportDialog then
+        LOG("*AI DEBUG "..aiBrain.Nickname.." Creates TRANSPORTPOOL" )
+    end
+
+    local transportplatoon = aiBrain:MakePlatoon( 'TransportPool', 'none' )
+    transportplatoon:UniquelyNamePlatoon('TransportPool') 
+    transportplatoon.BuilderName = 'TPool'
+    transportplatoon.UsingTransport = true
+    local ManagerClass = import("/mods/rngai/lua/ai/statemachines/platoon-air-transport-manager.lua").AITransportManagerRNG
+    setmetatable(transportplatoon, ManagerClass)
+    transportplatoon.RequestTable = {}
+    transportplatoon.availableTransports = {}
+    
+    -- Start the State Machine logic
+    ChangeState(transportplatoon, transportplatoon.Start)      -- never review this platoon during a merge
+
+	aiBrain.TransportPool = transportplatoon
+
+end
+
+function AssignTransportToPool( unit, aiBrain )
+
+    if not aiBrain.TransportPool then
+        CreateTransportPool( aiBrain)
+    end
+	if TransportDialog then
+		LOG("*AI DEBUG TRANSPORT "..tostring(unit.PlatoonHandle.BuilderName).." Transport "..tostring(unit.EntityId).." AssignTransportToPool" )
+	end
+    if not unit['rngdata'] then
+        unit['rngdata'] = {}
+    end
+
+    -- Disabled for now as we need it to perform a state change instead of assigning to the pool
+    --[[
+	if not unit.EventCallbacks['OnTransportDetach'] then
+		unit:AddUnitCallback( function(unit)
+			if TransportDialog then
+                LOG("*AI DEBUG TRANSPORT "..unit.PlatoonHandle.BuilderName.." Transport "..unit.EntityId.." Fires ReturnToPool callback" )
+			end
+			if TableGetn(unit:GetCargo()) == 0 then
+				if unit.WatchUnloadThread then
+					KillThread(unit.WatchUnloadThread)
+					unit.WatchUnloadThread = nil
+				end
+				ForkTo( AssignTransportToPool, unit, aiBrain )
+			end
+		end, 'OnTransportDetach')
+	end
+    ]]
+
+    -- if the unit is not already in the transport Pool --
+	if not unit.Dead and (not unit.PlatoonHandle ~= aiBrain.TransportPool) then
+        if TransportDialog then
+            LOG("*AI DEBUG TRANSPORT "..tostring(unit.PlatoonHandle.BuilderName).." Transport "..unit.EntityId.." starts assigning to Transport Pool" )
+        end
+		IssueClearCommands(unit)
+		-- if not in need of repair or fuel -- We need to add ProcessAirUnits to this file and update it to put the transports into a management state machine to returns to base.
+		if not ProcessTransportUnits( unit, aiBrain ) then
+            if aiBrain.TransportPool then
+                aiBrain:AssignUnitsToPlatoon(aiBrain.TransportPool, {unit}, 'Support','')
+                local request = {
+                    StateWanted = 'Insert'
+                }
+                import("/mods/rngai/lua/ai/statemachines/platoon-air-transport-manager.lua").AssignToUnitsMachine({ PlatoonData = request }, aiBrain.TransportPool, {unit})
+            else
+                return
+            end
+            unit['rngdata'].Assigning = false        
+		end
+    end
+    
+    unit['rngdata'].InUse = false
+    unit['rngdata'].Assigning = false    
+    
+    if TransportDialog then
+        LOG("*AI DEBUG TRANSPORT "..tostring(unit.PlatoonHandle.BuilderName).." Transport "..unit.EntityId.." now available to Transport Pool" )
+    end
+end
+
+function ProcessTransportUnits( unit, aiBrain )
+	if (not unit.Dead) and (not IsBeingBuilt(unit)) then
+        local fuel = GetFuelRatio(unit)
+		local health = unit:GetHealthPercent()
+		if ( fuel > -1 and fuel < .75 ) or health < .30 then
+            if not unit.InRefit then
+                if TransportDialog then
+                    LOG("*AI DEBUG "..aiBrain.Nickname.." Air Unit "..unit.Sync.id.." assigned to TransportReturnToBase ")
+                end
+                -- and send it off to the refit thread --
+                local transportPlatoon = aiBrain:MakePlatoon('None', 'None')
+                transportPlatoon.PlanName = 'TransportPlatoonRNG'
+                
+                -- Move units from Manager to Mission Platoon
+                for _, unit in assignment.Units do
+                    unit.InUse = true
+                    aiBrain:AssignUnitsToPlatoon(transportPlatoon, {unit}, 'Support', 'None')
+                end
+
+                local request = {
+                    StateWanted = 'Refit'
+                }
+
+                -- Initialize the Mission State Machine
+                import("/mods/rngai/lua/ai/statemachines/platoon-air-transport.lua").AssignToUnitsMachine({ PlatoonData = request }, transportPlatoon, {unit})
+                return true
+            else
+				if TransportDialog then
+                    LOG("*AI DEBUG "..aiBrain.Nickname.." Air Unit "..unit.Sync.id.." "..unit:GetBlueprint().Description.." already in return to base thread")
+				end
+            end
+		end
+	end
+	return false    -- unit did not need processing
+end
+
+---@param platoon AIPlatoon
+---@param destination Vector
+---@return boolean # True if request was successfully filed
+function RequestTransportRNG(platoon, destination)
+    local aiBrain = platoon:GetBrain()
+    local manager = aiBrain:GetPlatoonUniquelyNamed('TransportPool')
+    
+    if not manager then
+        import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua').CreateTransportPool(aiBrain)
+        manager = aiBrain:GetPlatoonUniquelyNamed('TransportPool')
+    end
+
+    local units = platoon:GetPlatoonUnits()
+    -- Initialize the slot table instead of a single float
+    local neededSlots = { Large = 0, Medium = 0, Small = 0 }
+
+    for _, unit in units do
+        if not IsDestroyed(unit) then
+            -- Default to 1 (Small) if missing
+            local transportClass = unit:GetBlueprint().Transport.TransportClass or 1
+            
+            if transportClass == 1 then
+                neededSlots.Small = neededSlots.Small + 1
+            elseif transportClass == 2 then
+                neededSlots.Medium = neededSlots.Medium + 1
+            elseif transportClass == 3 or transportClass == 10 then
+                neededSlots.Large = neededSlots.Large + 1
+            end
+        end
+    end
+
+    local timeRequested = GetGameTick()
+    -- Ensure we check for engineers correctly using the first unit's categories
+    local requestType = EntityCategoryContains(categories.ENGINEER, units[1]) and 'Engineer' or 'Combat'
+    local location = platoon:GetPlatoonPosition()
+
+    -- Pass neededSlots instead of capacityNeeded
+    local requestId = manager:AddRequest(platoon, neededSlots, location, destination, requestType, timeRequested)
+    
+    return requestId
 end

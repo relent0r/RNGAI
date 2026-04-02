@@ -1,4 +1,4 @@
-AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
+local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
@@ -328,7 +328,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
 
                 -- Skip the last move... we want to return and do a build
                eng.WaitingForTransport = true
-               bUsedTransports = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua").SendPlatoonWithTransports(aiBrain, eng.PlatoonHandle, builderData.Position, 2, true)
+               --bUsedTransports = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua").SendPlatoonWithTransports(aiBrain, eng.PlatoonHandle, builderData.Position, 2, true)
+               bUsedTransports = StateUtils.RequestTransportRNG(self, builderData.Position)
                eng.WaitingForTransport = false
 
                 if bUsedTransports then

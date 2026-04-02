@@ -1,4 +1,4 @@
-local AIPlatoon = import("/lua/aibrains/platoons/platoon-base.lua").AIPlatoon
+local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local NavUtils = import("/lua/sim/navutils.lua")
 local MarkerUtils = import("/lua/sim/markerutilities.lua")
 local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
@@ -22,7 +22,7 @@ local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 ---@class AIPlatoonAdaptiveReclaimBehavior : AIPlatoon
 ---@field ThreatToEvade Vector | nil
 ---@field LocationToReclaim Vector | nil
-AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
+AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
 
     PlatoonName = 'AdaptiveReclaimBehavior',
 
@@ -886,7 +886,8 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
             and eng.PlatoonHandle then
                 -- Skip the last move... we want to return and do a build
                eng.WaitingForTransport = true
-               bUsedTransports = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua").SendPlatoonWithTransports(aiBrain, eng.PlatoonHandle, builderData.Position, 2, true)
+               --bUsedTransports = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua").SendPlatoonWithTransports(aiBrain, eng.PlatoonHandle, builderData.Position, 2, true)
+               bUsedTransports = StateUtils.RequestTransportRNG(eng.PlatoonHandle, builderData.Position)
                eng.WaitingForTransport = false
 
                 if bUsedTransports then
@@ -1175,7 +1176,8 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoon) {
         ---@param self AIPlatoonAdaptiveReclaimBehavior
         Main = function(self)
             local brain = self:GetBrain()
-            local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, self.LocationToReclaim, 3, false)
+            --local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, self.LocationToReclaim, 3, false)
+            local usedTransports = StateUtils.RequestTransportRNG(self, self.LocationToReclaim)
             if usedTransports then
                 ----self:LogDebug(string.format('Engineer used transports'))
                 self:ChangeState(self.Navigating)

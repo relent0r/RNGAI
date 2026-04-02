@@ -1938,8 +1938,8 @@ IntelManager = Class {
         coroutine.yield(Random(5,20))
         local aiBrain = self.Brain
         while aiBrain.Status ~= "Defeat" do
-            local startTime = GetSystemTimeSecondsOnlyForProfileUse()
-            local zoneCount = 0
+            --local startTime = GetSystemTimeSecondsOnlyForProfileUse()
+            --local zoneCount = 0
             for layerName, drawer in threatLayers do
                 for threatName, threatTable in drawer do
                     ClearTable(threatTable)
@@ -1987,7 +1987,7 @@ IntelManager = Class {
                     zData.friendlydirectfireantisurfacethreat = 0
                     zData.platoonallocations.friendlyantiairallocatedthreat = 0
                     zData.platoonallocations.friendlydirectfireallocatedthreat = 0
-                    zoneCount = zoneCount + 1
+                    --zoneCount = zoneCount + 1
                     local friendlydefenseantisurfacethreat = 0
                     local friendlydefenseantiairthreat = 0
                     if zData.defensespokes then
@@ -2110,8 +2110,8 @@ IntelManager = Class {
                     --LOG('Assigned FriendlyLandAntiAirThreat to graphzone '..k2..' of '..aiBrain.GraphZones[k2].FriendlyLandAntiAirThreat)
                 end
             end
-            local duration = (GetSystemTimeSecondsOnlyForProfileUse() - startTime)
-            LOG(string.format('INTEL_MONITOR_PERF: Zones: %d | Platoons: %d | Cycle: %0.4fms', zoneCount, table.getn(AlliedPlatoons), duration))
+            --local duration = (GetSystemTimeSecondsOnlyForProfileUse() - startTime)
+            --LOG(string.format('INTEL_MONITOR_PERF: Zones: %d | Platoons: %d | Cycle: %0.4fms', zoneCount, table.getn(AlliedPlatoons), duration))
             coroutine.yield(20)
         end
     end,

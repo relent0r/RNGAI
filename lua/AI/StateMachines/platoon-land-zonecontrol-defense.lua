@@ -522,7 +522,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 WARN('No position passed to ZoneControl')
                 return false
             end
-            local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
+            --local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
+            local usedTransports = StateUtils.RequestTransportRNG(self, builderData.Position)
             if usedTransports then
                 --self:LogDebug(string.format('platoon used transports'))
                 if not self.BuilderData.Position then

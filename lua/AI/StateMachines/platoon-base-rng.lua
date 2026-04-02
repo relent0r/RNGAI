@@ -15,6 +15,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
 
     ---@param self AIPlatoon
     OnDestroy = function(self)
+        LOG('Platoon has been destroyed, name was '..tostring(self.PlatoonName))
         if self.BuilderHandle then
             self.BuilderHandle:RemoveHandle(self)
         end
@@ -24,6 +25,13 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
     ---@param self AIPlatoon
     OnUnitsAddedToPlatoon = function(self)
         local units = self:GetPlatoonUnits()
+        if not self['rngdata'] then
+            self['rngdata'] = {}
+        end
+        if not self['rngdata'].UIDSet then
+            local uid = string.format("%d_%d", GetGameTick(), Random(1000, 9999))
+            self.rngdata.UID = uid
+        end
         self.Units = units
         local bombCoolDown
         local maxPlatoonStrikeDamage = 0
