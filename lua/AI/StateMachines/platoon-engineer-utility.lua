@@ -502,9 +502,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local eng = self.eng
             local builderData = self.BuilderData
             local pos = eng:GetPosition()
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, pos, builderData.Position, 30 , 30)
-            self:LogDebug(string.format('Navigating to position, path reason is '..tostring(reason)))
-            local result, navReason
+            local canPath = NavUtils.CanPathTo(self.MovementLayer, pos, builderData.Position)
             local whatToBuildM = self.ExtractorBuildID
             local bUsedTransports
             if IsDestroyed(eng) then
@@ -516,21 +514,53 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local minPlatoonSpeed = self['rngdata'].MinPlatoonSpeed or 1.9
             local walkDistThreshold = minPlatoonSpeed * maxWalkTime
             local walkDistThresholdSq = walkDistThreshold * walkDistThreshold
-            if reason ~= 'PathOK' then
-                self:LogDebug(string.format('Path is not ok '))
-                -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
-                if navigateDist < 300*300 then
-                    result, navReason = NavUtils.CanPathTo('Amphibious', pos, builderData.Position)
-                end 
-            end
-            if ((not result and reason ~= 'PathOK') or navigateDist > walkDistThresholdSq)
-            and eng.PlatoonHandle then
+            local needsTransport = false
 
-                -- Skip the last move... we want to return and do a build
-               eng.WaitingForTransport = true
-               --bUsedTransports = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua").SendPlatoonWithTransports(aiBrain, eng.PlatoonHandle, builderData.Position, 2, true)
-               bUsedTransports = StateUtils.RequestTransportRNG(self, builderData.Position)
-               eng.WaitingForTransport = false
+            if not canPath or navigateDist > (350 * 350) then
+                needsTransport = true
+            end
+            if needsTransport or navigateDist > walkDistThresholdSq then
+                local transportType = canPath and 'Utility' or 'UtilityNoPath'
+                self:LogDebug('Requesting transport for navigation')
+                eng['rngdata'].WaitingForTransport = true
+                local requestId, requestData = StateUtils.RequestTransportRNG(self, builderData.Position, transportType)
+                
+                if requestId then
+                    local estWait = (requestData and requestData.EstimatedWait) or 30
+                    local walkTime = (math.sqrt(navigateDist) / (eng.Blueprint.Physics.MaxSpeed or 2.5))
+                    --LOG('estWait '..tostring(estWait)..' walk time '..tostring(walkTime))
+                    if not canPath or walkTime > estWait or canPath then
+                        local timeout = 0
+                        while not eng.Dead and not eng:IsUnitState('Attached') and timeout < 30 do
+                            coroutine.yield(20)
+                            timeout = timeout + 1
+                        end
+                        eng['rngdata'].WaitingForTransport = false
+                        
+                        -- If we successfully used a transport, transition to check if we have a build queue or return to decision
+                        if eng:IsUnitState('Attached') then
+                            while not eng.Dead and eng:IsUnitState('Attached') do
+                                coroutine.yield(20)
+                            end
+                            -- Post-drop check
+                            coroutine.yield(10)
+                            if eng.EngineerBuildQueue and table.getn(eng.EngineerBuildQueue) > 0 then
+                                self:ChangeState(self.Constructing)
+                            else
+                                self:ChangeState(self.DecideWhatToDo)
+                            end
+                            return
+                        end
+                    end
+                end
+                eng['rngdata'].WaitingForTransport = false
+                
+                -- If transport failed and distance is extreme, abort
+                if navigateDist > 409600 then -- 640 * 640
+                    self:LogDebug('No transport and distance too great. Aborting.')
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
 
                 if bUsedTransports then
                     --self:LogDebug(string.format('Used a transport'))
@@ -538,23 +568,15 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.Constructing)
                     return
                 elseif VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 512 * 512 then
-                    -- If over 512 and no transports dont try and walk!
                     self:LogDebug(string.format('No transport available and distance is greater than 512, decide what to do'))
-                    --LOG('We didnt use transports and its very far')
-                    --if self.ZoneExpansionSet and aiBrain.TransportRequested and aiBrain:GetCurrentUnits(categories.TRANSPORTFOCUS) < 1 then
-                    --    LOG('ZoneExpansionTransportRequested set to true')
-                    --    aiBrain.ZoneExpansionTransportRequested = true
-                    --end
                     coroutine.yield(20)
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
             end
-            if result or reason == 'PathOK' then
-                --RNGLOG('* AI-RNG: engineerMoveWithSafePath(): result or reason == PathOK ')
-                if reason ~= 'PathOK' then
-                    path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, builderData.Position)
-                end
+            if canPath then
+                local path, reason, distance, threats = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, self.MovementLayer, pos, builderData.Position)
+
                 if path then
                     --self:LogDebug(string.format('We are going to walk to the destination (a transport might have brought us)'))
                     --RNGLOG('* AI-RNG: engineerMoveWithSafePath(): path 0 true')
@@ -747,7 +769,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 else
-                    if reason == 'TooMuchThreat' then
+                    if reason == 'TooMuchThreat' and table.getn(threats) > 0 then
                         coroutine.yield(30)
                         self:ExitStateMachine()
                         return
@@ -796,6 +818,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local buildingTmpl = buildingTmplFile[(cons.BuildingTemplate or 'BuildingTemplates')][factionIndex]
             local baseTmpl = baseTmplFile[(cons.BaseTemplate or 'BaseTemplates')][factionIndex]
             local avoidZonePos = self.BuilderData.Alter
+            self:LogDebug(string.format('Engineer set task '..tostring(self.BuilderName)))
             StateUtils.SetupStateBuildAICallbacksRNG(eng)
             if cons.NearDefensivePoints then
                 --LOG('Requesting structure near defensive point')
@@ -906,9 +929,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     return
                 end
                 if reference and refZone and refName then
-                    if aiBrain.Nickname == 'DFS (AI: RNG Standard)' then
-                        LOG('DFS has naval expansion for position '..tostring(repr(aiBrain.Zones.Naval.zones[refZone].pos))..' label is '..tostring(aiBrain.Zones.Naval.zones[refZone].label))
-                    end
                     aiBrain.Zones.Naval.zones[refZone].lastexpansionattempt = GetGameTimeSeconds()
                     aiBrain.Zones.Naval.zones[refZone].engineerplatoonallocated = self
                     --[[if aiBrain.Zones.Naval.zones[refZone].resourcevalue > 3 then
@@ -1465,6 +1485,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     movementRequired = false
                 end
                 if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, buildLocation, false, transportWait, emergencyBuild ) then
+                    self:LogDebug(string.format('EngineerMoveWithSafePathRNG called within PerformBuildTask '..tostring(eng.EntityId)))
                     if not eng or eng.Dead or not eng.PlatoonHandle or not aiBrain:PlatoonExists(eng.PlatoonHandle) then
                         if eng then eng.ProcessBuild = nil end
                         return
@@ -1475,6 +1496,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     else
                         aiBrain:BuildStructure(eng, whatToBuild, {buildLocation[1], buildLocation[3], 0}, buildRelative)
                     end
+                    self:LogDebug(string.format('Build commands issued, waiting for distance check to build location'))
                     local engStuckCount = 0
                     local Lastdist
                     local dist
@@ -1489,6 +1511,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             Lastdist = dist
                         else
                             engStuckCount = engStuckCount + 1
+                            self:LogDebug(string.format('Engineer stuck within performbuild task, max is 40, stuck count '..tostring(engStuckCount)))
                             --RNGLOG('* AI-RNG: * No movement during move to build position look, adding one, current is '..engStuckCount)
                             if engStuckCount > 40 and not eng:IsUnitState('Building') then
                                 --RNGLOG('* AI-RNG: * Stuck while moving to build position. Stuck='..engStuckCount)
@@ -1510,6 +1533,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                             end
                                         end
                                     end
+                                    self:LogDebug(string.format('Enemy action taken, move to perform build task'))
                                     self:ChangeState(self.PerformBuildTask)
                                     return
                                 end
@@ -1533,6 +1557,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             --LOG('highValueCount is 2 or more')
                             --LOG('We are going to abort '..repr(eng.EngineerBuildQueue[1]))
                             eng.UnitBeingBuilt = nil
+                            self:LogDebug(string.format('High value item that we dont need, abort and remove item from build queue'))
                             table.remove(eng.EngineerBuildQueue, 1)
                             break
                         end
@@ -1557,10 +1582,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     coroutine.yield(5)
+                    self:LogDebug(string.format('Move to constructing state'))
                     self:ChangeState(self.Constructing)
                     return
                 else
                     -- we can't move there, so remove it from our build queue
+                    self:LogDebug(string.format('EngineerMoveWithSafePathRNG failed so remove item from queue'))
                     table.remove(eng.EngineerBuildQueue, 1)
                 end
                 coroutine.yield(2)
@@ -1923,7 +1950,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local eng = self.eng
             local aiBrain = self:GetBrain()
             while not IsDestroyed(eng) and (eng.GetCommandQueue and (0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving"))) do
-                --LOG('Constructing Loop Check: Commands='..tostring(RNGGETN(eng:GetCommandQueue()))..', Building='..tostring(eng:IsUnitState('Building'))..', Moving='..tostring(eng:IsUnitState("Moving")))
+                self:LogDebug(string.format('Constructing loop'))
                 coroutine.yield(1)
                 --LOG(string.format("RNGLOG: Engineer %s in Constructing state. EconStall: %s. DistanceToTarget: %s", self:GetPlatoonUnits()[1]:GetEntityId(), aiBrain:GetEconomyStoredRatio('MASS'), VDist3(self:GetPlatoonUnits()[1]:GetPosition(), self.Pos or self:GetPlatoonUnits()[1]:GetPosition())))
                 local platPos = eng:GetPosition()
@@ -1969,9 +1996,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                         end
                                     end
                                 elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, unit) then
-                                    --RNGLOG('MexBuild found enemy unit, try avoid it')
                                     if VDist3Sq(platPos, enemyUnitPos) < 156 and unit and not unit.Dead and unit:GetFractionComplete() == 1 then
-                                        --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
                                         IssueClearCommands({eng})
                                         IssueReclaim({eng}, unit)
                                         coroutine.yield(60)
@@ -2031,9 +2056,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                         end
                                     end
                                 elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, unit) then
-                                    --RNGLOG('MexBuild found enemy unit, try avoid it')
                                     if VDist3Sq(platPos, enemyUnitPos) < 156 and unit and not unit.Dead and unit:GetFractionComplete() == 1 then
-                                        --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
                                         IssueClearCommands({eng})
                                         IssueReclaim({eng}, unit)
                                         coroutine.yield(60)
@@ -2146,6 +2169,8 @@ AssignToUnitsMachine = function(data, platoon, units)
                 IssueClearCommands({unit})
                 unit.PlatoonHandle = platoon
                 unit.BuildFailedCount = 0
+                unit.Active = nil
+                unit.CustomState = nil
                 if not unit.Dead and unit:TestToggleCaps('RULEUTC_StealthToggle') then
                     unit:SetScriptBit('RULEUTC_StealthToggle', false)
                 end

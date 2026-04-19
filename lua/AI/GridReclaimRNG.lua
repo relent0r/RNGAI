@@ -11,7 +11,6 @@ GridReclaimRNG = Class(GridReclaim) {
 
     ---@param self GridReclaimRNG
     __init = function(self)
-        LOG('Init GridReclaimRNG')
         GridReclaim.__init(self)
         
 

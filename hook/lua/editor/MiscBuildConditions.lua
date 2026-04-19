@@ -165,13 +165,7 @@ end
 function GreaterThanGameTimeRNG(aiBrain, num, caution)
     local time = GetGameTimeSeconds()
     local multiplier = aiBrain.EcoManager.EcoMultiplier
-    if caution and aiBrain.UpgradeMode == 'Caution' then
-        if aiBrain.CheatEnabled and (num / math.sqrt(multiplier)) < time then
-            return true
-        elseif num * 1.3 < time then
-            return true
-        end
-    elseif aiBrain.CheatEnabled and (num / math.sqrt(multiplier)) < time then
+    if aiBrain.CheatEnabled and (num / math.sqrt(multiplier)) < time then
         return true
     elseif num < time then
         return true
@@ -229,6 +223,18 @@ function ArmyNeedOrWantTransports(aiBrain)
         return true
     end
     return false
+end
+
+function TransportPressureLevelRNG(aiBrain, requiredLevel)
+    if not aiBrain.TransportPressure then return false end
+    if aiBrain.NoRush and aiBrain.NoRush.Active then return false end
+    --LOG('Transport pressure , current level is '..tostring(aiBrain.TransportPressure.PressureLevel))
+    --LOG('Current transport count is '..aiBrain:GetCurrentUnits(categories.TRANSPORTFOCUS))
+    
+    -- Level 1: Any valid request
+    -- Level 2: Multiple requests or significant slot count
+    -- Level 3: Long wait times or massive slot count
+    return aiBrain.TransportPressure.PressureLevel >= requiredLevel
 end
 
 -- Not in use

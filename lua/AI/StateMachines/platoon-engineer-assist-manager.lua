@@ -132,10 +132,11 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             --LOG('TotalTechBuildRate[3] '..tostring(self.TotalTechBuildRate[3]))
             --LOG('TotalBuildRate '..tostring(self.TotalBuildRate))
             if self.TotalBuildRate == 0 then
+                --LOG('Move to wait')
                 self:ChangeState(self.Wait)
                 return
             end
-
+            --LOG('AdjustRosterForEco')
             self:ChangeState(self.AdjustRosterForEco)
             return
         end,
@@ -234,6 +235,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                 self:ExitStateMachine()
                 return
             end
+            --LOG('Collection Available')
 
             self:ChangeState(self.CollectAvailable)
             return
@@ -414,7 +416,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                     end
                 elseif assistData.type == 'MissileAssist' then
                     if assistDesc then
-                        LOG('MissileAssist detection')
+                        --LOG('MissileAssist detection')
                         --LOG('Number of units we can assist '..tostring(RNGGETN(assistDesc)))
                         local bestWeight
                         --LOG('Number of units in table '..tostring(table.getn(assistDesc)))
@@ -481,6 +483,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
 
                     local lookupKey = assistData.bpKey or 'None'
                     local maxBp = aiBrain.EngineerAssistRuleBP[lookupKey]
+                    --LOG('Unit has a maxBp '..tostring(maxBp)..'lookup key was '..tostring(lookupKey))
                     local currentCommitted = 0
                     if maxBp then
                         local buildRateToCommit = maxBp * self.BuildMultiplier
@@ -542,10 +545,12 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             -- Identify tech tier from your local tallies
             --LOG('Check assist manager reallocation T1 build rate '..tostring(self.TotalTechBuildRate[1])..' T2 build rate '..tostring(self.TotalTechBuildRate[2])..' T3 build rate '..tostring(self.TotalTechBuildRate[3]))
             --LOG('Desired Build rate '..tostring(aiBrain.EngineerAssistManagerBuildPowerRequired))
+            --LOG('Current focus category lookup '..tostring(aiBrain.EngineerAssistManagerFocusCategoryLookup))
             local tech = 0
             if self.TotalTechBuildRate[3] > 0 then tech = 3
             elseif self.TotalTechBuildRate[2] > 0 then tech = 2
             elseif self.TotalTechBuildRate[1] > 0 then tech = 1 end
+            --LOG('Tech is '..tostring(tech))
             if tech > 0 then
                 if aiBrain.EngineerAssistManagerFocusCategoryLookup == 'EnergyRequired' then
                     --LOG('Attempt to reallocate engineer for power building')
@@ -600,7 +605,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                                         eng.CaptureInProgress = nil
                                         eng.UnitBeingAssist = nil
                                         eng['rngdata'].IsAssistAssigned = nil
-                                        eng.Active = false
+                                        eng.Active = nil
                                         eng.CustomState = nil
                                         if aiBrain.RNGDEBUG then
                                             eng:SetCustomName('I should be exiting the assist manager')
@@ -862,7 +867,7 @@ EngineerAssistRemoveRNG = function(self, aiBrain, eng)
         eng.CaptureInProgress = nil
         eng.UnitBeingAssist = nil
         eng['rngdata'].IsAssistAssigned = nil
-        eng.Active = false
+        eng.Active = nil
         eng.CustomState = nil
         if aiBrain.RNGDEBUG then
             eng:SetCustomName('I should be exiting the assist manager')

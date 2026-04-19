@@ -100,6 +100,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local eng = self.eng
             local engPos = eng:GetPosition()
+            local builderData = self.BuilderData
             if self.PlatoonData.CheckCivUnits then
                 self:LogDebug(string.format('We are checking for civilian unit capture'))
                 local captureUnit = RUtils.CheckForCivilianUnitCapture(aiBrain, eng, self.MovementLayer)
@@ -132,6 +133,16 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
+            end
+            if builderData and builderData.StateWanted == 'GetReclaimTable' then
+                self:LogDebug(string.format('We are switching to ReclaimTable state and we already had it set'))
+                self:ChangeState(self.GetReclaimTable)
+                return
+            end
+                if builderData and builderData.StateWanted == 'GetReclaimTable' then
+                self:LogDebug(string.format('We are switching to ReclaimTable state and we already had it set'))
+                self:ChangeState(self.GetReclaimTable)
+                return
             end
             if aiBrain.ReclaimEnabled and not aiBrain.StartReclaimTaken then
                 self:LogDebug(string.format('We are switching to start reclaiming state'))
@@ -256,7 +267,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
             local eng = self.eng
             local maxReclaimRadius = (eng.Blueprint.Economy.MaxBuildDistance or 5) * (eng.Blueprint.Economy.MaxBuildDistance or 5)
             local tableSize = RNGGETN(aiBrain.StartReclaimTable)
-            LOG('Start reclaim table size is '..tostring(tableSize))
+            --LOG('Start reclaim table size is '..tostring(tableSize))
             self:LogDebug(string.format('Reclaim Table size is '..tostring(tableSize)))
             if tableSize > 0 then
                 IssueClearCommands({eng})
@@ -346,14 +357,17 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                         coroutine.yield(10)
                         local reclaimTimeout = 0
                         local massOverflow = false
-                        while aiBrain:PlatoonExists(self) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 40) do
-                            local reclaimDistance = VDist3Sq(engPos, closestReclaim.CachePosition)
-                            if reclaimDistance <= (maxReclaimRadius + 9) then
+                        while aiBrain:PlatoonExists(self) and closestReclaim and (not IsDestroyed(closestReclaim)) and (reclaimTimeout < 80) do
+                            -- word of warning here, used vdist2sq because if you use 3 then reclaim thats under water may not be within range.
+                            local reclaimDistance = VDist2Sq(engPos[1], engPos[3] ,closestReclaim.CachePosition[1], closestReclaim.CachePosition[3])
+                            local bp = closestReclaim.Blueprint
+                            local boxSize = (bp.SizeX + bp.SizeZ) * 0.25
+                            if reclaimDistance <= (maxReclaimRadius + (boxSize * boxSize) + 9) then
                                 IssueReclaim({eng}, closestReclaim)
                             end
                             local brokenPathMovement = false
                             reclaimTimeout = reclaimTimeout + 1
-                            --RNGLOG('Waiting for reclaim to no longer exist')
+                            --LOG('Waiting for reclaim to no longer exist, timeout is '..tostring(reclaimTimeout))
                             if eng:IsUnitState('Reclaiming') and reclaimTimeout > 0 then
                                 reclaimTimeout = reclaimTimeout - 1
                             end
@@ -431,6 +445,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local eng = self.eng
             local searchType
+            local reclaimTargetX, reclaimTargetZ
             local reclaimGridInstance = aiBrain.GridReclaim
             local brainGridInstance = aiBrain.GridBrain
             local deathFunction = function(unit)
@@ -447,9 +462,15 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
             if self.PlatoonData.Early then
                 searchType = 'MAIN'
             end
-
-            local reclaimTargetX, reclaimTargetZ = RUtils.EngFindReclaimCell(aiBrain, eng, self.MovementLayer, searchType)
+            if self.BuilderData.CellAssigned and self.BuilderData.Position then
+                reclaimTargetX, reclaimTargetZ = self.BuilderData.CellAssigned[1], self.BuilderData.CellAssigned[2]
+                self.BuilderData = {}
+            end
+            if not reclaimTargetX and not reclaimTargetZ  then
+                reclaimTargetX, reclaimTargetZ = RUtils.EngFindReclaimCell(aiBrain, eng, self.MovementLayer, searchType)
+            end
             if reclaimTargetX and reclaimTargetZ then
+                self:LogDebug(string.format('GetReclaimTable We have a reclaimtargetx and reclaimtargetz '))
                 local brainCell = brainGridInstance:ToCellFromGridSpace(reclaimTargetX, reclaimTargetZ)
                 -- Assign engineer to cell
                 eng.CellAssigned = {reclaimTargetX, reclaimTargetZ}
@@ -459,177 +480,191 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                 local validLocation = reclaimGridInstance:ToWorldSpace(reclaimTargetX, reclaimTargetZ)
 
                 if validLocation then
+                    local engPos = eng:GetPosition()
+                    self:LogDebug(string.format('GetReclaimTable We have a valid location '))
                     IssueClearCommands({eng})
-                    if AIUtils.EngineerMoveWithSafePathRNG(aiBrain, eng, validLocation, true) then
-                        if not eng or eng.Dead or not aiBrain:PlatoonExists(self) then
-                            return
+                    self:LogDebug(string.format('Trying to move with safe path '))
+                    local reclaimGridDist = VDist3Sq(engPos, validLocation)
+                    if reclaimGridDist > 2025 then
+                        self.BuilderData = {
+                            Position = validLocation,
+                            StateWanted = 'GetReclaimTable',
+                            CellAssigned = {reclaimTargetX, reclaimTargetZ}
+                        }
+                        self:ChangeState(self.NavigateToLocation)
+                        return
+                    end
+                    self:LogDebug(string.format('EngineerMoveWithSafePathRNG  returned  true'))
+                    if not eng or eng.Dead or not aiBrain:PlatoonExists(self) then
+                        return
+                    end
+                    local engStuckCount = 0
+                    local Lastdist
+                    local dist
+                    while not eng.Dead and aiBrain:PlatoonExists(self) do
+                        coroutine.yield(1)
+                        engPos = eng:GetPosition()
+                        dist = VDist3Sq(engPos, validLocation)
+                        self:LogDebug(string.format('Engineer is moving to validLocation, distance is '..tostring(dist)))
+                        if dist < 144 then
+                            --RNGLOG('We are at the grid square location, dist is '..dist)
+                            IssueClearCommands({eng})
+                            break
                         end
-                        local engStuckCount = 0
-                        local Lastdist
-                        local dist
-                        while not eng.Dead and aiBrain:PlatoonExists(self) do
-                            coroutine.yield(1)
-                            engPos = eng:GetPosition()
-                            dist = VDist3Sq(engPos, validLocation)
-                            if dist < 144 then
-                                --RNGLOG('We are at the grid square location, dist is '..dist)
-                                IssueClearCommands({eng})
+                        if Lastdist ~= dist then
+                            engStuckCount = 0
+                            Lastdist = dist
+                        else
+                            engStuckCount = engStuckCount + 1
+                            if engStuckCount > 15 and not eng:IsUnitState('Reclaiming') then
                                 break
                             end
-                            if Lastdist ~= dist then
-                                engStuckCount = 0
-                                Lastdist = dist
-                            else
-                                engStuckCount = engStuckCount + 1
-                                if engStuckCount > 15 and not eng:IsUnitState('Reclaiming') then
-                                    break
+                        end
+                        if eng:IsIdleState() then
+                            IssueMove({eng}, validLocation)
+                        end
+                        if eng:IsUnitState("Moving") then
+                            if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
+                                local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
+                                if enemyEngineer then
+                                    local enemyEngPos
+                                    for _, unit in enemyEngineer do
+                                        if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
+                                            enemyEngPos = unit:GetPosition()
+                                            local dx = engPos[1] - enemyEngPos[1]
+                                            local dz = engPos[3] - enemyEngPos[3]
+                                            local enemyEngPos = dx * dx + dz * dz
+                                            if enemyEngPos < 100 then
+                                                IssueClearCommands({eng})
+                                                IssueReclaim({eng}, enemyEngineer[1])
+                                                break
+                                            end
+                                        end
+                                    end
                                 end
                             end
-                            if eng:IsIdleState() then
-                                IssueMove({eng}, validLocation)
-                            end
-                            if eng:IsUnitState("Moving") then
-                                if GetNumUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy') > 0 then
-                                    local enemyEngineer = GetUnitsAroundPoint(aiBrain, categories.LAND * categories.ENGINEER * (categories.TECH1 + categories.TECH2), engPos, 10, 'Enemy')
-                                    if enemyEngineer then
-                                        local enemyEngPos
-                                        for _, unit in enemyEngineer do
-                                            if unit and not unit.Dead and unit:GetFractionComplete() == 1 then
-                                                enemyEngPos = unit:GetPosition()
-                                                local dx = engPos[1] - enemyEngPos[1]
-                                                local dz = engPos[3] - enemyEngPos[3]
-                                                local enemyEngPos = dx * dx + dz * dz
-                                                if enemyEngPos < 100 then
-                                                    IssueClearCommands({eng})
-                                                    IssueReclaim({eng}, enemyEngineer[1])
+                        end
+                        coroutine.yield(25)
+                    end
+                    if not eng or eng.Dead or not aiBrain:PlatoonExists(self) then
+                        coroutine.yield(1)
+                        return
+                    end
+                    local reclaimAvailable = true
+                    local maxRetries = 20
+                    local reclaimRetryCount = 0
+                    while reclaimAvailable and not eng.Dead do
+                        engPos = eng:GetPosition()
+                        -- reclaim grid for a better reclaim position 9 points with 1 being the current engineer position
+                        -- we create a grid of 8 squares around the engineer that it will search after each grid square is reclaim it is removed.
+                        local reclaimGrid = {
+                            {engPos[1], 0 ,engPos[3]},
+                            {engPos[1], 0 ,engPos[3] + 15},
+                            {engPos[1] + 15, 0 ,engPos[3] + 15},
+                            {engPos[1] + 15, 0, engPos[3]},
+                            {engPos[1] + 15, 0, engPos[3] - 15},
+                            {engPos[1], 0, engPos[3] - 15},
+                            {engPos[1] - 15, 0, engPos[3] - 15},
+                            {engPos[1] - 15, 0, engPos[3]},
+                            {engPos[1] - 15, 0, engPos[3] + 15},
+                            {engPos[1], 0 ,engPos[3] + 25},
+                            {engPos[1] + 15, 0 ,engPos[3] + 25},
+                            {engPos[1] + 25, 0 ,engPos[3] + 25},
+                            {engPos[1] + 25, 0 ,engPos[3] + 15},
+                            {engPos[1] + 25, 0, engPos[3]},
+                            {engPos[1] + 25, 0, engPos[3] - 15},
+                            {engPos[1] + 25, 0, engPos[3] - 25},
+                            {engPos[1] + 15, 0, engPos[3] - 25},
+                            {engPos[1], 0, engPos[3] - 25},
+                            {engPos[1] - 15, 0, engPos[3] - 25},
+                            {engPos[1] - 25, 0, engPos[3] - 25},
+                            {engPos[1] - 25, 0, engPos[3] - 15},
+                            {engPos[1] - 25, 0, engPos[3]},
+                            {engPos[1] - 25, 0, engPos[3] + 15},
+                            {engPos[1] - 15, 0, engPos[3] + 25},
+                            {engPos[1] - 25, 0, engPos[3] + 25},
+                        }
+                        --LOG('EngineerReclaimGrid '..repr(reclaimGrid))
+                        if reclaimGrid and not table.empty( reclaimGrid ) then
+                            local reclaimCount = 0
+                            local engineerHasReclaimed = false
+                            local leeway = 2.0
+                            for k, square in reclaimGrid do
+                                local squarePos = {square[1], GetTerrainHeight(square[1], square[3]), square[3]}
+                                if NavUtils.CanPathTo('Amphibious', engPos, squarePos) then
+                                    local minX = math.max(square[1] - 8, 0)
+                                    local maxX = math.min(square[1] + 8, self.MapSizeX)
+                                    local minZ = math.max(square[3] - 8, 0)
+                                    local maxZ = math.min(square[3] + 8, self.MapSizeZ) -- Assuming square map size
+                                    local rectDef = Rect(minX, minZ, maxX, maxZ)
+                                    local reclaimRect = GetReclaimablesInRect(rectDef)
+                                    local engReclaiming = false
+                                    if reclaimRect then
+                                        for c, b in reclaimRect do
+                                            if not IsProp(b) or self.BadReclaimables[b] then continue end
+                                            local bPos = b.CachePosition or b:GetPosition()
+                                            if not bPos[1] then
+                                                continue
+                                            end
+                                            
+                                            if bPos[1] < (minX - leeway) or bPos[1] > (maxX + leeway)
+                                            or bPos[3] < (minZ - leeway) or bPos[3] > (maxZ + leeway) then
+                                                continue
+                                            end
+                                            -- Start Blacklisted Props
+                                            local blacklisted = false
+                                            for _, BlackPos in RNGAIGLOBALS.PropBlacklist do
+                                                if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
+                                                    blacklisted = true
                                                     break
                                                 end
                                             end
+                                            if blacklisted then continue end
+                                            if b.MaxMassReclaim and b.MaxMassReclaim >= 5 then
+                                                engReclaiming = true
+                                                engineerHasReclaimed = true
+                                                reclaimCount = reclaimCount + 1
+                                                IssueReclaim({eng}, b)
+                                            end
                                         end
                                     end
+                                    if engReclaiming then
+                                        coroutine.yield(1)
+                                        local idleCounter = 0
+                                        while not eng.Dead and 0<RNGGETN(eng:GetCommandQueue()) and aiBrain:PlatoonExists(self) do
+                                            if not eng:IsUnitState('Reclaiming') and not eng:IsUnitState('Moving') then
+                                                --RNGLOG('We are not reclaiming or moving in the reclaim loop')
+                                                --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
+                                                idleCounter = idleCounter + 1
+                                                if idleCounter > 10 then
+                                                    IssueClearCommands({eng})
+                                                    break
+                                                end
+                                            end
+                                            --RNGLOG('We are reclaiming stuff')
+                                            coroutine.yield(30)
+                                        end
+                                    end
+                                end
+                                MexBuild(eng, aiBrain)
+                                if engineerHasReclaimed then
+                                    break
                                 end
                             end
-                            coroutine.yield(25)
-                        end
-                        if not eng or eng.Dead or not aiBrain:PlatoonExists(self) then
-                            coroutine.yield(1)
-                            return
-                        end
-                        local reclaimAvailable = true
-                        local maxRetries = 20
-                        local reclaimRetryCount = 0
-                        while reclaimAvailable and not eng.Dead do
-                            engPos = eng:GetPosition()
-                            -- reclaim grid for a better reclaim position 9 points with 1 being the current engineer position
-                            -- we create a grid of 8 squares around the engineer that it will search after each grid square is reclaim it is removed.
-                            local reclaimGrid = {
-                                {engPos[1], 0 ,engPos[3]},
-                                {engPos[1], 0 ,engPos[3] + 15},
-                                {engPos[1] + 15, 0 ,engPos[3] + 15},
-                                {engPos[1] + 15, 0, engPos[3]},
-                                {engPos[1] + 15, 0, engPos[3] - 15},
-                                {engPos[1], 0, engPos[3] - 15},
-                                {engPos[1] - 15, 0, engPos[3] - 15},
-                                {engPos[1] - 15, 0, engPos[3]},
-                                {engPos[1] - 15, 0, engPos[3] + 15},
-                                {engPos[1], 0 ,engPos[3] + 25},
-                                {engPos[1] + 15, 0 ,engPos[3] + 25},
-                                {engPos[1] + 25, 0 ,engPos[3] + 25},
-                                {engPos[1] + 25, 0 ,engPos[3] + 15},
-                                {engPos[1] + 25, 0, engPos[3]},
-                                {engPos[1] + 25, 0, engPos[3] - 15},
-                                {engPos[1] + 25, 0, engPos[3] - 25},
-                                {engPos[1] + 15, 0, engPos[3] - 25},
-                                {engPos[1], 0, engPos[3] - 25},
-                                {engPos[1] - 15, 0, engPos[3] - 25},
-                                {engPos[1] - 25, 0, engPos[3] - 25},
-                                {engPos[1] - 25, 0, engPos[3] - 15},
-                                {engPos[1] - 25, 0, engPos[3]},
-                                {engPos[1] - 25, 0, engPos[3] + 15},
-                                {engPos[1] - 15, 0, engPos[3] + 25},
-                                {engPos[1] - 25, 0, engPos[3] + 25},
-                            }
-                            --LOG('EngineerReclaimGrid '..repr(reclaimGrid))
-                            if reclaimGrid and not table.empty( reclaimGrid ) then
-                                local reclaimCount = 0
-                                local engineerHasReclaimed = false
-                                local leeway = 2.0
-                                for k, square in reclaimGrid do
-                                    local squarePos = {square[1], GetTerrainHeight(square[1], square[3]), square[3]}
-                                    if NavUtils.CanPathTo('Amphibious', engPos, squarePos) then
-                                        local minX = math.max(square[1] - 8, 0)
-                                        local maxX = math.min(square[1] + 8, self.MapSizeX)
-                                        local minZ = math.max(square[3] - 8, 0)
-                                        local maxZ = math.min(square[3] + 8, self.MapSizeZ) -- Assuming square map size
-                                        local rectDef = Rect(minX, minZ, maxX, maxZ)
-                                        local reclaimRect = GetReclaimablesInRect(rectDef)
-                                        local engReclaiming = false
-                                        if reclaimRect then
-                                            for c, b in reclaimRect do
-                                                if not IsProp(b) or self.BadReclaimables[b] then continue end
-                                                local bPos = b.CachePosition or b:GetPosition()
-                                                if not bPos[1] then
-                                                    continue
-                                                end
-                                                
-                                                if bPos[1] < (minX - leeway) or bPos[1] > (maxX + leeway)
-                                                or bPos[3] < (minZ - leeway) or bPos[3] > (maxZ + leeway) then
-                                                    continue
-                                                end
-                                                -- Start Blacklisted Props
-                                                local blacklisted = false
-                                                for _, BlackPos in RNGAIGLOBALS.PropBlacklist do
-                                                    if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
-                                                        blacklisted = true
-                                                        break
-                                                    end
-                                                end
-                                                if blacklisted then continue end
-                                                if b.MaxMassReclaim and b.MaxMassReclaim >= 5 then
-                                                    engReclaiming = true
-                                                    engineerHasReclaimed = true
-                                                    reclaimCount = reclaimCount + 1
-                                                    IssueReclaim({eng}, b)
-                                                end
-                                            end
-                                        end
-                                        if engReclaiming then
-                                            coroutine.yield(1)
-                                            local idleCounter = 0
-                                            while not eng.Dead and 0<RNGGETN(eng:GetCommandQueue()) and aiBrain:PlatoonExists(self) do
-                                                if not eng:IsUnitState('Reclaiming') and not eng:IsUnitState('Moving') then
-                                                    --RNGLOG('We are not reclaiming or moving in the reclaim loop')
-                                                    --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
-                                                    idleCounter = idleCounter + 1
-                                                    if idleCounter > 10 then
-                                                        IssueClearCommands({eng})
-                                                        break
-                                                    end
-                                                end
-                                                --RNGLOG('We are reclaiming stuff')
-                                                coroutine.yield(30)
-                                            end
-                                        end
-                                    end
-                                    MexBuild(eng, aiBrain)
-                                    if engineerHasReclaimed then
-                                        break
-                                    end
-                                end
-                                if not engineerHasReclaimed then
-                                    reclaimAvailable = false
-                                end
-                                --RNGLOG('reclaim grid loop has finished')
-                                --RNGLOG('Total things that should have be issued reclaim are '..reclaimCount)
-                            else
+                            if not engineerHasReclaimed then
                                 reclaimAvailable = false
                             end
-                            reclaimRetryCount = reclaimRetryCount + 1
-                            if reclaimRetryCount > maxRetries then
-                                break
-                            end
+                            --RNGLOG('reclaim grid loop has finished')
+                            --RNGLOG('Total things that should have be issued reclaim are '..reclaimCount)
+                        else
+                            reclaimAvailable = false
                         end
-                    else
+                        reclaimRetryCount = reclaimRetryCount + 1
+                        if reclaimRetryCount > maxRetries then
+                            break
+                        end
+                    end
+                    --[[
                         self:LogDebug(string.format('Eng could not move with safe path'))
                         if eng.CellAssigned then
                             -- Brain is assigned on unit create, if issues use eng:GetAIBrain()
@@ -648,6 +683,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                     end
+                    ]]
                 else
                     self:LogDebug(string.format('ToWorldSpace did not provide valid location'))
                 end
@@ -753,12 +789,13 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                 end
             else
                 self.InitialRange = self.InitialRange + 100
+                --LOG('Increasing initial reclaim range, is currently '..tostring(self.InitialRange))
                 if self.InitialRange > 500 then
                     RNGAIGLOBALS.PropBlacklist = {}
                     aiBrain.ReclaimEnabled = false
                     aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
                     coroutine.yield(1)
-                    LOG('Exiting state machine after initial range got too large')
+                    --LOG('Exiting state machine after initial range got too large')
                     self:ExitStateMachine()
                     return
                 else
@@ -774,7 +811,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                     aiBrain.ReclaimEnabled = false
                     aiBrain.ReclaimLastCheck = GetGameTimeSeconds()
                     coroutine.yield(1)
-                    LOG('Exiting state machine after closest distance hit 10000')
+                    --LOG('Exiting state machine after closest distance hit 10000')
                     self:ExitStateMachine()
                     return
                 end
@@ -788,7 +825,12 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
             IssueClearCommands({eng})
             if not closestReclaim and not furtherestReclaim then
                 coroutine.yield(5)
-                LOG('Exiting state machine after no closest or furtherest reclaim')
+                if self.InitialRange < 250 then
+                    self.InitialRange = self.InitialRange + 100
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
+                --LOG('Exiting state machine after no closest or furtherest reclaim, current range is '..tostring(self.InitialRange))
                 self:ExitStateMachine()
                 return
             end
@@ -806,31 +848,41 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
             end
     
             IssueClearCommands({eng})
-            if furtherestReclaim then
-                IssueAggressiveMove({eng}, furtherestReclaim)
-            else
-                IssueAggressiveMove({eng}, closestReclaim)
-            end
-            local reclaiming = not eng:IsIdleState()
-            local max_time = self.PlatoonData.ReclaimTime
-            local currentTime = 0
-            local idleCount = 0
-            while reclaiming do
-                coroutine.yield(100)
-                if eng.Dead then
+            local reclaimTarget = furtherestReclaim or closestReclaim
+            if reclaimTarget then
+                local canPath = NavUtils.CanPathTo(self.MovementLayer, engPos, reclaimTarget)
+                if not canPath then
+                    self.BuilderData = {
+                        Position = reclaimTarget,
+                        StateWanted = 'GetGenericReclaim',
+                        }
+                    self:ChangeState(self.NavigateToLocation)
                     return
                 end
-                currentTime = currentTime + 10
-                if currentTime > max_time then
-                    reclaiming = false
-                end
-                if eng:IsIdleState() then
-                    idleCount = idleCount + 1
-                    if idleCount > 5 then
+            end
+            if reclaimTarget then
+                IssueAggressiveMove({eng}, reclaimTarget)
+                local reclaiming = not eng:IsIdleState()
+                local max_time = self.PlatoonData.ReclaimTime
+                local currentTime = 0
+                local idleCount = 0
+                while reclaiming do
+                    coroutine.yield(100)
+                    if eng.Dead then
+                        return
+                    end
+                    currentTime = currentTime + 10
+                    if currentTime > max_time then
                         reclaiming = false
                     end
+                    if eng:IsIdleState() then
+                        idleCount = idleCount + 1
+                        if idleCount > 5 then
+                            reclaiming = false
+                        end
+                    end
+                    MexBuild(eng, aiBrain)
                 end
-                MexBuild(eng, aiBrain)
             end
             if IsDestroyed(self) then
                 return
@@ -839,7 +891,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
             self.GenericReclaimLoop = self.GenericReclaimLoop + 1
             if self.GenericReclaimLoop == 5 then
                 coroutine.yield(1)
-                LOG('Exiting state machine after reclaim loop hit 5')
+                self:LogDebug(string.format('GenericReclaimLoop hit 5 loops, exiting state machine'))
                 self:ExitStateMachine()
                 return
             end
@@ -848,273 +900,297 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
-    NavigateToTaskLocation = State {
-
-        StateName = 'NavigateToTaskLocation',
-
-        --- Initial state of any state machine
-        ---@param self AIPlatoonEngineerBehavior
+    NavigateToLocation = State {
+        StateName = 'NavigateToLocation',
+        --- Refactored navigation logic integrating EngineerMoveWithSafePathRNG
+        ---@param self AIPlatoonAdaptiveReclaimBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
             local eng = self.eng
             local builderData = self.BuilderData
-            local pos = eng:GetPosition()
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, pos, builderData.Position, 30 , 30)
-            self:LogDebug(string.format('Navigating to position, path reason is '..tostring(reason)))
-            local result, navReason
-            local whatToBuildM = self.ExtractorBuildID
-            local bUsedTransports
-            if IsDestroyed(eng) then
-                --SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
+            
+            if not builderData or not builderData.Position then
+                self:LogDebug('NavigateToLocation: No destination provided in BuilderData')
+                self:ChangeState(self.DecideWhatToDo)
                 return
             end
-            local navigateDist = VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3])
+
+            local destination = builderData.Position
+            local startPos = eng:GetPosition()
+            
+            -- 1. Path Generation & Transport Evaluation
+            local canPath = NavUtils.CanPathTo(self.MovementLayer, startPos, destination)
+            local navigateDist = VDist2Sq(startPos[1], startPos[3], destination[1], destination[3])
             local maxWalkTime = 180
             local minPlatoonSpeed = self['rngdata'].MinPlatoonSpeed or 1.9
             local walkDistThreshold = minPlatoonSpeed * maxWalkTime
             local walkDistThresholdSq = walkDistThreshold * walkDistThreshold
-            if reason ~= 'PathOK' then
-                self:LogDebug(string.format('Path is not ok '))
-                -- we will crash the game if we use CanPathTo() on all engineer movments on a map without markers. So we don't path at all.
-                if navigateDist < 300*300 then
-                    result, navReason = NavUtils.CanPathTo('Amphibious', pos, builderData.Position)
-                    --self:LogDebug(string.format('Can we path to it '..tostring(result)))
-                end 
+            local needsTransport = false
+
+            -- Transport trigger: Unpathable or distance > 300 (threshold from original function)
+            if not canPath  or navigateDist > (350 * 350) then
+                needsTransport = true
             end
 
-            if ((not result and reason ~= 'PathOK') or navigateDist > walkDistThresholdSq)
-            and eng.PlatoonHandle then
-                -- Skip the last move... we want to return and do a build
-               eng.WaitingForTransport = true
-               --bUsedTransports = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua").SendPlatoonWithTransports(aiBrain, eng.PlatoonHandle, builderData.Position, 2, true)
-               bUsedTransports = StateUtils.RequestTransportRNG(eng.PlatoonHandle, builderData.Position)
-               eng.WaitingForTransport = false
-
-                if bUsedTransports then
-                    --self:LogDebug(string.format('Used a transport'))
-                    coroutine.yield(10)
-                    if eng.EngineerBuildQueue and table.getn(eng.EngineerBuildQueue) > 0 then
-                        self:ChangeState(self.Constructing)
-                        return
-                    else
-                        self:ChangeState(self.DecideWhatToDo)
-                        return
+            -- 2. Transport Handling
+            if needsTransport or navigateDist > walkDistThresholdSq then
+                local transportType = canPath and 'Reclaim' or 'ReclaimNoPath'
+                self:LogDebug('Requesting transport for navigation')
+                eng['rngdata'].WaitingForTransport = true
+                local requestId, requestData = StateUtils.RequestTransportRNG(self, destination, transportType)
+                
+                if requestId then
+                    local estWait = (requestData and requestData.EstimatedWait) or 30
+                    local walkTime = (math.sqrt(navigateDist) / (eng.Blueprint.Physics.MaxSpeed or 2.5))
+                    --LOG('estWait '..tostring(estWait)..' walk time '..tostring(walkTime))
+                    if not canPath or walkTime > estWait then
+                        local timeout = 0
+                        local maxWaitTime = math.max(estWait, 150)
+                        local reclaimPerformed = false
+                        while not eng.Dead and not eng:IsUnitState('Attached') and timeout < maxWaitTime do
+                            if not reclaimPerformed and estWait > 20 then
+                                reclaimPerformed = RUtils.PerformEngAreaReclaim(aiBrain, eng, 60)
+                                reclaimPerformed = true
+                            end
+                            coroutine.yield(20)
+                            local manager = aiBrain:GetPlatoonUniquelyNamed('TransportPool')
+                            if manager and not manager:GetRequestById(requestId) then
+                                LOG('Request ID is not present in the transport pool manager')
+                                coroutine.yield(15)
+                                local transport = self['rngdata'].AssignedTransport
+                                if not transport or transport.Dead then
+                                    -- Request disappeared but we aren't attached? Transport probably died.
+                                    LOG('Request is no longer in manager and we are not attached, break')
+                                    break
+                                end
+                            end
+                            timeout = timeout + 2
+                        end
+                        eng['rngdata'].WaitingForTransport = false
+                        
+                        -- If we successfully used a transport, transition to check if we have a build queue or return to decision
+                        if eng:IsUnitState('Attached') then
+                            while not eng.Dead and (eng:IsUnitState('Attached') or eng:IsUnitState('TransportLoading')) do
+                                coroutine.yield(20)
+                            end
+                            -- Post-drop check
+                            coroutine.yield(10)
+                            if eng.EngineerBuildQueue and table.getn(eng.EngineerBuildQueue) > 0 then
+                                for k, v in eng.EngineerBuildQueue do
+                                    if eng.EngineerBuildQueue[k].PathPoint then
+                                        continue
+                                    end
+                                    if eng.EngineerBuildQueue[k][5] then
+                                        IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
+                                    else
+                                        aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                                    end
+                                end
+                                self:ChangeState(self.Constructing)
+                            else
+                                self:ChangeState(self.DecideWhatToDo)
+                            end
+                            return
+                        else
+                            if eng:IsUnitState('Building') then
+                                self:ChangeState(self.Constructing)
+                                return
+                            end
+                        end
                     end
-                elseif VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 512 * 512 then
-                    -- If over 512 and no transports dont try and walk!
-                    self:LogDebug(string.format('No transport available and distance is greater than 512, decide what to do'))
-                    coroutine.yield(20)
+                end
+                eng['rngdata'].WaitingForTransport = false
+                
+                -- If transport failed and distance is extreme, abort
+                if navigateDist > 409600 then -- 640 * 640
+                    self:LogDebug('No transport and distance too great. Aborting.')
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
             end
-            if result or reason == 'PathOK' then
-                --RNGLOG('* AI-RNG: engineerMoveWithSafePath(): result or reason == PathOK ')
-                if reason ~= 'PathOK' then
-                    path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, builderData.Position)
-                end
+
+            -- 3. Path Execution (Walking)
+            if canPath then
+
+                local path, reason, distance, threats  = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, self.MovementLayer, startPos, destination)
+
+                IssueClearCommands({eng})
                 if path then
-                    --self:LogDebug(string.format('We are going to walk to the destination (a transport might have brought us)'))
-                    --RNGLOG('* AI-RNG: engineerMoveWithSafePath(): path 0 true')
-                    -- Move to way points (but not to destination... leave that for the final command)
-                    --RNGLOG('We are issuing move commands for the path')
-                    local dist
-                    local pathLength = RNGGETN(path)
-                    --self:LogDebug(string.format('Path length is '..tostring(pathLength)))
-                    local brokenPathMovement = false
-                    local currentPathNode = 1
-                    IssueClearCommands({eng})
-                    for i=currentPathNode, pathLength do
-                        if i>=3 then
-                            local bool,markers=StateUtils.CanBuildOnMassMexPlatoon(aiBrain, path[i], 25)
-                            if bool then
-                                --local massMarker = RUtils.GetClosestMassMarkerToPos(aiBrain, waypointPath)
-                                --RNGLOG('Mass Marker'..repr(massMarker))
-                                --RNGLOG('Attempting second mass marker')
-                                local buildQueueReset = eng.EngineerBuildQueue or {}
-                                eng.EngineerBuildQueue = {}
-                                for _,massMarker in markers do
-                                    RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
-                                    RUtils.EngineerTryRepair(aiBrain, eng, whatToBuildM, massMarker.Position)
-                                    if massMarker.BorderWarning then
-                                       --RNGLOG('Border Warning on mass point marker')
-                                        IssueBuildMobile({eng}, {massMarker.Position[1], massMarker.Position[3], 0}, whatToBuildM, {})
-                                        local newEntry = {whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position, true, PathPoint=i}
-                                        TableInsert(eng.EngineerBuildQueue, newEntry)
-                                    else
-                                        aiBrain:BuildStructure(eng, whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false)
-                                        local newEntry = {whatToBuildM, {massMarker.Position[1], massMarker.Position[3], 0}, false,Position=massMarker.Position, false, PathPoint=i}
-                                        TableInsert(eng.EngineerBuildQueue, newEntry)
-                                    end
-                                end
-                                if buildQueueReset then
-                                    for k, v in buildQueueReset do
-                                        TableInsert(eng.EngineerBuildQueue, v)
-                                    end
-                                end
-                            end
-                        end
-                        if (i - math.floor(i/2)*2)==0 or VDist3Sq(builderData.Position,path[i])<40*40 then 
-                            if i==pathLength then
-                                local distanceToDest = VDist3Sq(pos, builderData.Position)
-                                local engMovePos = RUtils.lerpy(pos, builderData.Position, {math.sqrt(distanceToDest), math.sqrt(distanceToDest) - 5})
-                                IssueMove({eng}, engMovePos)
-                            end
-                            continue 
-                        end
-                        --self:LogDebug(string.format('We are issuing the move command to path node '..tostring(i)))
+                    local pathLength = table.getn(path)
+                    for i = 1, pathLength do
                         IssueMove({eng}, path[i])
                     end
-                    if eng.EngineerBuildQueue then
-                        for k, v in eng.EngineerBuildQueue do
-                            if eng.EngineerBuildQueue[k].PathPoint then
-                                continue
-                            end
-                            if eng.EngineerBuildQueue[k][5] then
-                                IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
-                            else
-                                aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
-                            end
-                        end
-                    end
-                    while not IsDestroyed(eng) do
-                        local reclaimed
-                        if brokenPathMovement and eng.EngineerBuildQueue and not table.empty(eng.EngineerBuildQueue) then
-                            pos = eng:GetPosition()
-                            local queuePointTaken = {}
-                            local skipPath = false
-                            for i=currentPathNode, pathLength do
-                                for k, v in eng.EngineerBuildQueue do
-                                    if v.PathPoint and (v.PathPoint == i or i > v.PathPoint and not queuePointTaken[k]) then
-                                        if eng.EngineerBuildQueue[k][5] then
-                                            --RNGLOG('BorderWarning build')
-                                            --RNGLOG('Found build command at point '..repr(eng.EngineerBuildQueue[k][2]))
-                                            IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
-                                        else
-                                            --RNGLOG('Found build command at point '..repr(eng.EngineerBuildQueue[k][2]))
-                                            aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
-                                        end
-                                        queuePointTaken[k] = true
-                                        skipPath = true
-                                    end
-                                end
-                                if not skipPath then
-                                    IssueMove({eng}, path[i])
-                                end
-                                skipPath = false
-                            end
-                            for k, v in eng.EngineerBuildQueue do
-                                if queuePointTaken[k] and eng.EngineerBuildQueue[k]  then
-                                    --RNGLOG('QueuePoint already taken, skipping for position '..repr(eng.EngineerBuildQueue[k][2]))
-                                    continue
-                                end
-                                if eng.EngineerBuildQueue[k][5] then
-                                    --RNGLOG('Found end build command at point '..repr(eng.EngineerBuildQueue[k][2]))
-                                    IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
-                                else
-                                    --RNGLOG('Found end build command at point '..repr(eng.EngineerBuildQueue[k][2]))
-                                    aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
-                                end
-                            end
-                            if reclaimed then
-                                coroutine.yield(20)
-                            end
-                            reclaimed = false
-                            brokenPathMovement = false
-                        end
-                        pos = eng:GetPosition()
-                        if currentPathNode <= pathLength then
-                            dist = VDist3Sq(pos, path[currentPathNode])
-                            if dist < 100 or (currentPathNode+1 <= pathLength and dist > VDist3Sq(pos, path[currentPathNode+1])) then
-                                currentPathNode = currentPathNode + 1
-                            end
-                        end
-                        if VDist3Sq(builderData.Position, pos) < 3600 then
-                            --self:LogDebug(string.format('We are within 60 units of destination, break from while loop'))
-                            break
-                        end
-                        coroutine.yield(15)
-                        if IsDestroyed(eng) then
-                            return
-                        end
-                        if eng:IsIdleState() then
-                          self:LogDebug(string.format('We are idle for some reason, go back to decide what to do'))
-                          self:ChangeState(self.DecideWhatToDo)
-                          return
-                        end
-                        if eng.EngineerBuildQueue then
-                            if ALLBPS[eng.EngineerBuildQueue[1][1]].CategoriesHash.MASSEXTRACTION and ALLBPS[eng.EngineerBuildQueue[1][1]].CategoriesHash.TECH1 then
-                                if not eng:IsUnitState('Reclaiming') then
-                                    brokenPathMovement = RUtils.PerformEngReclaim(aiBrain, eng, 5)
-                                    reclaimed = true
-                                end
-                            end
-                        end
-                        if eng:IsUnitState("Moving") then
-                            if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, pos, 45, 'Enemy') > 0 then
-                                local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.MOBILE, pos, 45, 'Enemy')
-                                local reclaimUnit
-                                for _, eunit in enemyUnits do
-                                    local enemyUnitPos = eunit:GetPosition()
-                                    if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
-                                        if VDist3Sq(enemyUnitPos, pos) < 144 then
-                                            if eunit and not eunit.Dead and eunit:GetFractionComplete() == 1 then
-                                                if VDist3Sq(pos, enemyUnitPos) < 100 then
-                                                    IssueClearCommands({eng})
-                                                    IssueReclaim({eng}, eunit)
-                                                    brokenPathMovement = true
-                                                    reclaimUnit = eunit
-                                                    coroutine.yield(25)
-                                                    break
-                                                end
-                                            end
-                                        end
-                                    elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, eunit) then
-                                        if VDist3Sq(enemyUnitPos, pos) < 81 then
-                                            if eunit and not eunit.Dead and eunit:GetFractionComplete() == 1 then
-                                                if VDist3Sq(pos, enemyUnitPos) < 100 then
-                                                    IssueClearCommands({eng})
-                                                    IssueReclaim({eng}, eunit)
-                                                    brokenPathMovement = true
-                                                    reclaimUnit = eunit
-                                                    coroutine.yield(25)
-                                                    break
-                                                end
-                                            end
-                                        else
-                                            IssueClearCommands({eng})
-                                            IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, pos, 50))
-                                            brokenPathMovement = true
-                                            reclaimUnit = eunit
-                                            coroutine.yield(45)
-                                        end
-                                    end
-                                    
-                                end
-                                if brokenPathMovement and reclaimUnit and eng:IsUnitState('Reclaiming') then
-                                    while not IsDestroyed(reclaimUnit) and not IsDestroyed(eng) do
-                                        coroutine.yield(20)
-                                    end
-                                end
-                            end
-                        end
-                    end
                 else
-                    if reason == 'TooMuchThreat' then
+                    if reason == 'TooMuchThreat' and table.getn(threats) > 0 then
+                        self:LogDebug(string.format('Too much threat to travel'))
                         coroutine.yield(30)
-                        LOG('Exiting state machine after too much threat')
                         self:ExitStateMachine()
                         return
                     end
-                    IssueMove({eng}, builderData.Position)
                 end
-                if IsDestroyed(self) then
+                IssueMove({eng}, destination)
+
+                -- 4. The Monitoring Loop (Threat detection and Opportunistic Reclaim)
+                local currentPathNode = 1
+                local pathLength = path and table.getn(path) or 0
+                local movementTimeout = 0
+                local lastPos = eng:GetPosition()
+
+                while not eng.Dead and aiBrain:PlatoonExists(self) do
+                    local currentPos = eng:GetPosition()
+                    local distToDestSq = VDist3Sq(currentPos, destination)
+
+                    -- Arrival check
+                    if distToDestSq < 100 then break end
+
+                    -- Path node tracking
+                    if path and currentPathNode <= pathLength then
+                        local nodeDistSq = VDist3Sq(currentPos, path[currentPathNode])
+                        if nodeDistSq < 64 or (currentPathNode + 1 <= pathLength and nodeDistSq > VDist3Sq(currentPos, path[currentPathNode+1])) then
+                            currentPathNode = currentPathNode + 1
+                        end
+                    end
+                    local actionTaken = false
+
+                    -- Opportunistic Threat/Reclaim Logic (from original function)
+                    local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.MOBILE + categories.MASSEXTRACTION, currentPos, 45, 'Enemy')
+                    if not table.empty(enemyUnits) then
+                        for _, enemy in enemyUnits do
+                            if not enemy.Dead and enemy:GetFractionComplete() == 1 then
+                                local enemyPos = enemy:GetPosition()
+                                local enemyDistSq = VDist3Sq(currentPos, enemyPos)
+
+                                -- Case A: Reclaimable weak units (Scouts/Engineers)
+                                if EntityCategoryContains(categories.SCOUT + categories.ENGINEER - categories.COMMAND, enemy) then
+                                    if enemyDistSq < 144 then
+                                        IssueClearCommands({eng})
+                                        IssueReclaim({eng}, enemy)
+                                        actionTaken = true
+                                        -- Wait for reclaim to finish or unit to move away
+                                        while not enemy.Dead and not eng.Dead and VDist3Sq(eng:GetPosition(), enemy:GetPosition()) < 169 do
+                                            coroutine.yield(20)
+                                        end
+                                        break
+                                    end
+                                -- Case B: Dangerous Mobile Land
+                                elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, enemy) then
+                                    if enemyDistSq < 100 then
+                                        IssueClearCommands({eng})
+                                        IssueReclaim({eng}, enemy) -- Last ditch effort
+                                        actionTaken = true
+                                        coroutine.yield(20)
+                                        break
+                                    else
+                                        -- Avoidance maneuver
+                                        IssueClearCommands({eng})
+                                        IssueMove({eng}, RUtils.AvoidLocation(enemyPos, currentPos, 50))
+                                        actionTaken = true
+                                        coroutine.yield(40)
+                                        break
+                                    end
+                                -- Case C: Capture enemy Mexes
+                                elseif EntityCategoryContains(categories.MASSEXTRACTION, enemy) and enemyDistSq < 225 then
+                                    IssueClearCommands({eng})
+                                    IssueCapture({eng}, enemy)
+                                    actionTaken = true
+                                    while not enemy.Dead and not eng.Dead and enemy:GetAIBrain() ~= aiBrain do
+                                        coroutine.yield(20)
+                                    end
+                                    break
+                                end
+                            end
+                        end
+                    end
+                    actionTaken = RUtils.PerformEngReclaim(aiBrain, eng, 5)
+                    if actionTaken then
+                        IssueClearCommands({eng})
+                        if path then
+                            for i = currentPathNode, pathLength do
+                                IssueMove({eng}, path[i])
+                            end
+                        end
+                        IssueMove({eng}, destination)
+                    end
+
+                    
+
+                    if IsDestroyed(eng) then
+                        return
+                    end
+                    if eng:IsIdleState() then
+                        movementTimeout = movementTimeout + 1
+                        if movementTimeout > 10 then 
+                            self:LogDebug('Navigation timeout: Unit idle too long')
+                            break 
+                        end
+                    else
+                        movementTimeout = 0
+                    end
+
+                    coroutine.yield(15)
+                end
+            end
+
+            self:ChangeState(self.DecideWhatToDo)
+        end,
+    },
+
+    WaitingForTransport = State {
+
+        StateName = "WaitingForTransport",
+
+        Main = function(self, data)
+            local eng = self.eng
+            if not eng or eng.Dead then return end
+            --LOG('Engineer has moved into a WaitingForTransport State')
+            self:LogDebug(string.format('Engineer has entered  WaitingForTransport  state'))
+
+            -- 1. THE HALT
+            -- We do NOT IssueClearCommands here if we have a build queue!
+            -- Instead, we just IssueStop to kill current movement.
+            IssueClearCommands({eng})
+            self:LogDebug(string.format('Engineer has issued  a stop'))
+            local transportPlatoon = self['rngdata'].AssignedTransport
+            if not transportPlatoon then
+                self:LogDebug(string.format('transportPlatoon is nil'))
+            end
+            -- 2. THE IDLE LOOP
+            while not IsDestroyed(self) and not eng.Dead do
+                self:LogDebug(string.format('Engineer is waiting inside the idle loop'))
+                -- If we are attached, we just wait to be dropped
+                if not transportPlatoon or transportPlatoon.Dead then
+                    self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                coroutine.yield(10)
-                self:ChangeState(self.DecideWhatToDo)
-                return
+                if eng:IsUnitState('Attached') then
+                    coroutine.yield(40)
+                elseif eng:IsUnitState('TransportLoading') then
+                    coroutine.yield(10)
+                else
+                    -- Optional: Nudge toward the transport if it's landing nearby
+                    if eng:IsUnitState('Building') then
+                        self:ChangeState(self.Constructing)
+                        return
+                    end
+                    self:LogDebug(string.format('Engineer is something else inside the idle loop '..tostring(eng.EntityId)))
+                    -- If the transport is lost, resume whatever we were doing
+                    if not transportPlatoon or transportPlatoon.Dead then
+                        self:LogDebug(string.format('Engineer considered the transport lost or maybe its already returned to the manage pool'))
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                    if eng:IsIdleState() and self['rngdata'].TransportUnloaded then
+                        self['rngdata'].TransportUnloaded = false
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                end
+                coroutine.yield(20)
             end
+            self:LogDebug(string.format('Engineer is exiting WaitingForTransport state'))
+            self['rngdata'].AssignedTransport =  nil
+            self:ChangeState(self.DecideWhatToDo)
+            return
         end,
     },
 
@@ -1164,27 +1240,6 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                 end
             end
             self:ChangeState(self.Searching)
-            return
-        end,
-    },
-
-    Transporting = State {
-
-        StateName = 'Transporting',
-
-        --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
-        ---@param self AIPlatoonAdaptiveReclaimBehavior
-        Main = function(self)
-            local brain = self:GetBrain()
-            --local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, self.LocationToReclaim, 3, false)
-            local usedTransports = StateUtils.RequestTransportRNG(self, self.LocationToReclaim)
-            if usedTransports then
-                ----self:LogDebug(string.format('Engineer used transports'))
-                self:ChangeState(self.Navigating)
-            else
-                ----self:LogDebug(string.format('Engineer tried but didnt use transports'))
-                self:ChangeState(self.Searching)
-            end
             return
         end,
     },

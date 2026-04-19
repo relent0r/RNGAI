@@ -108,7 +108,8 @@ IntelManager = Class {
             RADAR = {},
             TMD = {},
             TECH1POINTDEFENSE = {},
-            SMD = {}
+            SMD = {},
+            SONAR = {},
         }
         self.MapMaximumValues = {
             MaximumResourceValue = 0,
@@ -711,7 +712,7 @@ IntelManager = Class {
         local OwnIndex = aiBrain:GetArmyIndex()
 
         while true do
-            --LOG('Running zone expansion check for '..tostring(aiBrain.Nickname))
+            LOG('Running zone expansion check for '..tostring(aiBrain.Nickname))
             local maxDistance
             local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
             if not playableArea then
@@ -741,11 +742,9 @@ IntelManager = Class {
                             if zoneType == 'Naval' then
                                 skipDistance = 4225
                             end
-                            labelResourceValue[v.label] = labelResourceValue[v.label] or {}
                             local bx = mainBasePos[1] - v.pos[1]
                             local bz = mainBasePos[3] - v.pos[3]
                             local mainBaseDistance = bx * bx + bz * bz
-                            table.insert(labelResourceValue[v.label], {ZoneID = v.id, ResourceValue = v.resourcevalue, StartPositionClose = v.startpositionclose, DistanceToBase = mainBaseDistance, ZoneType = zoneType})
                             if v.BuilderManager.FactoryManager.LocationActive then
                                 if not labelBaseValues[v.BuilderManager.Label] then
                                     labelBaseValues[v.BuilderManager.Label] = {}
@@ -771,6 +770,8 @@ IntelManager = Class {
                             end
                             if not closeEnemyStart and not closeAllyStart then
                                 if mainBaseDistance > skipDistance then
+                                    labelResourceValue[v.label] = labelResourceValue[v.label] or {}
+                                    table.insert(labelResourceValue[v.label], {ZoneID = v.id, ResourceValue = v.resourcevalue, StartPositionClose = v.startpositionclose, DistanceToBase = mainBaseDistance, ZoneType = zoneType})
                                     if not edgeSkip then
                                         if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) and (not v.engineerplatoonallocated or IsDestroyed(v.engineerplatoonallocated)) and (v.lastexpansionattempt == 0 or gameTime >= v.lastexpansionattempt + 30 ) then
                                             local normalizedDistanceValue = mainBaseDistance / maxDistance
@@ -793,7 +794,7 @@ IntelManager = Class {
                                             )
                                             if zoneType == 'Naval' then
                                                 local navalMultiplier = 1.0
-                                                
+
                                                 if v.label then
                                                     local labelData = aiBrain.BrainIntel.NavalBaseLabels[v.label]
                                                     local labelMeta = NavUtils.GetLabelMetadata(v.label)
@@ -837,11 +838,17 @@ IntelManager = Class {
             local filteredLandUnPathableList = {}
             local filteredNavalList = {}
             --LOG('Number of zoneprioritylist zones we can expand to '..table.getn(zonePriorityList))
+            --LOG('ZonePriorityList '..tostring(repr(zonePriorityList)))
             for _, zone in ipairs(zonePriorityList) do
                 if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zone.Position, 30, 'Enemy') < 1 then
                     if zone.BestArmy and zone.BestArmy ~= armyIndex and ArmyBrains[zone.BestArmy].Status ~= 'Defeat' then
                         continue
                     end
+                    local graphLabel = aiBrain.GraphZones[zone.Label]
+                    local markersInGraph = graphLabel.MassMarkersInGraph or 1
+                    local normalizedMarkersInGraphValue = markersInGraph  / maxGraphValue
+                    --LOG('normalizedMarkersInGraphValue '..tostring(normalizedMarkersInGraphValue))
+                    local isPrimaryLabel = (normalizedMarkersInGraphValue > 0.7)
                     if zone.ResourceValue < 3 and zone.ZoneType ~= 'Naval' then
                         --LOG('Zone worth less than 3')
                         --LOG('Team value was '..tostring(zone.TeamValue))
@@ -849,17 +856,39 @@ IntelManager = Class {
                         local higherValueExists = false
                         if zone.Label ~= mainBaseLabel then
                             for _, resValue in ipairs(labelResourceValue[zone.Label] or {}) do
-                                if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive and zoneSet[resValue.ZoneID].BuilderManager.BaseType ~= 'MAIN' then
-                                    --LOG('Already have an active factory manager there on label '..tostring(zone.Label))
-                                    --LOG('Location is '..tostring(zoneSet[resValue.ZoneID].pos[1])..' : '..tostring(zoneSet[resValue.ZoneID].pos[3]))
-                                    higherValueExists = true
-                                    break
-                                end
-                                if not resValue.StartPositionClose then
-                                    if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
-                                    and aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
-                                        if resValue.DistanceToBase < zone.DistanceToBase and resValue.ResourceValue >= zone.ResourceValue then
-                                            --LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
+                                if resValue.DistanceToBase < zone.DistanceToBase and resValue.ResourceValue >= zone.ResourceValue then
+                                    -- If we are on the primary label, unbuildable ghosts don't shadow us.
+                                    if isPrimaryLabel then
+                                        -- We ignore this resValue and continue the loop
+                                        local friendlyBaseFound = false
+                                        for name, manager in aiBrain.BuilderManagers do
+                                            if manager and manager.FactoryManager and manager.FactoryManager.LocationActive then
+                                                local mPos = manager.Position
+
+                                                local dist = VDist2Sq(zone.Position[1], zone.Position[3], mPos[1], mPos[3])
+                                                if dist < 8100 then -- Log anything within a reasonable range
+                                                    friendlyBaseFound = true
+                                                    break
+                                                end
+                                            end
+                                        end
+                                        if friendlyBaseFound then
+                                            higherValueExists = true
+                                            break
+                                        end
+                                    else
+                                        -- Check for active bases or start positions
+                                        if (zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive and zoneSet[resValue.ZoneID].BuilderManager.BaseType ~= 'MAIN') then
+                                            --LOG('HigherValueExists set to true due to StartPositionClose or an active factory manager for zone '..tostring(zone.ZoneID))
+                                            higherValueExists = true
+                                            break
+                                        end
+
+                                        -- Check for unit threats
+                                        if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
+                                        and aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
+                                            
+                                            --LOG('HigherValueExists set to true due to factories being present for zone '..tostring(zone.ZoneID))
                                             higherValueExists = true
                                             break
                                         end
@@ -867,7 +896,7 @@ IntelManager = Class {
                                 end
                             end
                         elseif zone.TeamValue < 0.8 or zone.TeamValue > 1.2 then
-                            --LOG('Zone is less than 0.8 or more than 1.2')
+                            LOG('Zone is less than 0.8 or more than 1.2')
                             for _, resValue in ipairs(labelResourceValue[zone.Label] or {}) do
                                 if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive then
                                     higherValueExists = true
@@ -877,7 +906,7 @@ IntelManager = Class {
                                     if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
                                     and aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
                                         if resValue.DistanceToBase < zone.DistanceToBase and resValue.ResourceValue >= zone.ResourceValue then
-                                            --LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
+                                            LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                             higherValueExists = true
                                             break
                                         end
@@ -907,6 +936,9 @@ IntelManager = Class {
                             end
                         end
                     else
+                        --LOG('Zone checked '..tostring(zone.ZoneID))
+                        --LOG('Amphib Label '..tostring(zone.AmphibLabel)..' mainbaseAmphibLabel '..tostring(mainBaseAmphibLabel)..' zone type '..tostring(zone.ZoneType))
+                        --LOG('Ally factory count '..tostring(aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zone.Position, 30, 'Ally')))
                         if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zone.Position, 30, 'Ally') < 1 then
                             if zone.AmphibLabel ~= mainBaseAmphibLabel and zone.ZoneType == 'Land' then
                                 table.insert(filteredLandUnPathableList, zone)
@@ -919,7 +951,7 @@ IntelManager = Class {
                     end
                 end
             end
-            --LOG('Number of filtered zones we can expand to '..table.getn(filteredLandPathableList))
+            --LOG('Number of filtered zones we can expand to '..table.getn(filteredLandUnPathableList))
             if not table.empty(filteredLandPathableList) then
                 table.sort(filteredLandPathableList, function(a, b) return a.Priority > b.Priority end)
                 self.ZoneExpansions.Pathable = filteredLandPathableList
@@ -1588,7 +1620,7 @@ IntelManager = Class {
         
         local bestZone = nil
         local bestScore
-        local noTransportsAvailable = not aiBrain.TransportPool or table.getn(aiBrain.TransportPool) < 1
+        local noTransportsAvailable = not aiBrain.TransportPool or aiBrain.TransportPool and aiBrain.TransportPressure and aiBrain.TransportPressure.PressureLevel > 2
         local minThreshold = 0
         if weights.minThreshold then
             local platoonThreat = platoon.CurrentPlatoonThreatAntiSurface or 0
@@ -1626,7 +1658,8 @@ IntelManager = Class {
             local zonePressureValue = RUtils.GetZonePressureValue(RUtils.IsEnemyStartClose(v), v, platoon)
 
 
-    
+            local zoneOwner = v.control or 'None'
+            --LOG(string.format("RNGLOG | Zone: %s | Owner: %s | DistWeight: %.2f | DistVal: %.4f", v.id, tostring(zoneOwner), weights.zoneDistanceWeight or 0, distanceValue))
             -- 5. Final Calculation
             local finalScore = baseScore + 
                 (threatValue * weights.threatOpportunityWeight) -
@@ -1662,7 +1695,7 @@ IntelManager = Class {
             -- OR if it's the one the OLD logic chose.
             
             --[[
-            local debugType = 'airsurface' -- e.g., 'aadefense' or 'raid'
+            local debugType = 'control' -- e.g., 'aadefense' or 'raid'
             
             if debugType == 'all' or zonetype == debugType then
                 if not bestScore or finalScore > bestScore then
@@ -1671,10 +1704,10 @@ IntelManager = Class {
                     local eSurf = v.enemyantisurfacethreat or 0
                     local fSurf = v.friendlyantisurfacethreat or 0
                     
-                    --LOG(string.format("RNGAI Selection | Type: %-9s | Zone: %s | Platoon: %s", zonetype, v.id, platoon.PlatoonName or 'N/A'))
+                    LOG(string.format("RNGAI Selection | Type: %-9s | Zone: %s | Platoon: %s", zonetype, v.id, platoon.PlatoonName or 'N/A'))
                     
                     -- Math Breakdown: Shows exactly how the weights affected the final choice
-                    --LOG(string.format("  > Score: %.2f (Base: %.2f | Opp: +%.2f | Dist: -%.2f | Press: -%.2f)", finalScore, baseScore, (threatValue * weights.threatOpportunityWeight), (distanceValue * weights.zoneDistanceWeight), (zonePressureValue * weights.zonePressureWeight)))
+                    LOG(string.format("  > Score: %.2f (Base: %.2f | Opp: +%.2f | Dist: -%.2f | Press: -%.2f)", finalScore, baseScore, (threatValue * weights.threatOpportunityWeight), (distanceValue * weights.zoneDistanceWeight), (zonePressureValue * weights.zonePressureWeight)))
                     
                     -- Specific Context for the Type
                     if zonetype == 'aadefense' then
@@ -1689,6 +1722,7 @@ IntelManager = Class {
                 end
             end
             ]]
+            
     
             if not bestScore or finalScore > bestScore then
                 bestScore = finalScore
@@ -3220,7 +3254,7 @@ IntelManager = Class {
                 elseif intelType == 'Sonar' then
                     --RNGLOG('Check for another sonar and then confirm radius is same or greater?')
                     local sonarCoverage = false
-                    for k, v in self.MapIntelGrid[x][z].Sonar do
+                    for k, v in self.MapIntelGrid[x][z].Sonars do
                         if v and not v.Dead then
                             --RNGLOG('Found another sonar, dont set this grid to false')
                             sonarCoverage = true
@@ -4732,9 +4766,6 @@ IntelManager = Class {
 
     AssignEngineerToStructureRequestNearPosition = function(self, eng, position, radius, structureType)
         local radiusSq = radius * radius
-        if structureType == 'SMD' then
-            LOG('Requesting an SMD to be build at '..tostring(repr(position)))
-        end
         --LOG('Checking for an existing requests, current request count '..tostring(table.getn(self.StructureRequests)))
         if self.StructureRequests[structureType] then
             for _, v in self.StructureRequests[structureType] do
@@ -4811,9 +4842,6 @@ IntelManager = Class {
     IsAssignedStructureRequestPresent = function(self, pos, radius, structureType)
         local rSq = radius * radius
         --LOG('IsExistingStructureRequestPresent, source position is '..tostring(repr(pos)))
-        if structureType == 'SMD' then
-            LOG('Checking if we already have an SMD being build')
-        end
         if self.StructureRequests[structureType] then
             for _, data in self.StructureRequests[structureType] do
                 if data.Assigned then
@@ -5115,9 +5143,6 @@ IntelManager = Class {
                         local share = (weight / totalWeight) * effectiveThreat
                         local weightedShare = share * (myBuildRate / math.max(avgLandBuildRate, 0.1))-- normalize relative to all bases
                         fmgr.ZoneThreatAssignment = (fmgr.ZoneThreatAssignment or 0) + weightedShare
-                        if aiBrain.Nickname == 'DFS (AI: RNG Standard)' and layer == 'Naval' then
-                            LOG(string.format("RNGLOG_FMGR_THREATASSIGNMENT | ID: %s | ThreatAssignment: %.2f ", tostring(pID), fmgr.ZoneThreatAssignment))
-                        end
                     end
                 end
             end
@@ -5763,14 +5788,20 @@ function InitialNavalAttackCheck(aiBrain)
                 end
             end
             if not table.empty(validNavalLabels) then
-                aiBrain.BrainIntel.NavalBaseLabels = validNavalLabels
                 local labelCount = 0
-                for _, v in validNavalLabels do
+                for labelID, label in validNavalLabels do
+                    local labelMeta = NavUtils.GetLabelMetadata(labelID)
+                   if labelMeta.Area and labelMeta.Area < 10 then
+                        if label.AllyPlayerCount == 0 or label.EnemyPlayerCount == 0 then
+                            label.State = 'Unconfirmed'
+                        end
+                    end
                     --LOG('Label State '..tostring(v.State))
-                    if v.State == 'Confirmed' then
+                    if label.State == 'Confirmed' then
                         labelCount = labelCount + 1
                     end
                 end
+                aiBrain.BrainIntel.NavalBaseLabels = validNavalLabels
                 aiBrain.BrainIntel.NavalBaseLabelCount = labelCount
             end
         end

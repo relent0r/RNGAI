@@ -516,9 +516,9 @@ FactoryBuilderManager = Class(BuilderManager) {
             else
                 local template = self:GetFactoryTemplate(builder:GetPlatoonTemplate(), factory)
                 if factory.Blueprint.CategoriesHash.AIR then
-                  LOG('*AI DEBUG: ARMY '..tostring(self.Brain:GetArmyIndex())..': Factory Builder Manager Building - '..tostring(builder.BuilderName)..' at base '..tostring(self.LocationType))
-                  LOG('Enemy Air threat'..tostring(self.Brain.EnemyIntel.EnemyThreatCurrent.Air)..' Enemy AntiAir threat'..tostring(self.Brain.EnemyIntel.EnemyThreatCurrent.AntiAir))
-                  LOG('RNG Air threat'..tostring(self.Brain.BrainIntel.SelfThreat.AirNow)..' RNG AntiAir threat'..tostring(self.Brain.BrainIntel.SelfThreat.AntiAirNow))
+                  --LOG('*AI DEBUG: ARMY '..tostring(self.Brain:GetArmyIndex())..': Factory Builder Manager Building - '..tostring(builder.BuilderName)..' at base '..tostring(self.LocationType))
+                  --LOG('Enemy Air threat'..tostring(self.Brain.EnemyIntel.EnemyThreatCurrent.Air)..' Enemy AntiAir threat'..tostring(self.Brain.EnemyIntel.EnemyThreatCurrent.AntiAir))
+                  --LOG('RNG Air threat'..tostring(self.Brain.BrainIntel.SelfThreat.AirNow)..' RNG AntiAir threat'..tostring(self.Brain.BrainIntel.SelfThreat.AntiAirNow))
                 end
                 self.Brain:BuildPlatoon(template, {factory}, 1)
             end

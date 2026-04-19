@@ -216,3 +216,31 @@ function BaseNeedsMoreFactoryBuildRate(aiBrain, locationType, buildRateType, bpB
     end
     return false
 end
+
+function LandDefenseUrgencyCheck(aiBrain, locationType)
+    -- Note this is for land bases only
+    local manager = aiBrain.BuilderManagers[locationType]
+    if not manager.FactoryManager.LocationActive then return false end
+
+    local zoneId = manager.ZoneID
+    local zone = aiBrain.Zones.Land.zones[zoneId]
+    if not zone then return false end
+
+    -- Start with defense in our own zone
+    local totalFriendlyDefense = (zone.friendlydirectfireantisurfacethreat or 0) + (zone.friendlydefenseantisurfacethreat or 0)
+    local totalEnemyThreat = zone.enemylandthreat or 0
+
+    -- Aggregate threat from neighbors
+    if zone.edges and not table.empty(zone.edges) then
+        for _, edge in zone.edges do
+            -- Optional: Apply a distance falloff? 
+            -- Closer threats (smaller edge.distance) could be weighted higher
+            if edge.zone.enemylandthreat > 0 then
+                totalEnemyThreat = totalEnemyThreat + edge.zone.enemylandthreat
+            end
+        end
+    end
+
+    -- Only build if enemy threat exceeds our combined mobile units and static PD
+    return totalEnemyThreat > totalFriendlyDefense
+end

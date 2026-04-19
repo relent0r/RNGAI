@@ -1851,7 +1851,7 @@ end
 
 function ExpansionBaseCheckRNG(aiBrain)
     -- Removed automatic setting of Land-Expasions-allowed. We have a Game-Option for this.
-    local checkNum = tonumber(ScenarioInfo.Options.LandExpansionsAllowed) or 3
+    local checkNum = tonumber(ScenarioInfo.Options.LandExpansionsAllowed) or 5
     return ExpansionBaseCountRNG(aiBrain, '<', checkNum)
 end
 
@@ -1932,13 +1932,16 @@ function LandZoneAvailableRNG(aiBrain, locationType, radius)
             end
         end
     end
-    local noTransportsAvailable = not aiBrain.TransportPool or table.getn(aiBrain.TransportPool) < 1
+    local noTransportsAvailable = not aiBrain.TransportPool or aiBrain.TransportPool and aiBrain.TransportPressure and aiBrain.TransportPressure.PressureLevel > 2
+    LOG('noTransportsAvailable is set as '..tostring(noTransportsAvailable))
     if not noTransportsAvailable and not table.empty(im.ZoneExpansions.NonPathable) then
-        for _, v in im.ZoneExpansions.Pathable do
+        LOG('Check non pathable expansions')
+        for _, v in im.ZoneExpansions.NonPathable do
             if v.ZoneID then
                 local zone = aiBrain.Zones.Land.zones[v.ZoneID]
                 if zone and VDist3Sq(homePosition, zone.pos) < radius and (not zone.BuilderManager.FactoryManager.LocationActive or zone.BuilderManagerDisabled) and (not zone.engineerplatoonallocated or IsDestroyed(zone.engineerplatoonallocated)) and (zone.lastexpansionattempt == 0 or gameTime >= zone.lastexpansionattempt + 30) then
                     if aiBrain:GetThreatAtPosition(zone.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
+                        LOG('We have a non pathable expansion we can go to')
                         return true
                     end
                 end
@@ -1955,7 +1958,7 @@ function NavalZoneAvailableRNG(aiBrain, locationType, radius)
     local homePosition = aiBrain.BuilderManagers[locationType].Position
     local managerAmphibLabel = aiBrain.BuilderManagers[locationType].AmphibLabel
     local radius = radius * radius
-    local noTransportsAvailable = not aiBrain.TransportPool or table.getn(aiBrain.TransportPool) < 1
+    local noTransportsAvailable = not aiBrain.TransportPool or aiBrain.TransportPool and aiBrain.TransportPressure and aiBrain.TransportPressure.PressureLevel > 2
     if not table.empty(im.ZoneExpansions.Naval) then
         for _, v in im.ZoneExpansions.Naval do
             if v.ZoneID then
@@ -2351,7 +2354,6 @@ function MinimumFactoryCheckRNG(aiBrain, locationType, structureType)
             local landThreshold = math.max(2, math.floor(7.0 - (effectiveDist / 133)))
             
             if landFactories < landThreshold then
-                LOG('landFactories '..tostring(landFactories)..' less than landThreshold '..tostring(landThreshold))
                 return false
             end
         end

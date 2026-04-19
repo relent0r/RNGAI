@@ -1597,10 +1597,19 @@ CaptureDoneRNG = function(unit, params)
 end
 
 BuildAIDoneRNG = function(unit, params)
-    if unit.Active or unit.Dead then return end
-    if not unit.AIPlatoonReference then return end
-    if unit.CustomState then return end
+    if unit.Active or unit.Dead then 
+        return 
+    end
+    if not unit.AIPlatoonReference then 
+        return 
+    end
+    if unit.CustomState then
+        return 
+    end
     if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
+        if unit.EngineerBuildQueue[1][7] then
+            ReleaseMassMarker(unit, unit.EngineerBuildQueue[1][7])
+        end
         table.remove(unit.EngineerBuildQueue, 1)
     end
     if unit.UnitBeingBuilt then
@@ -1625,6 +1634,9 @@ BuildAIDoneRNG = function(unit, params)
 end
 
 BuildAIFailedRNG = function(unit, params)
+    if unit.UnitBeingBuilt.EntityId and unit.UnitBeingBuilt.EntityId == '304' then
+        LOG('BuildAIFailedRNG for EnergyProduction')
+    end
     if unit.Active or unit.Dead then return end
     if not unit.AIPlatoonReference then return end
     --LOG('BuildFailed triggered Platoon was '..tostring(unit.PlatoonHandle.BuilderName))
@@ -2932,7 +2944,7 @@ function GetDFWeaponPos(unit)
 end
 
 -- Transport functions
-local TransportDialog = true
+local TransportDialog = false
 function CreateTransportPool( aiBrain )
     
     if TransportDialog then
@@ -3053,7 +3065,7 @@ end
 ---@param platoon AIPlatoon
 ---@param destination Vector
 ---@return boolean # True if request was successfully filed
-function RequestTransportRNG(platoon, destination)
+function RequestTransportRNG(platoon, destination, typeOverride)
     local aiBrain = platoon:GetBrain()
     local manager = aiBrain:GetPlatoonUniquelyNamed('TransportPool')
     
@@ -3083,11 +3095,124 @@ function RequestTransportRNG(platoon, destination)
 
     local timeRequested = GetGameTick()
     -- Ensure we check for engineers correctly using the first unit's categories
-    local requestType = EntityCategoryContains(categories.ENGINEER, units[1]) and 'Engineer' or 'Combat'
+    local requestType = typeOverride or EntityCategoryContains(categories.ENGINEER, units[1]) and 'Engineer' or 'Combat'
     local location = platoon:GetPlatoonPosition()
 
     -- Pass neededSlots instead of capacityNeeded
-    local requestId = manager:AddRequest(platoon, neededSlots, location, destination, requestType, timeRequested)
+    local requestId, requestData = manager:AddRequest(platoon, neededSlots, location, destination, requestType, timeRequested)
     
-    return requestId
+    return requestId, requestData
+end
+
+---@param engineer Entity
+---@param zone Table The zone table from your RNGLandResourceSet
+---@param marker Table The specific marker within zone.resourcemarkers
+function ReserveMassMarker(engineer, marker)
+    if not engineer or engineer.Dead then
+        return
+    end
+    local unitId = engineer.EntityId
+    if not engineer.rngdata then
+        engineer['rngdata'] = {}
+    end
+    local engPos = engineer:GetPosition()
+    local distSq = VDist2Sq(engPos[1], engPos[3], marker.position[1], marker.position[3])
+
+    -- Logging for audit trail
+    marker.reservedBy = unitId
+    marker.reservationDistSq = distSq
+    
+    -- We store the marker reference on the engineer for fast cleanup on death
+    engineer.rngdata.ReservedMarker = marker
+    LOG(string.format("MassReservation: Engineer %s reserving marker %s. DistSq: %s", 
+        unitId, marker.name, distSq))
+    LOG('Check marker object, reservedBy '..tostring(marker.reservedBy)..' reservationDistSq '..tostring(marker.reservationDistSq))
+end
+
+---@param engineer Entity
+---@param marker Table
+function ReleaseMassMarker(engineer, marker)
+    if not engineer or engineer.Dead then
+        return
+    end
+    if not engineer.rngdata then
+        engineer['rngdata'] = {}
+    end
+    if marker and marker.reservedBy == engineer.EntityId then
+        LOG(string.format("MassReservation: Engineer %s releasing marker %s", engineer.EntityId, marker.name))
+        marker.reservedBy = nil
+        marker.reservationDistSq = nil
+        engineer.rngdata.ReservedMarker = nil
+    end
+end
+
+---@param engineer Entity
+---@param marker Table
+function ReleaseMassMarkersInBuildQueue(engineer)
+    if not engineer or engineer.Dead then
+        return
+    end
+    if not engineer.rngdata then
+        engineer['rngdata'] = {}
+    end
+    LOG('Engineer is going to try and clear the reservations in its queue')
+    if engineer.EngineerBuildQueue and not table.empty(engineer.EngineerBuildQueue) then
+        LOG('Engineer queue is not empty '..tostring(table.getn(engineer.EngineerBuildQueue)))
+        for i = table.getn(engineer.EngineerBuildQueue), 1, -1 do
+            local buildEntry = engineer.EngineerBuildQueue[i]
+            LOG('Queue Entry '..tostring(repr(buildEntry)))
+            if buildEntry[7] then
+                LOG('Marker build entry exists')
+                local marker = buildEntry[7]
+                LOG('Reserved by '..tostring(marker.reservedBy)..' engineer entity id '..tostring(engineer.EntityId))
+                if marker.reservedBy == engineer.EntityId then
+                    LOG(string.format("MassReservation: EngineerBuildQueue %s releasing marker %s", engineer.EntityId, marker.name))
+                    marker.reservedBy = nil
+                    marker.reservationDistSq = nil
+                    table.remove(engineer.EngineerBuildQueue, i)
+                end
+            end
+        end
+    end
+end
+
+---@param requester Entity The engineer looking for work
+---@param marker Table The marker in the zone
+---@return boolean
+function CanReallocateMarker(requester, marker)
+    if not marker.reservedBy then 
+        return true 
+    end
+
+    local reqPos = requester:GetPosition()
+    local reqDistSq = VDist2Sq(reqPos[1], reqPos[3], marker.position[1], marker.position[3])
+
+    -- Check if the requester is significantly closer (using a 15% buffer and yes that is 85% not 72.225%)
+    if marker.reservationDistSq and reqDistSq < (marker.reservationDistSq * 0.7225) then
+        LOG(string.format("MassReservation: THEFT - Requester %s (DistSq %s) is closer than current owner %s (DistSq %s)", 
+            requester.EntityId, reqDistSq, marker.reservedBy, marker.reservationDistSq))
+        requester.PlatoonHandle:LogDebug(string.format("MassReservation: THEFT - Requester %s (DistSq %s) is closer than current owner %s (DistSq %s)", 
+            requester.EntityId, reqDistSq, marker.reservedBy, marker.reservationDistSq))
+        return true
+    end
+
+    return false
+end
+
+function RemoveFromZoneMarkersCache(zoneMarkers, zoneIndex, markerObject)
+    if not (zoneMarkers and zoneIndex and markerObject) then 
+        LOG('Missing parameters for RemoveFromZoneMarkersCache')
+        return 
+    end
+    
+    local resourceMarkers = zoneMarkers[zoneIndex].ResourceMarkers
+    if resourceMarkers then
+        for i, entry in resourceMarkers do
+            -- Compare the raw marker reference inside our wrapper
+            if entry.Marker == markerObject then
+                entry.Enabled = nil
+                break
+            end
+        end
+    end
 end

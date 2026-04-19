@@ -66,7 +66,7 @@ function CanBuildOnMassDistanceRNG(aiBrain, locationType, minDistance, maxDistan
         local adaptiveResourceMarkers = GetMarkersRNG()
         local noTransportsAvailable
         if locationType ~= 'FLOATING' then
-            noTransportsAvailable = not aiBrain.TransportPool or table.getn(aiBrain.TransportPool) < 1
+            noTransportsAvailable = not aiBrain.TransportPool or aiBrain.TransportPool and aiBrain.TransportPressure and aiBrain.TransportPressure.PressureLevel > 2
         end
         MassMarkerRNG = {}
         for _, v in adaptiveResourceMarkers do

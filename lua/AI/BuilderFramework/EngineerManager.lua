@@ -10,6 +10,7 @@ local Builder = import("/mods/RNGAI/lua/AI/BuilderFramework/builder.lua")
 local SUtils = import("/lua/ai/sorianutilities.lua")
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
+local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local NavUtils = import('/lua/sim/NavUtils.lua')
 
@@ -556,6 +557,17 @@ EngineerManager = Class(BuilderManager) {
                     -- Callbacks here
                     local deathFunction = function(unit)
                         unit.BuilderManagerData.EngineerManager:RemoveUnit(unit)
+                        if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
+                            for _, buildEntry in unit.EngineerBuildQueue do
+                                -- Element [7] is a mass point marker object
+                                local queuedMarker = buildEntry[7]
+                                if queuedMarker and queuedMarker.reservedBy == unit.EntityId then
+                                    StateUtils.ReleaseMassMarker(unit, queuedMarker)
+                                end
+                            end
+                            -- Kill the reference
+                            unit.EngineerBuildQueue = {}
+                        end
                     end
 
                     import('/lua/scenariotriggers.lua').CreateUnitDestroyedTrigger(deathFunction, unit)
@@ -696,7 +708,7 @@ EngineerManager = Class(BuilderManager) {
             --   --RNGLOG('*AI DEBUG: ARMY '..self.Brain.Nickname..': Engineer Manager Forming - '..builder.BuilderName..' - Priority: '..builder:GetPriority())
             --end
 
-            --LOG('*AI DEBUG: ARMY ', repr(self.Brain:GetArmyIndex()),': Engineer Manager Forming - ',repr(builder.BuilderName),' - Priority: ', builder:GetPriority())
+            LOG('*AI DEBUG: ARMY ', repr(self.Brain:GetArmyIndex()),': Engineer Manager Forming - ',repr(builder.BuilderName),' - Priority: ', builder:GetPriority())
             hndl.PlanName = template[2]
 
             --If we have specific AI, fork that AI thread
@@ -895,7 +907,7 @@ EngineerManager = Class(BuilderManager) {
                 local beingBuiltSmd = self:NumStructuresBeingBuiltTechCategory('TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' })
                 local queuedSmdCount = self:NumStructuresQueued('TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' })
                 if currentSMD == 0 and beingBuiltSmd == 0 and queuedSmdCount == 0 then
-                    LOG('We have no SMD, create a request')
+                    --LOG('We have no SMD, create a request')
                     if not aiBrain.IntelManager:IsAssignedStructureRequestPresent(self.Location, 120, 'SMD') then
                         local smdRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 120, 'SMD')
                         if smdRequestPos then

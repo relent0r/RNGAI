@@ -1674,8 +1674,6 @@ AIBrain = Class(RNGAIBrainClass) {
             RADAR = 15,
         }
 
-        self.DefensiveSupport = {}
-
         --Tactical Monitor
         self.TacticalMonitor = {
             TacticalMonitorStatus = 'ACTIVE',
@@ -1829,13 +1827,8 @@ AIBrain = Class(RNGAIBrainClass) {
             NavalSubNow = 0,
         }
         self.BrainIntel.ActiveExpansion = false
-        -- Structure Upgrade properties
-        self.UpgradeIssued = 0
-        self.EarlyQueueCompleted = false
         self.IntelTriggerList = {}
         
-        self.UpgradeIssuedPeriod = 100
-
         if self.CheatEnabled then
             self.EcoManager.EcoMultiplier = tonumber(ScenarioInfo.Options.CheatMult)
             self.EcoManager.BuildMultiplier = tonumber(ScenarioInfo.Options.BuildMult)
@@ -1848,8 +1841,6 @@ AIBrain = Class(RNGAIBrainClass) {
         self.StartMassReclaimTotal = 0
         self.StartReclaimTaken = false
         self.Zones = { }
-
-        self.UpgradeMode = 'Normal'
 
         -- ACU Support Data
         self.ACUSupport = {}
@@ -2427,7 +2418,6 @@ AIBrain = Class(RNGAIBrainClass) {
             EngineerManager = EngineerManager.CreateEngineerManager(self, baseName, position, radius),
             PathableZones = {},
             BuilderHandles = {},
-            CoreResources = {},
             ReclaimData = {},
             Position = position,
             Location = position, -- backwards compatibility for now
@@ -2438,7 +2428,6 @@ AIBrain = Class(RNGAIBrainClass) {
         }
         self.NumBases = self.NumBases + 1
         self:ForkThread(self.SetPathableZonesForBase, position, baseName)
-        self:ForkThread(RUtils.SetCoreResources, position, baseName)
         self:ForkThread(self.GetLabels, position, baseName, baseLayer)
         self:ForkThread(self.GetBaseZone, position, baseName, baseLayer)
         self:ForkThread(self.GetDefensivePointTable, baseName, 'BaseRestrictedArea', position, baseLayer)
@@ -4460,14 +4449,12 @@ AIBrain = Class(RNGAIBrainClass) {
         local enemyStarts = self.EnemyIntel.EnemyStartLocations
         local factionIndex = self:GetFactionIndex()
         local startX, startZ = self:GetArmyStartPos()
-        --RNGLOG('Upgrade Mode is  '..self.UpgradeMode)
         if self.CheatEnabled then
             multiplier = self.EcoManager.EcoMultiplier
         else
             multiplier = 1
         end
         local gameTime = GetGameTimeSeconds()
-        --RNGLOG('gameTime is '..gameTime..' Upgrade Mode is '..self.UpgradeMode)
         if self.BrainIntel.SelfThreat.AirNow < (self.EnemyIntel.EnemyThreatCurrent.Air / self.EnemyIntel.EnemyCount) then
             --RNGLOG('Less than enemy air threat, increase mobile aa numbers')
             self.amanager.Ratios[factionIndex].Land.T1.aa = 15
@@ -5642,6 +5629,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             self:EcoSelectorManagerRNG(v, TMLs, 'unpause', 'ENERGY')
                         end
                     end
+                    RNGLOG('PowerRecovery: Unpaused '..table.getn(unitTypePaused)..' groups. Post-recovery Trend: '..self.EconomyOverTimeCurrent.EnergyTrendOverTime..' | Storage: '..GetEconomyStored(self, "ENERGY"))
                     powerStateCaution = false
                 else
                     self.EngineerAssistManagerFocusPower = false
@@ -6290,7 +6278,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 for k, v in self.EnemyIntel.ChokePoints do
                     --LOG('Checkpoint check '..tostring(k)..' detail is '..tostring(repr(v)))
                     local path, reason, distance, threats = PlatoonGenerateSafePathToRNG(self, 'Land', selfStartPos, v.StartPosition, 1500, 20 )
-                    if not v.NoPath and not path and reason == 'TooMuchThreat' then
+                    if not v.NoPath and not path and reason == 'TooMuchThreat' and table.getn(threats) > 0 then
                         --LOG('Path to enemy base has too much threat')
                         local closestThreatDistance
                         local closestThreatPosition
@@ -6358,7 +6346,7 @@ AIBrain = Class(RNGAIBrainClass) {
     RequestEngineerAssistFocus = function(self, source, focusKey, priority, ttl, maxAssist)
         self.EngineerAssistManagerRequests = self.EngineerAssistManagerRequests or {}
         local expiry = GetGameTimeSeconds() + (ttl or 60)
-        LOG('RequestEngineerAssistFocus for focusKey'..tostring(source))
+        --LOG('RequestEngineerAssistFocus for focusKey'..tostring(source))
         
         self.EngineerAssistManagerRequests[source] = {
             FocusKey = focusKey,
@@ -7331,7 +7319,7 @@ AIBrain = Class(RNGAIBrainClass) {
             local engineerAssistRatio = self.EngineerAssistRatioDefault or 0.05
 
             -- Economic Values
-            local maxEcoSpend = 0.40
+            local maxEcoSpend = highestPhase == 3 and 0.45 or 0.40
             local maxAssistSpend = 1.0
             local ecoFloor = 0.05
             local assistFloor = 0.02 * highestPhase

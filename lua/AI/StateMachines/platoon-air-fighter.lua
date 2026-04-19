@@ -78,7 +78,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
-            LOG('Air Fighter DecideWhatToDo current Max Radius is '..self.MaxRadius)
+            --LOG('Air Fighter DecideWhatToDo current Max Radius is '..self.MaxRadius)
             local aiBrain = self:GetBrain()
             local target
             local platPos = self:GetPlatoonPosition()
@@ -89,7 +89,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
-                LOG('FighterBehavior DecideWhatToDo already has target, attacking')
+                --LOG('FighterBehavior DecideWhatToDo already has target, attacking')
                 self:ChangeState(self.AttackTarget)
                 return
             end
@@ -127,7 +127,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 if not target or target.Dead then
                     target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, true, false, false, false, false, true)
                     if target then
-                        LOG('High priority target returned, distance is '..tostring(VDist3(target:GetPosition(), platPos)))
+                        --LOG('High priority target returned, distance is '..tostring(VDist3(target:GetPosition(), platPos)))
                     end
                 end
                 if not target or target.Dead then
@@ -135,7 +135,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     --LOG('Current Platoon Threat '..tostring(self.CurrentPlatoonThreatAntiAir)..' Ally Threat '..tostring((aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat))..' Enemy Threat '..tostring(aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir))
                 -- Params aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted
                     if self.CurrentPlatoonThreatAntiAir > 0 then
-                        LOG('Current platoon threat for fighters is '..tostring(self.CurrentPlatoonThreatAntiAir))
+                        --LOG('Current platoon threat for fighters is '..tostring(self.CurrentPlatoonThreatAntiAir))
                         target = RUtils.FindAirTargetForTeamRNG(aiBrain, platPos, self, self.MaxRadius, self.CurrentPlatoonThreatAntiAir, self.AttackPriorities)
                         if target and not target.Dead then
                             local im = aiBrain.IntelManager
@@ -168,7 +168,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                                         target = nil
                                     end
                                 end
-                                LOG(string.format('FIGHTER_DECISION: Target: %s, Score: %.1f, MaxAllowed: %.1f, PlatoonThreat: %.1f', tostring(target.UnitId), threatScore, maxAllowableThreat, self.CurrentPlatoonThreatAntiAir))
+                                --LOG(string.format('FIGHTER_DECISION: Target: %s, Score: %.1f, MaxAllowed: %.1f, PlatoonThreat: %.1f', tostring(target.UnitId), threatScore, maxAllowableThreat, self.CurrentPlatoonThreatAntiAir))
                             end
                         end
                     end
@@ -187,7 +187,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not target then
-                LOG('FighterBehavior DecideWhatToDo check for hold position')
+                --LOG('FighterBehavior DecideWhatToDo check for hold position')
                 if not self.HoldPosTimer or self.HoldPosTimer + 120 < GetGameTimeSeconds() and VDist3Sq(platPos, aiBrain.BrainIntel.StartPos) < 22500 then
                     --LOG('Platpos for GetThreatAtPosition '..repr(platPos))
                     if platPos and GetThreatAtPosition(aiBrain, platPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < 1 then
@@ -232,7 +232,7 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     self.BuilderData = {
                         Position = self.Home,
                     }
-                    LOG('FighterBehavior DecideWhatToDo move back home')
+                    --LOG('FighterBehavior DecideWhatToDo move back home')
                     self:ChangeState(self.Navigating)
                     return
                 end
@@ -595,7 +595,7 @@ FighterThreatThreads = function(aiBrain, platoon)
         local platPos = platoon:GetPlatoonPosition()
         local enemyThreat = 0
         platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
-        LOG('CurrentPlatoonThreat '..tostring(platoon.CurrentPlatoonThreatAntiAir))
+        --LOG('CurrentPlatoonThreat '..tostring(platoon.CurrentPlatoonThreatAntiAir))
         if GetNumUnitsAroundPoint(aiBrain, UnitCategories, platPos, 80, 'Enemy') > 0 then
             local enemyUnits = GetUnitsAroundPoint(aiBrain, UnitCategories, platPos, 80, 'Enemy')
             for _, v in enemyUnits do
@@ -606,7 +606,7 @@ FighterThreatThreads = function(aiBrain, platoon)
                 end
             end
             platoon.CurrentEnemyThreatAntiAir = enemyThreat
-            LOG('CurrentEnemyThreatAntiAir '..tostring(platoon.CurrentEnemyThreatAntiAir))
+            --LOG('CurrentEnemyThreatAntiAir '..tostring(platoon.CurrentEnemyThreatAntiAir))
             if not platoon.BuilderData.Retreat and platoon.CurrentEnemyThreatAntiAir > platoon.CurrentPlatoonThreatAntiAir * 1.2 and not platoon.BuilderData.ProtectUnit and not platoon.BuilderData.AttackTarget.Blueprint.CategoriesHash.EXPERIMENTAL then
                 if VDist3Sq(platPos, platoon.Home) > 6400 then
                     --LOG('Fighters being asked to decidewhattodo due to threat')
@@ -635,7 +635,7 @@ FighterThreatThreads = function(aiBrain, platoon)
                 platoon.MaxRadius = aiBrain.IntelManager.SafeAirThreatRadius
             end
         end
-        LOG(string.format('FIGHTER_STATE: Radius: %d, LocalEnemyThreat: %.1f, SelfThreat: %.1f', platoon.MaxRadius, enemyThreat, platoon.CurrentPlatoonThreatAntiAir))
+        --LOG(string.format('FIGHTER_STATE: Radius: %d, LocalEnemyThreat: %.1f, SelfThreat: %.1f', platoon.MaxRadius, enemyThreat, platoon.CurrentPlatoonThreatAntiAir))
         if not aiBrain.BrainIntel.SuicideModeActive then
             for _, unit in GetPlatoonUnits(platoon) do
                 if unit and not IsDestroyed(unit) then

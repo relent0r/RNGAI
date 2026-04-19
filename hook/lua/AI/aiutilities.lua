@@ -60,17 +60,22 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
     and unit.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, unit) then
 
         -- Skip the last move... we want to return and do a build
-        unit.WaitingForTransport = true
+        unit['rngdata'].WaitingForTransport = true
         if reason == 'Unpathable' then
             transportWait = transportWait * 2
         end
         --LOG('Engineer wants to use a transport to get to location '..tostring(repr(destination)))
         --bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, unit.PlatoonHandle, destination, transportWait, true)
         bUsedTransports = StateUtils.RequestTransportRNG(unit.PlatoonHandle, destination)
-        unit.WaitingForTransport = false
+        local timeout = 0
+        while not unit.Dead and not unit:IsUnitState('Attached') and timeout < 90 do
+            coroutine.yield(20)
+            timeout = timeout + 1
+        end
+        unit['rngdata'].WaitingForTransport = false
 
         if bUsedTransports then
-            LOG('Engineer used transports returned true from the EngineerMoveWithSafePathRNG function')
+            --LOG('Engineer used transports returned true from the EngineerMoveWithSafePathRNG function')
             return true
         elseif VDist2Sq(pos[1], pos[3], destination[1], destination[3]) > 640 * 640 then
             -- If over 512 and no transports dont try and walk!
@@ -270,10 +275,10 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
     and eng.PlatoonHandle and not EntityCategoryContains(categories.COMMAND, eng) then
 
         -- Skip the last move... we want to return and do a build
-        eng.WaitingForTransport = true
+        eng['rngdata'].WaitingForTransport = true
         --bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, eng.PlatoonHandle, destination, 2, true)
         bUsedTransports = StateUtils.RequestTransportRNG(eng.PlatoonHandle, destination)
-        eng.WaitingForTransport = false
+        eng['rngdata'].WaitingForTransport = false
 
         if bUsedTransports then
             return true

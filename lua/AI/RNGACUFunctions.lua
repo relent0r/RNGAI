@@ -1486,6 +1486,210 @@ CDRDataThreads = function(aiBrain, unit)
     --RUtils.GenerateChokePointLines(self)
 end
 
+function CheckStrategicRisk(aiBrain)
+    local antiSurfaceRisk = false
+    local nukeRisk = false
+    if aiBrain.emanager.Artillery.T3 and aiBrain.emanager.Artillery.T3 > 0 then
+        antiSurfaceRisk = true
+    end
+    if aiBrain.emanager.Artillery.T4 and aiBrain.emanager.Artillery.T4 > 0 then
+        antiSurfaceRisk = true
+    end
+    if aiBrain.emanager.Satellite.T4 and aiBrain.emanager.Satellite.T4 > 0 then
+        antiSurfaceRisk = true
+    end
+    if aiBrain.emanager.Nuke.T3 and aiBrain.emanager.Nuke.T3 > 0 then
+        nukeRisk = true
+    end
+    if aiBrain.emanager.Nuke.T4 and aiBrain.emanager.Nuke.T4 > 0 then
+        nukeRisk = true
+    end
+
+    return antiSurfaceRisk, nukeRisk
+end
+
+function GetSafeLocation(aiBrain, locationType, artilleryRisk, nukeRisk)
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    local managerPos = aiBrain.BuilderManagers[locationType].Position
+    local unitsThatProtect = {}
+    if engineerManager then
+        if artilleryRisk then
+            local shieldUnits = engineerManager:GetUnits('Shields', categories.STRUCTURE)
+            if shieldUnits then
+                for _, u in shieldUnits do
+                    if not u.Dead then table.insert(unitsThatProtect, u) end
+                end
+            end
+        end
+        if nukeRisk then
+            local SMDUnits = engineerManager:GetUnits('AntiNuke', categories.STRUCTURE)
+            if SMDUnits then
+                for _, u in SMDUnits do
+                    if not u.Dead then table.insert(unitsThatProtect, u) end
+                end
+            end
+        end
+    end
+    local bestPos = nil
+    local bestScore = -1
+    if not table.empty(unitsThatProtect) then
+        for _, unit in unitsThatProtect do
+            local unitPos = unit:GetPosition()
+            local score = 0
+            -- Bonus: If we have both risks, prioritize positions covered by BOTH
+            -- We check if this unit's position is within range of others
+            for _, other in unitsThatProtect do
+                if unit ~= other then
+                    local bp = other.Blueprint
+                    local safeRadius
+                    if bp.CategoriesHash.SHIELD then
+                        safeRadius = bp.Defense.Shield.ShieldSize and bp.Defense.Shield.ShieldSize / 2
+                    elseif bp.CategoriesHash.SILO then
+                        safeRadius = bp.Weapon[1].MaxRadius
+                    end
+                    local otherPos = other:GetPosition()
+                    local dist = VDist2Sq(unitPos[1], unitPos[3], otherPos[1], otherPos[3])
+                    if dist < safeRadius then -- Within ~40 units of another protector
+                        score = score + 50
+                    end
+                end
+            end
+
+            if score > bestScore then
+                bestScore = score
+                bestPos = unitPos
+            end
+        end
+    end
+    if bestPos then
+        --LOG('ACU Returning safe pos '..tostring(repr(bestPos)))
+        return bestPos
+    else
+        --LOG('ACU Returning Start Pos for safe pos')
+        return aiBrain.BrainIntel.StartPos
+    end
+end
+
+GetWaypointFromPath = function(origin, path, lookAhead, destination)
+    if not path then return destination end
+    local count = table.getn(path)
+    if count == 0 then return destination end
+
+    -- 1. Find the segment the ACU is currently 'on' or 'near'
+    local bestDistSq
+    local bestIdx = 1
+    
+    for i = 1, count do
+        local dx = path[i][1] - origin[1]
+        local dz = path[i][3] - origin[3]
+        local dSq = dx * dx + dz * dz
+        if not bestDistSq or dSq < bestDistSq then
+            bestDistSq = dSq
+            bestIdx = i
+        end
+    end
+
+    -- 2. Start looking forward from that closest node
+    local toTravel = lookAhead
+    local curr = path[bestIdx]
+    
+    -- If we are at the very last node, just go to the destination
+    if bestIdx == count then return path[count] end
+
+    for i = bestIdx, count do
+        local nextNode = path[i]
+        local dx = nextNode[1] - curr[1]
+        local dz = nextNode[3] - curr[3]
+        local dSq = dx * dx + dz * dz
+        
+        if toTravel * toTravel > dSq then
+            toTravel = toTravel - math.sqrt(dSq)
+            curr = nextNode
+        else
+            local d = math.sqrt(dSq)
+            if d < 0.1 then return nextNode end
+            local factor = toTravel / d
+            return {
+                curr[1] + (dx * factor),
+                GetSurfaceHeight(curr[1] + (dx * factor), curr[3] + (dz * factor)),
+                curr[3] + (dz * factor)
+            }
+        end
+    end
+
+    if destination then
+        local dx = destination[1] - curr[1]
+        local dz = destination[3] - curr[3]
+        local dSq = dx * dx + dz * dz
+        
+        if toTravel * toTravel > dSq then
+            -- Even the destination is closer than our lookahead
+            return destination
+        else
+            local d = math.sqrt(dSq)
+            if d < 0.1 then return destination end
+            local factor = toTravel / d
+            return {
+                curr[1] + (dx * factor),
+                GetSurfaceHeight(curr[1] + (dx * factor), curr[3] + (dz * factor)),
+                curr[3] + (dz * factor)
+            }
+        end
+    end
+
+    return path[count]
+end
+
+function GetAreaPowerBalanceRNG(aiBrain, position, depth)
+    local zoneID = MAP:GetZoneID(position, aiBrain.Zones.Land.index)
+    local startZone = aiBrain.Zones.Land.zones[zoneID]
+    if not startZone then return nil end
+
+    local depth = depth or 2 -- How many 'hops' to check (2-3 is usually enough for Arty)
+    local scannedZones = {}
+    local queue = {{zone = startZone, d = 0}}
+    scannedZones[startZone.id] = true
+
+    local data = {
+        EnemySurface = 0,
+        EnemyAir = 0,
+        FriendlySurface = 0,
+        TotalZones = 0
+    }
+
+    -- BFS to gather all zones within 'depth' hops
+    local head = 1
+    while queue[head] do
+        local current = queue[head].zone
+        local dist = queue[head].d
+        head = head + 1
+
+        -- Aggregate Threat
+        data.EnemySurface = data.EnemySurface + (current.enemyantisurfacethreat or 0)
+        data.EnemyAir = data.EnemyAir + (current.enemyantiairthreat or 0)
+        data.FriendlySurface = data.FriendlySurface + (current.friendlyantisurfacethreat or 0)
+        data.TotalZones = data.TotalZones + 1
+
+        -- Add neighbors if we haven't reached max depth
+        if dist < depth and current.edges then
+            for _, edge in current.edges do
+                if not scannedZones[edge.zone] then
+                    local neighbor = aiBrain.Zones.Land.zones[edge.zone]
+                    if neighbor then
+                        scannedZones[edge.zone] = true
+                        table.insert(queue, {zone = neighbor, d = dist + 1})
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Calculate Power Ratio: > 1.0 means we have the advantage
+    data.PowerRatio = data.FriendlySurface / math.max(1, data.EnemySurface)
+    return data
+end
+
+
 function FindRadarPosition(aiBrain, cdr)
 
 end

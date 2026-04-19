@@ -152,41 +152,44 @@ function EngFindReclaimCell(aiBrain, eng, movementLayer, searchType)
     local workRate = buildRate * 5
     local engSpeed = eng.Blueprint.Physics.MaxSpeed or 1.9
     local engSpeedSq = engSpeed * engSpeed
-    local searchLoop = 0
     local reclaimTargetX, reclaimTargetZ
     local engPos = eng:GetPosition()
+    local hasTransportAccess = aiBrain.TransportPressure and aiBrain.TransportPressure.PressureLevel < 3
+    local maxWalkDistSq = 350 * 350
+    if searchType == 'MAIN' then
+        maxWalkDistSq = 750 * 750
+    end
     local gx, gz = reclaimGridInstance:ToGridSpace(engPos[1],engPos[3])
-    while searchLoop < searchRadius and (not (reclaimTargetX and reclaimTargetZ)) do 
-        WaitTicks(1)
-
-        -- retrieve a list of cells with some mass value
-        local cells, count = reclaimGridInstance:FilterAndSortInRadius(gx, gz, searchRadius, 10)
-        -- find out if we can path to the center of the cell and check engineer maximums
-        for k = 1, count do
-            local cell = cells[k] --[[@as AIGridReclaimCell]]
-            local centerOfCell = reclaimGridInstance:ToWorldSpace(cell.X, cell.Z)
-            local maxEngineers = math.min(math.ceil(cell.TotalMass / 750), 3)
-            -- make sure we can path to it and it doesnt have high threat e.g Point Defense
-            if CanPathTo(movementLayer, engPos, centerOfCell) and aiBrain:GetThreatAtPosition(centerOfCell, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 10 then
-                local brainCell = brainGridInstance:ToCellFromGridSpace(cell.X, cell.Z)
-                local engineersInCell = brainGridInstance:CountReclaimingEngineers(brainCell)
-                local bx = engPos[1] - centerOfCell[1]
-                local bz = engPos[3] - centerOfCell[3]
-                local cellDistance = bx * bx + bz * bz
-                local currentWorkSpeed = engineersInCell * workRate
-                local secondsUntilEmpty = 9999
-                if currentWorkSpeed > 0 then
-                    secondsUntilEmpty = cell.TotalMass / currentWorkSpeed
-                end
-                local maxTravelDistSq = (secondsUntilEmpty * secondsUntilEmpty) * engSpeedSq
-                --LOG('engineersInCell '..tostring(engineersInCell)..' x :'..tostring(cell.X)..' z :'..tostring(cell.Z)..' max engineers '..tostring(maxEngineers)..' maxTravelDist '..tostring(math.sqrt(maxTravelDistSq))..' current distance '..tostring(math.sqrt(cellDistance)))
-                if cellDistance < maxTravelDistSq and engineersInCell < maxEngineers then
-                    reclaimTargetX, reclaimTargetZ = cell.X, cell.Z
-                    break
-                end
+    -- retrieve a list of cells with some mass value
+    local cells, count = reclaimGridInstance:FilterAndSortInRadius(gx, gz, searchRadius, 10)
+    -- find out if we can path to the center of the cell and check engineer maximums
+    for k = 1, count do
+        local cell = cells[k] --[[@as AIGridReclaimCell]]
+        local centerOfCell = reclaimGridInstance:ToWorldSpace(cell.X, cell.Z)
+        local maxEngineers = math.min(math.max(math.ceil(cell.TotalMass / 750),2), 4)
+        -- make sure we can path to it and it doesnt have high threat e.g Point Defense
+        if CanPathTo(movementLayer, engPos, centerOfCell) and aiBrain:GetThreatAtPosition(centerOfCell, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 10 then
+            local brainCell = brainGridInstance:ToCellFromGridSpace(cell.X, cell.Z)
+            local engineersInCell = brainGridInstance:CountReclaimingEngineers(brainCell)
+            
+            local bx = engPos[1] - centerOfCell[1]
+            local bz = engPos[3] - centerOfCell[3]
+            local cellDistance = bx * bx + bz * bz
+            if not hasTransportAccess and cellDistance > maxWalkDistSq then
+                continue 
+            end
+            local currentWorkSpeed = engineersInCell * workRate
+            local secondsUntilEmpty = 9999
+            if currentWorkSpeed > 0 then
+                secondsUntilEmpty = cell.TotalMass / currentWorkSpeed
+            end
+            local maxTravelDistSq = (secondsUntilEmpty * secondsUntilEmpty) * engSpeedSq
+            --LOG('engineersInCell '..tostring(engineersInCell)..' x :'..tostring(cell.X)..' z :'..tostring(cell.Z)..' max engineers '..tostring(maxEngineers)..' maxTravelDist '..tostring(math.sqrt(maxTravelDistSq))..' current distance '..tostring(math.sqrt(cellDistance)))
+            if cellDistance < maxTravelDistSq and engineersInCell < maxEngineers then
+                reclaimTargetX, reclaimTargetZ = cell.X, cell.Z
+                break
             end
         end
-        searchLoop = searchLoop + 1
     end
     if reclaimTargetX and reclaimTargetZ then
         --LOG('Returned reclaim target of X:'..reclaimTargetX..' Z:'..reclaimTargetZ)
@@ -222,6 +225,7 @@ function GetDynamicReclaimRadius(aiBrain, locationType)
     local myPos = engineerManager.Location
     local riskFactor = 1.0
     if myPos and aiBrain.EnemyIntel and aiBrain.EnemyIntel.EnemyStartLocations then
+        local maxDistSq = VDist2Sq(0, 0, width, height)
         local closestEnemyDistSq
         for _, enemyPos in aiBrain.EnemyIntel.EnemyStartLocations do
             local distSq = VDist2Sq(myPos[1], myPos[3], enemyPos.Position[1], enemyPos.Position[3])
@@ -229,9 +233,10 @@ function GetDynamicReclaimRadius(aiBrain, locationType)
                 closestEnemyDistSq = distSq
             end
         end
-
+        if not closestEnemyDistSq then
+            closestEnemyDistSq = maxDistSq * 0.25
+        end
         -- Max possible map diagonal
-        local maxDistSq = VDist2Sq(0, 0, width, height)
         local proximity = 1 - math.min(closestEnemyDistSq / maxDistSq, 1)
 
         -- Scale factor: closer enemies reduce radius (from 1.0 to 0.5)
@@ -1104,7 +1109,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
                 v.allowedThreat = v.allowedThreat * 1.5 
             end
 
-            if surfaceThreat < v.allowedThreat or v.distance < 400 or acuDistanceToBase < 6400 then
+            if surfaceThreat < v.allowedThreat or v.distance < 2500 or acuDistanceToBase < 6400 then
                 
                 if checkPathing then
                     -- Layer Check
@@ -1162,7 +1167,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
                                     highValue = false
                                 end
                                 if highValue then
-                                    LOG('Returning valid target via amphib'..tostring(v.unit.UnitId)..' distance was '..tostring(v.distance)..' is defending home? '..tostring(isDefendingHome))
+                                    --LOG('Returning valid target via amphib'..tostring(v.unit.UnitId)..' distance was '..tostring(v.distance)..' is defending home? '..tostring(isDefendingHome))
                                     validTarget = true
                                 end
                             end
@@ -3261,6 +3266,7 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
        --RNGLOG('Location Pos is '..repr(pos))
     end
    --RNGLOG('Checking if Dynamic Expansions Table Exist')
+    local shortlist = {}
     local zoneFound = false
     if zoneType == 'Land' then
         if not table.empty(im.ZoneExpansions.Pathable) then
@@ -3274,26 +3280,53 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
                     retPos = zoneSet[v.ZoneID].pos
                     retName = 'LAND_ZONE_'..v.ZoneID
                     refZone = v.ZoneID
+                    table.insert(shortlist, { Expansion = v, Pathable = true })
                     zoneFound = true
                     break
                 end
             end
         end
-        if not zoneFound then
-            if not table.empty(im.ZoneExpansions.NonPathable) then
-                for _, v in im.ZoneExpansions.NonPathable do
-                    local skipPos = false
-                    if avoidZones and avoidZones[v.ZoneID] then
-                        skipPos = true
-                    end
-                    if not skipPos and v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive
-                    and (not zoneSet[v.ZoneID].engineerplatoonallocated or IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated)) and (currentTime >= zoneSet[v.ZoneID].lastexpansionattempt + 30 or zoneSet[v.ZoneID].lastexpansionattempt == 0 ) then
-                        retPos = zoneSet[v.ZoneID].pos
-                        retName = 'LAND_ZONE_'..v.ZoneID
-                        refZone = v.ZoneID
-                        zoneFound = true
-                        break
-                    end
+        if not table.empty(im.ZoneExpansions.NonPathable) then
+            for _, v in im.ZoneExpansions.NonPathable do
+                local skipPos = false
+                if avoidZones and avoidZones[v.ZoneID] then
+                    skipPos = true
+                end
+                if not skipPos and v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive
+                and (not zoneSet[v.ZoneID].engineerplatoonallocated or IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated)) and (currentTime >= zoneSet[v.ZoneID].lastexpansionattempt + 30 or zoneSet[v.ZoneID].lastexpansionattempt == 0 ) then
+                    retPos = zoneSet[v.ZoneID].pos
+                    retName = 'LAND_ZONE_'..v.ZoneID
+                    refZone = v.ZoneID
+                    zoneFound = true
+                    table.insert(shortlist, { Expansion = v, Pathable = false })
+                    break
+                end
+            end
+        end
+        if zoneFound then
+            local bestUtility
+            for _, v in shortlist do
+                local zData = zoneSet[v.Expansion.ZoneID]
+                -- 1. Start with the thread's pre-calculated Priority
+                -- 2. Multiply by teamvalue (2.0 = Allied, 1.0 = Neutral, 0.0 = Enemy)
+                -- This automatically slashes the score for expansions "behind the enemy"
+                local utilityScore = (v.Expansion.Priority or 0) * (zData.teamvalue or 1.0)
+                --LOG('Utility Score for '..tostring(v.Expansion.ZoneID))
+                --LOG('team value was '..tostring(zData.teamvalue))
+                --LOG('Score was '..tostring(v.Expansion.Priority))
+                
+                -- 3. Apply a small static bias for Island safety in the early game
+                -- This allows an Island (High TeamValue) to beat a Land zone (Low TeamValue)
+                if not v.Pathable and currentTime < 480 then
+                    utilityScore = utilityScore + 150 
+                end
+
+                -- Final Selection logic
+                if not bestUtility or utilityScore > bestUtility then
+                    bestUtility = utilityScore
+                    retPos = zData.pos
+                    retName = 'LAND_ZONE_'..v.Expansion.ZoneID
+                    refZone = v.Expansion.ZoneID
                 end
             end
         end
@@ -3301,13 +3334,6 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
     if zoneType == 'Naval' then
         if not table.empty(im.ZoneExpansions.Naval) then
             for _, v in im.ZoneExpansions.Naval do
-                if aiBrain.Nickname == 'DFS (AI: RNG Standard)' then
-                    LOG('Naval DFS Evaluating zone '..tostring(v.ZoneID)..' Is Factory Manager Location active? '..tostring(zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive)..' last expansion attempt '..tostring(zoneSet[v.ZoneID].lastexpansionattempt)..' current time '..tostring(currentTime)..' position '..tostring(repr(zoneSet[v.ZoneID].pos)))
-                    LOG('AI Start pos is '..tostring(repr(aiBrain.BrainIntel.StartPos))..' Distance to AI is '..tostring(VDist3(zoneSet[v.ZoneID].pos, aiBrain.BrainIntel.StartPos)))
-                    if zoneSet[v.ZoneID].engineerplatoonallocated and not IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated) then
-                        LOG('Already an engineer allocated to this zone')
-                    end
-                end
                 local skipPos = false
                 if avoidZones and avoidZones[v.ZoneID] then
                     skipPos = true
@@ -3318,9 +3344,6 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
                     retName = 'NAVAL_ZONE_'..v.ZoneID
                     refZone = v.ZoneID
                     zoneFound = true
-                    if aiBrain.Nickname == 'DFS (AI: RNG Standard)' then
-                        LOG('Naval Zone found '..tostring(v.ZoneID))
-                    end
                     break
                 end
             end
@@ -3925,9 +3948,8 @@ end
 
 function PerformEngReclaim(aiBrain, eng, minimumReclaim)
     local engPos = eng:GetPosition()
-    local maxReclaimDistance = eng.Blueprint.Economy.MaxBuildDistance or 10
-    maxReclaimDistance = maxReclaimDistance * maxReclaimDistance
-    local rectDef = Rect(engPos[1] - 10, engPos[3] - 10, engPos[1] + 10, engPos[3] + 10)
+    local buildRange = eng.Blueprint.Economy.MaxBuildDistance or 10
+    local rectDef = Rect(engPos[1] - 15, engPos[3] - 15, engPos[1] + 15, engPos[3] + 15)
     local reclaimRect = GetReclaimablesInRect(rectDef)
     local maxReclaimCount = 0
     local reclaimed = false
@@ -3936,7 +3958,10 @@ function PerformEngReclaim(aiBrain, eng, minimumReclaim)
         for c, b in reclaimRect do
             if not IsProp(b) then continue end
             if b.MaxMassReclaim and b.MaxMassReclaim >= minimumReclaim then
-                if VDist3Sq(engPos, b.CachePosition) <= maxReclaimDistance then
+                local propBp = b.Blueprint
+                local boxSize = (propBp.SizeX + propBp.SizeZ) * 0.25
+                local combinedRange = buildRange + boxSize
+                if VDist3Sq(engPos, b.CachePosition) <= (combinedRange * combinedRange) then
                     RNGINSERT(closeReclaim, b)
                     maxReclaimCount = maxReclaimCount + 1
                 end
@@ -3955,6 +3980,35 @@ function PerformEngReclaim(aiBrain, eng, minimumReclaim)
         end
     end
     return reclaimed
+end
+
+function PerformEngAreaReclaim(aiBrain, eng, searchRadius)
+    local engPos = eng:GetPosition()
+    -- Look for props in a much wider area (e.g., 60-100 for plateaus)
+    local rectDef = Rect(engPos[1] - searchRadius, engPos[3] - searchRadius, engPos[1] + searchRadius, engPos[3] + searchRadius)
+    local reclaimRect = GetReclaimablesInRect(rectDef)
+    
+    if reclaimRect and not table.empty(reclaimRect) then
+        local bestProp = nil
+        
+        -- Find the closest prop to start the area reclaim process
+        for _, prop in reclaimRect do
+            if IsProp(prop) and prop.MaxMassReclaim and prop.MaxMassReclaim > 0 then
+                if NavUtils.CanPathTo('Amphibious', engPos, prop.CachePosition) then
+                    local dist = VDist3Sq(engPos, prop.CachePosition)
+                    bestProp = prop
+                    break
+                end
+            end
+        end
+
+        if bestProp then
+            IssueClearCommands({eng})
+            IssueAggressiveMove({eng}, bestProp.CachePosition)
+            return true
+        end
+    end
+    return false
 end
 
 function GetNumberUnitsBeingBuilt(aiBrain, category)
@@ -6839,28 +6893,6 @@ function GetResourcesFromMarker(marker)
    return resourceTable
 end
 
-function SetCoreResources(aiBrain, position, baseName)
-    coroutine.yield(50)
-    aiBrain:WaitForZoneInitialization()
-    local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
-    local targetZone = MAP:GetZoneID(position,aiBrain.Zones.Land.index)
-    if not targetZone then
-        WARN('No zone returned trying to get core resources for base')
-        return
-    end
-    local resourceTable = table.copy(aiBrain.Zones.Land.zones[targetZone].resourcemarkers)
-    if resourceTable then
-        if aiBrain.BuilderManagers[baseName] then
-            aiBrain.BuilderManagers[baseName].CoreResources = resourceTable
-        end
-    elseif string.find(baseName, 'Naval Area') then
-        return {}
-    else
-        WARN('No resource table found in GetCoreResources')
-        return
-    end
-end
-
 function VentToPlatoon(platoon, aiBrain, plan)
     local ventPlatoon
     local platoonUnits = platoon:GetPlatoonUnits()
@@ -8541,7 +8573,32 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
     end
 
     if enemy <= 0 then
-        return 0
+        if zoneSelectionType == 'aadefense' then return 0 end
+
+        -- 1. Threat Check (Combat Units only)
+        local existingFriendly = friendly - (platoon and (platoon.CurrentPlatoonThreatDirectFireAntiSurface or 0) or 0)
+        local isEngineerAssigned = zone.engineerplatoonallocated and not zone.engineerplatoonallocated.Dead
+        
+        -- 3. THE OPPORTUNITY PIVOT
+        
+        -- CASE A: Home Base / Established Expansion
+        if isProductionZone then
+            -- We only want to 'Pull' units here if it's completely undefended.
+            -- Once existingFriendly hits 1.0 (one scout or light unit), pull drops to 0.
+            if existingFriendly < 1.0 then
+                return 0.5 -- Low priority 'maintenance' pull
+            end
+        end
+
+        -- CASE B: The Engineer is on the way (Pending Expansion)
+        if isEngineerAssigned then
+            -- This is a high-priority 'Security Gap'. 
+            -- We have an engineer walking into the dark; they NEED a guard.
+            if existingFriendly < 1.0 then
+                return 2.5 + (zone.resourcevalue * 0.1) -- Strong pull to PROTECT the engineer
+            end
+        end
+        return 0.1
     end
 
     local cappedFriendly
@@ -9526,7 +9583,7 @@ function GetInitialReclaimRings(factoryManager, aiBrain)
     local finalEngCount = math.clamp(math.ceil(calculatedCount), minEngs, maxEngs)
 
 
-    LOG('Final Engineer Count '..tostring(finalEngCount))
-    LOG(string.format('RNGAI_RECLAIM_AUDIT: Mass=%d, Energy=%d, Rings=%d, Multiplier=%.2f, EnemyDistSq=%d', totalMassRequired, totalEnergyRequired, ringLimit, shareMultiplier, enemyDistSq))
+    --LOG('Final Engineer Count '..tostring(finalEngCount))
+    --LOG(string.format('RNGAI_RECLAIM_AUDIT: Mass=%d, Energy=%d, Rings=%d, Multiplier=%.2f, EnemyDistSq=%d', totalMassRequired, totalEnergyRequired, ringLimit, shareMultiplier, enemyDistSq))
     return finalEngCount
 end

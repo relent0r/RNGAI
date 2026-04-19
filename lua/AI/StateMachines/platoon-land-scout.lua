@@ -467,11 +467,59 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                 return false
             end
             --local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, self.dest, 3, false)
-            local usedTransports = StateUtils.RequestTransportRNG(self, self.dest)
-            if usedTransports then
-                --self:LogDebug(string.format('Platoon used transports'))
-                self:ChangeState(self.Navigating)
-                return
+            local requestId = StateUtils.RequestTransportRNG(self, self.dest, 'Combat')
+            if requestId then
+                -- 2. THE WAITING LOOP
+                local attached = false
+                local timeout = 0
+                local maxWait = 120 -- Ticks/Loops before we give up (approx 2 mins at 20-tick intervals)
+                
+                while timeout < maxWait do
+                    local units = self:GetPlatoonUnits()
+                    if table.getn(units) == 0 then return end -- Platoon dead
+
+                    -- Check attachment status
+                    local allAttached = true
+                    local anyUnitInDanger = false
+                    
+                    for _, unit in units do
+                        if not unit.Dead then
+                            if not unit:IsUnitState('Attached') then
+                                allAttached = false
+                            end
+                            -- OPTIONAL: If units are being shot while waiting, maybe cancel?
+                            if unit:GetHealthPercent() < 0.8 then
+                                anyUnitInDanger = true
+                            end
+                        end
+                    end
+
+                    if allAttached then
+                        attached = true
+                        break
+                    end
+
+                    -- Check if the transport manager still has our request active
+                    -- If the transport was killed, the manager likely removed the request
+                    local manager = brain:GetPlatoonUniquelyNamed('TransportPool')
+                    if manager and not manager:GetRequestById(requestId) and not allAttached then
+                        -- Request disappeared but we aren't attached? Transport probably died.
+                        break 
+                    end
+
+                    timeout = timeout + 1
+                    coroutine.yield(20) 
+                end
+
+                if attached then
+                    self:ChangeState(self.Navigating)
+                    return
+                else
+                    -- Cleanup: If we timed out or transport died, clear any lingering 'Move to Transport' commands
+                    local units = self:GetPlatoonUnits()
+                    IssueClearCommands(units)
+                    -- Fall through to the 'No Transport' logic below
+                end
             else
                 --self:LogDebug(string.format('Platoon tried but didnt use transports'))
                 coroutine.yield(20)

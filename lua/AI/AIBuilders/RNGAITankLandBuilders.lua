@@ -199,6 +199,48 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI Reaction Tanks Island',
+    BuildersType = 'FactoryBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1 Tank Response Island',
+        PlatoonTemplate = 'T1LandDFTank',
+        Priority = 880,
+        BuilderConditions = {
+            { TBC, 'LandDefenseUrgencyCheck', { 'LocationType' }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * (categories.TECH2 + categories.TECH3) }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.7 }},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Tank Response Island',
+        PlatoonTemplate = 'T2LandAmphibious',
+        Priority = 881,
+        BuilderConditions = {
+            { TBC, 'LandDefenseUrgencyCheck', { 'LocationType' }},
+            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.LAND * categories.TECH3 }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.7 }},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
+        },
+        BuilderType = 'Land',
+    },
+    Builder {
+        BuilderName = 'RNGAI T1 Tank Response Island',
+        PlatoonTemplate = 'T3LandBot',
+        Priority = 882,
+        BuilderConditions = {
+            { TBC, 'LandDefenseUrgencyCheck', { 'LocationType' }},
+            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.6, 0.7 }},
+            { UCBC, 'UnitCapCheckLess', { .85 } },
+        },
+        BuilderType = 'Land',
+    },
+}
+
+
+
+BuilderGroup {
     BuilderGroupName = 'RNGAI Reaction Tanks Expansion',
     BuildersType = 'FactoryBuilder',
     Builder {

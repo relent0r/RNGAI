@@ -1,7 +1,21 @@
 local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
+local NavUtils = import("/lua/sim/navutils.lua")
 
 local RNGTableEmpty = table.empty
+
+local PriorityWeights = {
+    Utility          = 75,  -- Crucial for map control
+    UtilityNoPath    = 100,  -- Crucial for map control
+    Combat           = 80,   -- Urgent reinforcements
+    Resource         = 40,   -- Economic scaling
+    ResourceNoPath   = 65,
+    Reclaim          = 20,   -- Opportunistic (can usually walk)
+    ReclaimNoPath    = 45,   -- Opportunistic (can usually walk)
+    ReclaimHighValue = 70,
+    Engineer         = 30,   -- Generic fallback
+    Generic          = 10,   -- Lowest priority
+}
 
 ---@class AITransportManagerRNG : AIPlatoonRNG
 AITransportManagerRNG = Class(AIPlatoonRNG) {
@@ -14,7 +28,7 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
             self.MachineStarted = true
             self.RequestTable = {}
             self.availableTransports = {}
-            LOG('Starting Transport manager')
+            --LOG('Starting Transport manager')
             self:ChangeState(self.ManagePool)
         end,
     },
@@ -22,7 +36,7 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
     ManagePool = State {
         StateName = 'ManagePool',
         Main = function(self)
-            LOG('Transport manager manage pool')
+            --LOG('Transport manager manage pool')
             
             local aiBrain = self:GetBrain()
             local units = self:GetPlatoonUnits()
@@ -31,14 +45,22 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
             self.totalCapacity = 0
             local availableTransports = 0
             for _, unit in units do
-                if not IsDestroyed(unit) and not unit.InUse then
+                if not IsDestroyed(unit) and not unit['rngdata'].InUse then
                     -- 1. Check for Internal Missions (Health/Fuel)
-                    if unit:GetHealthPercent() < 0.4 or unit:GetFuelRatio() < 0.2 then
+                    local unitHealth = unit:GetHealthPercent()
+                    local unitFuelRatio = unit:GetFuelRatio()
+                    if unitHealth < 0.4 or unitFuelRatio < 0.2 then
+                        local stateWanted = unitHealth < 0.4 and 'Recycle' or 'Refit'
                         LOG('Low Fuel or health, initiate action state')
                         local transportPlatoon = aiBrain:MakePlatoon('TransportPlatoon', 'StateMachineAIRNG')
                         transportPlatoon.PlanName = 'TransportPlatoonRNG'
-                        unit.InUse = true
+                        unit['rngdata'].InUse = true
                         aiBrain:AssignUnitsToPlatoon(transportPlatoon, {unit}, 'Support', 'None')
+                        import("/mods/rngai/lua/ai/statemachines/platoon-air-transport.lua").AssignToUnitsMachine(
+                            {PlatoonData = { StateWanted = stateWanted}},
+                            transportPlatoon, 
+                            {unit}
+                        )
                         continue
                     end
 
@@ -60,11 +82,55 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
                 end
             end
             if availableTransports > 0 then
-                LOG('Available transports greater than 0, check request table')
+                --LOG('Available transports greater than 0, check request table')
                 self:ChangeState(self.CheckRequestTable)
                 return
             end
-            LOG('No available transports, loop back to manage pool')
+            if availableTransports == 0 and self.RequestTable then
+                local im = aiBrain.IntelManager
+                local totalMissingSlots = 0
+                local maxWaitTicks = 0
+                local currentTick = GetGameTick()
+                local validRequestCount = 0
+                local suicideRequestCount = 0
+
+                for _, req in self.RequestTable do
+                    -- RISK ASSESSMENT: Check destination safety
+                    -- If destination threat is high and it's a 'Combat' drop, check if it's suicidal
+                    local isSuicide = false
+                    local gridX, gridZ = im:GetIntelGrid(req.Destination)                          
+                    local airThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
+                    
+                    if airThreat > 50 then -- Threshold for "Dangerous AA"
+                        isSuicide = true
+                    end
+
+                    if isSuicide then
+                        suicideRequestCount = suicideRequestCount + 1
+                    else
+                        validRequestCount = validRequestCount + 1
+                        local reqTotal = (req.Slots.Large * 10) + (req.Slots.Medium * 5) + req.Slots.Small
+                        totalMissingSlots = totalMissingSlots + reqTotal
+                        
+                        local waitTime = currentTick - req.TimeRequested
+                        if waitTime > maxWaitTicks then
+                            maxWaitTicks = waitTime
+                        end
+                    end
+                end
+
+                aiBrain.TransportPressure = {
+                    MissingSlots = totalMissingSlots,
+                    MaxWaitSeconds = maxWaitTicks / 10,
+                    RequestCount = validRequestCount,
+                    SuicideCount = suicideRequestCount,
+                    -- PressureLevel: 0 (None), 1 (Low/Engineers), 2 (Medium), 3 (High/Urgent)
+                    PressureLevel = (maxWaitTicks > 600 or totalMissingSlots > 20) and 3 or (totalMissingSlots > 0 and 1 or 0)
+                }
+            else
+                aiBrain.TransportPressure = nil
+            end
+            --LOG('No available transports, loop back to manage pool')
             coroutine.yield(30)
             self:ChangeState(self.ManagePool)
             return
@@ -75,41 +141,62 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
     CheckRequestTable = State {
         StateName = 'CheckRequestTable',
         Main = function(self)
-            LOG('Check request table')
             if table.empty(self.RequestTable) then
-                LOG('Table is empty')
                 WaitTicks(20)
                 self:ChangeState(self.ManagePool)
                 return
             end
 
+            -- 1. Create a sortable list of requests
+            local sortedRequests = {}
+            local currentTick = GetGameTick()
+            
             for id, request in self.RequestTable do
-                -- Efficiency Check: If the platoon is dead, purge the request
-                LOG('Check request id '..tostring(id)..' request data '..tostring(repr(request.Platoon.UID)))
                 if not request.Platoon or IsDestroyed(request.Platoon) then
                     self.RequestTable[id] = nil
                     continue
                 end
+                
+                -- Calculate urgency: Priority + 1 point for every second waited
+                local secondsWaited = (currentTick - request.TimeRequested) / 10
+                if secondsWaited > 30 then
+                    local cargoPos = request.Platoon:GetPlatoonPosition()
+                    local distSq = VDist2Sq(cargoPos[1], cargoPos[3], request.Destination[1], request.Destination[3])
 
-                -- Use the new Selection logic
+                    if distSq < 3600 and NavUtils.CanPathTo(request.Platoon.MovementLayer, cargoPos, request.Destination) then
+                        --LOG('Manager: Pruning request '..tostring(request.ID)..' - Unit is walking.')
+                        self.RequestTable[id] = nil
+                    end
+                end
+                request.UrgencyScore = request.Priority + secondsWaited
+                
+                table.insert(sortedRequests, {id = id, data = request})
+            end
+
+            -- 2. Sort by Urgency Score (Highest first)
+            table.sort(sortedRequests, function(a, b)
+                return a.data.UrgencyScore > b.data.UrgencyScore
+            end)
+
+            -- 3. Iterate through the sorted list
+            for _, item in sortedRequests do
+                local id = item.id
+                local request = item.data
+
                 local assignedUnits = self:SelectBestTransports(request)
                 
                 if not table.empty(assignedUnits) then
-                    -- We found a match! Create the assignment bundle.
                     self.currentAssignment = {
                         Units = assignedUnits,
                         Request = request,
                         ID = id
                     }
-                    -- Transition to AssignRequestState to launch the Mission Platoon
-                    LOG('Assigning request state')
                     self:ChangeState(self.AssignRequestState)
                     return
                 end
             end
 
-            -- If we checked everything and found no matches, wait and try again
-            LOG('No matching requests found')
+            -- No matches found for any request
             WaitTicks(20)
             self:ChangeState(self.ManagePool)
         end,
@@ -120,7 +207,7 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
         Main = function(self)
             local aiBrain = self:GetBrain()
             local assignment = self.currentAssignment
-            LOG('Transport Manager assigning transport request')
+            --LOG('Transport Manager assigning transport request')
             
             -- Create the Mission Platoon
             local transportPlatoon = aiBrain:MakePlatoon('TransportPlatoon', 'StateMachineAIRNG')
@@ -128,7 +215,7 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
             
             -- Move units from Manager to Mission Platoon
             for _, unit in assignment.Units do
-                unit.InUse = true
+                unit['rngdata'].InUse = true
                 aiBrain:AssignUnitsToPlatoon(transportPlatoon, {unit}, 'Support', 'None')
             end
 
@@ -148,26 +235,50 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
     },
 
     AddRequest = function(self, requestingPlatoon, slotTable, location, destination, requestType, timeRequested)
-        LOG('Transport Manager request added to manager for platoon id '..tostring(requestingPlatoon.BuilderName))
         local id = requestingPlatoon['rngdata'].UID
-        if id then
-            self.RequestTable[id] = {
-                Platoon = requestingPlatoon,
-                Slots = slotTable,
-                Location = location,
-                Destination = destination,
-                RequestType = requestType,
-                TimeRequested = timeRequested
-            }
-            return id
-        else
-            WARN('AI-RNG Warning : A platoon tried to require a transport without a UID property , location was '..tostring(repr(location)))
+        if not id then
+            WARN('AI-RNG Warning: Platoon missing UID at '..tostring(repr(location)))
+            return nil
         end
+
+        -- Calculate a base priority score
+        local basePriority = PriorityWeights[requestType] or 10
+        
+        self.RequestTable[id] = {
+            Platoon = requestingPlatoon,
+            Slots = slotTable,
+            Location = location,
+            Destination = destination,
+            RequestType = requestType,
+            TimeRequested = timeRequested,
+            Priority = basePriority
+        }
+
+        -- Return metadata so the Platoon can decide to walk or wait
+        local aiBrain = self:GetBrain()
+        local pressure = aiBrain.TransportPressure or {}
+        
+        local requestData = {
+            EstimatedWait = pressure.MaxWaitSeconds or 0,
+            ManagerPressure = pressure.PressureLevel or 0,
+            QueueDepth = pressure.RequestCount or 0
+        }
+
+        LOG(string.format('Transport Manager: Request %s added. Priority: %d. Est Wait: %ds', requestType, basePriority, requestData.EstimatedWait))
+        
+        return id, requestData
     end,
 
     RemoveRequest = function(self, id)
-        LOG('Transport Manager request removed from manager')
         self.RequestTable[id] = nil
+    end,
+
+    GetRequestById = function(self, id)
+        if not self.RequestTable then
+            return nil
+        end
+        local request = self.RequestTable[id]
+        return request
     end,
 
     ---@param self AITransportManagerRNG
@@ -177,12 +288,12 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
         local aiBrain = self:GetBrain()
         local available = {}
         local location = request.Location
-        LOG('Selecting best transport')
+        --LOG('Selecting best transport')
         
         -- 1. Filter and sort by distance as before
         for _, unit in self:GetPlatoonUnits() do
-            if not IsDestroyed(unit) and not unit.rngdata.InUse then
-                LOG('Checking transport with id '..tostring(unit.EntityId))
+            if not IsDestroyed(unit) and not unit['rngdata'].InUse then
+                --LOG('Checking transport with id '..tostring(unit.EntityId))
                 local uPos = unit:GetPosition()
                 local distSq = VDist2Sq(location[1], location[3], uPos[1], uPos[3])
                 if distSq < 4000000 then 
@@ -190,7 +301,7 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
                 end
             end
         end
-        LOG('available count is '..tostring(table.getn(available)))
+        --LOG('available count is '..tostring(table.getn(available)))
         if table.empty(available) then return {} end
         table.sort(available, function(a, b) return a.DistanceSq < b.DistanceSq end)
 
@@ -251,9 +362,9 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
 
         -- Lock units only after we've confirmed a total fit
         for _, u in assignedUnits do
-            u.rngdata.InUse = true
+            u['rngdata'].InUse = true
         end
-        LOG('returning assigned unit count of '..tostring(table.getn(assignedUnits)))
+        --LOG('returning assigned unit count of '..tostring(table.getn(assignedUnits)))
         return assignedUnits
     end,
 

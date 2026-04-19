@@ -1,19 +1,14 @@
 WARN('['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] * RNGAI: offset platoon.lua' )
 
-local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
-local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
+local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
-local MABC = import('/lua/editor/MarkerBuildConditions.lua')
 local AIUtils = import('/lua/ai/aiutilities.lua')
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
-local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPosition = moho.entity_methods.GetPosition
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
-local ALLBPS = __blueprints
-local SUtils = import('/lua/AI/sorianutilities.lua')
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetEconomyStored = moho.aibrain_methods.GetEconomyStored
 local GetEconomyTrend = moho.aibrain_methods.GetEconomyTrend
@@ -205,7 +200,6 @@ Platoon = Class(RNGAIPlatoonClass) {
                 local unitPathing = false
                 if not NavUtils.CanPathTo(self.MovementLayer, GetPlatoonPosition(self), movePosition) then
                     if not NavUtils.CanPathTo(self.MovementLayer, GetPlatoonUnits(self)[1]:GetPosition(), movePosition) then
-                        --usedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, self, movePosition, 3, true)
                         usedTransports = StateUtils.RequestTransportRNG(self, movePosition)
                     else 
                         unitPathing = true

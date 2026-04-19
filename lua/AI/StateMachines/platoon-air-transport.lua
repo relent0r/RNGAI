@@ -2,6 +2,10 @@ local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.l
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import("/lua/sim/navutils.lua")
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
+local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
+
+local RNGGETN = table.getn
+local RNGINSERT = table.insert
 
 ---@class AITransportPlatoonRNG : AIPlatoonRNG
 AITransportPlatoonRNG = Class(AIPlatoonRNG) {
@@ -10,6 +14,7 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
     Start = State {
         StateName = 'Start',
         Main = function(self)
+            local aiBrain = self:GetBrain()
             local data = self.PlatoonData
             
             -- Branch based on what the Manager or Utility told us to do
@@ -20,7 +25,7 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Recycle)
                 return
             end
-            LOG('transport unit platoon decidewhattodo')
+            self.Home = aiBrain.BuilderManagers['MAIN'].Position
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
@@ -29,14 +34,11 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
     DecideWhatToDo = State {
         StateName = 'DecideWhatToDo',
         Main = function(self)
+            
             local aiBrain = self:GetBrain()
             local platPos = self:GetPlatoonPosition()
             local builderData = self.BuilderData
-            if self.GetPlatoonUnits then
-                LOG('GetPlatoonUnits exist at the start of decide what to do')
-            else
-                LOG('GetPlatoonUnits doesnt exist at the start of decide what to do')
-            end
+            LOG('Platoon Air Transport decide what to do start state is '..tostring(builderData.StateWanted))
             if builderData then
                 if builderData.StateWanted == 'Return' then
                     local transportPool = aiBrain.TransportPool
@@ -52,7 +54,7 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
             end
             local requestData = self.PlatoonData
             if not requestData then
-                LOG('Transport Platoon has no data, return to base and the move back to the main platoon')
+                --LOG('Transport Platoon has no data, return to base and the move back to the main platoon')
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, platPos, false)
                 local baseLocation = aiBrain.BuilderManagers[closestBase].Position
                 if baseLocation[1] and platPos[1] then
@@ -60,7 +62,7 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
                     local pz = baseLocation[3] - platPos[3]
                     local pathDistance = px * px + pz * pz
                     if pathDistance < 3600 then
-                        LOG('We should be at a friendly base')
+                        self:LogDebug(string.format('We should be at a friendly base waiting'))
                         coroutine.yield(100)
                         self.BuilderData = {
                             StateWanted = 'Return'
@@ -70,6 +72,7 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
                     else
                         -- Move to base. In a state machine, we can just issue the move 
                         -- and wait for the condition to be met.
+                        self:LogDebug(string.format('We are moving to a friendly base to wait and refuel'))
                         self.BuilderData = {
                             Position = closestBase,
                             StateWanted = 'Return'
@@ -81,17 +84,27 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
             end
             if requestData and requestData.Location then
                 local pickupLocation = requestData.Location
+                if self.PlatoonData.Platoon then
+                    LOG('Transport has a platoon to pickup, assign myself to it')
+                    self.PlatoonData.Platoon['rngdata'].AssignedTransport = self
+                else
+                    LOG('Transport does not have a platoon to pickup')
+                end
                 local px = pickupLocation[1] - platPos[1]
                 local pz = pickupLocation[3] - platPos[3]
                 local pathDistance = px * px + pz * pz
                 if pathDistance > 400 then
+                    self:LogDebug(string.format('Moving to pickup location'))
                     self.BuilderData = {
                         Position = pickupLocation,
                         StateWanted = 'WaitAtPickup'
                     }
+                    LOG('Platoon Air Transport is going to navigate to pickup location, current distance is '..tostring(pathDistance))
                     self:ChangeState(self.Navigating)
                     return
                 else
+                    self:LogDebug(string.format('Should be at pickup location, wait for pickup'))
+                    LOG('Platoon Air Transport close enough so will wait at pickup ')
                     self:ChangeState(self.WaitAtPickup)
                     return
                 end
@@ -109,18 +122,22 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
             -- Using your RUtils or standard AIUtils
             local platPos = self:GetPlatoonPosition()
             local basePos = aiBrain.BuilderManagers[self.LocationType or 'MAIN'].Position
+            LOG('Air Transport refit state')
             if basePos[1] and platPos[1] then
                 local px = basePos[1] - platPos[1]
                 local pz = basePos[3] - platPos[3]
                 local pathDistance = px * px + pz * pz
                 if pathDistance < 3600 then
                     LOG('We should be waiting to refuel')
+                    LOG('Air Transport refit state should be close to base and refitting')
                     coroutine.yield(100)
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 else
                     -- Move to base. In a state machine, we can just issue the move 
                     -- and wait for the condition to be met.
+                    LOG('Air Transport refit state navigating to base')
+                    self:LogDebug(string.format('Navigating to base for refit, refuel'))
                     self.BuilderData = {
                         Position = basePos,
                     }
@@ -128,6 +145,7 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
                     return
                 end
             else
+                LOG('Air Transport refit state has no base or self pos')
                 coroutine.yield(30)
                 self:ChangeState(self.DecideWhatToDo)
                 return
@@ -136,87 +154,174 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
     },
 
     Navigating = State {
-
         StateName = "Navigating",
 
-        --- The platoon retreats from a threat
-        ---@param self AIPlatoonBomberBehavior
         Main = function(self)
             local aiBrain = self:GetBrain()
             local builderData = self.BuilderData
-            local destination = builderData.Position
-            local navigateDistanceCutOff = builderData.CutOff or 6400
-            local destCutOff = math.sqrt(navigateDistanceCutOff) + 10
+            local requestData = self.PlatoonData
+            LOG('Air Transport Navigation state')
+            
+            -- 1. Target Selection
+            local destination = (builderData.StateWanted == 'WaitAtPickup') 
+                and builderData.Position 
+                or requestData.Destination
+
             if not destination then
-                --LOG('no destination BuilderData '..repr(builderData))
-                self:LogWarning(string.format('no destination to navigate to'))
-                coroutine.yield(10)
-                --LOG('No destiantion break out of Navigating')
+                self:ChangeState(self.DecideWhatToDo)
+                return
+            end         
+            local platoonUnits = self:GetPlatoonUnits()
+            local platoonCount = table.getn(platoonUnits)
+            local platPos = self:GetPlatoonPosition()
+            IssueClearCommands(platoonUnits)
+            
+            -- 2. Path Generation
+            LOG('Platpos '..tostring(repr(platPos)))
+            LOG('Destination '..tostring(repr(destination)))
+            self:LogDebug(string.format('Generating path'))
+
+            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platPos, destination, 15, 80)
+            if path then
+                self:LogDebug(string.format('Air Transport Navigation state path length is '..tostring(table.getn(path))))
+            else
+                self:LogDebug(string.format('Air Transport Navigation state bad path is '..tostring(path)))
+            end
+            
+            -- 3. Traversal Loop
+
+            if path and table.getn(path) > 1 then
+                local pathLength = table.getn(path)
+                for i, waypoint in path do
+                    local isFinalWaypoint = (i == pathLength)
+                    
+                    -- Issue grid moves for the current waypoint
+                    local movementPositions = StateUtils.GenerateGridPositions(waypoint, 6, platoonCount)
+                    for k, unit in platoonUnits do
+                        if not unit.Dead then
+                            IssueMove({unit}, movementPositions[k] or waypoint)
+                        end
+                    end
+
+                    local waypointTimeout = 0
+                    local lastDistSq = nil
+                    --LOG('Air Transport Navigation moving along  path '..tostring(i))
+                    
+                    while not IsDestroyed(self) do
+                        coroutine.yield(10)
+                        local platPos = self:GetPlatoonPosition()
+                        if not platPos[1] then return end
+                        
+                        local distSq = VDist2Sq(platPos[1], platPos[3], waypoint[1], waypoint[3])
+                        
+                        -- Scale threshold: Loose for waypoints (30 units), tight for final (15 units)
+                        local threshold = isFinalWaypoint and 225 or 900
+                        if distSq < threshold then
+                            break 
+                        end
+
+                        -- [Placeholder for Emergency Landing]
+                        -- If threat > limit then self:ChangeState(self.EmergencyLanding) end
+
+                        -- Stuck detection (20 seconds without progress)
+                        if lastDistSq and lastDistSq == distSq then
+                            waypointTimeout = waypointTimeout + 1
+                        else
+                            waypointTimeout = 0
+                        end
+                        if waypointTimeout > 20 then break end
+                        lastDistSq = distSq
+                        if builderData.StateWanted == 'WaitAtPickup' then
+                            if not requestData.Platoon or IsDestroyed(requestData.Platoon) then
+                                self:LogDebug(string.format('Pickup platoon gone, reset builder data'))
+                                self.BuilderData = {}
+                                self:ChangeState(self.DecideWhatToDo)
+                                return
+                            end
+                            local currentCargoPos = requestData.Platoon:GetPlatoonPosition()
+                            
+                            -- If the cargo has moved more than 25 units from our CURRENT target destination
+                            if currentCargoPos[1] and VDist2Sq(destination[1], destination[3], currentCargoPos[1], currentCargoPos[3]) > 625 then
+                                LOG('Transport: Cargo has moved significantly. Recalculating path.')
+                                self:LogDebug(string.format('Cargo and has moved significantly from pickup, move to their location and reset pickup Position'))
+                                -- Update BuilderData so other states see the new spot
+                                self.BuilderData.Position = currentCargoPos
+                                -- BREAK the traversal loop to force a re-path from Section 1
+                                -- This effectively restarts the Navigating logic with the fresh position
+                                self:ChangeState(self.Navigating) 
+                                return
+                            end
+                        end
+                    end
+                end
+            else
+                self:LogDebug(string.format('Air Transport Navigation state short path just move direct'))
+                -- Short path or failure fallback
+
+                IssueMove(platoonUnits, destination)
+                local timeout = 0
+                while not IsDestroyed(self) and timeout < 60 do
+                    coroutine.yield(20)
+                    local platPos = self:GetPlatoonPosition()
+                    if not platPos[1] then return end
+                    local targetPos = destination
+                    local platoonPickup = builderData.StateWanted == 'WaitAtPickup' and requestData.Platoon
+                    self:LogDebug(string.format('Distance is destination '..tostring(VDist2Sq(platPos[1], platPos[3], destination[1], destination[3]))))
+                    
+                    if platoonPickup then
+                        local currentCargoPos = requestData.Platoon:GetPlatoonPosition()
+                        if not currentCargoPos[1] then
+                            self:LogDebug(string.format('No current cargo pos indicating the platoon disbanded or was destroyed'))
+                            self.BuilderData = {}
+                            self:ChangeState(self.DecideWhatToDo) 
+                            return
+                        end
+                        targetPos = currentCargoPos
+
+                        local distanceToPlatoon = VDist2Sq(destination[1], destination[3], targetPos[1], targetPos[3])
+            
+                        -- If the cargo has moved more than 25 units from our CURRENT target destination
+                        if currentCargoPos and distanceToPlatoon > 3600 then
+                            self:LogDebug(string.format('Cargo and has moved significantly from pickup, move to their location and reset pickup Position'))
+                            -- Update BuilderData so other states see the new spot
+                            self.BuilderData.Position = currentCargoPos
+                            -- BREAK the traversal loop to force a re-path from Section 1
+                            -- This effectively restarts the Navigating logic with the fresh position
+                            self:ChangeState(self.Navigating) 
+                            return
+                        elseif currentCargoPos and VDist2Sq(platPos[1], platPos[3], targetPos[1], targetPos[3]) > 400 then
+                            self:LogDebug(string.format('Try move to less than 400'))
+                            IssueClearCommands(platoonUnits)
+                            IssueMove(platoonUnits, currentCargoPos)
+                        end
+                    end
+                    if VDist2Sq(platPos[1], platPos[3], targetPos[1], targetPos[3]) < 225 then break end
+                    timeout = timeout + 2
+                end
+            end
+
+            -- 4. Transition
+            if builderData.StateWanted == 'Unloading' then
+                self:LogDebug(string.format('Air Transport Navigation state move to Unloading'))
+                self:ChangeState(self.Unloading)
+                return
+            elseif builderData.StateWanted == 'WaitAtPickup' then
+                self:LogDebug(string.format('Air Transport Navigation state move to WaitAtPickup'))
+                self:ChangeState(self.WaitAtPickup)
+                return
+            else
+                self:LogDebug(string.format('Transport has unknown StateWanted, decidewhattodo'))
+                LOG('Air Transport Navigation state move to decidewhattodo, what was state wanted? '..tostring(repr(builderData)))
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
-            
-            local platoonPosition = self:GetPlatoonPosition()
-            if not platoonPosition[1] then
-                return
-            end
-            IssueClearCommands(platoonUnits)
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, platoonPosition, destination, 15, 80)
-            
-            if path then
-                local pathLength = RNGGETN(path)
-                if pathLength and pathLength > 1 then
-                    ----self:LogDebug(string.format('Performing aggressive path move'))
-                    for i=1, pathLength do
-                        local movementPositions = StateUtils.GenerateGridPositions(path[i], 6, self.PlatoonCount)
-                        for k, unit in platoonUnits do
-                            if not unit.Dead and movementPositions[k] then
-                                StateUtils.IssueNavigationMove(unit, movementPositions[k], true)
-                            else
-                                StateUtils.IssueNavigationMove(unit, path[i], true)
-                            end
-                        end
-                        local movementTimeout = 0
-                        local distanceTimeout
-                        while not IsDestroyed(self) do
-                            coroutine.yield(1)
-                            local platoonPosition = self:GetPlatoonPosition()
-                            if not platoonPosition then
-                                return
-                            end
-                            local px = path[i][1] - platoonPosition[1]
-                            local pz = path[i][3] - platoonPosition[3]
-                            local pathDistance = px * px + pz * pz
-                            if pathDistance < 3600 then
-                                break
-                            end
-                            --RNGLOG('Waiting to reach target loop')
-                            coroutine.yield(10)
-                            if not distanceTimeout or distanceTimeout == pathDistance then
-                                movementTimeout = movementTimeout + 1
-                                if movementTimeout > 5 then
-                                    break
-                                end
-                            end
-                            distanceTimeout = pathDistance
-                        end
-                    end
-                else
-                    ----self:LogDebug(string.format('Path too short, moving to destination. This shouldnt happen.'))
-                    IssueMove(platoonUnits, destination)
-                    coroutine.yield(25)
-                    self:ChangeState(self.DecideWhatToDo)
-                    return
-                end
-            end
-            self:ChangeState(self.DecideWhatToDo)
-            return
         end,
     },
 
     Recycle = State {
         StateName = 'Recycle',
         Main = function(self)
+            local aiBrain = self:GetBrain()
             local platPos = self:GetPlatoonPosition()
             local basePos = aiBrain.BuilderManagers[self.LocationType or 'MAIN'].Position
             if basePos[1] and platPos[1] then
@@ -235,6 +340,7 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
                 else
                     -- Move to base. In a state machine, we can just issue the move 
                     -- and wait for the condition to be met.
+                    self:LogDebug(string.format('Navigate to base for recycle'))
                     self.BuilderData = {
                         Position = basePos,
                     }
@@ -252,125 +358,176 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
         end,
     }, 
 
-    MoveToPickup = State {
-        StateName = 'MoveToPickup',
-        Main = function(self)
-            local aiBrain = self:GetBrain()
-            -- Initial movement
-            self:MoveToLocation(self.pickupPos, 'Air')
-
-            -- Wait until we are close enough to start loading
-            -- Using squared distance (40 units^2 = 1600)
-            while not IsDestroyed(self) do
-                local platPos = self:GetPlatoonPosition()
-                local dx = platPos[1] - self.pickupPos[1]
-                local dz = platPos[3] - self.pickupPos[3]
-                if (dx * dx + dz * dz) < 1600 then
-                    self:ChangeState(self.WaitAtPickup)
-                    return
-                end
-                WaitTicks(20)
-            end
-        end,
-    },
-
     WaitAtPickup = State {
         StateName = 'WaitAtPickup',
         Main = function(self)
-            if self.GetPlatoonUnits then
-                LOG('GetPlatoonUnits exist at the start of WaitAtPickup')
-            else
-                LOG('GetPlatoonUnits doesnt exist at the start of WaitAtPickup')
-            end
+            local aiBrain = self:GetBrain()
             local pickupPlatoon = self.PlatoonData.Platoon
-            if not pickupPlatoon then
-                LOG('Error no pickup platoon')
+            if not pickupPlatoon or not aiBrain:PlatoonExists(pickupPlatoon) then
+                self:LogDebug(string.format('Pickup platoon gone, CompleteUnlock'))
+                self.BuilderData = {
+                    StateWanted = 'Return'
+                }
+                self:ChangeState(self.CompleteUnlock)
+                return
             end
+
+            local transportAssignment = {}
+
             local transportUnits = self:GetPlatoonUnits()
             local cargoUnits = pickupPlatoon:GetPlatoonUnits()
+            if pickupPlatoon and not pickupPlatoon.Dead then
+                -- Check if this specific platoon type has been "upgraded" with the new state
+                if pickupPlatoon.WaitingForTransport then
+                    LOG('Transport: Target platoon supports WaitingForTransport. Forcing state change.')
+                    pickupPlatoon['rngdata'].AssignedTransport = self
+                    pickupPlatoon:ChangeState(pickupPlatoon.WaitingForTransport)
 
-            -- Sort or prepare your cargo
+                else
+                    -- FALLBACK: For older platoons, just issue a standard stop 
+                    -- This prevents them from walking away without needing a custom state
+                    LOG('Transport: Target platoon is legacy. Issuing standard Stop command.')
+                    IssueStop(cargoUnits)
+                end
+            end
+            coroutine.yield(10)
+
             local remainingCargo = {}
             for _, u in cargoUnits do
-                table.insert(remainingCargo, u)
+                if not u.Dead then table.insert(remainingCargo, u) end
             end
+            self:LogDebug(string.format('WaitAtPickup Cargo Unit count '..tostring(table.getn(remainingCargo))))
+            LOG('Transport Unit count '..tostring(table.getn(transportUnits)))
+            LOG('Cargo Unit count '..tostring(table.getn(remainingCargo)))
 
+            -- 1. Loading Assignment Logic
             for _, transport in transportUnits do
-                if table.empty(remainingCargo) then break end
+                if table.empty(remainingCargo) or transport.Dead then break end
                 
-                -- Get the capacity of THIS specific transport
-                -- (Assuming you have access to the helper that returns {Small, Medium, Large})
-                local slots = GetUnitSlotTable(transport) 
+                local slots = self:GetUnitSlotTable(transport) 
                 local loadBatch = {}
                 
-                -- Logic to fill this specific transport's 'loadBatch' based on its slots
-                -- This is a simplified version; you'd ideally check TransportClass
+                -- Check remainingCargo and see what fits in this specific transport
                 for i = table.getn(remainingCargo), 1, -1 do
                     local unit = remainingCargo[i]
-                    -- Logic: If unit fits in 'slots', add to loadBatch and remove from remainingCargo
-                    table.insert(loadBatch, unit)
-                    table.remove(remainingCargo, i)
+                    if not unit or unit.Dead then continue end
                     
-                    -- Break if transport is "full" based on your slot math
+                    local tClass = unit.Blueprint.Transport.TransportClass or 1
+                    
+                    -- Use the fractional logic to ensure we don't over-fill
+                    if tClass == 3 and slots.Large >= 1 then
+                        slots.Large = slots.Large - 1.0
+                        slots.Medium = slots.Medium - 0.25
+                        slots.Small = slots.Small - 0.50
+                        table.insert(loadBatch, unit)
+                        table.remove(remainingCargo, i)
+                    elseif tClass == 2 and slots.Medium >= 1 then
+                        slots.Large = slots.Large - 0.1
+                        slots.Medium = slots.Medium - 1.0
+                        slots.Small = slots.Small - 0.34
+                        table.insert(loadBatch, unit)
+                        table.remove(remainingCargo, i)
+                    elseif tClass == 1 and slots.Small >= 1 then
+                        slots.Medium = slots.Medium - 0.1
+                        slots.Small = slots.Small - 1.0
+                        table.insert(loadBatch, unit)
+                        table.remove(remainingCargo, i)
+                    end
                 end
 
                 if not table.empty(loadBatch) then
-                    -- Command the specific batch to the specific transport
-                    IssueTransportLoad(loadBatch, transport)
+                    self:LogDebug(string.format('Issue Transport load for loadBatch for '..tostring(pickupPlatoon.BuilderName)..' batch size '..tostring(table.getn(loadBatch))))
+                    self:LogDebug(string.format('Platoon Distance is '..tostring(VDist3(pickupPlatoon:GetPlatoonPosition(), self:GetPlatoonPosition()))))
+
+                    LOG('Issue Transport load for loadBatch for '..tostring(pickupPlatoon.BuilderName)..' batch size '..tostring(table.getn(loadBatch)))
+                    safecall("Unable to IssueTransportLoad", IssueTransportLoad, loadBatch, transport )
+                    transportAssignment[transport.EntityId] = {
+                        transportObject = transport,
+                        units = loadBatch
+                    }
                 end
             end
 
+            -- 2. The Wait Loop
+            local transportDestination = self.PlatoonData.Destination
             local loadingTimeout = 0
-            while loadingTimeout < 120 do -- 12 second max wait
+            -- Note: WaitTicks(10) is 1 second. 120 loops = 120 seconds (2 mins). 
+            -- If you want 12 seconds, change the limit to 12.
+            self:LogDebug(string.format('Waiting for load'))
+            while loadingTimeout < 60 do 
+                --LOG('Waiting for loading')
+                if IsDestroyed(self) then
+                    self:LogDebug(string.format('Transport platoon destroyed'))
+                    return
+                end
                 if self:AllUnitsAttached() then
-                    self:ChangeState(self.MoveToDestination)
+                    self:LogDebug(string.format('All units should be attached, navigating'))
+                    LOG('All units attached, navigating')
+                    self:LogDebug(string.format('All units attached, navigating with state wanted being Unloading'))
+                    self.BuilderData = {
+                        Position = transportDestination,
+                        StateWanted = 'Unloading'
+                    }
+                    self:ChangeState(self.Navigating)
                     return
                 end
                 
-                -- Check if the requesting platoon still exists
-                if not pickupPlatoon or IsDestroyed(pickupPlatoon) then
+                -- Verify the transport hasn't been sniped while waiting
+                if not self:GetPlatoonUnits()[1] then
+                    self:LogDebug(string.format('First transport no longer alive'))
+                    LOG('first transport is not alive')
+                    self.BuilderData = {}
+                    self:ChangeState(self.DecideWhatToDo)
+                    return 
+                end
+
+                if not pickupPlatoon or not aiBrain:PlatoonExists(pickupPlatoon) then
+                    self:LogDebug(string.format('No pickup platoon'))
+                    LOG('No pickup platoon')
+                    self.BuilderData = {}
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
+                if loadingTimeout == 30 then
+                    self:LogDebug(string.format('Reorder attachment request'))
+                    self:ReorderAttachment(transportAssignment)
+                    coroutine.yield(35)
+                elseif loadingTimeout == 45 then
+                    self:LogDebug(string.format('Reorder warp attachment request'))
+                    self:ReorderAttachment(transportAssignment, true)
+                    coroutine.yield(35)
+                end
 
                 loadingTimeout = loadingTimeout + 1
-                WaitTicks(10)
+                WaitTicks(10) 
             end
-            
-            -- If we timed out, some units might be left behind, but we must proceed
-            self:ChangeState(self.MoveToDestination)
-        end,
-    },
-
-    MoveToDestination = State {
-        StateName = 'MoveToDestination',
-        Main = function(self)
-            self:MoveToLocation(self.dropPos, 'Air')
-
-            while not IsDestroyed(self) do
-                local platPos = self:GetPlatoonPosition()
-                local dx = platPos[1] - self.dropPos[1]
-                local dz = platPos[3] - self.dropPos[3]
-                if (dx * dx + dz * dz) < 400 then -- 20 units squared
-                    self:ChangeState(self.Unloading)
-                    return
-                end
-                WaitTicks(20)
-            end
+            self:LogDebug(string.format('We didnt attach all units, decide what to do'))
+            self.BuilderData = {}
+            self:ChangeState(self.DecideWhatToDo)
+            return
         end,
     },
 
     Unloading = State {
         StateName = 'Unloading',
         Main = function(self)
+            local aiBrain = self:GetBrain()
+            local requestData = self.PlatoonData
+            local requestPlatoon = requestData.Platoon
+            local builderData = self.BuilderData
             local units = self:GetPlatoonUnits()
             IssueClearCommands(units)
-            IssueTransportUnload(units, self.dropPos)
+            IssueTransportUnload(units, requestData.Destination)
 
             local unloadTimeout = 0
             while unloadTimeout < 60 do
                 if self:IsTransportEmpty() then
+                    requestPlatoon['rngdata'].TransportUnloaded = true
                     break
+                end
+                if unloadTimeout == 45 then
+                    IssueClearCommands(units)
+                    IssueTransportUnload(units, self:GetPlatoonPosition())
                 end
                 unloadTimeout = unloadTimeout + 1
                 WaitTicks(20)
@@ -384,20 +541,55 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
         Main = function(self)
             local aiBrain = self:GetBrain()
             local units = self:GetPlatoonUnits()
-            local manager = aiBrain:GetPlatoonUniquelyNamed('TransportManagerRNG')
+            local manager = aiBrain:GetPlatoonUniquelyNamed('TransportPool')
+            local startPos = self:GetPlatoonPosition()
+            
+            -- 1. Determine Return Destination
+            -- Prefer the manager position, fallback to MAIN base
+            LOG('Complete Unlock plat pos is '..tostring(repr(startPos)))
+            LOG('Current unit count '..tostring(table.getn(units)))
+            local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, startPos, false)
+            local returnPos = aiBrain.BuilderManagers[closestBase].Position
 
+            if returnPos then
+                
+                -- 2. Generate a SAFE Path back to base
+                -- We use the same 'Air' layer and threat weights as the mission-start logic
+                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(
+                    aiBrain, 
+                    'Air', 
+                    startPos, 
+                    returnPos, 
+                    15, -- Threat Weight
+                    80  -- Max Threat
+                )
+
+                if path and table.getn(path) > 1 then
+                    LOG('Transport mission complete. Following safe path back to base.')
+                    IssueClearCommands(units)
+                    for _, waypoint in path do
+                        IssueMove(units, waypoint)
+                    end
+                else
+                    -- Fallback if no path is found (e.g. no markers or surrounded)
+                    LOG('No safe path home found, attempting direct move to base.')
+                    IssueClearCommands(units)
+                    IssueMove(units, returnPos)
+                end
+            end
+
+            -- 3. Hand units back to the manager
             if manager then
-                -- Hand units back to the manager platoon
                 for _, unit in units do
                     if not IsDestroyed(unit) then
-                        unit.InUse = false
+                        unit['rngdata'].InUse = false
                         aiBrain:AssignUnitsToPlatoon(manager, {unit}, 'Support', 'None')
                     end
                 end
             end
             
-            -- Disband this temporary mission platoon
-            self:PlatoonDisband()
+            -- Disband the temporary mission platoon
+            self:ExitStateMachine()
         end,
     },
 
@@ -425,6 +617,69 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
         aiBrain.TransportSlotTable[id] = slots
         
         return { Large = slots.Large, Medium = slots.Medium, Small = slots.Small }
+    end,
+
+    AllUnitsAttached = function(self)
+        local aiBrain = self:GetBrain()
+        local cargoPlatoon = self.PlatoonData.Platoon
+        if not cargoPlatoon or not aiBrain:PlatoonExists(cargoPlatoon) then
+            return true 
+        end
+        for _, u in cargoPlatoon:GetPlatoonUnits() do
+            if not u.Dead and not u:IsUnitState('Attached') then
+                return false
+            end
+        end
+        return true
+    end,
+
+    ReorderAttachment = function(self, manifest, warpUnits)
+        local aiBrain = self:GetBrain()
+        local cargoPlatoon = self.PlatoonData.Platoon
+        if not cargoPlatoon or not aiBrain:PlatoonExists(cargoPlatoon) then
+            return true 
+        end
+        for _, t in manifest do
+            local transport = t.transportObject
+            local transPos = transport:GetPosition()
+            local unitsToLoad = {}
+            for _, u in t.units do
+                if not u.Dead and not u:IsUnitState('Attached') then
+                    local unitPos = u:GetPosition()
+                    local distSq = VDist2Sq(unitPos[1], unitPos[3], transPos[1], transPos[3])
+                    if warpUnits then
+                        Warp(u, transPos)
+                    else
+                        if distSq < 25 then 
+                            IssueClearCommands({u})
+                            IssueMove({u}, {unitPos[1] + 5, unitPos[2], unitPos[3] + 5})
+                        else
+                            local dist = math.sqrt(distSq)
+                            local lerpPos = RUtils.lerpy(transPos, unitPos, {dist, dist - 5})
+                            IssueClearCommands({u})
+                            IssueMove({u}, transPos)
+                        end
+                    end
+                    table.insert(unitsToLoad, u)
+                end
+            end
+            if table.getn(unitsToLoad) > 0 then
+                IssueClearCommands({transport})
+                IssueMove({transport}, transPos)
+                safecall("Unable to IssueTransportLoad remaining units", IssueTransportLoad, unitsToLoad, transport )
+            end
+        end
+        return true
+    end,
+
+    --- Checks if all transports in this platoon are empty
+    IsTransportEmpty = function(self)
+        for _, t in self:GetPlatoonUnits() do
+            if not t.Dead and table.getn(t:GetCargo()) > 0 then
+                return false
+            end
+        end
+        return true
     end,
 }
 

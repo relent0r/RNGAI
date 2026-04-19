@@ -68,7 +68,18 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     local zx = engPos[1] - v.pos[1]
                     local zz = engPos[3] - v.pos[3]
                     if zx * zx + zz * zz < maxMarkerDistance then
-                        table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id, AmphibLabel = v.amphiblabel })
+                        local zoneEntry = {
+                            Position = v.pos,
+                            ResourceMarkers = {},
+                            ResourceValue = v.resourcevalue,
+                            ZoneID = v.id,
+                            AmphibLabel = v.amphiblabel
+
+                        }
+                        for _, m in v.resourcemarkers do
+                            table.insert(zoneEntry.ResourceMarkers, { Marker = m, Enabled = true })
+                        end
+                        table.insert(zoneMarkers, zoneEntry)
                     end
                 end
             end
@@ -78,7 +89,18 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     local zx = engPos[1] - v.pos[1]
                     local zz = engPos[3] - v.pos[3]
                     if zx * zx + zz * zz < maxMarkerDistance then
-                        table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id, AmphibLabel = v.amphiblabel })
+                        local zoneEntry = {
+                            Position = v.pos,
+                            ResourceMarkers = {},
+                            ResourceValue = v.resourcevalue,
+                            ZoneID = v.id,
+                            AmphibLabel = v.amphiblabel
+
+                        }
+                        for _, m in v.resourcemarkers do
+                            table.insert(zoneEntry.ResourceMarkers, { Marker = m, Enabled = true })
+                        end
+                        table.insert(zoneMarkers, zoneEntry)
                     end
                 end
             end
@@ -102,7 +124,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
 
             local aiBrain = self:GetBrain()
             local eng = self.eng
-            local noTransportsAvailable = not aiBrain.TransportPool or table.getn(aiBrain.TransportPool) < 1
+            local noTransportsAvailable = not aiBrain.TransportPool or aiBrain.TransportPool and aiBrain.TransportPressure and aiBrain.TransportPressure.PressureLevel > 2
             self.LastActive = GetGameTimeSeconds()
             -- how should we handle multiple engineers?
             local unit = self:GetPlatoonUnits()[1]
@@ -128,6 +150,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local transportRequired = false
             local enemyWeight = 1.5
             local transportPenaltySq = 12996
+            self:LogDebug(string.format('Engineer performing mass point table sort, entity is '..tostring(eng.EntityId)))
             table.sort(self.ZoneMarkers, function(a, b)
                 local aIsTrapped = (engLabel and noTransportsAvailable and a.AmphibLabel ~= engLabel)
                 local bIsTrapped = (engLabel and noTransportsAvailable and b.AmphibLabel ~= engLabel)
@@ -151,22 +174,38 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             if noTransportsAvailable and transportRequired then
                 aiBrain.TransportRequested = true 
             end
-            local currentmarker=nil
-            self.CurentZoneIndex=nil
-            self.CurrentMarkerIndex=nil
+            self.CurrentZoneIndex=nil
             local zoneFound = false
-            --self:LogDebug(string.format('Looping through remaining zone markers'))
+            self:LogDebug(string.format('Looping through remaining zone markers'))
             --self:LogDebug(string.format('eng id is '..tostring(eng.EntityId)))
             for i,v in self.ZoneMarkers do
+                if eng.EntityId == '25' then
+                    self:LogDebug(string.format('Eng is checking zone with distance '..tostring(VDist3(v.Position, platoonPos))))
+                end
                 for j, m in v.ResourceMarkers do
-                    if aiBrain:CanBuildStructureAt('ueb1103', m.position) then
-                        --LOG('First position in zoneMarkers selected is '..repr(m.position)..' zone index '..i)
-                        currentmarker=m
-                        self.CurentZoneIndex=i
-                        self.CurrentMarkerIndex=j
-                        --RNGLOG('We can build at mex, breaking loop '..repr(currentmexpos))
-                        zoneFound = true
-                        break
+                    if m.Enabled then
+                        local marker = m.Marker
+                        local canBuild = aiBrain:CanBuildStructureAt('ueb1103', marker.position)
+                        local isOccupiedByEnemy = false
+                        if not canBuild then
+                            -- PERFORMANCE OPTIMIZATION: Only check for units in a tiny radius (2 units)
+                            -- and only if the engine says we can't build.
+                            local unitCount = aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.MASSEXTRACTION, marker.position, 2, 'Enemy')
+                            if unitCount > 0 then
+                                self:LogDebug(string.format('Found marker occupied by enemy unit'))
+                                self:LogDebug(string.format('Distance to zone is '..tostring(VDist3(v.Position, platoonPos))))
+                                isOccupiedByEnemy = true
+                            end
+                        end
+                        if canBuild or isOccupiedByEnemy then
+                            if StateUtils.CanReallocateMarker(eng, marker) then
+                                --LOG('First position in zoneMarkers selected is '..repr(m.position)..' zone index '..i)
+                                self.CurrentZoneIndex=i
+                                self:LogDebug(string.format('We can build at mex, breaking loop'))
+                                zoneFound = true
+                                break
+                            end
+                        end
                     end
                 end
                 if zoneFound then
@@ -174,9 +213,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if not zoneFound then
-                --self:LogDebug(string.format('Start Cycle is greater than 3, disband platoon, eng id is '..tostring(eng.EntityId)))
+                self:LogDebug(string.format('No zone found after first loop'))
                 if self.StartCycle > 3 then
-                    --self:LogDebug(string.format('Start Cycle is greater than 3, disband platoon, eng id is '..tostring(eng.EntityId)))
+                    self:LogDebug(string.format('Start Cycle is greater than 3, disband platoon, eng id is '..tostring(eng.EntityId)))
                     coroutine.yield(20)
                     self:ExitStateMachine()
                 end
@@ -186,7 +225,18 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         local zx = platoonPos[1] - v.pos[1]
                         local zz = platoonPos[3] - v.pos[3]
                         if zx * zx + zz * zz < maxMarkerDistance then
-                            table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                            local zoneEntry = {
+                                Position = v.pos,
+                                ResourceMarkers = {},
+                                ResourceValue = v.resourcevalue,
+                                ZoneID = v.id,
+                                AmphibLabel = v.amphiblabel
+
+                            }
+                            for _, m in v.resourcemarkers do
+                                table.insert(zoneEntry.ResourceMarkers, { Marker = m, Enabled = true })
+                            end
+                            table.insert(zoneMarkers, zoneEntry)
                         end
                     end
                 end
@@ -196,7 +246,18 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         local zx = platoonPos[1] - v.pos[1]
                         local zz = platoonPos[3] - v.pos[3]
                         if zx * zx + zz * zz < maxMarkerDistance then
-                            table.insert(zoneMarkers, { Position = v.pos, ResourceMarkers = table.copy(v.resourcemarkers), ResourceValue = v.resourcevalue, ZoneID = v.id })
+                            local zoneEntry = {
+                                Position = v.pos,
+                                ResourceMarkers = {},
+                                ResourceValue = v.resourcevalue,
+                                ZoneID = v.id,
+                                AmphibLabel = v.amphiblabel
+
+                            }
+                            for _, m in v.resourcemarkers do
+                                table.insert(zoneEntry.ResourceMarkers, { Marker = m, Enabled = true })
+                            end
+                            table.insert(zoneMarkers, zoneEntry)
                         end
                     end
                 end
@@ -205,81 +266,124 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
-            if aiBrain:GetThreatAtPosition(currentmarker.position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 2 then
-                local threat = RUtils.GrabPosDangerRNG(aiBrain, currentmarker.position, 30,30, true, false, false)
+            local foundZone = self.ZoneMarkers[self.CurrentZoneIndex]
+            if aiBrain:GetThreatAtPosition(foundZone.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') > 2 then
+                local threat = RUtils.GrabPosDangerRNG(aiBrain, foundZone.Position, 30,30, true, false, false)
                 if (threat.enemyStructure + threat.enemySurface) > threat.allySurface then
-                    table.remove(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers,self.CurrentMarkerIndex)
-                    --self:LogDebug(string.format('Threat too high at destination mass marker '..tostring(currentmarker.position[1])..' '..tostring(currentmarker.position[3])))
+                    self:LogDebug(string.format('Threat too high, abort'))
+                    for _, item in foundZone.ResourceMarkers do
+                        StateUtils.RemoveFromZoneMarkersCache(self.ZoneMarkers, self.CurrentZoneIndex, item.Marker)
+                    end
+                    self:LogDebug(string.format('Threat too high at destination mass marker '..tostring(foundZone.Position[1])..' '..tostring(foundZone.Position[3])))
+                    self:LogDebug(string.format('Distance to marker was '..tostring(VDist2(platoonPos[1],platoonPos[3],foundZone.Position[1],foundZone.Position[3]))))
                     coroutine.yield(1)
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
             end
             eng.EngineerBuildQueue = {}
-            if currentmarker then
-                if self.ZoneMarkers[self.CurentZoneIndex].ResourceValue > 1 then
-                    local markers = table.copy(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers)
-                    table.sort(markers,function(a,b) return(VDist2Sq(a.position[1],a.position[3],currentmarker.position[1],currentmarker.position[3])<VDist2Sq(b.position[1],b.position[3],currentmarker.position[1],currentmarker.position[3]))end)
-                    for k, massMarker in markers do
-                        local borderWarning
-                        if massMarker.position[1] - playableArea[1] <= 8 or massMarker.position[1] >= playableArea[3] - 8 or massMarker.position[3] - playableArea[2] <= 8 or massMarker.position[3] >= playableArea[4] - 8 then
-                            borderWarning = true
+            if zoneFound then
+                local currentmarker
+                local processed = {} 
+                local lastPos = platoonPos 
+                local markers = foundZone.ResourceMarkers
+
+                for i = 1, RNGGETN(markers) do
+                    local bestMarkerObj = nil
+                    local closestDistSq
+
+                    for _, markerObject in markers do
+                        local massMarker = markerObject.Marker
+                        -- Use the 'name' property as the unique, desync-safe key
+                        if markerObject.Enabled and not processed[massMarker.name] then
+                            local mPos = massMarker.position
+                            local distSq = VDist2Sq(mPos[1], mPos[3], lastPos[1], lastPos[3])
+                            
+                            if not closestDistSq or distSq < closestDistSq then
+                                closestDistSq = distSq
+                                bestMarkerObj = markerObject
+                            end
                         end
-                        if VDist2Sq(massMarker.position[1],massMarker.position[3],currentmarker.position[1],currentmarker.position[3]) < 625 then
-                            if aiBrain:CanBuildStructureAt('ueb1103', massMarker.position) then
-                                RUtils.EngineerTryReclaimCaptureArea(aiBrain,eng, massMarker.position, 5)
-                                local repairPerformed = RUtils.EngineerTryRepair(aiBrain,eng, whatToBuild, massMarker.position)
-                                --eng:SetCustomName('MexBuild Platoon attempting to build in for loop')
-                                if not repairPerformed then
-                                    if borderWarning then
-                                        --RNGLOG('Border Warning on mass point marker')
-                                        IssueBuildMobile({eng}, massMarker.position, whatToBuild, {})
-                                    else
-                                        aiBrain:BuildStructure(eng, whatToBuild, {massMarker.position[1], massMarker.position[3], 0}, false)
-                                    end
-                                    local newEntry = {whatToBuild, {massMarker.position[1], massMarker.position[3], 0}, false,Position=massMarker.position}
-                                    RNGINSERT(eng.EngineerBuildQueue, newEntry)
-                                    currentmarker=massMarker
+                    end
+
+                    if bestMarkerObj then
+                        local massMarker = bestMarkerObj.Marker
+                        processed[massMarker.name] = true
+
+                        if aiBrain:CanBuildStructureAt('ueb1103', massMarker.position) then
+                            local canBuild = false
+                        
+                            if not massMarker.reservedBy then
+                                canBuild = true
+                                LOG('No one owns this marker so we can have it')
+                            else
+                                -- Yes 0.7225 is intentional because its a squared number
+                                if massMarker.reservationDistSq and closestDistSq < (massMarker.reservationDistSq * 0.7225) then
+                                    canBuild = true
+                                    LOG('Taking another engineers mass point because we are closer my distance '..tostring(closestDistSq)..' existing '..tostring(massMarker.reservationDistSq))
                                 end
                             end
-                        end
-                    end
-                else
-                    if aiBrain:CanBuildStructureAt('ueb1103', currentmarker.position) then
-                        RUtils.EngineerTryReclaimCaptureArea(aiBrain,eng, currentmarker.position, 5)
-                        local repairPerformed = RUtils.EngineerTryRepair(aiBrain,eng, whatToBuild, currentmarker.position)
-                        --eng:SetCustomName('MexBuild Platoon attempting to build in for loop')
-                        if not repairPerformed then
-                            local borderWarning
-                            if currentmarker.position[1] - playableArea[1] <= 8 or currentmarker.position[1] >= playableArea[3] - 8 or currentmarker.position[3] - playableArea[2] <= 8 or currentmarker.position[3] >= playableArea[4] - 8 then
-                                borderWarning = true
+                            if canBuild then
+                                local borderWarning
+                                if massMarker.position[1] - playableArea[1] <= 8 or massMarker.position[1] >= playableArea[3] - 8 or massMarker.position[3] - playableArea[2] <= 8 or massMarker.position[3] >= playableArea[4] - 8 then
+                                    borderWarning = true
+                                end
+                                local newEntry = {whatToBuild, {massMarker.position[1], massMarker.position[3], 0}, false, massMarker.position, borderWarning or false, false, massMarker}
+                                RNGINSERT(eng.EngineerBuildQueue, newEntry)
+                                lastPos = massMarker.position
+                                currentmarker = massMarker
+                                StateUtils.ReserveMassMarker(eng, massMarker)
                             end
-                            if borderWarning then
-                                --RNGLOG('Border Warning on mass point marker')
-                                IssueBuildMobile({eng}, currentmarker.position, whatToBuild, {})
-                            else
-                                aiBrain:BuildStructure(eng, whatToBuild, {currentmarker.position[1], currentmarker.position[3], 0}, false)
-                            end
-                            local newEntry = {whatToBuild, {currentmarker.position[1], currentmarker.position[3], 0}, false,Position=currentmarker.position}
-                            RNGINSERT(eng.EngineerBuildQueue, newEntry)
                         end
+                    else
+                        break 
                     end
                 end
-                local ax = platoonPos[1] - currentmarker.position[1]
-                local az = platoonPos[3] - currentmarker.position[3]
-                if ax * ax + az * az < 3600 and NavUtils.CanPathTo(self.MovementLayer, platoonPos, currentmarker.position) then
-                    --self:LogDebug(string.format('DecideWhatToDo high priority target close combatloop'))
-                    self:ChangeState(self.Constructing)
-                    return
+
+                if currentmarker then
+                    local ax = platoonPos[1] - currentmarker.position[1]
+                    local az = platoonPos[3] - currentmarker.position[3]
+                    if ax * ax + az * az < 3600 and NavUtils.CanPathTo(self.MovementLayer, platoonPos, currentmarker.position) then
+                        if eng.EngineerBuildQueue and table.getn(eng.EngineerBuildQueue) > 0 then
+                            for k, v in eng.EngineerBuildQueue do
+                                RUtils.EngineerTryReclaimCaptureArea(aiBrain,eng, {eng.EngineerBuildQueue[k][2][1], GetSurfaceHeight(eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2]), eng.EngineerBuildQueue[k][2][2]}, 3)
+                                local repairPerformed = RUtils.EngineerTryRepair(aiBrain,eng, whatToBuild, {eng.EngineerBuildQueue[k][2][1], GetSurfaceHeight(eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2]), eng.EngineerBuildQueue[k][2][2]})
+                                if not repairPerformed then
+                                    if eng.EngineerBuildQueue[k][5] then
+                                        LOG('IssueBuildMobile so borderwarning was true')
+                                        IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
+                                    else
+                                        LOG('Normal builld trigger')
+                                        aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                                    end
+                                    local marker = eng.EngineerBuildQueue[k][7]
+                                    if marker then
+                                        StateUtils.ReserveMassMarker(eng, eng.EngineerBuildQueue[k][7])
+                                    else
+                                        LOG('No marker in the engineers build queue')
+                                    end
+                                end
+                            end
+                            self:ChangeState(self.Constructing)
+                            return
+                        else
+                            self:ChangeState(self.DecideWhatToDo)
+                            return
+                        end
+                    else
+                        self:LogDebug(string.format('Engineer thinks its too far from the marker or cant path and is going to navigate'))
+                        self.BuilderData = {
+                            WhatToBuild = whatToBuild,
+                            Position = currentmarker.position,
+                            Marker = currentmarker,
+                            CutOff = 400
+                        }
+                        LOG(string.format("AUDIT: NavTransitionRef: %s | ID_At_Log: %s", tostring(currentmarker), tostring(currentmarker.reservedBy)))
+                        self:ChangeState(self.NavigateToTaskLocation)
+                        return
+                    end
                 else
-                    self.BuilderData = {
-                        WhatToBuild = whatToBuild,
-                        Position = currentmarker.position,
-                        Marker = currentmarker,
-                        CutOff = 400
-                    }
-                    self:ChangeState(self.NavigateToTaskLocation)
-                    return
+                    self:LogDebug(string.format('Engineer has no current marker after looking for one'))
                 end
             end
             if eng.Dead then return end
@@ -301,11 +405,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local eng = self.eng
             local builderData = self.BuilderData
             local pos = eng:GetPosition()
-            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, self.MovementLayer, pos, builderData.Position, 15 , 30)
-            --self:LogDebug(string.format('Navigating to position, path reason is '..tostring(reason)))
             local result, navReason
             local whatToBuildM = self.ExtractorBuildID
-            local bUsedTransports
             if IsDestroyed(eng) then
                 --SPEW('* AI-RNG: Unit is death before calling CanPathTo()')
                 return
@@ -315,33 +416,98 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local minPlatoonSpeed = self['rngdata'].MinPlatoonSpeed or 1.9
             local walkDistThreshold = minPlatoonSpeed * maxWalkTime
             local walkDistThresholdSq = walkDistThreshold * walkDistThreshold
-            if reason ~= 'PathOK' then
-                --self:LogDebug(string.format('Path is not ok '))
-                if navigateDist < 300*300 then
-                    --self:LogDebug(string.format('Distance is less than 300'))
-                    result, navReason = NavUtils.CanPathTo('Amphibious', pos, builderData.Position)
-                end 
+            local needsTransport = false
+            local canPath = NavUtils.CanPathTo(self.MovementLayer, pos, builderData.Position)
+            if not canPath or navigateDist > (350 * 350) then
+                needsTransport = true
             end
+            self:LogDebug('Starting navigation movement')
 
-            if ((not result and reason ~= 'PathOK') or navigateDist > walkDistThresholdSq)
-            and eng.PlatoonHandle then
-
+            if needsTransport or navigateDist > walkDistThresholdSq then
                 -- Skip the last move... we want to return and do a build
-               eng.WaitingForTransport = true
-               --bUsedTransports = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua").SendPlatoonWithTransports(aiBrain, eng.PlatoonHandle, builderData.Position, 2, true)
-               bUsedTransports = StateUtils.RequestTransportRNG(self, builderData.Position)
-               eng.WaitingForTransport = false
+                local transportType = canPath and 'Resource' or 'ResourceNoPath'
+                self:LogDebug('Requesting transport for navigation')
+                eng['rngdata'].WaitingForTransport = true
+                local requestId, requestData = StateUtils.RequestTransportRNG(self, builderData.Position, transportType)
+                if requestId then
+                    LOG('Request ID provided is '..tostring(requestId))
+                    self:LogDebug('Transport Requested and requestId received')
+                    local estWait = (requestData and requestData.EstimatedWait) or 30
+                    local walkTime = (math.sqrt(navigateDist) / (eng.Blueprint.Physics.MaxSpeed or 2.5))
+                    --LOG('estWait '..tostring(estWait)..' walk time '..tostring(walkTime))
+                    if not canPath or walkTime > estWait then
+                        self:LogDebug('Walk time is greater than wait, we will wait for a transport')
+                        local timeout = 0
+                        local maxWaitTime = math.max(estWait, 150)
+                        local reclaimPerformed = false
+                        while not eng.Dead and not eng:IsUnitState('Attached') and timeout < maxWaitTime do
+                            if not reclaimPerformed and estWait > 20 then
+                                reclaimPerformed = RUtils.PerformEngAreaReclaim(aiBrain, eng, 60)
+                                reclaimPerformed = true
+                            end
+                            coroutine.yield(20)
+                            local manager = aiBrain:GetPlatoonUniquelyNamed('TransportPool')
+                            if manager and not manager:GetRequestById(requestId) then
+                                LOG('Request ID is not present in the transport pool manager')
+                                coroutine.yield(15)
+                                local transport = self['rngdata'].AssignedTransport
+                                if not transport or transport.Dead then
+                                    -- Request disappeared but we aren't attached? Transport probably died.
+                                    LOG('Request is no longer in manager and we are not attached, break')
+                                    break
+                                end
+                            end
+                            timeout = timeout + 2
+                        end
+                        eng['rngdata'].WaitingForTransport = false
+                        self:LogDebug('Left waiting loop, move to attached check')
+                        
+                        -- If we successfully used a transport, transition to check if we have a build queue or return to decision
+                        if eng:IsUnitState('Attached') then
+                            self:LogDebug('Eng is now attached to transport')
+                            while not eng.Dead and (eng:IsUnitState('Attached') or eng:IsUnitState('TransportLoading')) do
+                                coroutine.yield(20)
+                            end
+                            -- Post-drop check
+                            coroutine.yield(10)
+                            self:LogDebug('Engineer dropped off by transport, build queue is '..tostring(table.getn(eng.EngineerBuildQueue)))
+                            if eng.EngineerBuildQueue and table.getn(eng.EngineerBuildQueue) > 0 then
+                                for k, v in eng.EngineerBuildQueue do
+                                    if eng.EngineerBuildQueue[k].PathPoint then
+                                        continue
+                                    end
+                                    if eng.EngineerBuildQueue[k][5] then
+                                        IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
+                                    else
+                                        aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                                    end
+                                end
+                                self:ChangeState(self.Constructing)
+                                return
+                            else
+                                self:ChangeState(self.DecideWhatToDo)
+                                return
+                            end
+                        else
+                            if eng:IsUnitState('Building') or eng:IsUnitState('Moving') then
+                                self:ChangeState(self.Constructing)
+                                return
+                            end
+                        end
+                    end
+                end
 
-                if bUsedTransports then
-                    self:LogDebug(string.format('Used a transport'))
-                    self.UsedTransports = true
-                    coroutine.yield(10)
-                    self:ChangeState(self.Constructing)
-                    return
-                elseif reason == 'Unpathable' or VDist2Sq(pos[1], pos[3], builderData.Position[1], builderData.Position[3]) > 512 * 512 then
+                
+                eng['rngdata'].WaitingForTransport = false
+                
+                if not canPath or navigateDist > 512 * 512 then
                     self:LogDebug(string.format('We didnt use a transport so are clearing commands'))
                     -- If over 512 and no transports dont try and walk!
-                    table.remove(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers,self.CurrentMarkerIndex)
+                    local marker = builderData.Marker
+                    if marker then
+                        StateUtils.ReleaseMassMarker(eng, marker)
+                        StateUtils.RemoveFromZoneMarkersCache(self.ZoneMarkers, self.CurrentZoneIndex, marker)
+                    end
                     --self:LogDebug(string.format('No path to position or greater than 500 and unable to use transport'))
                     IssueClearCommands({eng})
                     coroutine.yield(10)
@@ -349,19 +515,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            if result or reason == 'PathOK' then
-                --RNGLOG('* AI-RNG: engineerMoveWithSafePath(): result or reason == PathOK ')
-                if reason ~= 'PathOK' then
-                    path, reason = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, builderData.Position)
-                end
+            self:LogDebug('canPath is '..tostring(canPath))
+            if canPath then
+                local path, reason, distance, threats = AIAttackUtils.EngineerGenerateSafePathToRNG(aiBrain, 'Amphibious', pos, builderData.Position)
                 if path then
-                    --self:LogDebug(string.format('We are going to walk to the destination (a transport might have brought us)'))
-                    --RNGLOG('* AI-RNG: engineerMoveWithSafePath(): path 0 true')
-                    -- Move to way points (but not to destination... leave that for the final command)
-                    --RNGLOG('We are issuing move commands for the path')
+                    self:LogDebug(string.format('We are going to walk to the destination (a transport might have brought us)'))
                     local dist
                     local pathLength = RNGGETN(path)
-                    --self:LogDebug(string.format('Path length is '..tostring(pathLength)))
                     local brokenPathMovement = false
                     local currentPathNode = 1
                     IssueClearCommands({eng})
@@ -409,6 +569,27 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     while not IsDestroyed(eng) do
+                        local primaryMarker = builderData.Marker
+                        if primaryMarker and primaryMarker.reservedBy == eng.EntityId then
+                            primaryMarker.reservationDistSq = VDist2Sq(pos[1], pos[3], primaryMarker.position[1], primaryMarker.position[3])
+                        else
+                            -- THEFT CHECK: If our primary marker was stolen while we walked, abort.
+                            LOG('Zone assigned to another engineer, abort navigate, engineer id is '..tostring(eng.EntityId))
+                            self:LogDebug('Primary marker stolen or lost, returning to DecideWhatToDo')
+                            LOG('Entity that is assigned is '..tostring(primaryMarker.reservedBy))
+                            if primaryMarker.reservedBy then
+                                local entity = GetEntityById(primaryMarker.reservedBy)
+                                if entity and not entity.Dead then
+                                    LOG('Entity that has reserved the marker is alive, its current platoon is '..tostring(entity.PlatoonHandle.BuilderName))
+                                else
+                                    LOG('Entity is no longer alive')
+                                end
+                            end
+                            IssueClearCommands({eng})
+                            coroutine.yield(10)
+                            self:ChangeState(self.DecideWhatToDo)
+                            return
+                        end
                         local reclaimed
                         if brokenPathMovement and eng.EngineerBuildQueue and not table.empty(eng.EngineerBuildQueue) then
                             pos = eng:GetPosition()
@@ -461,7 +642,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if VDist3Sq(builderData.Position, pos) < 3600 then
-                            --self:LogDebug(string.format('We are within 60 units of destination, break from while loop'))
+                            self:LogDebug(string.format('We are within 60 units of destination, break from while loop'))
                             break
                         end
                         coroutine.yield(15)
@@ -469,7 +650,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                         if eng:IsIdleState() then
-                            --self:LogDebug(string.format('We are idle for some reason, go back to decide what to do'))
+                            self:LogDebug(string.format('We are idle for some reason, go back to decide what to do'))
                             self:ChangeState(self.DecideWhatToDo)
                           return
                         end
@@ -486,6 +667,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                         if eng:IsUnitState("Moving") then
                             if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, pos, 45, 'Enemy') > 0 then
+                                self:LogDebug('Enemy unit detected')
                                 local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.MOBILE, pos, 45, 'Enemy')
                                 for _, eunit in enemyUnits do
                                     local enemyUnitPos = eunit:GetPosition()
@@ -534,7 +716,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 else
-                    if reason == 'TooMuchThreat' then
+                    if reason == 'TooMuchThreat' and table.getn(threats) > 0 then
+                        self:LogDebug(string.format('Too much threat to travel'))
+                        --LOG('Dump threats '..tostring(repr(threats)))
                         coroutine.yield(30)
                         self:ExitStateMachine()
                         return
@@ -545,10 +729,94 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     return
                 end
                 coroutine.yield(10)
-                --self:LogDebug(string.format('Set to constructing state'))
+                self:LogDebug(string.format('Set to constructing state'))
                 self:ChangeState(self.Constructing)
                 return
             end
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
+    WaitingForTransport = State {
+
+        StateName = "WaitingForTransport",
+
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            local eng = self.eng
+            if not eng or eng.Dead then return end
+            --LOG('Engineer has moved into a WaitingForTransport State')
+            self:LogDebug(string.format('Engineer has entered  WaitingForTransport  state'))
+
+            -- 1. THE HALT
+            -- We do NOT IssueClearCommands here if we have a build queue!
+            -- Instead, we just IssueStop to kill current movement.
+            IssueStop({eng})
+            --[[
+            if eng.EngineerBuildQueue then
+                for k, v in eng.EngineerBuildQueue do
+                    if eng.EngineerBuildQueue[k][5] then
+                        IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
+                    else
+                        aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                    end
+                end
+            end
+            ]]
+            self:LogDebug(string.format('Engineer has issued  a stop'))
+            local transportPlatoon = self['rngdata'].AssignedTransport
+            if not transportPlatoon then
+                self:LogDebug(string.format('transportPlatoon is nil'))
+            end
+            -- 2. THE IDLE LOOP
+            local reissuedBuild = false
+            while not IsDestroyed(self) and not eng.Dead do
+                self:LogDebug(string.format('Engineer is waiting inside the idle loop'))
+                -- If we are attached, we just wait to be dropped
+                if eng:IsUnitState('Attached') then
+                    self:LogDebug(string.format('Engineer is attached inside the idle loop'))
+                    coroutine.yield(40)
+                    if not reissuedBuild then
+                        reissuedBuild = true
+                        if eng.EngineerBuildQueue then
+                            for k, v in eng.EngineerBuildQueue do
+                                if eng.EngineerBuildQueue[k][5] then
+                                    IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
+                                else
+                                    aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                                end
+                            end
+                        end
+                    end
+                elseif eng:IsUnitState('TransportLoading') then
+                    self:LogDebug(string.format('Engineer is transport loading inside the idle loop'))
+                    coroutine.yield(10)
+                else
+                    coroutine.yield(30)
+                    if eng:IsUnitState('Building') or eng:IsUnitState('Moving') then
+                        self:ChangeState(self.Constructing)
+                        return
+                    end
+                    self:LogDebug(string.format('Engineer is something else inside the idle loop '..tostring(eng.EntityId)))
+                    -- If the transport is lost, resume whatever we were doing
+                    if not transportPlatoon or transportPlatoon.Dead then
+                        self:LogDebug(string.format('Engineer considered the transport lost or maybe its already returned to the manage pool'))
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                    if eng:IsIdleState() and self['rngdata'].TransportUnloaded then
+                        self['rngdata'].TransportUnloaded = false
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
+                end
+                coroutine.yield(20)
+            end
+            self:LogDebug(string.format('Engineer is exiting WaitingForTransport state'))
+            self['rngdata'].AssignedTransport =  nil
+            self:ChangeState(self.DecideWhatToDo)
+            return
         end,
     },
 
@@ -592,6 +860,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                             IssueClearCommands({eng})
                                             IssueReclaim({eng}, unit)
                                             coroutine.yield(60)
+                                            StateUtils.ReleaseMassMarkersInBuildQueue(eng)
                                             self:ChangeState(self.DecideWhatToDo)
                                             return
                                         end
@@ -602,15 +871,15 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                         --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
                                         IssueClearCommands({eng})
                                         IssueReclaim({eng}, unit)
-                                        coroutine.yield(60)
-                                        coroutine.yield(10)
+                                        coroutine.yield(70)
+                                        StateUtils.ReleaseMassMarkersInBuildQueue(eng)
                                         self:ChangeState(self.DecideWhatToDo)
                                         return
                                     else
                                         IssueClearCommands({eng})
                                         IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, platPos, 50))
-                                        coroutine.yield(60)
-                                        coroutine.yield(10)
+                                        coroutine.yield(70)
+                                        StateUtils.ReleaseMassMarkersInBuildQueue(eng)
                                         self:ChangeState(self.DecideWhatToDo)
                                         return
                                     end
@@ -634,12 +903,18 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         --- Check for reclaim or assist or expansion specific things based on distance from base.
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
-            table.remove(self.ZoneMarkers[self.CurentZoneIndex].ResourceMarkers,self.CurrentMarkerIndex)
+            local eng = self.eng
+            local marker = self.BuilderData.Marker
+            if not marker then
+                LOG('self.BuilderData.Marker is currently empty')
+            end
+            if marker then
+                StateUtils.RemoveFromZoneMarkersCache(self.ZoneMarkers, self.CurrentZoneIndex, marker)
+            end
             coroutine.yield(10)
             local aiBrain = self:GetBrain()
             local radarRequestExists = aiBrain.IntelManager:IsExistingStructureRequestPresent(self:GetPlatoonPosition(), 45, 'RADAR')
             if radarRequestExists then
-                local eng = self.eng
                 local radarRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(eng, self:GetPlatoonPosition(), 45, 'RADAR')
                 if radarRequestPos then
                     import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'RadarBuild', Position = radarRequestPos, LocationType = self.LocationType} }, self, self:GetPlatoonUnits())

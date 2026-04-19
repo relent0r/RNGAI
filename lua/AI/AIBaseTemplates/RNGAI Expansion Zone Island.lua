@@ -30,6 +30,7 @@ BaseBuilderTemplate {
                 'RNGAI LandBuilder T1',
                 'RNGAI LandBuilder T2',
                 'RNGAI LandBuilder T3',
+                'RNGAI Reaction Tanks Island',
         
                 -- Land Unit Formers T1 --
                 'RNGAI ScoutLandFormer',

@@ -107,8 +107,8 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
-            { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'LandZoneAvailableRNG', { 'LocationType', 1000 } },
+            { UCBC, 'ExpansionBaseCheckRNG', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
+            { UCBC, 'LandZoneAvailableRNG', { 'LocationType', 1024 } },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
@@ -123,7 +123,7 @@ BuilderGroup {
                 ZoneExpansion = true,
                 NearMarkerType = 'Zone Expansion',
                 ExpansionRadius = 90, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
-                LocationRadius = 1000,
+                LocationRadius = 1024, -- 20km map max radius here
                 LocationType = 'LocationType',
                 BuildStructures = {                    
                     { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
@@ -139,8 +139,8 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderConditions = {
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
-            { UCBC, 'ExpansionBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
-            { UCBC, 'LandZoneAvailableRNG', { 'LocationType', 1000 } },
+            { UCBC, 'ExpansionBaseCheckRNG', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
+            { UCBC, 'LandZoneAvailableRNG', { 'LocationType', 2048 } },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Any',
@@ -155,7 +155,7 @@ BuilderGroup {
                 ZoneExpansion = true,
                 NearMarkerType = 'Zone Expansion',
                 ExpansionRadius = 90, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
-                LocationRadius = 1000,
+                LocationRadius = 2048, -- 40km map max radius here which means it wont expand far on 80km maps
                 LocationType = 'LocationType',
                 BuildStructures = {                    
                     { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
