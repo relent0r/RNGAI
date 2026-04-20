@@ -896,7 +896,7 @@ IntelManager = Class {
                                 end
                             end
                         elseif zone.TeamValue < 0.8 or zone.TeamValue > 1.2 then
-                            LOG('Zone is less than 0.8 or more than 1.2')
+                            --LOG('Zone is less than 0.8 or more than 1.2')
                             for _, resValue in ipairs(labelResourceValue[zone.Label] or {}) do
                                 if zoneSet[resValue.ZoneID].BuilderManager.FactoryManager.LocationActive then
                                     higherValueExists = true
@@ -906,7 +906,7 @@ IntelManager = Class {
                                     if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
                                     and aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
                                         if resValue.DistanceToBase < zone.DistanceToBase and resValue.ResourceValue >= zone.ResourceValue then
-                                            LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
+                                            --LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                             higherValueExists = true
                                             break
                                         end

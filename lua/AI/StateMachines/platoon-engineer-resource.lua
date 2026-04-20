@@ -287,7 +287,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 local processed = {} 
                 local lastPos = platoonPos 
                 local markers = foundZone.ResourceMarkers
-
+                self:LogDebug(string.format('Zone found, looping through resource markers in zone, count was '..tostring(table.getn(markers))))
+                
                 for i = 1, RNGGETN(markers) do
                     local bestMarkerObj = nil
                     local closestDistSq
@@ -307,6 +308,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     end
 
                     if bestMarkerObj then
+                        self:LogDebug(string.format('bestMarkerObj was found'))
                         local massMarker = bestMarkerObj.Marker
                         processed[massMarker.name] = true
 
@@ -316,14 +318,17 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             if not massMarker.reservedBy then
                                 canBuild = true
                                 LOG('No one owns this marker so we can have it')
+                                self:LogDebug(string.format('No one owns this marker so we can have it'))
                             else
                                 -- Yes 0.7225 is intentional because its a squared number
                                 if massMarker.reservationDistSq and closestDistSq < (massMarker.reservationDistSq * 0.7225) then
+                                    self:LogDebug(string.format('Someone owns it but we are closer'))
                                     canBuild = true
                                     LOG('Taking another engineers mass point because we are closer my distance '..tostring(closestDistSq)..' existing '..tostring(massMarker.reservationDistSq))
                                 end
                             end
                             if canBuild then
+                                self:LogDebug(string.format('We can build and are going to'))
                                 local borderWarning
                                 if massMarker.position[1] - playableArea[1] <= 8 or massMarker.position[1] >= playableArea[3] - 8 or massMarker.position[3] - playableArea[2] <= 8 or massMarker.position[3] >= playableArea[4] - 8 then
                                     borderWarning = true
@@ -344,6 +349,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     local ax = platoonPos[1] - currentmarker.position[1]
                     local az = platoonPos[3] - currentmarker.position[3]
                     if ax * ax + az * az < 3600 and NavUtils.CanPathTo(self.MovementLayer, platoonPos, currentmarker.position) then
+                        self:LogDebug(string.format('Masspoint is close and we can path to it'))
                         if eng.EngineerBuildQueue and table.getn(eng.EngineerBuildQueue) > 0 then
                             for k, v in eng.EngineerBuildQueue do
                                 RUtils.EngineerTryReclaimCaptureArea(aiBrain,eng, {eng.EngineerBuildQueue[k][2][1], GetSurfaceHeight(eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2]), eng.EngineerBuildQueue[k][2][2]}, 3)
@@ -440,6 +446,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         local timeout = 0
                         local maxWaitTime = math.max(estWait, 150)
                         local reclaimPerformed = false
+                        local engineerReachedTimeout = false
                         while not eng.Dead and not eng:IsUnitState('Attached') and timeout < maxWaitTime do
                             if not reclaimPerformed and estWait > 20 then
                                 reclaimPerformed = RUtils.PerformEngAreaReclaim(aiBrain, eng, 60)
@@ -461,7 +468,16 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         end
                         eng['rngdata'].WaitingForTransport = false
                         self:LogDebug('Left waiting loop, move to attached check')
-                        
+                        if timeout >= maxWaitTime and requestId then
+                            self:LogDebug('Engineer hit max wait time, cancel request and marker reservations')
+                            local marker = builderData.Marker
+                            if marker then
+                                self:LogDebug('Flushing mass marker build queue')
+                                StateUtils.ReleaseMassMarkersInBuildQueue(eng)
+                            end
+                            StateUtils.CancelTransportRequest(self, requestId)
+                        end
+
                         -- If we successfully used a transport, transition to check if we have a build queue or return to decision
                         if eng:IsUnitState('Attached') then
                             self:LogDebug('Eng is now attached to transport')
@@ -498,14 +514,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
 
                 
-                eng['rngdata'].WaitingForTransport = false
-                
                 if not canPath or navigateDist > 512 * 512 then
                     self:LogDebug(string.format('We didnt use a transport so are clearing commands'))
                     -- If over 512 and no transports dont try and walk!
                     local marker = builderData.Marker
                     if marker then
-                        StateUtils.ReleaseMassMarker(eng, marker)
+                        StateUtils.ReleaseMassMarkersInBuildQueue(eng)
                         StateUtils.RemoveFromZoneMarkersCache(self.ZoneMarkers, self.CurrentZoneIndex, marker)
                     end
                     --self:LogDebug(string.format('No path to position or greater than 500 and unable to use transport'))

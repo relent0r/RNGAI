@@ -558,15 +558,7 @@ EngineerManager = Class(BuilderManager) {
                     local deathFunction = function(unit)
                         unit.BuilderManagerData.EngineerManager:RemoveUnit(unit)
                         if unit.EngineerBuildQueue and not table.empty(unit.EngineerBuildQueue) then
-                            for _, buildEntry in unit.EngineerBuildQueue do
-                                -- Element [7] is a mass point marker object
-                                local queuedMarker = buildEntry[7]
-                                if queuedMarker and queuedMarker.reservedBy == unit.EntityId then
-                                    StateUtils.ReleaseMassMarker(unit, queuedMarker)
-                                end
-                            end
-                            -- Kill the reference
-                            unit.EngineerBuildQueue = {}
+                            StateUtils.ReleaseMassMarkersInBuildQueue(unit)
                         end
                     end
 

@@ -3104,6 +3104,22 @@ function RequestTransportRNG(platoon, destination, typeOverride)
     return requestId, requestData
 end
 
+---@param platoon AIPlatoon
+---@param destination Vector
+---@return boolean # True if request was successfully filed
+function CancelTransportRequest(platoon, requestId)
+    local aiBrain = platoon:GetBrain()
+    local manager = aiBrain:GetPlatoonUniquelyNamed('TransportPool')
+    
+    if not manager then
+        return
+    end
+    if requestId then
+        manager:RemoveRequest(requestId)
+        return true
+    end
+end
+
 ---@param engineer Entity
 ---@param zone Table The zone table from your RNGLandResourceSet
 ---@param marker Table The specific marker within zone.resourcemarkers

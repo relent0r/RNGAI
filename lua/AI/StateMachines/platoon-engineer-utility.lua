@@ -28,7 +28,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         --- Initial state of any state machine
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
-            self:LogDebug(string.format('Welcome to the EngineerUtilityBehavior StateMachine'))
+            self:LogDebug(string.format('Welcome to the EngineerUtilityBehavior StateMachine '))
+            self:LogDebug(string.format('This platoon is for '..tostring(self.BuilderName)))
             local aiBrain = self:GetBrain()
             self.LocationType = self.PlatoonData.LocationType or self.PlatoonData.Construction.LocationType
             self.MovementLayer = self:GetNavigationalLayer()
@@ -1360,6 +1361,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if eng.EngineerBuildQueue and table.getn(eng.EngineerBuildQueue) > 0 then
+                self:LogDebug(string.format('Engineer executing PerformBuildTask for '..tostring(self.BuilderName)))
                 self:ChangeState(self.PerformBuildTask)
                 return
             end
@@ -2090,6 +2092,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
             local eng = self.eng
+            local aiBrain = self:GetBrain()
             if self.HighValueDiscard then
                 while RNGGETN(eng:GetCommandQueue()) > 0 and not eng:IsIdleState() do
                     coroutine.yield(20)
@@ -2099,7 +2102,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             end
             if table.empty(eng.EngineerBuildQueue) then
                 if self.PlatoonData.CheckCivUnits then
-                    local aiBrain = self:GetBrain()
                     local captureUnit = RUtils.CheckForCivilianUnitCapture(aiBrain, eng, self.MovementLayer)
                     if captureUnit then
                         self.PlatoonData.StateMachine = 'PreAllocatedTask'
@@ -2115,7 +2117,24 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             end
             if eng:IsIdleState() then
                 coroutine.yield(2)
-                --LOG('Build queue is '..tostring(repr(eng.EngineerBuildQueue)))
+                if eng.EngineerBuildQueue and table.getn(eng.EngineerBuildQueue) > 0 then
+                    for k, v in eng.EngineerBuildQueue do
+                        if v[1] then
+                            local unitCat = ParseEntityCategory(v[1])
+                            local units = aiBrain:GetUnitsAroundPoint(unitCat, {v[2][1], GetSurfaceHeight(v[2][1], v[2][2]), v[2][2]}, 1, 'Ally')
+                            for _, unit in units do
+                                if unit and not unit.Dead then
+                                    if unit:GetFractionComplete() == 1 then
+                                        table.remove(eng.EngineerBuildQueue, k)
+                                        coroutine.yield(2)
+                                        self:ChangeState(self.PerformBuildTask)
+                                        return
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
                 self:ChangeState(self.PerformBuildTask)
                 return
             else
