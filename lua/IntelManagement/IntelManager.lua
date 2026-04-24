@@ -85,7 +85,7 @@ IntelManager = Class {
             },
             aadefense = {
                 zonePressureWeight = 3.0,
-                zoneDistanceWeight = 1.0,
+                zoneDistanceWeight = 0.8,
                 threatOpportunityWeight = 2.0
             },
             airsurface = {
@@ -712,7 +712,7 @@ IntelManager = Class {
         local OwnIndex = aiBrain:GetArmyIndex()
 
         while true do
-            LOG('Running zone expansion check for '..tostring(aiBrain.Nickname))
+            --LOG('Running zone expansion check for '..tostring(aiBrain.Nickname))
             local maxDistance
             local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
             if not playableArea then
@@ -4993,6 +4993,8 @@ IntelManager = Class {
         local localIslandEnemyThreat = {}
         local productionZones = {}
         local totalBuildRate = 0
+        local minHighValueThreat = 15
+        local minLowValueThreat = 8
         local buildRateKey = (layer == 'Naval') and 'NavalBuildRate' or (layer == 'Air') and 'AirBuildRate' or 'LandBuildRate'
         for zID, zData in pairs(zoneLayerSet) do
             if zData.label then
@@ -5069,18 +5071,20 @@ IntelManager = Class {
             
             if layer == 'Land' then
                 enemyThreatLevel = math.ceil(tData.gridenemylandthreat)
-                if status == 'Unoccupied' or status == 'Contested' then
+                if frontlineZones[tID] then
+                    enemyThreatLevel = math.max(enemyThreatLevel, 35)
+                elseif status == 'Unoccupied' or status == 'Contested' then
                     -- Use some uncertainty estimate
                     if teamValue > 0.6 then
-                        enemyThreatLevel = math.max(enemyThreatLevel, 10)
+                        enemyThreatLevel = math.max(enemyThreatLevel, minHighValueThreat)
                     else
-                        enemyThreatLevel = math.max(enemyThreatLevel, 5)
+                        enemyThreatLevel = math.max(enemyThreatLevel, minLowValueThreat)
                     end
                 elseif tData.zoneincome.selfincome == 0 then
                     if teamValue > 0.6 then
-                        enemyThreatLevel = math.max(enemyThreatLevel, 10)
+                        enemyThreatLevel = math.max(enemyThreatLevel, minHighValueThreat)
                     else
-                        enemyThreatLevel = math.max(enemyThreatLevel, 5)
+                        enemyThreatLevel = math.max(enemyThreatLevel, minLowValueThreat)
                     end
                 end
                 friendlyThreatLevel = tData.friendlydirectfireantisurfacethreat
@@ -5090,15 +5094,15 @@ IntelManager = Class {
                 if status == 'Unoccupied' or status == 'Contested' then
                     -- Use some uncertainty estimate
                     if teamValue > 0.6 then
-                        enemyThreatLevel = math.max(enemyThreatLevel, 15)
+                        enemyThreatLevel = math.max(enemyThreatLevel, minHighValueThreat)
                     else
-                        enemyThreatLevel = math.max(enemyThreatLevel, 5)
+                        enemyThreatLevel = math.max(enemyThreatLevel, minLowValueThreat)
                     end
                 elseif tData.zoneincome.selfincome == 0 then
                     if teamValue > 0.6 then
-                        enemyThreatLevel = math.max(enemyThreatLevel, 10)
+                        enemyThreatLevel = math.max(enemyThreatLevel, minHighValueThreat)
                     else
-                        enemyThreatLevel = math.max(enemyThreatLevel, 5)
+                        enemyThreatLevel = math.max(enemyThreatLevel, minLowValueThreat)
                     end
                 end
                 friendlyThreatLevel = tData.friendlydirectfireantisurfacethreat

@@ -1170,6 +1170,9 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
                                     --LOG('Returning valid target via amphib'..tostring(v.unit.UnitId)..' distance was '..tostring(v.distance)..' is defending home? '..tostring(isDefendingHome))
                                     validTarget = true
                                 end
+                                if not highValue then
+                                    LOG(string.format("RNGLOG: ACU_Target_Rejected | Unit: %s | Reason: Amphibious path exists but highValue is false", v.unit.UnitId))
+                                end
                             end
                         end
                     end
@@ -1369,6 +1372,13 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
             -- Last resort: If no safe neighbors exist (Encourages retreat if surrounded)
             if acuDistanceToBase > 10000 and not defendingBase then 
                 closestTargetPosition = basePosition
+                closestDistance = acuDistanceToBase -- Sync distance to base
+                closestTarget = false
+            else
+                -- If we are at base and have no targets, clear everything
+                closestDistance = 999999
+                closestTargetPosition = false
+                closestTarget = false
             end
         end
     end
@@ -8628,12 +8638,19 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
     
         -- Only penalize if we have more than double the enemy air threat
         -- This provides a "Safety Buffer" for gunship spikes.
+        
+
         if friendly > (enemy * 2.0) + 5 then 
             local excessRatio = (friendly - (enemy * 2.0)) / (enemy + 5)
             -- Lower multiplier (0.8) and lower cap (2.0)
             -- This is enough to discourage idling, but not enough to ignore a threat.
-            local overcommitPenalty = math.min(excessRatio * 0.8, 2.0) 
+            local saturationCap = (enemy == 0) and 50.0 or 2.0
+            local overcommitPenalty = math.min(excessRatio * 0.8, saturationCap) 
             score = score - overcommitPenalty
+        end
+        if friendly == 0 and (zone.friendlydefenseantiairthreat or 0) == 0 then
+            local assetProtectionBonus = (zone.teamvalue or 0) * 0.75
+            score = score + assetProtectionBonus
         end
     elseif zoneSelectionType == 'airsurface' then
         -- Gunships shouldn't be penalized as heavily for overcommitting
@@ -9218,6 +9235,9 @@ function GetAASaturationPenalty(zone)
 
     -- How much AA is "ideal" for the current army size?
     local aaNeeded = (zone.friendlyantisurfacethreat or 0) * MaxAARatioPerSurfaceThreat
+    if aaNeeded <= 0 then
+        aaNeeded = 1.0 -- Or a small value that represents "one platoon's worth"
+    end
 
     -- Only apply penalty if we are actually over-saturated
     if totalProjectedAA > aaNeeded and aaNeeded > 0 then

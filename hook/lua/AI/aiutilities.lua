@@ -326,7 +326,7 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
                         --RNGLOG('Attempting second mass marker')
                         
                         local buildQueueReset = eng.EnginerBuildQueue
-                        eng.EnginerBuildQueue = {}
+                        StateUtils.UpdateEngineerBuildQueueRNG(eng)
                         for _,massMarker in markers do
                             RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
                             RUtils.EngineerTryRepair(aiBrain, eng, whatToBuildM, massMarker.Position)

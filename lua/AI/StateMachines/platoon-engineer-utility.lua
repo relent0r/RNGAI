@@ -597,7 +597,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 --RNGLOG('Mass Marker'..repr(massMarker))
                                 --RNGLOG('Attempting second mass marker')
                                 local buildQueueReset = eng.EngineerBuildQueue or {}
-                                eng.EngineerBuildQueue = {}
+                                StateUtils.UpdateEngineerBuildQueueRNG(eng)
                                 for _,massMarker in markers do
                                     RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
                                     RUtils.EngineerTryRepair(aiBrain, eng, whatToBuildM, massMarker.Position)
@@ -1560,7 +1560,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             --LOG('We are going to abort '..repr(eng.EngineerBuildQueue[1]))
                             eng.UnitBeingBuilt = nil
                             self:LogDebug(string.format('High value item that we dont need, abort and remove item from build queue'))
-                            table.remove(eng.EngineerBuildQueue, 1)
+                            StateUtils.UpdateEngineerBuildQueueRNG(eng, 1)
                             break
                         end
                     end
@@ -1590,7 +1590,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 else
                     -- we can't move there, so remove it from our build queue
                     self:LogDebug(string.format('EngineerMoveWithSafePathRNG failed so remove item from queue'))
-                    table.remove(eng.EngineerBuildQueue, 1)
+                    StateUtils.UpdateEngineerBuildQueueRNG(eng, 1)
                 end
                 coroutine.yield(2)
             end
@@ -2125,7 +2125,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             for _, unit in units do
                                 if unit and not unit.Dead then
                                     if unit:GetFractionComplete() == 1 then
-                                        table.remove(eng.EngineerBuildQueue, k)
+                                        StateUtils.UpdateEngineerBuildQueueRNG(eng, k)
                                         coroutine.yield(2)
                                         self:ChangeState(self.PerformBuildTask)
                                         return
@@ -2160,7 +2160,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 IssueClearCommands({eng})
                 unit.ReclaimInProgress = true
                 IssueReclaim({eng}, unit)
-                eng.EngineerBuildQueue = {}
+                StateUtils.UpdateEngineerBuildQueueRNG(eng)
             end
             while RNGGETN(eng:GetCommandQueue()) > 0 and not eng:IsIdleState() do
                 coroutine.yield(20)

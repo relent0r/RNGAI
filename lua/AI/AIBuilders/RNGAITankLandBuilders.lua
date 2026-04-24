@@ -346,7 +346,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI T1 Mobile AA Response',
         PlatoonTemplate = 'T1LandAA',
-        Priority = 855,
+        Priority = 879,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsGreaterAtRestrictedRNG', { 'LocationType', 0, 'AIR' }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 3, categories.LAND * categories.ANTIAIR } },

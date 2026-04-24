@@ -264,7 +264,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         if platUnits then
             for _, unit in platUnits do
                 if unit.Blueprint.CategoriesHash.ENGINEER then
-                    unit.EngineerBuildQueue = {}
+                    StateUtils.UpdateEngineerBuildQueueRNG(unit)
                     unit.PlatoonHandle = nil
                     unit.AssistSet = nil
                     unit.AssistPlatoon = nil

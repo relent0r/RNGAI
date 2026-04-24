@@ -146,7 +146,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local maxMarkerDistance = self.PlatoonData.Construction.MaxDistance or 256
             maxMarkerDistance = maxMarkerDistance * maxMarkerDistance
 
-            eng.EngineerBuildQueue = {}
+            StateUtils.UpdateEngineerBuildQueueRNG(eng)
             local transportRequired = false
             local enemyWeight = 1.5
             local transportPenaltySq = 12996
@@ -281,7 +281,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            eng.EngineerBuildQueue = {}
+            StateUtils.UpdateEngineerBuildQueueRNG(eng)
             if zoneFound then
                 local currentmarker
                 local processed = {} 
@@ -544,7 +544,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             local bool,markers=StateUtils.CanBuildOnMassMexPlatoon(aiBrain, path[i], 25)
                             if bool then
                                 local buildQueueReset = eng.EngineerBuildQueue or {}
-                                eng.EngineerBuildQueue = {}
+                                StateUtils.UpdateEngineerBuildQueueRNG(eng)
                                 for _,massMarker in markers do
                                     RUtils.EngineerTryReclaimCaptureArea(aiBrain, eng, massMarker.Position, 5)
                                     RUtils.EngineerTryRepair(aiBrain, eng, whatToBuildM, massMarker.Position)

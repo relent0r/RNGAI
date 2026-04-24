@@ -1006,6 +1006,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
 
                     }
                     self:LogDebug(string.format('No target but there is a closest unit position'))
+                    LOG('Closest threat distance is '..tostring(closestThreatDistance)..' closest unit is '..tostring(closestThreatUnit.UnitId))
                     self:ChangeState(self.Navigating)
                     return
                 else

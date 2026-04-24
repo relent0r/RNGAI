@@ -3120,6 +3120,34 @@ function CancelTransportRequest(platoon, requestId)
     end
 end
 
+---@param unit unit
+---@param index Integer
+function UpdateEngineerBuildQueueRNG(unit, index)
+    -- This is a helper function to avoid random logic from not removing marker reservations.
+    local queue = unit.EngineerBuildQueue
+    if not queue then 
+        unit.EngineerBuildQueue = {}
+        return 
+    end
+
+    if index then
+        -- Target Removal
+        local entry = queue[index]
+        if entry and entry[7] then
+            ReleaseMassMarker(unit, entry[7])
+        end
+        table.remove(queue, index)
+    else
+        -- Full Flush
+        for _, entry in queue do
+            if entry and entry[7] then
+                ReleaseMassMarker(unit, entry[7])
+            end
+        end
+        unit.EngineerBuildQueue = {}
+    end
+end
+
 ---@param engineer Entity
 ---@param zone Table The zone table from your RNGLandResourceSet
 ---@param marker Table The specific marker within zone.resourcemarkers
@@ -3140,9 +3168,8 @@ function ReserveMassMarker(engineer, marker)
     
     -- We store the marker reference on the engineer for fast cleanup on death
     engineer.rngdata.ReservedMarker = marker
-    LOG(string.format("MassReservation: Engineer %s reserving marker %s. DistSq: %s", 
-        unitId, marker.name, distSq))
-    LOG('Check marker object, reservedBy '..tostring(marker.reservedBy)..' reservationDistSq '..tostring(marker.reservationDistSq))
+    --LOG(string.format("MassReservation: Engineer %s reserving marker %s. DistSq: %s", unitId, marker.name, distSq))
+    --LOG('Check marker object, reservedBy '..tostring(marker.reservedBy)..' reservationDistSq '..tostring(marker.reservationDistSq))
 end
 
 ---@param engineer Entity
