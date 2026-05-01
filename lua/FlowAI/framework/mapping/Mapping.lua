@@ -807,7 +807,7 @@ GameMap = Class({
             for j=1,self.zSize do
                 local z = z0 + (j*gap)
                 for k=1,8 do
-                    if self.markers[i][j][layer][k] and (self.zones[i][j][index][1] > 0) then
+                    if (layer == LAYER_AIR or self.markers[i][j][layer][k]) and (self.zones[i][j][index][1] > 0) then
                         local x1 = x
                         local z1 = z
                         local draw = true
