@@ -179,9 +179,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             self:LogDebug(string.format('Looping through remaining zone markers'))
             --self:LogDebug(string.format('eng id is '..tostring(eng.EntityId)))
             for i,v in self.ZoneMarkers do
-                if eng.EntityId == '25' then
-                    self:LogDebug(string.format('Eng is checking zone with distance '..tostring(VDist3(v.Position, platoonPos))))
-                end
                 for j, m in v.ResourceMarkers do
                     if m.Enabled then
                         local marker = m.Marker
@@ -317,14 +314,14 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         
                             if not massMarker.reservedBy then
                                 canBuild = true
-                                LOG('No one owns this marker so we can have it')
+                                --LOG('No one owns this marker so we can have it')
                                 self:LogDebug(string.format('No one owns this marker so we can have it'))
                             else
                                 -- Yes 0.7225 is intentional because its a squared number
                                 if massMarker.reservationDistSq and closestDistSq < (massMarker.reservationDistSq * 0.7225) then
                                     self:LogDebug(string.format('Someone owns it but we are closer'))
                                     canBuild = true
-                                    LOG('Taking another engineers mass point because we are closer my distance '..tostring(closestDistSq)..' existing '..tostring(massMarker.reservationDistSq))
+                                    --LOG('Taking another engineers mass point because we are closer my distance '..tostring(closestDistSq)..' existing '..tostring(massMarker.reservationDistSq))
                                 end
                             end
                             if canBuild then
@@ -356,10 +353,8 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 local repairPerformed = RUtils.EngineerTryRepair(aiBrain,eng, whatToBuild, {eng.EngineerBuildQueue[k][2][1], GetSurfaceHeight(eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2]), eng.EngineerBuildQueue[k][2][2]})
                                 if not repairPerformed then
                                     if eng.EngineerBuildQueue[k][5] then
-                                        LOG('IssueBuildMobile so borderwarning was true')
                                         IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
                                     else
-                                        LOG('Normal builld trigger')
                                         aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
                                     end
                                     local marker = eng.EngineerBuildQueue[k][7]
@@ -384,7 +379,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             Marker = currentmarker,
                             CutOff = 400
                         }
-                        LOG(string.format("AUDIT: NavTransitionRef: %s | ID_At_Log: %s", tostring(currentmarker), tostring(currentmarker.reservedBy)))
+                        --LOG(string.format("AUDIT: NavTransitionRef: %s | ID_At_Log: %s", tostring(currentmarker), tostring(currentmarker.reservedBy)))
                         self:ChangeState(self.NavigateToTaskLocation)
                         return
                     end
@@ -588,17 +583,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             primaryMarker.reservationDistSq = VDist2Sq(pos[1], pos[3], primaryMarker.position[1], primaryMarker.position[3])
                         else
                             -- THEFT CHECK: If our primary marker was stolen while we walked, abort.
-                            LOG('Zone assigned to another engineer, abort navigate, engineer id is '..tostring(eng.EntityId))
+                            --LOG('Zone assigned to another engineer, abort navigate, engineer id is '..tostring(eng.EntityId))
                             self:LogDebug('Primary marker stolen or lost, returning to DecideWhatToDo')
-                            LOG('Entity that is assigned is '..tostring(primaryMarker.reservedBy))
-                            if primaryMarker.reservedBy then
-                                local entity = GetEntityById(primaryMarker.reservedBy)
-                                if entity and not entity.Dead then
-                                    LOG('Entity that has reserved the marker is alive, its current platoon is '..tostring(entity.PlatoonHandle.BuilderName))
-                                else
-                                    LOG('Entity is no longer alive')
-                                end
-                            end
+                            LOG('Entity that is assigned is '..tostring(primaryMarker.reservedBy)..' current engineer id is '..tostring(eng.EntityId))
                             IssueClearCommands({eng})
                             coroutine.yield(10)
                             self:ChangeState(self.DecideWhatToDo)

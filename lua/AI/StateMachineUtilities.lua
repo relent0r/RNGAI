@@ -3182,7 +3182,7 @@ function ReleaseMassMarker(engineer, marker)
         engineer['rngdata'] = {}
     end
     if marker and marker.reservedBy == engineer.EntityId then
-        LOG(string.format("MassReservation: Engineer %s releasing marker %s", engineer.EntityId, marker.name))
+        --LOG(string.format("MassReservation: Engineer %s releasing marker %s", engineer.EntityId, marker.name))
         marker.reservedBy = nil
         marker.reservationDistSq = nil
         engineer.rngdata.ReservedMarker = nil
@@ -3198,18 +3198,18 @@ function ReleaseMassMarkersInBuildQueue(engineer)
     if not engineer.rngdata then
         engineer['rngdata'] = {}
     end
-    LOG('Engineer is going to try and clear the reservations in its queue')
+    --LOG('Engineer is going to try and clear the reservations in its queue')
     if engineer.EngineerBuildQueue and not table.empty(engineer.EngineerBuildQueue) then
-        LOG('Engineer queue is not empty '..tostring(table.getn(engineer.EngineerBuildQueue)))
+        --LOG('Engineer queue is not empty '..tostring(table.getn(engineer.EngineerBuildQueue)))
         for i = table.getn(engineer.EngineerBuildQueue), 1, -1 do
             local buildEntry = engineer.EngineerBuildQueue[i]
-            LOG('Queue Entry '..tostring(repr(buildEntry)))
+            --LOG('Queue Entry '..tostring(repr(buildEntry)))
             if buildEntry[7] then
-                LOG('Marker build entry exists')
+                --LOG('Marker build entry exists')
                 local marker = buildEntry[7]
-                LOG('Reserved by '..tostring(marker.reservedBy)..' engineer entity id '..tostring(engineer.EntityId))
+                --LOG('Reserved by '..tostring(marker.reservedBy)..' engineer entity id '..tostring(engineer.EntityId))
                 if marker.reservedBy == engineer.EntityId then
-                    LOG(string.format("MassReservation: EngineerBuildQueue %s releasing marker %s", engineer.EntityId, marker.name))
+                    --LOG(string.format("MassReservation: EngineerBuildQueue %s releasing marker %s", engineer.EntityId, marker.name))
                     marker.reservedBy = nil
                     marker.reservationDistSq = nil
                     table.remove(engineer.EngineerBuildQueue, i)

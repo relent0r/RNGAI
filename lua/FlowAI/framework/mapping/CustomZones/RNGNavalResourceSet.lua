@@ -153,9 +153,12 @@ RNGNavalResourceSet = Class(ZoneSet){
                     complete = false
                 end
             end
+            local posX = math.floor(x)
+            local posZ = math.floor(z)
+            local posY = GetSurfaceHeight(posX, posZ)
             self:AddZone({
-                pos={x,GetSurfaceHeight(x,z),z}, 
-                component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), 
+                pos={posX, posY, posZ}, 
+                component=MAP:GetComponent({posX, posY, posZ},self.layer), 
                 weight=best.weight, 
                 startpositionclose=startPos, 
                 enemystructurethreat=0, 

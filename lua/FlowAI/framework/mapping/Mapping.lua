@@ -208,8 +208,8 @@ GameMap = Class({
         self.zoneSets = {}
         self.numZoneSets = 0
         local END = GetSystemTimeSecondsOnlyForProfileUse()
-        --RNGLOG(string.format('FlowAI framework: CreateMapMarkers() finished, runtime: %.2f seconds.', END - START ))
-        local drawStuffz = false
+        LOG(string.format('FlowAI framework: CreateMapMarkers() finished, runtime: %.2f seconds.', END - START ))
+        local drawStuffz = true
         if drawStuffz then
             --[[
             The second param is GetZoneSet is layer.
@@ -222,7 +222,7 @@ GameMap = Class({
             LAYER_AMPH = 4]]
             ForkThread(
                 function()
-                    local zoneSetCopy = self:GetZoneSet('RNGLandResourceSet',1)
+                    local zoneSetCopy = self:GetZoneSet('RNGAirResourceSet',0)
                     coroutine.yield(100)
                     while true do
                         --self:DrawLayer(2)
@@ -592,6 +592,9 @@ GameMap = Class({
         end
     end,
     PaintZones = function(self,zoneList,index,layer)
+        if layer == LAYER_AIR then
+            return self:PaintAirZones(zoneList, index)
+        end
         local edges = {}
         for i = 1, self.xSize do
             for j = 1, self.zSize do
@@ -674,6 +677,74 @@ GameMap = Class({
                     else
                         y = GetTerrainHeight(x,z)
                     end
+                    table.insert(edgeList,{zones={id0,id1},border=v1[1],distance=v1[2],midpoint={x, y, z}})
+                end
+            end
+        end
+        return edgeList
+    end,
+    PaintAirZones = function(self,zoneList,index)
+        local edges = {}
+        for i = 1, self.xSize do
+            for j = 1, self.zSize do
+                -- We must ensure the 'index' table exists for EVERY tile
+                self.zones[i][j][index] = {-1, 0}
+            end
+        end
+        local work = CreatePriorityQueue()
+        for _, zone in zoneList do
+            local i = self:GetI(zone.pos[1])
+            local j = self:GetJ(zone.pos[3])
+            work:Queue({priority=0, id=zone.id, i=i, j=j})
+            zone.fail = false
+            edges[zone.id] = {}
+        end
+        while work:Size() > 0 do
+            local item = work:Dequeue()
+            local i = item.i
+            local j = item.j
+            local id = item.id
+            if i > 0 and i <= self.xSize and j > 0 and j <= self.zSize then
+                if self.zones[i][j][index][1] < 0 then
+                    -- Update and iterate
+                    self.zones[i][j][index][1] = item.id
+                    self.zones[i][j][index][2] = item.priority
+                    work:Queue({priority=item.priority+1,i=i+1,j=j,id=id})
+                    work:Queue({priority=item.priority+SQRT_2,i=i+1,j=j+1,id=id})
+                    work:Queue({priority=item.priority+1,i=i,j=j+1,id=id})
+                    work:Queue({priority=item.priority+SQRT_2,i=i-1,j=j+1,id=id})
+                    work:Queue({priority=item.priority+1,i=i-1,j=j,id=id})
+                    work:Queue({priority=item.priority+SQRT_2,i=i-1,j=j-1,id=id})
+                    work:Queue({priority=item.priority+1,i=i,j=j-1,id=id})
+                    work:Queue({priority=item.priority+SQRT_2,i=i+1,j=j-1,id=id})
+                elseif self.zones[i][j][index][1] ~= id then
+                    -- Add edge
+                    local dist = item.priority+self.zones[i][j][index][2]
+                    if not edges[self.zones[i][j][index][1]][id] then
+                        edges[self.zones[i][j][index][1]][id] = {0, dist, i, j}
+                        edges[id][self.zones[i][j][index][1]] = {0, dist, i, j}
+                    end
+                    edges[self.zones[i][j][index][1]][id][1] = edges[self.zones[i][j][index][1]][id][1] + 1
+                    edges[id][self.zones[i][j][index][1]][1] = edges[id][self.zones[i][j][index][1]][1] + 1
+                    if dist < edges[self.zones[i][j][index][1]][id][2] then
+                        edges[self.zones[i][j][index][1]][id][2] = dist
+                        edges[self.zones[i][j][index][1]][id][3] = i
+                        edges[self.zones[i][j][index][1]][id][4] = j
+                        edges[id][self.zones[i][j][index][1]][2] = dist
+                        edges[id][self.zones[i][j][index][1]][3] = i
+                        edges[id][self.zones[i][j][index][1]][4] = j
+                    end
+                end
+            end
+        end
+        local edgeList = {}
+        for id0, v0 in edges do
+            for id1, v1 in v0 do
+                if id0 < id1 then
+                    local x = self:GetX(v1[3])
+                    local z = self:GetZ(v1[4])
+                    local y = nil
+                    y = GetSurfaceHeight(x,z)
                     table.insert(edgeList,{zones={id0,id1},border=v1[1],distance=v1[2],midpoint={x, y, z}})
                 end
             end

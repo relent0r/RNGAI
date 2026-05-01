@@ -531,7 +531,7 @@ function EnemyUnitsGreaterAtRestrictedRNG(aiBrain, locationType, number, type)
             end
         elseif type == 'AIR' then
             if aiBrain.BasePerimeterMonitor[locationType].AirUnits > number then
-                --RNGLOG('Air units greater than '..number..' at base location '..locationType)
+                LOG('Air units greater than '..number..' at base location '..locationType)
                 return true
             end
         elseif type == 'ANTIAIR' then

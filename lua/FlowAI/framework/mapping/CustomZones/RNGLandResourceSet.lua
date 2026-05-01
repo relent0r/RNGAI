@@ -126,9 +126,12 @@ RNGLandResourceSet = Class(ZoneSet){
                 zoneList[k] = nil
             end
             for _, v in startLocations do
+                local posX = math.floor(v.position[1])
+                local posZ = math.floor(v.position[3])
+                local posY = GetSurfaceHeight(posX, posZ)
                 zoneList[head] = {
-                    pos=v.position, 
-                    component=MAP:GetComponent(v.position,self.layer), 
+                    pos= {posX, posY, posZ}, 
+                    component=MAP:GetComponent({posX, posY, posZ},self.layer), 
                     weight=table.getn(v.resourcemarkers), 
                     startpositionclose=true, 
                     enemystructurethreat=0, 
@@ -237,9 +240,12 @@ RNGLandResourceSet = Class(ZoneSet){
                 end
             end
             initialZoneCount = initialZoneCount + 1
+            local posX = math.floor(x)
+            local posZ = math.floor(z)
+            local posY = GetSurfaceHeight(posX, posZ)
             table.insert(initialZones, {
-                pos={x,GetSurfaceHeight(x,z),z}, 
-                component=MAP:GetComponent({x,GetSurfaceHeight(x,z),z},self.layer), 
+                pos={posX, posY, posZ}, 
+                component=MAP:GetComponent({posX, posY, posZ},self.layer), 
                 weight=best.weight, 
                 startpositionclose=startPos, 
                 enemystructurethreat=0, 
