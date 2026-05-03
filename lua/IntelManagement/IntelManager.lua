@@ -1831,6 +1831,7 @@ IntelManager = Class {
             end
             self:AssignIMAPThreat(aiBrain, 'Land')
             self:AssignIMAPThreat(aiBrain, 'Naval')
+            self:AssignIMAPThreat(aiBrain, 'Air')
             self:AssignThreatToFactories(aiBrain.Zones['Land'].zones, 'Land')
             self:AssignThreatToFactories(aiBrain.Zones['Naval'].zones, 'Naval')
             for _, zone in aiBrain.Zones['Land'].zones do
@@ -1846,7 +1847,7 @@ IntelManager = Class {
     AssignIMAPThreat = function(self, aiBrain, zoneType)
         local zoneTable = aiBrain.Zones[zoneType].zones
         local labelTable = {}
-        local zoneToGridMap = self.ZoneToGridMap
+        local zoneToGridMap = self.ZoneToGridMap[zoneType]
         local currentTime = GetGameTimeSeconds()
         local STALE_TIME = 5
     
@@ -1891,7 +1892,7 @@ IntelManager = Class {
                 total.count = total.count + 1
             end
     
-           if total.count > 0 then
+            if total.count > 0 then
                 -- Apply Noise Floor to prevent floating point remnants (the "0.1" ghosts)
                 -- from blocking the historical decay branch.
                 local landThreat = (total.Land > 0.5) and total.Land or 0
@@ -1916,23 +1917,24 @@ IntelManager = Class {
                 if zone.enemynavalthreat < 0.1 then zone.enemynavalthreat = 0 end
                 if zone.enemyantisurfacethreat < 0.1 then zone.enemyantisurfacethreat = 0 end
                 if zone.enemystructurethreat < 0.1 then zone.enemystructurethreat = 0 end
-
-                if not labelTable[zone.label] then
-                    labelTable[zone.label] = {
-                        enemylandthreat = 0,
-                        enemyairthreat = 0,
-                        enemyantiairthreat = 0,
-                        enemynavalthreat = 0,
-                        enemyantisurfacethreat = 0,
-                        enemystructurethreat = 0
-                    }
+                if zone.label then
+                    if not labelTable[zone.label] then
+                        labelTable[zone.label] = {
+                            enemylandthreat = 0,
+                            enemyairthreat = 0,
+                            enemyantiairthreat = 0,
+                            enemynavalthreat = 0,
+                            enemyantisurfacethreat = 0,
+                            enemystructurethreat = 0
+                        }
+                    end
+                    labelTable[zone.label].enemylandthreat = labelTable[zone.label].enemylandthreat + zone.enemylandthreat
+                    labelTable[zone.label].enemyairthreat = labelTable[zone.label].enemyairthreat + zone.enemyairthreat
+                    labelTable[zone.label].enemyantiairthreat = labelTable[zone.label].enemyantiairthreat + zone.enemyantiairthreat
+                    labelTable[zone.label].enemynavalthreat = labelTable[zone.label].enemynavalthreat + zone.enemynavalthreat
+                    labelTable[zone.label].enemyantisurfacethreat = labelTable[zone.label].enemyantisurfacethreat + zone.enemyantisurfacethreat
+                    labelTable[zone.label].enemystructurethreat = labelTable[zone.label].enemystructurethreat + zone.enemystructurethreat
                 end
-                labelTable[zone.label].enemylandthreat = labelTable[zone.label].enemylandthreat + zone.enemylandthreat
-                labelTable[zone.label].enemyairthreat = labelTable[zone.label].enemyairthreat + zone.enemyairthreat
-                labelTable[zone.label].enemyantiairthreat = labelTable[zone.label].enemyantiairthreat + zone.enemyantiairthreat
-                labelTable[zone.label].enemynavalthreat = labelTable[zone.label].enemynavalthreat + zone.enemynavalthreat
-                labelTable[zone.label].enemyantisurfacethreat = labelTable[zone.label].enemyantisurfacethreat + zone.enemyantisurfacethreat
-                labelTable[zone.label].enemystructurethreat = labelTable[zone.label].enemystructurethreat + zone.enemystructurethreat
             end
         end
         self.LabelIMAPThreat[zoneType] = labelTable
@@ -2260,8 +2262,8 @@ IntelManager = Class {
         end
     end,
 
-    ZoneIsIntelStale = function(self, zone, time)
-        local cells = self.ZoneToGridMap[zone.id]
+    ZoneIsIntelStale = function(self, zone, time, layer)
+        local cells = self.ZoneToGridMap[layer][zone.id]
         if not cells then
             return false
         end
@@ -2290,7 +2292,7 @@ IntelManager = Class {
         return staleCount / total > 0.5
     end,
 
-    IsZoneSafeToScout = function(self, currentTime, zone)
+    IsZoneSafeToScout = function(self, currentTime, zone, layer)
         if zone.status == 'Allied' or zone.status == 'Unoccupied' or (zone.status == 'Contested' and zone.enemyantisurfacethreat == 0) then
             if zone.enemystartdata then
                 for _, v in zone.enemystartdata do
@@ -2303,7 +2305,7 @@ IntelManager = Class {
             end
             --[[
             -- Not implementing this yet as it needs more refinement
-            if zone.status ~= 'Allied' and self:ZoneIsIntelStale(zone, currentTime) then
+            if zone.status ~= 'Allied' and self:ZoneIsIntelStale(zone, currentTime, layer) then
                 return false
             end
             ]]
@@ -2315,7 +2317,6 @@ IntelManager = Class {
     GetDefensiveCurveZones = function(self, zonesTable, baseZoneID, safeZones)
 
         local aiBrain = self.Brain
-        local zoneToGridMappings = self.ZoneToGridMap
         local currentTime = GetGameTimeSeconds()
         -- Step 1: Find all safe zones reachable from baseZoneID if safeZones not provided
         if not safeZones then
@@ -2328,7 +2329,7 @@ IntelManager = Class {
                 local zoneData = zonesTable[current]
                 if zoneData then
                     for _, neighborID in ipairs(zoneData.edges) do
-                        if not safeZones[neighborID.zone.id] and self:IsZoneSafeToScout(currentTime, neighborID.zone) then
+                        if not safeZones[neighborID.zone.id] and self:IsZoneSafeToScout(currentTime, neighborID.zone, 'Land') then
                             safeZones[neighborID.zone.id] = true
                             table.insert(queue, neighborID.zone.id)
                         end
@@ -2345,7 +2346,7 @@ IntelManager = Class {
             local zoneData = zonesTable[safeZoneID]
             if zoneData then
                 for _, neighborID in ipairs(zoneData.edges) do
-                    if not self:IsZoneSafeToScout(currentTime, neighborID.zone) then
+                    if not self:IsZoneSafeToScout(currentTime, neighborID.zone, 'Land') then
                         defensiveCurveZones[safeZoneID] = true
                         break  -- we only need one unsafe neighbor to qualify this zone
                     end
@@ -2507,7 +2508,8 @@ IntelManager = Class {
         local maximumResourceValue = 0
         local Zones = {
             'Land',
-            'Naval'
+            'Naval',
+            'Air'
         }
         local expansionSize = math.min((aiBrain.MapDimension / 2), 180)
         for _, v in Zones do
@@ -6051,6 +6053,11 @@ CreateIntelGrid = function(aiBrain)
         RNGLOG('Intel Grid MapSize X : '..mx..' Z: '..mz)
     end
     local zoneToGridMap = aiBrain.IntelManager.ZoneToGridMap
+    local layers = {
+        Land = aiBrain.Zones.Land.index,
+        Naval = aiBrain.Zones.Naval.index,
+        Air = aiBrain.Zones.Air.index
+    }
 
     -- smaller maps have a 8x8 iMAP
     if mx == mz and mx == 256 then 
@@ -6130,14 +6137,23 @@ CreateIntelGrid = function(aiBrain)
             intelGrid[x][z].DistanceToMain = VDist3(intelGrid[x][z].Position, aiBrain.BrainIntel.StartPos) 
             intelGrid[x][z].Water = GetTerrainHeight(cx, cz) < GetSurfaceHeight(cx, cz)
             intelGrid[x][z].Size = { sx = fx, sz = fz}
-            local zoneId = MAP:GetZoneID(gridPos,aiBrain.Zones.Land.index) or 0
-            if not zoneToGridMap[zoneId] then
-                zoneToGridMap[zoneId] = {}
+            for layerName, layerIdx in layers do
+                local zId = MAP:GetZoneID(gridPos, layerIdx) or 0
+                if zId > 0 then
+                    -- We need separate mapping tables to avoid ID collisions between layers
+                    if not zoneToGridMap[layerName] then
+                        zoneToGridMap[layerName] = {}
+                    end
+                    if not zoneToGridMap[layerName][zId] then
+                        zoneToGridMap[layerName][zId] = {}
+                    end
+                    table.insert(zoneToGridMap[layerName][zId], intelGrid[x][z])
+                    
+                    -- Store the ID on the cell for debugging
+                    intelGrid[x][z][layerName .. 'ZoneID'] = zId
+                end
             end
-            if zoneId > 0 then
-                table.insert(zoneToGridMap[zoneId], intelGrid[x][z])
-            end
-            intelGrid[x][z].LandZoneID = zoneId
+            --intelGrid[x][z].LandZoneID = zoneId
             intelGrid[x][z].LandLabel = NavUtils.GetLabel('Land', gridPos)
             intelGrid[x][z].Enabled = true
         end

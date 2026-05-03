@@ -398,7 +398,7 @@ AIPlatoonLandScoutBehavior = Class(AIPlatoonRNG) {
                     if edges then
                         for _, edge in edges do
                             local neighbor = edge.zone
-                            if not aiBrain.IntelManager:IsZoneSafeToScout(nil, neighbor) then
+                            if not aiBrain.IntelManager:IsZoneSafeToScout(nil, neighbor, 'Land') then
                                 table.insert(probeTargets, neighbor)
                             end
                         end

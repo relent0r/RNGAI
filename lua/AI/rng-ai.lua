@@ -2131,9 +2131,11 @@ AIBrain = Class(RNGAIBrainClass) {
         WaitTicks(1)
         self.Zones.Land = MAP:GetZoneSet('RNGLandResourceSet',1)
         self.Zones.Naval = MAP:GetZoneSet('RNGNavalResourceSet',2)
+        self.Zones.Air = MAP:GetZoneSet('RNGAirResourceSet',0)
         self.ZoneCount = {
             Land = table.getn(self.Zones.Land.zones),
-            Naval = table.getn(self.Zones.Naval.zones)
+            Naval = table.getn(self.Zones.Naval.zones),
+            Air = table.getn(self.Zones.Air.zones)
         }
         self.ZonesInitialized = true
         --self:ForkThread(import('/mods/RNGAI/lua/AI/RNGDebug.lua').DrawReclaimGrid)

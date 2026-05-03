@@ -209,7 +209,7 @@ GameMap = Class({
         self.numZoneSets = 0
         local END = GetSystemTimeSecondsOnlyForProfileUse()
         LOG(string.format('FlowAI framework: CreateMapMarkers() finished, runtime: %.2f seconds.', END - START ))
-        local drawStuffz = true
+        local drawStuffz = false
         if drawStuffz then
             --[[
             The second param is GetZoneSet is layer.
@@ -580,11 +580,17 @@ GameMap = Class({
         end
     end,
     GetComponent = function(self,pos,layer)
+        if layer == LAYER_AIR then
+            return 1
+        end
         local i = self:GetI(pos[1])
         local j = self:GetJ(pos[3])
         return self.components[i][j][layer]
     end,
     GetComponentSize = function(self,component,layer)
+        if layer == LAYER_AIR then
+            return self.xSize * self.zSize
+        end
         if component > 0 then
             return self.componentSizes[layer][component]
         else

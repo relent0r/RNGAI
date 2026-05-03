@@ -583,7 +583,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     while not IsDestroyed(eng) do
                         local primaryMarker = builderData.Marker
                         local primary = self.BuilderData.Marker
-                        LOG(string.format("RNGLOG: Eng %s Pathing. TargetMarker: %s, ReservedBy: %s, QueueSize: %s", eng.EntityId, tostring(primary.name), tostring(primary.reservedBy), table.getn(eng.EngineerBuildQueue or {})))
+                        --LOG(string.format("RNGLOG: Eng %s Pathing. TargetMarker: %s, ReservedBy: %s, QueueSize: %s", eng.EntityId, tostring(primary.name), tostring(primary.reservedBy), table.getn(eng.EngineerBuildQueue or {})))
                         if primary.reservedBy ~= eng.EntityId then LOG("RNGLOG: DETECTED SELF-DE-RESERVATION AT NODE " .. tostring(currentPathNode)) end
                         if primaryMarker and primaryMarker.reservedBy == eng.EntityId then
                             primaryMarker.reservationDistSq = VDist2Sq(pos[1], pos[3], primaryMarker.position[1], primaryMarker.position[3])
