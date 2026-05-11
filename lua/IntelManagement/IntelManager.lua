@@ -2937,7 +2937,11 @@ IntelManager = Class {
             if cell then
                 cell.IMAPCurrentThreat[threatType] = threatVal
                 -- Keep the max between new threat and decayed memory
-                cell.IMAPHistoricalThreat[threatType] = math.max(cell.IMAPCurrentThreat[threatType], threatVal)
+                if threatVal == 0 and cell.IntelCoverage then
+                    cell.IMAPHistoricalThreat[threatType] = 0
+                else
+                    cell.IMAPHistoricalThreat[threatType] = math.max(cell.IMAPHistoricalThreat[threatType] or 0, threatVal)
+                end
                 cell.LastThreatUpdate = timeNow
             end
         end

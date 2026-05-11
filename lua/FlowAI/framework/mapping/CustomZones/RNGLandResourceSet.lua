@@ -35,7 +35,7 @@ local MAP = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMa
     edges ={
         {
             distance = I think this is the distance between the centerpoint and the edge of the zone
-            border = something, check with softles
+            border = how many grid links are there between zones
             zone = the ID of that adjacent zone
         }
     }

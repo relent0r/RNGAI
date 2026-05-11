@@ -3,6 +3,7 @@ local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua
 local NavUtils = import("/lua/sim/navutils.lua")
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local CanBuildStructureAt = moho.aibrain_methods.CanBuildStructureAt
@@ -655,6 +656,70 @@ FighterThreatThreads = function(aiBrain, platoon)
                 end
             end
         end
+        local zoneRiskMap = {}
+        local startZoneID = MAP:GetZoneID(platPos, aiBrain.Zones.Air.index)
+        local airZones = aiBrain.Zones.Air.zones
+        local acu = aiBrain.CDRUnit
+        local acuZoneID
+        if acu.Position[1] then
+            acuZoneID = MAP:GetZoneID(acu.Position, aiBrain.Zones.Air.index) or 0
+        end
+
+
+        if startZoneID then
+            local maxSearchDistSq = platoon.MaxRadius * platoon.MaxRadius
+            local startZone = airZones[startZoneID]
+            local sAA = startZone.enemyantiairthreat or 0
+            local sAir = startZone.enemyairthreat or 0
+            local sEffective = sAA + (sAir * 0.1)
+
+            -- Start with the 'Home Zone' discount
+            local queue = { {id = startZoneID, depth = 0, totalRisk = -sEffective} }
+            local visited = { [startZoneID] = true }
+            local transitWeight = 0.1 
+
+            while table.getn(queue) > 0 do
+                local current = table.remove(queue, 1)
+                local zone = airZones[current.id]
+                
+                if zone and VDist3Sq(platPos, zone.pos) <= maxSearchDistSq then 
+                    local zAA = zone.enemyantiairthreat or 0
+                    local zAir = zone.enemyairthreat or 0
+                    
+                    -- LETHALITY (The Cost)
+                    local localRisk = zAA + (zAir * 0.1)
+                    local totalPathRisk = current.totalRisk + localRisk
+                    
+                    -- INCLINATION (The Reward)
+                    -- High Air + Low AA = Massive priority boost
+                    local preyValue = math.max(0, zAir - zAA)
+                    
+                    zoneRiskMap[current.id] = {
+                        zoneid = current.id,
+                        risk = totalPathRisk,
+                        priority = preyValue, -- NEW: High value for unescorted targets
+                        localRisk = localRisk,
+                        hasPriorityTarget = zAir > 30,
+                        isACUPresent = (acuZoneID > 0 and current.id == acuZoneID)
+                    }
+
+                    for _, edge in zone.edges do
+                        local nObj = edge.zone
+                        local nID = nObj.id 
+                        if nID and airZones[nID] and not visited[nID] then
+                            visited[nID] = true
+                            table.insert(queue, {
+                                id = nID,
+                                depth = current.depth + 1,
+                                totalRisk = current.totalRisk + (localRisk * transitWeight)
+                            })
+                        end
+                    end
+                end
+            end
+        end
+        platoon.ZoneRiskMap = zoneRiskMap -- Make available for targeting function
+        --LOG('Zone Risk Map '..tostring(repr(zoneRiskMap)))
         coroutine.yield(20)
     end
 end

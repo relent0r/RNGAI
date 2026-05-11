@@ -9292,6 +9292,11 @@ end
 function FindAirTargetForTeamRNG(aiBrain, position, platoon, maxRange, platoonThreat, priorityList)
     --LOG('Looking for antiair target with FindAirTargetForTeamRNG')
     if not position then return nil end
+    local riskMap = platoon.ZoneRiskMap
+    if not riskMap then 
+        WARN("AI-RNG: Fighter platoon has no risk map")
+        return nil 
+    end
     
     local armyIndex = aiBrain:GetArmyIndex()
     local emergencyDefensePos = aiBrain.BrainIntel.StartPos
@@ -9354,40 +9359,46 @@ function FindAirTargetForTeamRNG(aiBrain, position, platoon, maxRange, platoonTh
             -- Efficient local scan at the node
             local enemies = aiBrain:GetUnitsAroundPoint(categories.AIR - categories.INSIGNIFICANTUNIT, searchPos, range, 'Enemy')
             for _, category in priorityList do
+                local bestPriority
                 for _, unit in enemies do
                     if not unit.Dead and unit:GetFractionComplete() == 1 then
                         if EntityCategoryContains(category, unit) then
                             local unitPos = unit:GetPosition()
+                            local targetZoneID = MAP:GetZoneID(unitPos, aiBrain.Zones.Air.index)
+                            local zData = riskMap[targetZoneID]
+                            if not zData then
+                                LOG("RNG TARGETING: Unit in Zone " .. tostring(targetZoneID or 'NIL') .. " is OUTSIDE riskMap range. Skipping safety check.")
+                            end
+                            local currentRisk = zData and zData.risk or 0
+                            local targetIncentive = zData and zData.priority or 0
+
+                            local maxAllowableRisk = platoon.CurrentPlatoonThreatAntiAir * 1.5 
+                            local perceivedRisk = currentRisk - (targetIncentive * 0.5)
+                            
+                            -- Override: If it's a bomber or near our ACU, we are 50% more brave
+                            if EntityCategoryContains(categories.BOMBER + categories.GROUNDATTACK, unit) or (zData and zData.isACUPresent )then
+                                maxAllowableRisk = maxAllowableRisk * 2.0
+                            end
+
                             local isSafe = true
-                            local currentThreat = GetThreatAtPosition( aiBrain, unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
-                            if currentThreat > platoonThreat then
-                                local distanceWeight = 0.5      -- how much distance reduces risk
-                                local threatWeight     = 1.0      -- historical threat multiplier
-                                local inferredWeight = 1.0      -- inferred enemy threat multiplier
-                                local supportWeight  = -0.5     -- friendly AA reduces risk
-                                local dx = position[1] - unitPos[1]
-                                local dz = position[3] - unitPos[3]
-                                local distSq = dx*dx + dz*dz
-                                local distFactor = distSq / (platoon.MaxRadius*platoon.MaxRadius)
-                                local threatScore = threatWeight * currentThreat
-                                                    + inferredWeight * aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
-                                                    + distanceWeight * distFactor
-                                local maxAllowableThreat = platoon.CurrentPlatoonThreatAntiAir * 1.5  -- tune this
-                                --LOG('Threat score is '..tostring(threatScore)..' max threat allowed is '..tostring(maxAllowableThreat))
-                                if threatScore > maxAllowableThreat then
-                                    local hx = emergencyDefensePos[1] - unitPos[1]
-                                    local hz = emergencyDefensePos[3] - unitPos[3]
-                                    local homeDistSq = hx*hx + hz*hz
-                                    -- abort target acquisition
-                                    if homeDistSq > 6400 then
-                                        --LOG('Threat score is '..tostring(threatScore)..' max threat allowed is '..tostring(maxAllowableThreat)..' platoon threat was '..tostring(platoon.CurrentPlatoonThreatAntiAir))
-                                        --LOG('Aborting target during find air target')
-                                        isSafe = false
-                                    end
+                            if perceivedRisk > maxAllowableRisk then
+                                LOG('High risk target, risk is '..tostring(zData.risk)..' max allowable '..tostring(maxAllowableRisk))
+                                local hx = emergencyDefensePos[1] - unitPos[1]
+                                local hz = emergencyDefensePos[3] - unitPos[3]
+                                local homeDistSq = hx*hx + hz*hz
+                                -- abort target acquisition
+                                if homeDistSq > 6400 then
+                                    --LOG('Threat score is '..tostring(threatScore)..' max threat allowed is '..tostring(maxAllowableThreat)..' platoon threat was '..tostring(platoon.CurrentPlatoonThreatAntiAir))
+                                    LOG('Aborting target during find air target')
+                                    isSafe = false
                                 end
                             end
                             if isSafe then
-                                bestTarget = unit
+                                if not bestPriority or targetIncentive > bestPriority then
+                                    LOG("TARGET ACCEPTED. | Perceived Risk: " .. perceivedRisk .. " is within Max: " .. maxAllowableRisk)
+                                    bestPriority = targetIncentive
+                                    bestTarget = unit
+                                end
                             end
                         end
                     end
