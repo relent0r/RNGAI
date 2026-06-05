@@ -187,51 +187,57 @@ function CDRBrainThread(cdr)
                 cdr.HighThreatUpgradeRequired = true
             end
         end
-        if cdr.Active then
+if cdr.Active then
+            -- Aggregate current support platoon threat levels safely
+            local supportSurfaceThreat = 0
+            local supportAirThreat = 0
+            local hasValidSupport = false
+
+            if cdr.SupportPlatoon and not IsDestroyed(cdr.SupportPlatoon) then
+                hasValidSupport = true
+                local supportUnits = GetPlatoonUnits(cdr.SupportPlatoon) or {}
+                for _, v in supportUnits do
+                    if not v.Dead then
+                        local unitBp = v:GetBlueprint()
+                        if unitBp.Defense then
+                            supportSurfaceThreat = supportSurfaceThreat + (unitBp.Defense.SurfaceThreatLevel or 0)
+                            supportAirThreat = supportAirThreat + (unitBp.Defense.AirThreatLevel or 0)
+                        end
+                    end
+                end
+            end
+
             if cdr.DistanceToHome > 900 and cdr.CurrentEnemyThreat > 0 then
-                if cdr.Confidence < 3.5 and (not cdr.SupportPlatoon or IsDestroyed(cdr.SupportPlatoon) and (gameTime - 15) > lastPlatoonCall) then
-                    --LOG('Calling platoon, last call was '..tostring(lastPlatoonCall)..' game time is '..tostring(gameTime))
-                    --RNGLOG('CDR Support Platoon doesnt exist and I need it, calling platoon')
-                    --RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
-                    cdr.PlatoonHandle:LogDebug(string.format('ACU confidence low, CDRCallPlatoon'))
-                    --LOG('CDR is calling for support platoon '..aiBrain.Nickname)
-                    --LOG('Game time 15 seconds ago '..tostring((gameTime - 15)))
-                    --LOG('LastPlatoon Call time '..tostring(lastPlatoonCall))
-                    CDRCallPlatoon(cdr, math.max(0,cdr.CurrentEnemyThreat * 1.3 - cdr.CurrentFriendlyThreat), math.max(0,cdr.CurrentEnemyAirThreat - cdr.CurrentFriendlyAntiAirThreat))
+                -- Define minimum dynamic thresholds based on location status
+                local minSurfaceThreat = 15
+                local minAirThreat = 5
+                if cdr.PositionStatus == 'Hostile' then
+                    minSurfaceThreat = 30
+                    minAirThreat = 15
+                end
+
+                -- Condition A: No support platoon exists, or it has fallen below required capability thresholds
+                local supportNeedsReplenishment = not hasValidSupport or (supportSurfaceThreat < minSurfaceThreat) or (supportAirThreat < minAirThreat)
+
+                if (cdr.Confidence < 3.5 or cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat or supportNeedsReplenishment) and (gameTime - 20) > lastPlatoonCall then
+                    cdr.PlatoonHandle:LogDebug(string.format('ACU escort requirements unfulfilled. Calling support. Surface: %d/%d, Air: %d/%d', supportSurfaceThreat, minSurfaceThreat, supportAirThreat, minAirThreat))
+                    
+                    -- Request supplemental threat to close the gap
+                    local requestedSurface = math.max(minSurfaceThreat, cdr.CurrentEnemyThreat * 1.3 - cdr.CurrentFriendlyThreat)
+                    local requestedAir = math.max(minAirThreat, cdr.CurrentEnemyAirThreat - cdr.CurrentFriendlyAntiAirThreat)
+                    
+                    CDRCallPlatoon(cdr, requestedSurface, requestedAir)
                     lastPlatoonCall = gameTime
-                elseif cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and (not cdr.SupportPlatoon or IsDestroyed(cdr.SupportPlatoon) and (gameTime - 15) > lastPlatoonCall) then
-                    --LOG('Calling platoon, last call was '..tostring(lastPlatoonCall)..' game time is '..tostring(gameTime))
-                    --RNGLOG('CDR Support Platoon doesnt exist and I need it, calling platoon')
-                    --RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
-                    cdr.PlatoonHandle:LogDebug(string.format('ACU enemy threat greater than friendly and no support platoon CDRCallPlatoon'))
-                    --LOG('CDR is calling for support platoon '..aiBrain.Nickname)
-                    --LOG('Game time 15 seconds ago '..tostring((gameTime - 15)))
-                    --LOG('LastPlatoon Call time '..tostring(lastPlatoonCall))
-                    CDRCallPlatoon(cdr, math.max(0,cdr.CurrentEnemyThreat * 1.3 - cdr.CurrentFriendlyThreat), math.max(0,cdr.CurrentEnemyAirThreat - cdr.CurrentFriendlyAntiAirThreat))
-                    lastPlatoonCall = gameTime
-                elseif cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat and (gameTime - 25) > lastPlatoonCall then
-                    --LOG('Calling platoon, last call was '..tostring(lastPlatoonCall)..' game time is '..tostring(gameTime))
-                    --RNGLOG('CDR Support Platoon exist but we have too much threat, calling platoon')
-                    --RNGLOG('Call values enemy threat '..(cdr.CurrentEnemyThreat * 1.2)..' friendly threat '..cdr.CurrentFriendlyThreat)
-                    cdr.PlatoonHandle:LogDebug(string.format('enemy threat greater than friendly CDRCallPlatoon'))
-                    --LOG('CDR is calling for support platoon '..aiBrain.Nickname)
-                    --LOG('Game time 15 seconds ago '..tostring((gameTime - 15)))
-                    --LOG('LastPlatoon Call time '..tostring(lastPlatoonCall))
-                    CDRCallPlatoon(cdr, math.max(0,cdr.CurrentEnemyThreat * 1.3 - cdr.CurrentFriendlyThreat), math.max(0,cdr.CurrentEnemyAirThreat - cdr.CurrentFriendlyAntiAirThreat))
-                    lastPlatoonCall = gameTime
+                
+                -- Condition B: Health/Emergency Fallback overrides
                 elseif cdr.Health < 6000 and cdr.CurrentFriendlyThreat < 20 and (gameTime - 15) > lastPlatoonCall then
-                    --LOG('Calling platoon, last call was '..tostring(lastPlatoonCall)..' game time is '..tostring(gameTime))
                     cdr.PlatoonHandle:LogDebug(string.format('ACU is low on health and less than 20 CDRCallPlatoon'))
-                    --LOG('CDR is calling for support platoon '..aiBrain.Nickname)
-                    --LOG('Game time 15 seconds ago '..tostring((gameTime - 15)))
-                    --LOG('LastPlatoon Call time '..tostring(lastPlatoonCall))
                     CDRCallPlatoon(cdr, 20, 10)
+                    lastPlatoonCall = gameTime
                 elseif cdr.DistanceToHome > 40000 and cdr.CurrentFriendlyThreat < 20 and cdr.CurrentEnemyThreat > cdr.CurrentFriendlyThreat and (gameTime - 15) > lastPlatoonCall then
                     cdr.PlatoonHandle:LogDebug(string.format('ACU is further than 200 units and less than 20 friendly and enemy is greater CDRCallPlatoon'))
-                    --LOG('CDR is calling for support platoon '..aiBrain.Nickname)
-                    --LOG('Game time 15 seconds ago '..tostring((gameTime - 15)))
-                    --LOG('LastPlatoon Call time '..tostring(lastPlatoonCall))
                     CDRCallPlatoon(cdr, 20, 5)
+                    lastPlatoonCall = gameTime
                 end
             end
         end
@@ -588,9 +594,9 @@ function CDRThreatAssessmentRNG(cdr)
             end
             
             local function customSurvivability(healthPercent)
-                local k = 15  -- Steepness factor
+                local k = 14  -- Steepness factor
                 -- Apply a sigmoid function that starts at 2.0 for health = 1.0
-                local sigmoid = 1 / (1 + math.exp(k * (healthPercent - 0.5)))
+                local sigmoid = 1 / (1 + math.exp(k * (healthPercent - 0.35)))
                 -- Scale and shift the result to match the target values
                 local result = 2 - (sigmoid * 1.5)
                 return result
@@ -660,7 +666,7 @@ function CDRThreatAssessmentRNG(cdr)
                 --LOG('Enemy threat before '..tostring(enemyThreatConfidenceModifier))
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * distanceFearFactor
                 --LOG('Friendly threat after '..tostring(aiBrain.Nickname)..' is '..tostring(friendlyThreatConfidenceModifier))
-                enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + weights.localEnemyThreatRatio * localEnemyThreatRatio, 0.1
+                enemyThreatConfidenceModifier = math.max(enemyThreatConfidenceModifier + weights.localEnemyThreatRatio * localEnemyThreatRatio, 0.1)
                 --LOG('Enemy threat after '..tostring(enemyThreatConfidenceModifier))
                 --LOG('Distance to enemy base scaled factor for '..tostring(aiBrain.Nickname)..' is '..tostring(distanceFearFactor))
 
@@ -673,6 +679,7 @@ function CDRThreatAssessmentRNG(cdr)
                 
                     -- **Health + Shield Influence on Confidence**
                 local healthModifer = customSurvivability(math.min(cdr.HealthPercent, 1))
+                --LOG('ACU actual health percent '..tostring(cdr.HealthPercent))
                 --LOG('healthModifer ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(healthModifer))
                 local survivability = (healthModifer * weights.healthBoost) + (shieldFactor or 0)
                 --LOG('Survivability ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(survivability))
@@ -685,9 +692,13 @@ function CDRThreatAssessmentRNG(cdr)
                     overchargeFactor = weights.overchargeBoost * threatScaling * healthScaling
                 end
                 
-               -- LOG('AI '..tostring(aiBrain.Nickname)..' health percent '..tostring(cdr.HealthPercent)..' friendlyThreatConfidenceModifier '..tostring(friendlyThreatConfidenceModifier)..' enemyThreatConfidenceModifier '..tostring(enemyThreatConfidenceModifier)..' ratio '..tostring(friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier)..' survivability '..tostring(survivability)..' overcharge '..tostring(overchargeFactor))
+                --LOG('AI '..tostring(aiBrain.Nickname)..' health percent '..tostring(cdr.HealthPercent)..' friendlyThreatConfidenceModifier '..tostring(friendlyThreatConfidenceModifier)..' enemyThreatConfidenceModifier '..tostring(enemyThreatConfidenceModifier)..' ratio '..tostring(friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier)..' survivability '..tostring(survivability)..' overcharge '..tostring(overchargeFactor))
 
-                cdr.Confidence = ((friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier) * survivability) + overchargeFactor
+
+                -- Normalize the threat divisor to 1.0. 
+                -- This prevents the '1.#INF' infinity leash seen in the logs when local threat is 0,
+                -- ensuring the leash remains tight to the base when the ACU is injured.
+                cdr.Confidence = ((friendlyThreatConfidenceModifier / math.max(enemyThreatConfidenceModifier, 1.0)) * survivability) + overchargeFactor
                 if friendlyACURangeAdvantage then
                     --LOG('ACU has a range advantage')
                     local rangeAdvantageBonus = 1.2

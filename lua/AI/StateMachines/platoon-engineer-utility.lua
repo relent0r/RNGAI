@@ -1633,6 +1633,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             else
                 avoidZone = MAP:GetZoneID(avoidZonePos,aiBrain.Zones.Land.index)
             end
+
             self.AvoidZones[avoidZone] = true
             --LOG('FindAlternateZoneExpansion ZonesToAvoid '..tostring(repr(self.AvoidZones)))
             local reference, refName, refZone = RUtils.AIFindZoneExpansionPointRNG(aiBrain, false, (cons.LocationRadius or 256), avoidZonePos, self.AvoidZones, 'Land')
@@ -1683,7 +1684,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 self.AlternativeZoneExpansionSet = true
-                --LOG('FindAlternateZoneExpansion engineer should be constructing')
                 self.BuilderData = {
                     Position = reference,
                     Zone = refZone,

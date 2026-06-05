@@ -517,7 +517,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                 else
-                    LOG('No best unit found for assist manager, we will loop back again')
+                    --LOG('No best unit found for assist manager, we will loop back again')
                 end
             end
 
@@ -832,9 +832,7 @@ EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
                 end
             end
             if removeEngineer then
-                --LOG('Assist Platoon Focus Category has changed, aborting current assist. Focus lookup is '..tostring(aiBrain.EngineerAssistManagerFocusCategoryLookup))
-                --LOG('Engineer is not focused on its primary task '..tostring(focusLookupValue))
-                --LOG('Current unit to assist is '..tostring(unitToAssist.UnitId))
+                --LOG('AssistThread_ABORT_FOCUS: Eng '..eng.EntityId..' aborting '..unitToAssist.UnitId..' because Brain Focus is now '..tostring(focusLookupValue))
                 eng.UnitBeingAssist = nil
                 break
             end

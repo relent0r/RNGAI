@@ -4,7 +4,6 @@ local NavUtils = import('/lua/sim/NavUtils.lua')
 local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
-local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
@@ -1161,7 +1160,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 WARN('No position passed to ZoneControl')
                 return false
             end
-            --local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
             local requestId = StateUtils.RequestTransportRNG(self, builderData.Position, 'Combat')
             if requestId then
                 -- 2. THE WAITING LOOP
@@ -1219,9 +1217,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 self:LogDebug(string.format('platoon tried but didnt use transports'))
                 coroutine.yield(20)
                 if self.MovementLayer == 'Land' and self:CalculatePlatoonThreat('Surface', categories.AMPHIBIOUS + categories.HOVER) > 0 then
-                    LOG('This platoon has no transport but amphib surface threat')
+                    --LOG('This platoon has no transport but amphib surface threat')
                     if NavUtils.CanPathTo('Amphibious', self.Pos, builderData.Position) then
-                        LOG('This platoon can path to the position via amphib')
+                        --LOG('This platoon can path to the position via amphib')
                         local amphibiousSurfaceUnits = {}
                         local amphibiousAntiAirUnits = {}
                         local units = self:GetPlatoonUnits()
@@ -1233,9 +1231,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                                 table.insert(amphibiousAntiAirUnits, unit)
                             end
                         end
-                        LOG('This platoon has this count of amphib surface fire units '..tostring(table.getn(amphibiousSurfaceUnits)))
+                        --LOG('This platoon has this count of amphib surface fire units '..tostring(table.getn(amphibiousSurfaceUnits)))
                         if table.getn(amphibiousSurfaceUnits) > 0 then
-                            LOG('Creating new platoon')
+                            --LOG('Creating new platoon')
                             local plat = brain:MakePlatoon('', 'none')
                             brain:AssignUnitsToPlatoon(plat, amphibiousSurfaceUnits, 'Attack', 'None')
                             brain:AssignUnitsToPlatoon(plat, amphibiousAntiAirUnits, 'Guard', 'None')

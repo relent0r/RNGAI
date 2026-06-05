@@ -1,7 +1,6 @@
 local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local NavUtils = import("/lua/sim/navutils.lua")
 local MarkerUtils = import("/lua/sim/markerutilities.lua")
-local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local AIUtils = import("/lua/ai/aiutilities.lua")
 local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
@@ -955,12 +954,12 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                             coroutine.yield(20)
                             local manager = aiBrain:GetPlatoonUniquelyNamed('TransportPool')
                             if manager and not manager:GetRequestById(requestId) then
-                                LOG('Request ID is not present in the transport pool manager')
+                                --LOG('Request ID is not present in the transport pool manager')
                                 coroutine.yield(15)
                                 local transport = self['rngdata'].AssignedTransport
                                 if not transport or transport.Dead then
                                     -- Request disappeared but we aren't attached? Transport probably died.
-                                    LOG('Request is no longer in manager and we are not attached, break')
+                                    --LOG('Request is no longer in manager and we are not attached, break')
                                     break
                                 end
                             end

@@ -360,8 +360,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                     local marker = eng.EngineerBuildQueue[k][7]
                                     if marker then
                                         StateUtils.ReserveMassMarker(eng, eng.EngineerBuildQueue[k][7])
-                                    else
-                                        LOG('No marker in the engineers build queue')
                                     end
                                 end
                             end
@@ -431,7 +429,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 eng['rngdata'].WaitingForTransport = true
                 local requestId, requestData = StateUtils.RequestTransportRNG(self, builderData.Position, transportType)
                 if requestId then
-                    LOG('Request ID provided is '..tostring(requestId))
+                    --LOG('Request ID provided is '..tostring(requestId))
                     self:LogDebug('Transport Requested and requestId received')
                     local estWait = (requestData and requestData.EstimatedWait) or 30
                     local walkTime = (math.sqrt(navigateDist) / (eng.Blueprint.Physics.MaxSpeed or 2.5))
@@ -450,12 +448,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             coroutine.yield(20)
                             local manager = aiBrain:GetPlatoonUniquelyNamed('TransportPool')
                             if manager and not manager:GetRequestById(requestId) then
-                                LOG('Request ID is not present in the transport pool manager')
+                                --LOG('Request ID is not present in the transport pool manager')
                                 coroutine.yield(15)
                                 local transport = self['rngdata'].AssignedTransport
                                 if not transport or transport.Dead then
                                     -- Request disappeared but we aren't attached? Transport probably died.
-                                    LOG('Request is no longer in manager and we are not attached, break')
+                                    --LOG('Request is no longer in manager and we are not attached, break')
                                     break
                                 end
                             end
@@ -584,14 +582,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         local primaryMarker = builderData.Marker
                         local primary = self.BuilderData.Marker
                         --LOG(string.format("RNGLOG: Eng %s Pathing. TargetMarker: %s, ReservedBy: %s, QueueSize: %s", eng.EntityId, tostring(primary.name), tostring(primary.reservedBy), table.getn(eng.EngineerBuildQueue or {})))
-                        if primary.reservedBy ~= eng.EntityId then LOG("RNGLOG: DETECTED SELF-DE-RESERVATION AT NODE " .. tostring(currentPathNode)) end
                         if primaryMarker and primaryMarker.reservedBy == eng.EntityId then
                             primaryMarker.reservationDistSq = VDist2Sq(pos[1], pos[3], primaryMarker.position[1], primaryMarker.position[3])
                         else
                             -- THEFT CHECK: If our primary marker was stolen while we walked, abort.
                             --LOG('Zone assigned to another engineer, abort navigate, engineer id is '..tostring(eng.EntityId))
                             self:LogDebug('Primary marker stolen or lost, returning to DecideWhatToDo')
-                            LOG('Entity that is assigned is '..tostring(primaryMarker.reservedBy)..' current engineer id is '..tostring(eng.EntityId))
+                            --LOG('Entity that is assigned is '..tostring(primaryMarker.reservedBy)..' current engineer id is '..tostring(eng.EntityId))
                             IssueClearCommands({eng})
                             coroutine.yield(10)
                             self:ChangeState(self.DecideWhatToDo)
@@ -913,7 +910,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local eng = self.eng
             local marker = self.BuilderData.Marker
             if not marker then
-                LOG('self.BuilderData.Marker is currently empty')
+                --LOG('self.BuilderData.Marker is currently empty')
             end
             if marker then
                 StateUtils.RemoveFromZoneMarkersCache(self.ZoneMarkers, self.CurrentZoneIndex, marker)

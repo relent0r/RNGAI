@@ -4,7 +4,6 @@ local NavUtils = import('/lua/sim/NavUtils.lua')
 local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
-local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
@@ -435,7 +434,6 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 WARN('No position passed to LandAssault')
                 return false
             end
-            --local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
             local requestId = StateUtils.RequestTransportRNG(self, builderData.Position, 'Combat')
             if requestId then
                 -- 2. THE WAITING LOOP

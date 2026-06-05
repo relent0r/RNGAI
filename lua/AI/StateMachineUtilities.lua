@@ -1634,9 +1634,6 @@ BuildAIDoneRNG = function(unit, params)
 end
 
 BuildAIFailedRNG = function(unit, params)
-    if unit.UnitBeingBuilt.EntityId and unit.UnitBeingBuilt.EntityId == '304' then
-        LOG('BuildAIFailedRNG for EnergyProduction')
-    end
     if unit.Active or unit.Dead then return end
     if not unit.AIPlatoonReference then return end
     --LOG('BuildFailed triggered Platoon was '..tostring(unit.PlatoonHandle.BuilderName))
@@ -3232,10 +3229,6 @@ function CanReallocateMarker(requester, marker)
 
     -- Check if the requester is significantly closer (using a 15% buffer and yes that is 85% not 72.225%)
     if marker.reservationDistSq and reqDistSq < (marker.reservationDistSq * 0.7225) then
-        LOG(string.format("MassReservation: THEFT - Requester %s (DistSq %s) is closer than current owner %s (DistSq %s)", 
-            requester.EntityId, reqDistSq, marker.reservedBy, marker.reservationDistSq))
-        requester.PlatoonHandle:LogDebug(string.format("MassReservation: THEFT - Requester %s (DistSq %s) is closer than current owner %s (DistSq %s)", 
-            requester.EntityId, reqDistSq, marker.reservedBy, marker.reservationDistSq))
         return true
     end
 

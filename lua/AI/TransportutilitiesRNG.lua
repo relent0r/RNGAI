@@ -2094,23 +2094,39 @@ function WatchTransportTravel( transport, destination, aiBrain, UnitPlatoon )
 				--LOG('Destination is set as '..tostring(destination[1]..':'..tostring(destination[3])))
                 break
 			end
-			if UnitPlatoon.ZoneExpansionSet and not UnitPlatoon.AlternativeZoneExpansionSet and aiBrain:GetThreatAtPosition(destination, 0, true, 'AntiSurface') > 5 then
+			local isLandCombat = UnitPlatoon.MovementLayer == 'Land' or UnitPlatoon.MovementLayer == 'Amphibious'
+            
+            local threatR0 = aiBrain:GetThreatAtPosition(destination, 0, true, 'AntiSurface')
+            if not transport.LastThreatLog or transport.LastThreatLog + 5 < GetGameTimeSeconds() then
+                transport.LastThreatLog = GetGameTimeSeconds()
+            end
+
+			if (UnitPlatoon.ZoneExpansionSet or isLandCombat) and not UnitPlatoon.AlternativeZoneExpansionSet and not UnitPlatoon.AlternativeLandingSet and threatR0 > 5 then
 				transport.LastPosition = nil
-				UnitPlatoon.BuilderData.AvoidZonePos = destination
-				UnitPlatoon:ChangeState(UnitPlatoon.FindAlternateZoneExpansion)
+				if UnitPlatoon.ZoneExpansionSet then
+					UnitPlatoon.BuilderData.AvoidZonePos = destination
+					UnitPlatoon:ChangeState(UnitPlatoon.FindAlternateZoneExpansion)
+				else
+					UnitPlatoon.BuilderData.AvoidPos = destination
+					UnitPlatoon:ChangeState(UnitPlatoon.FindAlternateLandingPosition)
+				end
 				local timeout = 0
-				while not UnitPlatoon.AlternativeZoneExpansionSet do
+				while not UnitPlatoon.AlternativeZoneExpansionSet and not UnitPlatoon.AlternativeLandingSet do
 					timeout = timeout + 1
 					coroutine.yield(10)
-					if UnitPlatoon.AlternativeZoneExpansionFailed or timeout > 5 then
+					if UnitPlatoon.AlternativeZoneExpansionFailed or UnitPlatoon.AlternativeLandingFailed or timeout > 5 then
 						break
 					end
 				end
-				if UnitPlatoon.AlternativeZoneExpansionSet and UnitPlatoon.BuilderData.Position then
+				if (UnitPlatoon.AlternativeZoneExpansionSet or UnitPlatoon.AlternativeLandingSet) and UnitPlatoon.BuilderData.Position then
+					LOG('RNGAI: WatchTransportTravel: Alternate LZ found at '..tostring(repr(UnitPlatoon.BuilderData.Position))..'. Updating flight plan.')
 					destination = UnitPlatoon.BuilderData.Position
 					IssueClearCommands({transport})
 					IssueMove({transport}, destination )
 					UnitPlatoon.AlternativeZoneExpansionSet = false
+					UnitPlatoon.AlternativeLandingSet = false
+				else
+					LOG('RNGAI: WatchTransportTravel: Cargo failed to find alternate expansion.')
 				end
 			end
 			
@@ -2388,4 +2404,3 @@ function InPlayableArea(pos)
     end
     return true
 end
-

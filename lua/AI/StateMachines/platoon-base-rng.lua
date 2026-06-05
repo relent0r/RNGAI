@@ -1,6 +1,7 @@
 local AIBasePlatoon = import("/lua/aibrains/platoons/platoon-base.lua").AIPlatoon
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
+local NavUtils = import('/lua/sim/navutils.lua')
 local ALLBPS = __blueprints
 
 ---@class AIPlatoon : moho.platoon_methods
@@ -280,9 +281,9 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     if not unit.Dead and unit.BuilderManagerData then
                         if unit.BuilderManagerData.EngineerManager then
                             unit.BuilderManagerData.EngineerManager:TaskFinished(unit)
-                            if unit.PlatoonHandle.Home and unit.PlatoonHandle.LocationType and unit.PlatoonHandle.LocationType ~= 'FLOATING' then
-                                local hx = unit.PlatoonHandle.Pos[1] - unit.PlatoonHandle.Home[1]
-                                local hz = unit.PlatoonHandle.Pos[3] - unit.PlatoonHandle.Home[3]
+                    if self.Home and self.LocationType and self.LocationType ~= 'FLOATING' then
+                        local hx = platUnits[1]:GetPosition()[1] - self.Home[1]
+                        local hz = platUnits[1]:GetPosition()[3] - self.Home[3]
                                 local homeDistance = hx * hx + hz * hz
                                 if homeDistance < 6400 and brain.BuilderManagers[unit.PlatoonHandle.LocationType].FactoryManager.RallyPoint then
                                     --self:LogDebug(string.format('No transport used and close to base, move to rally point'))
@@ -311,4 +312,97 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         brain:DisbandPlatoon(self)
     end,
 
+    FindAlternateLandingPosition = State {
+        StateName = "FindAlternateLandingPosition",
+        Main = function(self)
+            local aiBrain = self:GetBrain()
+            local avoidPos = self.BuilderData.AvoidPos
+            if not avoidPos then
+                self.AlternativeLandingFailed = true
+                return
+            end
+
+            local layer = self.MovementLayer or 'Land'
+            local searchRadius = 120 -- Search area for a safe LZ
+            local threatMax = 5 -- Maximum acceptable surface threat for landing
+            local preferredLabel = NavUtils.GetLabel('Land', avoidPos)
+
+            -- Search for safe ground markers within the search radius
+            local markerlist = NavUtils.DirectionsFromWithThreatThreshold(layer, avoidPos, searchRadius, aiBrain, NavUtils.ThreatFunctions.AntiSurface, threatMax, aiBrain.BrainIntel.IMAPConfig.Rings)
+
+            if not table.empty(markerlist) then
+                -- 1. Label Filtering: Prioritize landing on the same landmass/label
+                local sameLabelMarkers = {}
+                if preferredLabel and preferredLabel ~= 0 then
+                    for _, m in markerlist do
+                        if NavUtils.GetLabel('Land', m) == preferredLabel then
+                            table.insert(sameLabelMarkers, m)
+                        end
+                    end
+                end
+
+                local candidates = not table.empty(sameLabelMarkers) and sameLabelMarkers or markerlist
+
+                -- Sort candidates by proximity to original objective
+                table.sort(candidates, function(a, b)
+                    local distASq = VDist2Sq(a[1], a[3], avoidPos[1], avoidPos[3])
+                    local distBSq = VDist2Sq(b[1], b[3], avoidPos[1], avoidPos[3])
+                    return distASq < distBSq
+                end)
+                
+                -- 2. Tactical Validation: Verify the closest "safe" spot isn't actually hot with units
+                local bestPos = false
+                local cargoThreat = self.CurrentPlatoonThreatAntiSurface or 0
+                for _, pos in candidates do
+                    local numEnemy = aiBrain:GetNumUnitsAroundPoint(categories.DIRECTFIRE + categories.ANTIAIR, pos, 25, 'Enemy')
+                    if numEnemy == 0 then
+                        bestPos = pos
+                        break
+                    else
+                        local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.DIRECTFIRE + categories.ANTIAIR, pos, 25, 'Enemy')
+                        local spotAntiAirThreat = 0
+                        local spotSurfaceThreat = 0
+                        for _, u in enemyUnits do
+                            if not u.Dead then
+                                local bp = u.Blueprint.Defense
+                                spotAntiAirThreat = spotAntiAirThreat + (bp.AirThreatLevel or 0)
+                                spotSurfaceThreat = spotSurfaceThreat + (bp.SurfaceThreatLevel or 0)
+                            end
+                        end
+                        if spotAntiAirThreat < 5 and spotSurfaceThreat <= cargoThreat * 0.5 then
+                            bestPos = pos
+                            break
+                        end
+                    end
+                end
+
+                -- Fallback to the closest marker if the tactical check is too strict for all candidates
+                bestPos = bestPos or candidates[1]
+                -- Provide the new position to the transport
+                self.BuilderData.Position = bestPos
+                self.AlternativeLandingSet = true
+            else
+                self.AlternativeLandingFailed = true
+            end
+            
+            -- Loop until detached from transport, then return to standard decision logic
+            while not IsDestroyed(self) do
+                local attached = false
+                local units = self:GetPlatoonUnits()
+                for _, u in units do
+                    if not u.Dead and u:IsUnitState('Attached') then
+                        attached = true
+                        break
+                    end
+                end
+                
+                if not attached then
+                    --LOG(string.format('RNGAI: FindAlternateLandingPosition: Platoon %s detached. Returning to decision logic.', self.PlatoonName))
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
+                end
+                coroutine.yield(20)
+            end
+        end,
+    },
 }

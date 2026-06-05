@@ -73,11 +73,11 @@ RNGAirResourceSet = Class(ZoneSet){
             local posX = math.floor(x)
             local posZ = math.floor(z)
             local posY = GetSurfaceHeight(posX, posZ)
-            LOG('RNGAI: Air Zone Created at ' .. tostring(posX) .. ',' .. tostring(posZ))
-            LOG('RNGAI: Zone ' .. table.getn(self.zones) .. ' captured ' .. totalWeight .. ' mass markers.')
-            if totalWeight == 0 then
-                LOG('RNGAI: WARNING - Empty Air Zone. AI may have a blind spot here.')
-            end
+            --LOG('RNGAI: Air Zone Created at ' .. tostring(posX) .. ',' .. tostring(posZ))
+            --LOG('RNGAI: Zone ' .. table.getn(self.zones) .. ' captured ' .. totalWeight .. ' mass markers.')
+            --if totalWeight == 0 then
+            --    LOG('RNGAI: WARNING - Empty Air Zone. AI may have a blind spot here.')
+            --end
             self:AddZone({
                 pos = {posX, posY, posZ},
                 component=MAP:GetComponent({posX, posY, posZ},self.layer),

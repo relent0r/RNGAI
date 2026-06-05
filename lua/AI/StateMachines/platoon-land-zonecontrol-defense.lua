@@ -4,7 +4,6 @@ local NavUtils = import('/lua/sim/NavUtils.lua')
 local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
-local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
@@ -187,7 +186,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            local targetZone
+            local targetZone, targetPos
             if not target then
                 -- look for main base attacks?
                 --self:LogDebug(string.format('DecideWhatToDo no target look at main base'))
@@ -226,8 +225,8 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 --self:LogDebug(string.format('DecideWhatToDo no target zone, look for one'))
                 --Note this yield is to try and avoid a bunch of platoons all selecting the same zone before the allocation thread has looped.
                 coroutine.yield(Random(5,35))
-                targetZone = IntelManagerRNG.GetIntelManager(aiBrain):GetBestZoneForPlatoon(self, self.ZoneType)
-                --LOG('Zone selected with GetBestZoneForPlatoon : '..tostring(testtargetZone)..' with zone type '..tostring(self.ZoneType))
+                targetZone, targetPos = IntelManagerRNG.GetIntelManager(aiBrain):GetBestZoneForPlatoon(self, self.ZoneType, self.ZoneID)
+                --LOG('Zone selected with GetBestZoneForPlatoon : '..tostring(targetZone)..' with zone type '..tostring(self.ZoneType))
                 if targetZone then
                     if self.LocationType and aiBrain.BuilderManagers[self.LocationType].ZoneID then
                         if targetZone == aiBrain.BuilderManagers[self.LocationType].ZoneID then
@@ -235,6 +234,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                             self.BuilderData = {
                                 TargetZone = targetZone,
                                 Position = aiBrain.Zones.Land.zones[targetZone].pos,
+                                Position = targetPos or aiBrain.Zones.Land.zones[targetZone].pos,
                                 CutOff = 400
                             }
                             self:ChangeState(self.Loiter)
@@ -245,6 +245,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     self.BuilderData = {
                         TargetZone = targetZone,
                         Position = aiBrain.Zones.Land.zones[targetZone].pos,
+                        Position = targetPos or aiBrain.Zones.Land.zones[targetZone].pos,
                         CutOff = 400
                     }
                     self.ZoneAllocated = targetZone
@@ -522,7 +523,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 WARN('No position passed to ZoneControl')
                 return false
             end
-            --local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
             local requestId = StateUtils.RequestTransportRNG(self, builderData.Position, 'Combat')
             if requestId then
                 -- 2. THE WAITING LOOP

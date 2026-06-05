@@ -6,7 +6,6 @@ local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetThreatBetweenPositions = moho.aibrain_methods.GetThreatBetweenPositions
-local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local AIUtils = import('/lua/ai/AIUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local RNGPOW = math.pow

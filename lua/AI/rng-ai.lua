@@ -6136,13 +6136,16 @@ AIBrain = Class(RNGAIBrainClass) {
                     --RNGLOG('Priority Unit Is MASSFABRICATION or SHIELD')
                     if action == 'unpause' then
                         --RNGLOG('Unpausing MASSFABRICATION or SHIELD')
-                        if v.MaintenanceConsumption then continue end
+                        if type == 'ENERGY' and v.MaintenanceConsumption then continue end
                         v:SetPaused(false)
-                        v:OnScriptBitClear(3)
+                        if type == 'ENERGY' then
+                            v:OnScriptBitClear(3)
+                        end
                         continue
                     end
+                    local isUpgrading = v.IsUnitState and v:IsUnitState('Upgrading')
                     
-                    if not v.MaintenanceConsumption then continue end
+                    if not v.MaintenanceConsumption and not isUpgrading then continue end
                     --RNGLOG('pausing MASSFABRICATION or SHIELD '..v.UnitId)
                     local unitConsumption = 0
                     if type == 'MASS' then
@@ -6153,7 +6156,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     if unitConsumption > 0 then
                         totalResourceSaved = totalResourceSaved + unitConsumption
                         v:SetPaused(true)
-                        v:OnScriptBitSet(3)
+                        if type == 'ENERGY' then
+                            v:OnScriptBitSet(3)
+                        end
                     end
                 elseif priorityUnit == 'SHIELD' then
                     --RNGLOG('Priority Unit Is MASSFABRICATION or SHIELD')
@@ -7291,20 +7296,13 @@ AIBrain = Class(RNGAIBrainClass) {
 
     AdjustEconomicAllocation = function (self)
         coroutine.yield(50)
-
         -- Small helpers
-        local function clamp(x, lo, hi)
-            if x < lo then return lo end
-            if x > hi then return hi end
-            return x
-        end
-
-        local function safeDiv(num, den, fallback)
-            if den and den ~= 0 then return num / den end
-            return fallback or 0
-        end
-
+        local function clamp(x, lo, hi) if x < lo then return lo end if x > hi then return hi end return x end
+        local function safeDiv(num, den, fallback) if den and den ~= 0 then return num / den end return fallback or 0 end
+        local economicDebugEnabled = true
         while self.Status ~= 'Defeat' do
+            -- Threshold for reallocating excess
+            local threatFactorThreshold = 1.3
             coroutine.yield(30)
 
             ----------------------------------------------------------------------
@@ -7343,33 +7341,143 @@ AIBrain = Class(RNGAIBrainClass) {
             local hasLandProduction  = hasFactory('LAND')
             local hasAirProduction   = hasFactory('AIR')
             local hasNavalProduction = hasFactory('NAVAL')
-            local productionZones = im.ProductionZones or {}
+            local productionZonesByLayer = im.ProductionZones or {}
             local myLabel = self.BuilderManagers['MAIN'].Label or 0
             local totalGravity = 0
             local teamWeightedSat = 0
             local totalFactories = 0
             local massStored = self:GetEconomyStored('MASS') or 0
             local massTrend = (self.EconomyOverTimeCurrent and self.EconomyOverTimeCurrent.MassTrendOverTime) or 0
-            local countedLabels = {}
-            for _, pZone in productionZones do
-                local fmgr = pZone.BuilderManager.FactoryManager
-                local managerLabel = pZone.BuilderManager.Label or 0
-                if managerLabel == 0 then
-                    WARN('No label on builder manager '..tostring(pZone.BuilderManager.LocationType))
-                end
-                if fmgr and fmgr.LocationActive and not countedLabels[managerLabel] then
+            local countedGravityLabels = {}
+            local zoneCount = 0
+            local totalLocalClaims = 0
+            -- Rough estimate: 1 BuildRate point consumes ~0.5 Mass/sec (heuristic for tech mix)
+            local brToMassFactor = 0.5
 
-                    -- Weight by actual factory units, not just the zone
-                    local fCount = fmgr:GetNumCategoryFactories(categories.STRUCTURE * categories.FACTORY - categories.GATE) or 1 
-                    totalGravity = totalGravity + (fmgr.EconomicGravity or 0)
-                    countedLabels[managerLabel] = true
+            ----------------------------------------------------------------------
+            -- 3) BIAS & MAP CONTEXT
+            ----------------------------------------------------------------------
+            local isNavalMap = false
+            local landProjection = 1.0
+            local navalProjection = 1.0
+        
+            local currentEnemy = self:GetCurrentEnemy()
+            if currentEnemy and self.CanPathToEnemyRNG then
+                local ownIdx = self:GetArmyIndex()
+                local enemyIdx = currentEnemy:GetArmyIndex()
+                local mainPath = self.CanPathToEnemyRNG[ownIdx]
+                    and self.CanPathToEnemyRNG[ownIdx][enemyIdx]
+                    and self.CanPathToEnemyRNG[ownIdx][enemyIdx]['MAIN']
+
+                local labelCount = brainIntel.NavalBaseLabelCount or 0
+                if mainPath and mainPath ~= 'LAND' and labelCount > 0 then
+                    if (self.MapWaterRatio or 0) > 0.45 then
+                        isNavalMap = true
+                    end
+                end
+                if mainPath ~= 'LAND' then
+                    landProjection = 0.2 -- Default: Over the horizon / Stalled
                     
-                    -- Use TeamSaturation if available, fallback to SaturationRatio
-                    local tSat = fmgr.TeamSaturationRatio or fmgr.SaturationRatio or 1
-                    teamWeightedSat = teamWeightedSat + (tSat * fCount)
-                    totalFactories = totalFactories + fCount
+                    if myLabel and im.LabelIMAPThreat and im.LabelIMAPThreat['Land'] then
+                        local labelThreat = im.LabelIMAPThreat['Land'][myLabel]
+                        if labelThreat then
+                            if (labelThreat.enemystructurethreat or 0) > 0 then
+                                landProjection = 0.8 -- Enemy has a base on our island
+                            elseif (labelThreat.enemylandthreat or 0) > 0 then
+                                landProjection = 0.5 -- Units detected on our island (Drops)
+                            end
+                        end
+                    end
                 end
             end
+
+            local playerBiases = {
+                Default   = { Land = 1.0, Air = 1.0, Naval = 1.0 },
+                Land      = { Land = 1.5, Air = 0.8, Naval = 0.7 },
+                Air       = { Land = 0.7, Air = 1.5, Naval = 0.8 },
+                Naval     = { Land = 0.7, Air = 0.8, Naval = 1.5 },
+                ChokePoint= { Land = 0.3, Air = 1.0, Naval = 1.0 },
+            }
+
+            local currentBias =
+                (brainIntel.PlayerRole.AirPlayer and playerBiases.Air)
+                or (brainIntel.PlayerRole.SpamPlayer and playerBiases.Land)
+                or (isNavalMap and playerBiases.Naval)
+                or ((self.EnemyIntel and self.EnemyIntel.ChokeFlag) and playerBiases.ChokePoint)
+                or playerBiases.Default
+
+            local navalBiasMultiplier = (im and im.NavalFocusSafe) and 1.75 or 1.0
+            if economicDebugEnabled then
+                LOG(string.format("RNGLOG_PATH_AUDIT | IsNavalMap: %s | landProjection: %.2f", tostring(isNavalMap), landProjection))
+            end
+
+            ----------------------------------------------------------------------
+            -- 4) THREAT GAPS & RISKS
+            ----------------------------------------------------------------------
+            local landGap  = (enemyThreat.Land or 0)    - ((myThreat.LandNow or 0)    + (myThreat.AllyLandThreat or 0))
+            local airGap   = (enemyThreat.AntiAir or 0) - ((myThreat.AntiAirNow or 0) + (myThreat.AllyAntiAirThreat or 0))
+            local navalGap = (enemyThreat.Naval or 0)   - ((myThreat.NavalNow or 0)   + (myThreat.AllyNavalThreat or 0))
+
+            -- Pressure factor in [0..1]
+            local projectedLandRisk  = clamp(safeDiv(landGap * landProjection, math.max(1, enemyThreat.Land or 0), 0), 0, 1)
+            local projectedNavalRisk = clamp(safeDiv(navalGap * navalProjection, math.max(1, enemyThreat.Naval or 0), 0), 0, 1)
+            if economicDebugEnabled then
+                LOG(string.format("RNGLOG_FFA_AUDIT | LandGap: %.2f | RawEnemyLand: %.2f | MyLand: %.2f", landGap, (enemyThreat.Land or 0), (myThreat.LandNow or 0)))
+                LOG(string.format("RNGLOG_FFA_AUDIT | AirGap: %.2f | RawEnemyAir: %.2f | MyAir: %.2f", airGap, (enemyThreat.AntiAir or 0), (myThreat.AntiAirNow or 0)))
+                LOG(string.format("RNGLOG_FFA_AUDIT | NavalGap: %.2f | RawEnemyNaval: %.2f | MyNaval: %.2f", navalGap, (enemyThreat.Naval or 0), (myThreat.NavalNow or 0)))
+            end
+
+            for layerKey, zoneList in productionZonesByLayer do
+                for _, pZone in zoneList do
+                    local fmgr = pZone.BuilderManager.FactoryManager
+                    if fmgr and fmgr.LocationActive then
+                        -- Reset local funding bias
+                        fmgr.LocalDefenseFunding = 0
+
+                        -- Calculate specific local pressure for this expansion
+                        local lLand = clamp((fmgr.ZoneThreatAssignment or 0) / 60, 0, 1)
+                        local monitor = self.BasePerimeterMonitor[pZone.BuilderManager.LocationType]
+                        local lAir  = monitor and clamp((monitor.AirThreat or 0) / 45, 0, 1) or 0
+                        local lNaval = (layerKey == 'Naval') and clamp((fmgr.ZoneThreatAssignment or 0) / 60, 0, 1) or 0
+                        
+                        local managerLocalPressure = math.max(lLand, lAir, lNaval)
+
+                        if managerLocalPressure > 0 and totalIncome > 0 then
+                            -- PROPORTIONAL FUNDING: How much of the global income can this base eat?
+                            local managerBR = (fmgr.LandBuildRate or 0) + (fmgr.AirBuildRate or 0) + (fmgr.NavalBuildRate or 0)
+                            local capacityRatio = (managerBR * brToMassFactor) / totalIncome
+                            
+                            -- Increase global production ratio by its capacity proportion adjusted by threat intensity
+                            -- Dampen expansion panic slightly if we are globally winning
+                            local isMain = (pZone.BuilderManager.BaseType == 'MAIN')
+                            local dampener = isMain and 1.0 or (0.5 + (projectedLandRisk * 0.5))
+                            local claim = managerLocalPressure * capacityRatio * dampener
+                            
+                            totalLocalClaims = totalLocalClaims + claim
+                            fmgr.LocalDefenseFunding = managerLocalPressure * dampener
+                        end
+
+                        local managerLabel = pZone.BuilderManager.Label or 0
+                        if managerLabel == 0 then
+                            WARN('No label on builder manager '..tostring(pZone.BuilderManager.LocationType))
+                        end
+                        -- 1) Gravity is calculated per-label: strict deduplication
+                        if not countedGravityLabels[managerLabel] then
+                            totalGravity = totalGravity + (fmgr.EconomicGravity or 0)
+                            countedGravityLabels[managerLabel] = true
+                        end
+                        
+                        -- 2) Factory capacity metrics are per-manager: aggregate all bases
+                        local fCount = fmgr:GetNumCategoryFactories(categories.STRUCTURE * categories.FACTORY - categories.GATE) or 1 
+                        local tSat = fmgr.TeamSaturationRatio or fmgr.SaturationRatio or 1
+                        teamWeightedSat = teamWeightedSat + (tSat * fCount)
+                        totalFactories = totalFactories + fCount
+                        zoneCount = zoneCount + 1
+                    end
+                end
+            end
+            
+            --LOG(string.format("RNGLOG_ECON_LOOP | RawZones: %d | ProcessedFacs: %d | MeasuredGrav: %.2f", zoneCount, totalFactories, totalGravity))
 
             brainIntel.GlobalEconomicGravity = totalGravity
             brainIntel.AverageSaturation = (totalFactories > 0) and (teamWeightedSat / totalFactories) or 1.0
@@ -7403,106 +7511,31 @@ AIBrain = Class(RNGAIBrainClass) {
             end
 
             ----------------------------------------------------------------------
-            -- 3) BIAS & MAP CONTEXT
-            ----------------------------------------------------------------------
-            local isNavalMap = false
-            local landProjection = 1.0
-            local navalProjection = 1.0
-        
-            local currentEnemy = self:GetCurrentEnemy()
-            if currentEnemy and self.CanPathToEnemyRNG then
-                local ownIdx = self:GetArmyIndex()
-                local enemyIdx = currentEnemy:GetArmyIndex()
-                local mainPath = self.CanPathToEnemyRNG[ownIdx]
-                    and self.CanPathToEnemyRNG[ownIdx][enemyIdx]
-                    and self.CanPathToEnemyRNG[ownIdx][enemyIdx]['MAIN']
-
-                local labelCount = brainIntel.NavalBaseLabelCount or 0
-                if mainPath and mainPath ~= 'LAND' and labelCount > 0 then
-                    if (self.MapWaterRatio or 0) > 0.45 then
-                        isNavalMap = true
-                    end
-                end
-                if mainPath ~= 'LAND' then
-                    
-                    --LOG('Default lower landProjection because main path is not land')
-                    landProjection = 0.2 -- Default: Over the horizon / Stalled
-                    
-                    -- Check LabelIMAPThreat for the specific label where our production is located
-                    -- We'll check the first active production zone's label as the 'Home' reference
-
-                    
-                    if myLabel and im.LabelIMAPThreat and im.LabelIMAPThreat['Land'] then
-                        local labelThreat = im.LabelIMAPThreat['Land'][myLabel]
-                        if labelThreat then
-                            if (labelThreat.enemystructurethreat or 0) > 0 then
-                                landProjection = 0.8 -- Enemy has a base on our island
-                                --LOG('Base Detected on our island, structure threat is '..tostring(labelThreat.enemystructurethreat))
-                            elseif (labelThreat.enemylandthreat or 0) > 0 then
-                                landProjection = 0.5 -- Units detected on our island (Drops)
-                                --LOG('Units Detected on our island, land threat is '..tostring(labelThreat.enemylandthreat))
-                            end
-                        end
-                    end
-                end
-                --LOG(string.format("RNGLOG_PATH_AUDIT | IsNavalMap: %s | CanPathLand: %s | landProjection: %s", tostring(isNavalMap), tostring(mainPath), tostring(landProjection)))
-            end
-
-            
-
-            local playerBiases = {
-                Default   = { Land = 1.0, Air = 1.0, Naval = 1.0 },
-                Land      = { Land = 1.5, Air = 0.8, Naval = 0.7 },
-                Air       = { Land = 0.7, Air = 1.5, Naval = 0.8 },
-                Naval     = { Land = 0.7, Air = 0.8, Naval = 1.5 },
-                ChokePoint= { Land = 0.3, Air = 1.0, Naval = 1.0 },
-            }
-
-            local currentBias =
-                (brainIntel.PlayerRole.AirPlayer and playerBiases.Air)
-                or (brainIntel.PlayerRole.SpamPlayer and playerBiases.Land)
-                or (isNavalMap and playerBiases.Naval)
-                or ((self.EnemyIntel and self.EnemyIntel.ChokeFlag) and playerBiases.ChokePoint)
-                or playerBiases.Default
-
-            local navalBiasMultiplier = (im and im.NavalFocusSafe) and 1.75 or 1.0
-            local threatFactorThreshold = 1.4
-
-            ----------------------------------------------------------------------
             -- 4) PRESSURE MODEL -> DYNAMIC PRODUCTION BUDGET
             ----------------------------------------------------------------------
-            local landGap  = (enemyThreat.Land or 0)    - ((myThreat.LandNow or 0)    + (myThreat.AllyLandThreat or 0))
-            local airGap   = (enemyThreat.AntiAir or 0) - ((myThreat.AntiAirNow or 0) + (myThreat.AllyAntiAirThreat or 0))
-            local navalGap = (enemyThreat.Naval or 0)   - ((myThreat.NavalNow or 0)   + (myThreat.AllyNavalThreat or 0))
-            --LOG(string.format("RNGLOG_FFA_AUDIT | LandGap: %.2f | RawEnemyLand: %.2f | MyLand: %.2f", landGap, (enemyThreat.Land or 0), (myThreat.LandNow or 0)))
-            --LOG(string.format("RNGLOG_FFA_AUDIT | AirGap: %.2f | RawEnemyAir: %.2f | MyAir: %.2f", airGap, (enemyThreat.AntiAir or 0), (myThreat.AntiAirNow or 0)))
-            --LOG(string.format("RNGLOG_FFA_AUDIT | NavalGap: %.2f | RawEnemyNaval: %.2f | MyNaval: %.2f", navalGap, (enemyThreat.Naval or 0), (myThreat.NavalNow or 0)))
-
-            -- Pressure factor in [0..1]
-            local projectedLandRisk  = clamp(safeDiv(landGap * landProjection, math.max(1, enemyThreat.Land or 0), 0), 0, 1)
-            local projectedNavalRisk = clamp(safeDiv(navalGap * navalProjection, math.max(1, enemyThreat.Naval or 0), 0), 0, 1)
             local threatPressure = math.max(projectedLandRisk, projectedNavalRisk)
             local gravityPressure = clamp(brainIntel.GlobalEconomicGravity / 500, 0, 1)
         
-            -- Capability Gate: How much 'Room' does the Team have left in current zones?
-            -- (If Team Saturation is 1.0, Need is 0.0)
             local saturationNeed = clamp(1.0 - brainIntel.AverageSaturation, 0, 1)
-
-            -- THE PIVOT: Expansion pressure is killed if the Team is full.
             local expansionPressure = gravityPressure * saturationNeed
             
-            -- Combined Pressure: Always stay high if there is a local threat
-            local combinedPressure = math.max(threatPressure, expansionPressure)
-            --LOG(string.format("RNGLOG_PROJECTION_AUDIT | Label: %s | LandProj: %.2f | NavProj: %.2f", tostring(myLabel), landProjection, navalProjection))
-            --LOG(string.format("RNGLOG_RISK_AUDIT | LandRisk: %.2f | NavRisk: %.2f | ExpPress: %.2f | Combined: %.2f", projectedLandRisk, projectedNavalRisk, expansionPressure, combinedPressure))
+            local basePressure = math.max(threatPressure, expansionPressure)
+            local combinedPressure = basePressure
+
+            if economicDebugEnabled then
+                LOG(string.format("RNGLOG_PROJECTION_AUDIT | Label: %s | LandProj: %.2f | NavProj: %.2f", tostring(myLabel), landProjection, navalProjection))
+                LOG(string.format("RNGLOG_RISK_AUDIT | LandRisk: %.2f | NavRisk: %.2f | ExpPress: %.2f | Combined: %.2f", projectedLandRisk, projectedNavalRisk, expansionPressure, combinedPressure))
+            end
             -- Bump maxProd to 0.90 to ensure expansion has 'teeth' when needed
-            local minProd, maxProd = 0.45, 0.90
-            local productionAllocation = minProd + (combinedPressure * (maxProd - minProd))
+            local minProd, maxProd = 0.45, 0.85
 
-            -- High pressure disables capacity clamps to “signal expansion”
-            local isHighPressure = combinedPressure > 0.50
+            local productionAllocation = clamp(minProd + (basePressure * (maxProd - minProd)) + totalLocalClaims, minProd, maxProd)
 
-            --LOG(string.format("RNGLOG_PIVOT_AUDIT | Gravity: %.2f | AvgSat: %.2f | SatNeed: %.2f | ExpPress: %.2f | ThreatPress: %.2f", brainIntel.GlobalEconomicGravity, brainIntel.AverageSaturation, saturationNeed, expansionPressure, projectedLandRisk))
+            local isHighPressure = math.max(projectedLandRisk, projectedNavalRisk) > 0.35
+
+            if self.RNGDEBUG then
+                LOG(string.format("RNGLOG_PIVOT_AUDIT | Gravity: %.2f | AvgSat: %.2f | SatNeed: %.2f | ExpPress: %.2f | ThreatPress: %.2f", brainIntel.GlobalEconomicGravity, brainIntel.AverageSaturation, saturationNeed, expansionPressure, projectedLandRisk))
+            end
 
             ----------------------------------------------------------------------
             -- 5) DOMAIN RATIOS (DESIRE -> DOMINANCE CLAMP -> NORMALIZE)
@@ -7525,8 +7558,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 local shift = (landGap > 0) and (landGap / landTotalThreat) or 0
                 desiredLand = math.max(minAllocation, math.min(normalized + (shift * maxShiftLandRatio * currentBias.Land), maxShiftLandRatio))
 
-                -- Dominance clamp -> frees excess when safe
-                if ((myThreat.LandNow or 0) + (myThreat.AllyLandThreat or 0)) > ((enemyThreat.Land or 0) * threatFactorThreshold) and not isHighPressure then
+                -- Dominance clamp -> frees excess when safe (Ignore local raids if army is overwhelmingly superior)
+                if ((myThreat.LandNow or 0) + (myThreat.AllyLandThreat or 0)) > ((enemyThreat.Land or 0) * threatFactorThreshold) and projectedLandRisk < 0.30 then
                     excessAllocation = excessAllocation + math.max(0, desiredLand - minAllocation)
                     desiredLand = minAllocation
                 end
@@ -7538,7 +7571,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 desiredAir = math.max(minAllocation, math.min(normalized + (shift * maxShiftAirRatio * currentBias.Air), maxShiftAirRatio))
 
                 -- As requested: compare dominance against enemyThreat.AntiAir (not enemyThreat.Air)
-                if ((myThreat.AntiAirNow or 0) + (myThreat.AllyAntiAirThreat or 0)) > ((enemyThreat.AntiAir or 0) * threatFactorThreshold) and not isHighPressure then
+                if ((myThreat.AntiAirNow or 0) + (myThreat.AllyAntiAirThreat or 0)) > ((enemyThreat.AntiAir or 0) * threatFactorThreshold) then
                     excessAllocation = excessAllocation + math.max(0, desiredAir - minAllocation)
                     desiredAir = minAllocation
                 end
@@ -7549,7 +7582,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local shift = (navalGap > 0) and (navalGap / navalTotalThreat) or 0
                 desiredNaval = math.max(minAllocation, math.min(normalized + (shift * maxShiftNavalRatio * currentBias.Naval * navalBiasMultiplier), maxShiftNavalRatio))
 
-                if ((myThreat.NavalNow or 0) + (myThreat.AllyNavalThreat or 0)) > ((enemyThreat.Naval or 0) * threatFactorThreshold) and not isHighPressure then
+                if ((myThreat.NavalNow or 0) + (myThreat.AllyNavalThreat or 0)) > ((enemyThreat.Naval or 0) * threatFactorThreshold) and projectedNavalRisk < 0.30 then
                     excessAllocation = excessAllocation + math.max(0, desiredNaval - minAllocation)
                     desiredNaval = minAllocation
                 end
@@ -7595,11 +7628,15 @@ AIBrain = Class(RNGAIBrainClass) {
                     newNaval = caps.Naval
                 end
                 
-                --LOG(string.format("RNGLOG_EXPANSION_AUDIT | Intent: %.2f | Cap: %.2f | Final: %.2f", landIntent, (caps and caps.Land or 0), self.ProductionRatios.Land))
+                if economicDebugEnabled then
+                    LOG(string.format("RNGLOG_EXPANSION_AUDIT | Intent: %.2f | Cap: %.2f | Final: %.2f", landIntent, (caps and caps.Land or 0), self.ProductionRatios.Land))
+                end
             end
 
-            --local phantomLand = math.max(0, (newLand or 0) - (self.EcoManager and self.EcoManager.ApproxLandFactoryMassConsumption or 0)/math.max(1, totalIncome))
-            --LOG(string.format("RNGLOG_SQUEEZE_AUDIT | Pressure: %.2f | LandIntent: %.2f | LandCap: %.2f | PhantomWaste: %.2f | AssistRatio: %.2f", combinedPressure, (newLand or 0), (self.EcoManager and self.EcoManager.ApproxLandFactoryMassConsumption or 0)/math.max(1, totalIncome), phantomLand, engineerAssistRatio))
+            if economicDebugEnabled then
+                local phantomLand = math.max(0, (newLand or 0) - (self.EcoManager and self.EcoManager.ApproxLandFactoryMassConsumption or 0)/math.max(1, totalIncome))
+                LOG(string.format("RNGLOG_SQUEEZE_AUDIT | Pressure: %.2f | LandIntent: %.2f | LandCap: %.2f | PhantomWaste: %.2f | AssistRatio: %.2f", combinedPressure, (newLand or 0), (self.EcoManager and self.EcoManager.ApproxLandFactoryMassConsumption or 0)/math.max(1, totalIncome), phantomLand, engineerAssistRatio))
+            end
 
 
             ----------------------------------------------------------------------
@@ -7668,12 +7705,13 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EconomyUpgradeSpend = economyUpgradeSpend
 
             -- Logging (kept)
-            --LOG(string.format('RNGLOG: Pressure=%0.2f | Units=%0.2f | ProdAlloc=%0.2f | Leftover=%0.2f',combinedPressure, totalUnitAllocation, productionAllocation, leftover))
-            --LOG(string.format('RNGLOG_ECO: UnitClaim=%.2f | Eco=%.2f | Assist=%.2f | Excess=%.2f',totalUnitAllocation, economyUpgradeSpend, engineerAssistRatio, excessAllocation))
-
-            --LOG(string.format("AI: %s | Time: %s | Income: %.2f",tostring(self.Nickname), tostring(GetGameTimeSeconds()), totalIncome))
-            --LOG(string.format("Ratios - Land: %.2f, Air: %.2f, Naval: %.2f, Assist: %.2f, Eco: %.2f",newLand, newAir, newNaval, engineerAssistRatio, economyUpgradeSpend))
-            --LOG(string.format("OBTP_SQUEEZE | ProdAlloc: %.2f | EcoSpend: %.2f | LandWanted: %.2f",productionAllocation, economyUpgradeSpend, newLand))
+            if economicDebugEnabled then
+                LOG(string.format('RNGLOG: Pressure=%0.2f | Units=%0.2f | ProdAlloc=%0.2f | Leftover=%0.2f',combinedPressure, totalUnitAllocation, productionAllocation, leftover))
+                LOG(string.format('RNGLOG_ECO: UnitClaim=%.2f | Eco=%.2f | Assist=%.2f | Excess=%.2f',totalUnitAllocation, economyUpgradeSpend, engineerAssistRatio, excessAllocation))
+                LOG(string.format("AI: %s | Time: %s | Income: %.2f",tostring(self.Nickname), tostring(GetGameTimeSeconds()), totalIncome))
+                LOG(string.format("Ratios - Land: %.2f, Air: %.2f, Naval: %.2f, Assist: %.2f, Eco: %.2f",newLand, newAir, newNaval, engineerAssistRatio, economyUpgradeSpend))
+                LOG(string.format("OBTP_SQUEEZE | ProdAlloc: %.2f | EcoSpend: %.2f | LandWanted: %.2f",productionAllocation, economyUpgradeSpend, newLand))
+            end
 
             
 
@@ -7682,16 +7720,17 @@ AIBrain = Class(RNGAIBrainClass) {
             for _, v in self.BuilderManagers do
                 local fmgr = v.FactoryManager
                 if fmgr.LocationActive then
-                    totalLandNeed  = totalLandNeed  + ((fmgr.LandBuildRate or 0) * (fmgr.ProductionModifier or 1.0))
-                    totalAirNeed   = totalAirNeed   + ((fmgr.AirBuildRate or 0) * (fmgr.ProductionModifier or 1.0))
-                    totalNavalNeed = totalNavalNeed + ((fmgr.NavalBuildRate or 0) * (fmgr.ProductionModifier or 1.0))
+                    local mod = (fmgr.ProductionModifier or 1.0) * (1.0 + (fmgr.LocalDefenseFunding or 0))
+                    totalLandNeed  = totalLandNeed  + ((fmgr.LandBuildRate or 0) * mod)
+                    totalAirNeed   = totalAirNeed   + ((fmgr.AirBuildRate or 0) * mod)
+                    totalNavalNeed = totalNavalNeed + ((fmgr.NavalBuildRate or 0) * mod)
                 end
             end
 
             for _, v in self.BuilderManagers do
                 local fmgr = v.FactoryManager
                 if fmgr.LocationActive then
-                    local mod = fmgr.ProductionModifier or 1.0
+                    local mod = (fmgr.ProductionModifier or 1.0) * (1.0 + (fmgr.LocalDefenseFunding or 0))
                     fmgr.BaseLandRatio  = (totalLandNeed > 0)  and (((fmgr.LandBuildRate or 0) * mod) / totalLandNeed) * newLand or 0
                     fmgr.BaseAirRatio   = (totalAirNeed > 0)   and (((fmgr.AirBuildRate or 0) * mod) / totalAirNeed) * newAir or 0
                     fmgr.BaseNavalRatio = (totalNavalNeed > 0) and (((fmgr.NavalBuildRate or 0) * mod) / totalNavalNeed) * newNaval or 0
@@ -7700,8 +7739,10 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
             
-            --LOG(string.format("RNGLOG_CITIZEN_AUDIT | Leftover:%f | EcoTook:%f | PostEcoRemaining:%f | ConstRatioNudge:%f | FinalAssist:%f | EngSpend:%f", leftover, economyUpgradeSpend, leftoverAfterEco, nudgeValue, engineerAssistRatio, totalEngSpend))
-            --LOG(string.format("RNGLOG_ALLOCATION_AUDIT | FinalProdAlloc: %.2f | Land: %.2f | Air: %.2f | Naval: %.2f | EcoSpend: %.2f | Assist: %.2f",productionAllocation, newLand, newAir, newNaval, economyUpgradeSpend, engineerAssistRatio))
+            if economicDebugEnabled then
+                LOG(string.format("RNGLOG_CITIZEN_AUDIT | Leftover:%f | EcoTook:%f | PostEcoRemaining:%f | ConstRatioNudge:%f | FinalAssist:%f | EngSpend:%f", leftover, economyUpgradeSpend, leftoverAfterEco, nudgeValue, engineerAssistRatio, totalEngSpend))
+                LOG(string.format("RNGLOG_ALLOCATION_AUDIT | FinalProdAlloc: %.2f | Land: %.2f | Air: %.2f | Naval: %.2f | EcoSpend: %.2f | Assist: %.2f",productionAllocation, newLand, newAir, newNaval, economyUpgradeSpend, engineerAssistRatio))
+            end
         end
     end,
 

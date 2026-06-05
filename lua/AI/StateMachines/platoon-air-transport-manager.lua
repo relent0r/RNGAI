@@ -51,7 +51,7 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
                     local unitFuelRatio = unit:GetFuelRatio()
                     if unitHealth < 0.4 or unitFuelRatio < 0.2 then
                         local stateWanted = unitHealth < 0.4 and 'Recycle' or 'Refit'
-                        LOG('Low Fuel or health, initiate action state')
+                        --LOG('Low Fuel or health, initiate action state')
                         local transportPlatoon = aiBrain:MakePlatoon('TransportPlatoon', 'StateMachineAIRNG')
                         transportPlatoon.PlanName = 'TransportPlatoonRNG'
                         unit['rngdata'].InUse = true
@@ -264,7 +264,7 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
             QueueDepth = pressure.RequestCount or 0
         }
 
-        LOG(string.format('Transport Manager: Request %s added. Priority: %d. Est Wait: %ds', requestType, basePriority, requestData.EstimatedWait))
+        --LOG(string.format('Transport Manager: Request %s added. Priority: %d. Est Wait: %ds', requestType, basePriority, requestData.EstimatedWait))
         
         return id, requestData
     end,

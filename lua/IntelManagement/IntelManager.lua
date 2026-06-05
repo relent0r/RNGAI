@@ -75,7 +75,8 @@ IntelManager = Class {
         self.ZoneWeightTable = {
             control = {
                 zonePressureWeight = 3.0,
-                zoneDistanceWeight = 1.0,
+                zoneDistanceWeight = 1.8,
+                zoneDistanceWeight = 1.5,
                 threatOpportunityWeight = 2.0
             },
             raid = {
@@ -85,7 +86,7 @@ IntelManager = Class {
             },
             aadefense = {
                 zonePressureWeight = 3.0,
-                zoneDistanceWeight = 0.8,
+                zoneDistanceWeight = 1.4,
                 threatOpportunityWeight = 2.0
             },
             airsurface = {
@@ -1366,13 +1367,13 @@ IntelManager = Class {
             control = {
                 zoneDistanceWeight = 1.0,
                 enemyDistanceWeight = 1.0,
-                homeDistanceWeight = 0.8,
+                homeDistanceWeight = 1.5, -- Increases gravity toward base/supply lines
                 incomeValueWeight = 0.5,
                 threatOpportunityWeight = 2.0,
                 zoneStatusWeight = 1.2,
                 zonePressureWeight = 3.0,
                 teamValueWeight = 0.7,
-                contiguityWeight = 2.0,
+                contiguityWeight = 3.0, -- Strengthens the value of territory connected to allies
                 adjacencyThreatWeight = 0.9,
                 encirclementWeight = 2.0,
                 zoneHomeWeight = 1.0,
@@ -1617,9 +1618,11 @@ IntelManager = Class {
         local weights = self.ZoneWeightTable[string.lower(zonetype or 'control')]
         local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
         local mapDiagonalSq = VDist2Sq(playableArea[1], playableArea[2], playableArea[3], playableArea[4])
+        local stabilityWeight = 4.0 -- Prevents rubber-banding between zones
         
         local bestZone = nil
         local bestScore
+        local bestPos = nil
         local noTransportsAvailable = not aiBrain.TransportPool or aiBrain.TransportPool and aiBrain.TransportPressure and aiBrain.TransportPressure.PressureLevel > 2
         local minThreshold = 0
         if weights.minThreshold then
@@ -1647,7 +1650,13 @@ IntelManager = Class {
                              (zonetype == 'aadefense') and v.staticaascore or 
                              (zonetype == 'airsurface') and v.staticsurfaceairscore or 
                              v.staticcontrolscore
-            
+
+            local currentStab = 0
+            if id == origZoneID then
+                currentStab = stabilityWeight
+                baseScore = baseScore + currentStab
+            end
+
             -- 3. Dynamic Distance
             local distSq = VDist2Sq(platPos[1], platPos[3], v.pos[1], v.pos[3])
             local distanceValue = distSq / mapDiagonalSq
@@ -1655,7 +1664,7 @@ IntelManager = Class {
             -- 4. Using RUtils with cached platoon values
             -- Note: RUtils should likely use platoon.CurrentPlatoonThreatAntiSurface etc inside
             local threatValue = RUtils.GetThreatOportunityValue(v, zonetype, platoon)
-            local zonePressureValue = RUtils.GetZonePressureValue(RUtils.IsEnemyStartClose(v), v, platoon)
+            local zonePressureValue = RUtils.GetZonePressureValue(RUtils.IsEnemyStartClose(v), v, platoon, zonetype)
 
 
             local zoneOwner = v.control or 'None'
@@ -1665,6 +1674,11 @@ IntelManager = Class {
                 (threatValue * weights.threatOpportunityWeight) -
                 (distanceValue * weights.zoneDistanceWeight) -
                 (zonePressureValue * weights.zonePressureWeight)
+
+            if not bestScore or finalScore > (bestScore - 0.5) then
+                LOG(string.format("RNG_ZONE_DECISION: Plat=%s | Zone=%s | Final=%.2f | Base=%.2f | Opp=%.2f | DistP=%.4f | PressP=%.4f | Stab=%.1f | Status=%s", 
+                    platoon.BuilderName or "Unk", v.id, finalScore, baseScore, (threatValue * weights.threatOpportunityWeight), (distanceValue * weights.zoneDistanceWeight), (zonePressureValue * weights.zonePressureWeight), currentStab, v.status or "None"))
+            end
 
             if zonetype == 'aadefense' then
                 local saturationPenalty = RUtils.GetAASaturationPenalty(v)
@@ -1727,15 +1741,46 @@ IntelManager = Class {
             if not bestScore or finalScore > bestScore then
                 bestScore = finalScore
                 bestZone = v
+                bestPos = v.pos
+
+                -- 6. Edge Awareness: If defending a frontline zone, find the specific border to guard
+                if (zonetype == 'control' or zonetype == 'aadefense') and self.CurrentFrontLineZones[id] then
+                    local myBasePos = aiBrain.BrainIntel.StartPos
+                    local worstEdge = nil
+                    local maxIncomingThreat = -1
+                    
+                    for _, edge in v.edges or {} do
+                        local neighbor = edge.zone
+                        -- Check if the neighbor is the source of threat
+                        if neighbor.status == 'Hostile' or neighbor.status == 'Contested' then
+                            -- Check if midpoint is not significantly closer to base than zone center
+                            local distCenterSq = VDist2Sq(v.pos[1], v.pos[3], myBasePos[1], myBasePos[3])
+                            local distEdgeSq = VDist2Sq(edge.midpoint[1], edge.midpoint[3], myBasePos[1], myBasePos[3])
+                            
+                            -- Requirement: promote moving forward or staying steady, not retreating.
+                            -- We allow a 10% tolerance (0.9) for irregular zone shapes.
+                            if distEdgeSq >= (distCenterSq * 0.9) then
+                                local neighborThreat = (zonetype == 'aadefense') and neighbor.enemyairthreat or neighbor.enemyantisurfacethreat
+                                if neighborThreat > maxIncomingThreat then
+                                    maxIncomingThreat = neighborThreat
+                                    worstEdge = edge
+                                end
+                            end
+                        end
+                    end
+                    
+                    if worstEdge then
+                        bestPos = worstEdge.midpoint
+                    end
+                end
             end
         end
-        if bestZone and bestScore < minThreshold then
-            --LOG(string.format("Smart Logic: %s platoon (Threat: %.1f) rejected Zone %s. Score %.2f < Need %.2f", zonetype, platoon.CurrentPlatoonThreatAntiSurface, tostring(bestZone), bestScore, minThreshold))
-            return nil
+        if not bestZone or (bestZone and bestScore < minThreshold) then
+            return nil, nil
         end
         local logZone = bestZone or {id = 'None'}
         --LOG(string.format("ZONE_DECISION: Plat=%s | BestZone=%s | Score=%.2f | MinReq=%.2f | PlatThreat=%.1f  | Current Zone=%s", platoon.PlatoonName, logZone.id, bestScore or 0, minThreshold, (platoon.CurrentPlatoonThreatAntiSurface or 0), tostring(platoon.ZoneID)))
-        return bestZone.id
+        return bestZone.id, bestPos
     end,
 
     ZoneAlertThreadRNG = function(self)
@@ -1832,6 +1877,7 @@ IntelManager = Class {
             self:AssignIMAPThreat(aiBrain, 'Land')
             self:AssignIMAPThreat(aiBrain, 'Naval')
             self:AssignIMAPThreat(aiBrain, 'Air')
+            self.ProductionZones = {}
             self:AssignThreatToFactories(aiBrain.Zones['Land'].zones, 'Land')
             self:AssignThreatToFactories(aiBrain.Zones['Naval'].zones, 'Naval')
             for _, zone in aiBrain.Zones['Land'].zones do
@@ -5127,9 +5173,6 @@ IntelManager = Class {
                     else
                         dist = distanceCache[pID.id] and distanceCache[pID.id][tID]
                     end
-                    if layer == 'Naval' and aiBrain.Nickname == 'DFS (AI: RNG Standard)' and not dist then
-                        LOG(string.format("RNGLOG_DIST_MISSING | ProdID: %s | TargetID: %s", tostring(pID.id), tostring(tID)))
-                    end
                     
                     if dist and dist > 0 then
                         if dist > distancePropagationCap then
@@ -5211,7 +5254,12 @@ IntelManager = Class {
             end
             fmgr.ProductionModifier = modifier * tacticalFactor
         end
-        self.ProductionZones = productionZones
+        local globalOpportunity = 0
+        for lID, lData in labelStats do
+            globalOpportunity = globalOpportunity + lData.gravity
+        end
+        --LOG(string.format("RNGLOG_GRAVITY_AUDIT | FactoryLabelGravity: %.2f | TrueMapGravity: %.2f", aiBrain.BrainIntel.GlobalEconomicGravity or 0, globalOpportunity))
+        self.ProductionZones[layer] = productionZones
         --LOG('---- End AssignThreatToFactories Loop ----')
     end,
 
@@ -7029,4 +7077,3 @@ end
 -- isZoneSafe: function(zoneID) -> boolean
 -- safeZones: set (table as keys) of safe zone IDs (optional, else compute starting from baseZone)
 -- baseZoneID: ID of the main base zone
-

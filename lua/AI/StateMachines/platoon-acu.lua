@@ -294,6 +294,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                                 brain.Zones.Land.zones[stageExpansion.Key].lastexpansionattempt = GetGameTimeSeconds()
                                                 self:LogDebug(string.format('We have found a position to expand to, navigating, team value is '..tostring(brain.Zones.Land.zones[stageExpansion.Key].teamvalue)))
                                                 self:LogDebug(string.format('The destination position is '..tostring(self.BuilderData.Position[1])..':'..tostring(self.BuilderData.Position[3])))
+                                                --LOG('We have found a position to expand to, navigating')
                                                 self:ChangeState(self.Navigating)
                                                 return
                                             else
@@ -311,6 +312,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             AttackTarget = closestThreatUnit,
                             Position = closestThreatUnit:GetPosition(), 
                         }
+                        --LOG('Attack Retreat')
                         self:ChangeState(self.AttackRetreat)
                         return
                     elseif target then
@@ -318,6 +320,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             AttackTarget = closestThreatUnit,
                             Position = closestThreatUnit:GetPosition(), 
                         }
+                        --LOG('Attack Retreat')
                         self:ChangeState(self.AttackRetreat)
                         return
                     elseif not target and closestUnitPosition and closestThreatDistance < (targetSearchRange * targetSearchRange) then
@@ -329,6 +332,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
 
                         }
                         self:LogDebug(string.format('No target but we have a closest unit position'))
+                        --LOG('No target but we have a closest unit position')
                         self:ChangeState(self.Navigating)
                         return
                     end
@@ -351,6 +355,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     local dz = cdr.Position[3] - cdr.CDRHome[3]
                     local distance = dx * dx + dz * dz
                     if distance > 25 then
+                        --LOG('Retreating due to less than 2 confidence')
                         self:ChangeState(self.Retreating)
                         return
                     end
@@ -370,6 +375,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
 
                         --LOG('Enhancement cutoff set to '..tostring(movementCutOff))
                         self:LogDebug(string.format('We are not in range for enhancement and will navigate to the position '..tostring(self.BuilderData.Position)))
+                        --LOG('We are not in range for enhancement and will navigate to the position')
                         self:ChangeState(self.Navigating)
                         return
                     end
@@ -450,6 +456,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         }
                         --LOG('Enhancement cutoff set to '..tostring(movementCutOff))
                         self:LogDebug(string.format('We are not in range for enhancement and will navigate to the position '..tostring(self.BuilderData.Position)))
+                        --LOG('We are not in range for enhancement and will navigate to the position')
                         self:ChangeState(self.Navigating)
                         return
                     end
@@ -731,6 +738,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
+            --local inferredTerritory = brain.GridPresence:GetInferredStatus(cdr.Position)
+            --LOG(string.format("[ACU_TERRITORY_AUDIT] Inferred: %s, PosStatus: %s, LandPhase: %s, EThreat: %d, FThreat: %d", tostring(inferredTerritory), tostring(cdr.PositionStatus), tostring(brain.EnemyIntel.LandPhase), cdr.CurrentEnemyThreat or 0, cdr.CurrentFriendlyThreat or 0))
             if brain.EnemyIntel.LandPhase > 2.5 then
                 if brain.GridPresence:GetInferredStatus(cdr.Position) == 'Hostile' then
                     --LOG('We are in hostile territory and should be retreating')
@@ -1006,7 +1015,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
 
                     }
                     self:LogDebug(string.format('No target but there is a closest unit position'))
-                    LOG('Closest threat distance is '..tostring(closestThreatDistance)..' closest unit is '..tostring(closestThreatUnit.UnitId))
+                    --LOG('Closest threat distance is '..tostring(closestThreatDistance)..' closest unit is '..tostring(closestThreatUnit.UnitId))
                     self:ChangeState(self.Navigating)
                     return
                 else

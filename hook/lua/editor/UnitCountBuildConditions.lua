@@ -531,7 +531,7 @@ function EnemyUnitsGreaterAtRestrictedRNG(aiBrain, locationType, number, type)
             end
         elseif type == 'AIR' then
             if aiBrain.BasePerimeterMonitor[locationType].AirUnits > number then
-                LOG('Air units greater than '..number..' at base location '..locationType)
+                --LOG('Air units greater than '..number..' at base location '..locationType)
                 return true
             end
         elseif type == 'ANTIAIR' then
@@ -1797,13 +1797,14 @@ function UnitBuildDemand(aiBrain, locationType, unitType, tier, unit, threatBase
             else
                 calculatedUnitCount = math.ceil(friendlyThreat / weight)
             end
-            --LOG('Tier '..tier..' unit '..unit)
             if aiBrain.amanager.Demand.Bases[locationType] and aiBrain.amanager.Demand.Bases[locationType][unitType][tier][unit] > calculatedUnitCount then
                 return true
             end
-            --LOG('Demand for base '..tostring(locationType)..' is false for unit of type '..tostring(unit)..' calcuated count at the time was '..tostring(calculatedUnitCount))
-            --LOG('Demand '..tostring(aiBrain.amanager.Demand.Bases[locationType][unitType][tier][unit]))
-            --LOG('Total current at the time was '..tostring(aiBrain.amanager.Current[unitType][tier][unit]))
+            if unit == 'aa' then
+              --LOG('Demand for base '..tostring(locationType)..' is false for unit of type '..tostring(unit)..' calcuated count at the time was '..tostring(calculatedUnitCount))
+              --LOG('Demand '..tostring(aiBrain.amanager.Demand.Bases[locationType][unitType][tier][unit]))
+              --LOG('Total current at the time was '..tostring(aiBrain.amanager.Current[unitType][tier][unit]))
+            end
         else
             if aiBrain.amanager.Demand.Bases[locationType] and aiBrain.amanager.Demand.Bases[locationType][unitType][tier][unit] > aiBrain.amanager.Current[unitType][tier][unit] then
                 --LOG('Demand for base '..tostring(locationType)..' is true for unit of type '..tostring(unit))
@@ -1933,15 +1934,15 @@ function LandZoneAvailableRNG(aiBrain, locationType, radius)
         end
     end
     local noTransportsAvailable = not aiBrain.TransportPool or aiBrain.TransportPool and aiBrain.TransportPressure and aiBrain.TransportPressure.PressureLevel > 2
-    LOG('noTransportsAvailable is set as '..tostring(noTransportsAvailable))
+    --LOG('noTransportsAvailable is set as '..tostring(noTransportsAvailable))
     if not noTransportsAvailable and not table.empty(im.ZoneExpansions.NonPathable) then
-        LOG('Check non pathable expansions')
+        --LOG('Check non pathable expansions')
         for _, v in im.ZoneExpansions.NonPathable do
             if v.ZoneID then
                 local zone = aiBrain.Zones.Land.zones[v.ZoneID]
                 if zone and VDist3Sq(homePosition, zone.pos) < radius and (not zone.BuilderManager.FactoryManager.LocationActive or zone.BuilderManagerDisabled) and (not zone.engineerplatoonallocated or IsDestroyed(zone.engineerplatoonallocated)) and (zone.lastexpansionattempt == 0 or gameTime >= zone.lastexpansionattempt + 30) then
                     if aiBrain:GetThreatAtPosition(zone.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
-                        LOG('We have a non pathable expansion we can go to')
+                        --LOG('We have a non pathable expansion we can go to')
                         return true
                     end
                 end

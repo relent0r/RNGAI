@@ -83,7 +83,6 @@ BuilderGroup {
         PlatoonTemplate = 'T1LandAA',
         Priority = 746,
         BuilderConditions = {
-            { UCBC, 'BuildOnlyOnLocationRNG', {'LocationType', 'MAIN' } },
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading', nil, true}},
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T1', 'aa', true} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -179,7 +178,6 @@ BuilderGroup {
         PlatoonTemplate = 'T2LandAA',
         Priority = 751,
         BuilderConditions = {
-            { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Land', 'T2', 'aa', true} },
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Land', 'LandUpgrading', nil, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },

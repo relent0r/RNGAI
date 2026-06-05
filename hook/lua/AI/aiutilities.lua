@@ -6,7 +6,6 @@ local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
-local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local MarkerUtils = import("/lua/sim/MarkerUtilities.lua")
 local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
@@ -65,7 +64,6 @@ function EngineerMoveWithSafePathRNG(aiBrain, unit, destination, alwaysGenerateP
             transportWait = transportWait * 2
         end
         --LOG('Engineer wants to use a transport to get to location '..tostring(repr(destination)))
-        --bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, unit.PlatoonHandle, destination, transportWait, true)
         bUsedTransports = StateUtils.RequestTransportRNG(unit.PlatoonHandle, destination)
         local timeout = 0
         while not unit.Dead and not unit:IsUnitState('Attached') and timeout < 90 do
@@ -276,7 +274,6 @@ function EngineerMoveWithSafePathCHP(aiBrain, eng, destination, whatToBuildM)
 
         -- Skip the last move... we want to return and do a build
         eng['rngdata'].WaitingForTransport = true
-        --bUsedTransports = TransportUtils.SendPlatoonWithTransports(aiBrain, eng.PlatoonHandle, destination, 2, true)
         bUsedTransports = StateUtils.RequestTransportRNG(eng.PlatoonHandle, destination)
         eng['rngdata'].WaitingForTransport = false
 

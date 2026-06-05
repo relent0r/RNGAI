@@ -3268,6 +3268,7 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
     local zoneSet = aiBrain.Zones[zoneType].zones
     local currentTime = GetGameTimeSeconds()
     local retPos, retName, refZone
+    local preferredLabel = (position and zoneType == 'Land') and NavUtils.GetLabel('Land', position) or false
     radius = radius * radius
 
     if not pos then
@@ -3276,69 +3277,56 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
        --RNGLOG('Location Pos is '..repr(pos))
     end
    --RNGLOG('Checking if Dynamic Expansions Table Exist')
-    local shortlist = {}
-    local zoneFound = false
     if zoneType == 'Land' then
-        if not table.empty(im.ZoneExpansions.Pathable) then
-            for _, v in im.ZoneExpansions.Pathable do
-                local skipPos = false
-                if avoidZones and avoidZones[v.ZoneID] then
-                    skipPos = true
-                end
-                if not skipPos and v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive
-                and (not zoneSet[v.ZoneID].engineerplatoonallocated or IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated)) and (currentTime >= zoneSet[v.ZoneID].lastexpansionattempt + 30 or zoneSet[v.ZoneID].lastexpansionattempt == 0 ) then
-                    retPos = zoneSet[v.ZoneID].pos
-                    retName = 'LAND_ZONE_'..v.ZoneID
-                    refZone = v.ZoneID
-                    table.insert(shortlist, { Expansion = v, Pathable = true })
-                    zoneFound = true
-                    break
-                end
-            end
-        end
-        if not table.empty(im.ZoneExpansions.NonPathable) then
-            for _, v in im.ZoneExpansions.NonPathable do
-                local skipPos = false
-                if avoidZones and avoidZones[v.ZoneID] then
-                    skipPos = true
-                end
-                if not skipPos and v and VDist3Sq(pos, v.Position) < radius and not zoneSet[v.ZoneID].BuilderManager.FactoryManager.LocationActive
-                and (not zoneSet[v.ZoneID].engineerplatoonallocated or IsDestroyed(zoneSet[v.ZoneID].engineerplatoonallocated)) and (currentTime >= zoneSet[v.ZoneID].lastexpansionattempt + 30 or zoneSet[v.ZoneID].lastexpansionattempt == 0 ) then
-                    retPos = zoneSet[v.ZoneID].pos
-                    retName = 'LAND_ZONE_'..v.ZoneID
-                    refZone = v.ZoneID
-                    zoneFound = true
-                    table.insert(shortlist, { Expansion = v, Pathable = false })
-                    break
-                end
-            end
-        end
-        if zoneFound then
-            local bestUtility
-            for _, v in shortlist do
-                local zData = zoneSet[v.Expansion.ZoneID]
-                -- 1. Start with the thread's pre-calculated Priority
-                -- 2. Multiply by teamvalue (2.0 = Allied, 1.0 = Neutral, 0.0 = Enemy)
-                -- This automatically slashes the score for expansions "behind the enemy"
-                local utilityScore = (v.Expansion.Priority or 0) * (zData.teamvalue or 1.0)
-                --LOG('Utility Score for '..tostring(v.Expansion.ZoneID))
-                --LOG('team value was '..tostring(zData.teamvalue))
-                --LOG('Score was '..tostring(v.Expansion.Priority))
-                
-                -- 3. Apply a small static bias for Island safety in the early game
-                -- This allows an Island (High TeamValue) to beat a Land zone (Low TeamValue)
-                if not v.Pathable and currentTime < 480 then
-                    utilityScore = utilityScore + 150 
-                end
+        local bestGlobalEntry = nil
+        local bestGlobalUtility = -1
+        
+        local bestOnLabelEntry = nil
+        local bestOnLabelUtility = -1
 
-                -- Final Selection logic
-                if not bestUtility or utilityScore > bestUtility then
-                    bestUtility = utilityScore
-                    retPos = zData.pos
-                    retName = 'LAND_ZONE_'..v.Expansion.ZoneID
-                    refZone = v.Expansion.ZoneID
+        local function CheckList(expansionList, isPathable)
+            if table.empty(expansionList) then return end
+            for _, v in expansionList do
+                local skipPos = false
+                if avoidZones and avoidZones[v.ZoneID] then
+                    skipPos = true
+                end
+                if not skipPos and v and VDist3Sq(pos, v.Position) < radius then
+                    local zData = zoneSet[v.ZoneID]
+                    if not zData.BuilderManager.FactoryManager.LocationActive
+                    and (not zData.engineerplatoonallocated or IsDestroyed(zData.engineerplatoonallocated))
+                    and (currentTime >= zData.lastexpansionattempt + 30 or zData.lastexpansionattempt == 0) then
+                        
+                        -- Calculate utility
+                        local utilityScore = (v.Priority or 0) * (zData.teamvalue or 1.0)
+                        if not isPathable and currentTime < 480 then
+                            utilityScore = utilityScore + 150 
+                        end
+
+                        if utilityScore > bestGlobalUtility then
+                            bestGlobalUtility = utilityScore
+                            bestGlobalEntry = { Expansion = v, zData = zData }
+                        end
+
+                        if preferredLabel and zData.label == preferredLabel then
+                            if utilityScore > bestOnLabelUtility then
+                                bestOnLabelUtility = utilityScore
+                                bestOnLabelEntry = { Expansion = v, zData = zData }
+                            end
+                        end
+                    end
                 end
             end
+        end
+
+        CheckList(im.ZoneExpansions.Pathable, true)
+        CheckList(im.ZoneExpansions.NonPathable, false)
+
+        local winner = bestOnLabelEntry or bestGlobalEntry
+        if winner then
+            retPos = winner.zData.pos
+            retName = 'LAND_ZONE_'..winner.Expansion.ZoneID
+            refZone = winner.Expansion.ZoneID
         end
     end
     if zoneType == 'Naval' then
@@ -5167,26 +5155,22 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
-                if im.MapIntelGrid[i][k].Enabled and not im.MapIntelGrid[i][k].IntelCoverage and im.MapIntelGrid[i][k].ScoutPriority >= 100 then
+                local cell = im.MapIntelGrid[i] and im.MapIntelGrid[i][k]
+                if cell.Enabled and not cell.IntelCoverage and cell.ScoutPriority >= 100 then
                     if not im.MapIntelGrid[i][k].Graphs[locationType].GraphChecked then
                         --RNGLOG('Trying to set graphs for '..i..k..' current grid position is '..repr(im.MapIntelGrid[i][k].Position))
                         im:IntelGridSetGraph(locationType, i, k, platoon.Home, im.MapIntelGrid[i][k].Position)
                     end
-                    if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 45 then
-                        --RNGLOG('ScoutPriority is '..im.MapIntelGrid[i][k].ScoutPriority)
-                        --RNGLOG('LastScouted is '..im.MapIntelGrid[i][k].LastScouted)
-                        --RNGLOG('DistanceToMain is '..im.MapIntelGrid[i][k].DistanceToMain)
-                        if im.MapIntelGrid[i][k].LastScouted == 0 then
-                            im.MapIntelGrid[i][k].LastScouted = 1
-                        end
-                        if im.MapIntelGrid[i][k].DistanceToMain == 0 then
-                            im.MapIntelGrid[i][k].DistanceToMain = 1
-                        end
-                        if im.MapIntelGrid[i][k].TimeScouted == 0 then
-                            im.MapIntelGrid[i][k].TimeScouted = 1
-                        end
-                        local priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].ScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain
-                        local cellStatus = aiBrain.GridPresence:GetInferredStatus(im.MapIntelGrid[i][k].Position)
+                    
+                    -- Dynamic TimeScouted calculation ensures "Claims" are respected immediately
+                    local lastScouted = cell.LastScouted
+                    if lastScouted == 0 then lastScouted = 1 end
+                    local timeScouted = math.max(1, currentGameTime - lastScouted)
+
+                    if timeScouted > 45 then
+                        local distToMain = math.max(1, cell.DistanceToMain)
+                        local priority = (cell.ScoutPriority * cell.ScoutPriority) * timeScouted * distToMain
+                        local cellStatus = aiBrain.GridPresence:GetInferredStatus(cell.Position)
                         if cellStatus == 'Allied' then
                             priority = priority * 0.80
                         end
@@ -5201,11 +5185,10 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             end
         end
         if highestGrid.Priority > 0 then
+            --LOG(string.format('GetLandScoutLocationRNG: HighPri selected Grid [%d, %d] Priority: %f', highestGrid.x, highestGrid.z, highestGrid.Priority))
             scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
-            scoutingData.LastScouted = currentGameTime
-            scoutingData.TimeScouted = 1
+            scoutingData.LastScouted = currentGameTime - 15 -- Mark as recently scouted to drop priority for other scouts
             scoutType = 'Location'
-            --RNGLOG('Current Game Time '..currentGameTime)
             --RNGLOG('HighPri Scouting Data '..repr(scoutingData))
         end
         aiBrain.IntelData.HiPriScouts = aiBrain.IntelData.HiPriScouts + 1
@@ -5214,22 +5197,21 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
         local currentGrid = {x = 0, z = 0, Priority = 0}
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
-                if im.MapIntelGrid[i][k].Enabled and not im.MapIntelGrid[i][k].IntelCoverage and im.MapIntelGrid[i][k].ScoutPriority < 100 then
+                local cell = im.MapIntelGrid[i] and im.MapIntelGrid[i][k]
+                if cell.Enabled and not cell.IntelCoverage and cell.ScoutPriority < 100 then
                     if not im.MapIntelGrid[i][k].Graphs[locationType].GraphChecked then
                         --RNGLOG('Trying to set graphs for '..i..k..' current grid position is '..repr(im.MapIntelGrid[i][k].Position))
                         im:IntelGridSetGraph(locationType, i, k, platoon.Home, im.MapIntelGrid[i][k].Position)
                     end
-                    if im.MapIntelGrid[i][k].TimeScouted == 0 or im.MapIntelGrid[i][k].TimeScouted > 60 then
-                        --RNGLOG('LastScouted is '..im.MapIntelGrid[i][k].LastScouted)
-                        --RNGLOG('DistanceToMain is '..im.MapIntelGrid[i][k].DistanceToMain)
-                        if im.MapIntelGrid[i][k].LastScouted == 0 then
-                            im.MapIntelGrid[i][k].LastScouted = 1
-                        end
-                        if im.MapIntelGrid[i][k].DistanceToMain == 0 then
-                            im.MapIntelGrid[i][k].DistanceToMain = 1
-                        end
-                        local priority = (im.MapIntelGrid[i][k].ScoutPriority * im.MapIntelGrid[i][k].ScoutPriority) / im.MapIntelGrid[i][k].TimeScouted * im.MapIntelGrid[i][k].DistanceToMain
-                        local cellStatus = aiBrain.GridPresence:GetInferredStatus(im.MapIntelGrid[i][k].Position)
+
+                    local lastScouted = cell.LastScouted
+                    if lastScouted == 0 then lastScouted = 1 end
+                    local timeScouted = math.max(1, currentGameTime - lastScouted)
+
+                    if timeScouted > 60 then
+                        local distToMain = math.max(1, cell.DistanceToMain)
+                        local priority = (cell.ScoutPriority * cell.ScoutPriority) * timeScouted * distToMain
+                        local cellStatus = aiBrain.GridPresence:GetInferredStatus(cell.Position)
                         if cellStatus == 'Allied' then
                             priority = priority * 0.80
                         end
@@ -5245,10 +5227,10 @@ GetLandScoutLocationRNG = function(platoon, aiBrain, scout)
             end
         end
         if highestGrid.Priority > 0 then
+            --LOG(string.format('GetLandScoutLocationRNG: LowPri selected Grid [%d, %d] Priority: %f', highestGrid.x, highestGrid.z, highestGrid.Priority))
             scoutingData = im.MapIntelGrid[highestGrid.x][highestGrid.z]
             aiBrain.IntelData.HiPriScouts = 0
-            scoutingData.LastScouted = currentGameTime
-            scoutingData.TimeScouted = 1
+            scoutingData.LastScouted = currentGameTime - 15 -- Reduce priority for next few calls
             scoutType = 'Location'
         end
         aiBrain.IntelData.LowPriScouts = aiBrain.IntelData.LowPriScouts + 1
@@ -5585,61 +5567,80 @@ CanPathToCurrentEnemyRNG = function(aiBrain) -- Uveso's function modified to run
 end
 
 GetHoldingPosition = function(aiBrain, platoon, threatType, maxRadius)
-    local holdingPos = false
-    local threatLocations = aiBrain:GetThreatsAroundPosition( aiBrain.BuilderManagers['MAIN'].Position, 16, true, threatType )
-    local operatingArea = aiBrain.OperatingAreas['BaseDMZArea'] * aiBrain.OperatingAreas['BaseDMZArea']
-    local bestThreat
-    local bestThreatPos
-    local bestThreatDist
-    if aiBrain.RNGDEBUG then
-        --RNGLOG('CurrentPlatoonThreat '..platoon.CurrentPlatoonThreat)
-        --RNGLOG('threatLocations for antiair platoon '..repr(threatLocations))
-    end
+    local bestHoldingPos = false
+    local mainManagers = aiBrain.BuilderManagers['MAIN']
+    if not mainManagers then return false end
+    
+    local mainPos = mainManagers.Position
+    local threatLocations = aiBrain:GetThreatsAroundPosition(mainPos, 16, true, threatType)
+    local operatingAreaSq = aiBrain.OperatingAreas['BaseDMZArea'] * aiBrain.OperatingAreas['BaseDMZArea']
+    
+    local bestThreatPos = false
+    local highestThreatVal = 0
 
+    -- 1. Identify Primary Threat Vector
     if not RNGTableEmpty(threatLocations) then
-        for k, v in threatLocations do
-            local locationDistance = VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, {v[1],0,v[2]})
-            if locationDistance > 625 and (not bestThreat or locationDistance < bestThreatDist) then
-                bestThreat = v[3]
-                bestThreatPos = {v[1],0,v[2]}
-                bestThreatDist = locationDistance
+        for _, v in threatLocations do
+            local threatPos = {v[1], 0, v[2]}
+            local distToMainSq = VDist3Sq(mainPos, threatPos)
+            -- Focus on threats outside the immediate base but within response range
+            if distToMainSq > 625 and v[3] > highestThreatVal then
+                highestThreatVal = v[3]
+                bestThreatPos = threatPos
             end
         end
     end
-    if bestThreatPos then
-        local distance = VDist3Sq(aiBrain.BuilderManagers['MAIN'].Position, bestThreatPos)
-        local maxRadiusSquared = maxRadius * maxRadius
-        local distanceSplit
-        if distance / 4 > maxRadiusSquared then
-            distanceSplit = maxRadiusSquared
-        else
-            distanceSplit = distance / 4
-        end
-        local closestBaseDist
-        local bestBasePos
-        for baseName, base in aiBrain.BuilderManagers do
-            if base.Position then
-                local baseDist = VDist3Sq(bestThreatPos, base.Position)
-                if (not closestBaseDist or (baseDist < closestBaseDist and baseDist < distance)) and baseDist < operatingArea then
-                    local friendlyAntiAirStructures = aiBrain:GetNumUnitsAroundPoint(categories.DEFENSE * categories.ANTIAIR, base.Position, 65, 'Ally')
-                    if friendlyAntiAirStructures > 0 then
-                        bestBase = base
-                        bestBasePos = base.Position
-                        closestBaseDist = baseDist
-                    end
+
+    if not bestThreatPos then return false end
+
+    -- 2. Evaluate Air Zones for Intercept Potential
+    local airZones = aiBrain.Zones.Air.zones
+    local maxRadiusSq = maxRadius * maxRadius
+    local bestScore = -1
+    local distBaseToThreatSq = VDist3Sq(mainPos, bestThreatPos)
+
+    for i = 1, table.getn(airZones) do
+        local zone = airZones[i]
+        local zonePos = zone.pos
+        local distZoneToMainSq = VDist3Sq(mainPos, zonePos)
+
+        -- Constraint: Zone must be within the Operating Area and Platoon's Max Radius
+        if distZoneToMainSq < operatingAreaSq and distZoneToMainSq < maxRadiusSq then
+            
+            -- Safety Audit: Is the zone crawling with enemy AA?
+            -- We ignore zones where enemy AA threat is significant.
+            local enemyAA = zone.enemyantiairthreat or 0
+            if enemyAA < 5 then
+                local distZoneToThreatSq = VDist3Sq(zonePos, bestThreatPos)
+                
+                -- Scoring Heuristic:
+                -- + Bonus for being closer to the threat than the main base (Forward Leaning)
+                -- + Bonus for friendly static AA (Safety/Baiting)
+                -- - Penalty for being too far from the main base (Over-extending)
+                
+                local forwardLeaningScore = distBaseToThreatSq - distZoneToThreatSq
+                local staticSupportScore = (zone.friendlylandantiairthreat or 0) * 10
+                
+                local currentScore = forwardLeaningScore + staticSupportScore
+
+                if currentScore > bestScore then
+                    bestScore = currentScore
+                    bestHoldingPos = zonePos
                 end
             end
         end
-        if bestBasePos and closestBaseDist < distance then
-            holdingPos = bestBasePos
-        else
-            holdingPos = lerpy(aiBrain.BuilderManagers['MAIN'].Position, bestThreatPos, {math.sqrt(distance), (math.sqrt(distanceSplit))})
-        end
-        if aiBrain.RNGDEBUG then
-            RNGLOG('Holding Position is set to '..repr(holdingPos))
-        end
     end
-    return holdingPos
+
+    -- Fallback: If no ideal zone is found, stay at Main Base
+    if not bestHoldingPos then
+        bestHoldingPos = mainPos
+    end
+
+    if aiBrain.RNGDEBUG then
+        RNGLOG('RNGAI: Zone-Based Holding Position selected: '..repr(bestHoldingPos))
+    end
+
+    return bestHoldingPos
 end
 
 CDRWeaponCheckRNG = function (aiBrain, cdr, selfThreat)
@@ -6904,32 +6905,67 @@ function GetResourcesFromMarker(marker)
 end
 
 function VentToPlatoon(platoon, aiBrain, plan)
-    local ventPlatoon
-    local platoonUnits = platoon:GetPlatoonUnits()
+    local platoonUnits = platoon:GetPlatoonUnits() or {}
     local count = 0
+    local aliveUnits = {}
     for _, v in platoonUnits do
         if v and not v.Dead then
             count = count + 1
+            table.insert(aliveUnits, v)
         end
     end
+
+    if count == 0 then return end
+
     platoon.MachineStarted = false
-    if plan == 'LandCombatBehavior' then
-       --'We are venting to a new state machine '..aiBrain.Nickname..' platoon count is '..count)
-        ventPlatoon = aiBrain:MakePlatoon('', '')
-        aiBrain:AssignUnitsToPlatoon(ventPlatoon, platoonUnits, 'Attack', 'None')
-        import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ Vented = true}, ventPlatoon, platoonUnits)
-        aiBrain:DisbandPlatoon(platoon)
-    elseif plan =='LandAssaultBehavior' then
-        ventPlatoon = aiBrain:MakePlatoon('', '')
-        aiBrain:AssignUnitsToPlatoon(ventPlatoon, platoonUnits, 'Attack', 'None')
-        import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ Vented = true }, ventPlatoon, platoonUnits)
-        aiBrain:DisbandPlatoon(platoon)
-    else
-        ventPlatoon = aiBrain:MakePlatoon('', plan)
-        ventPlatoon.PlanName = 'Vented Platoon'
-        aiBrain:AssignUnitsToPlatoon(ventPlatoon, platoonUnits, 'Attack', 'None')
-        aiBrain:DisbandPlatoon(platoon)
+
+    -- Determine if we should split the platoon based on current battlefield presence.
+    -- If this platoon is large (blob) and our external land presence is low, split it up.
+    local splitThreshold = 18
+    local shouldSplit = false
+    if count > splitThreshold then
+        local selfThreat = aiBrain.BrainIntel.SelfThreat.LandNow or 0
+        local pThreat = platoon:CalculatePlatoonThreat('Surface', categories.LAND)
+        local enemyLandThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Land or 1
+        local externalPresence = selfThreat - pThreat
+
+        -- We split if our external presence is weak (< 100) or significantly outnumbered by the global enemy threat.
+        if externalPresence < 100 or externalPresence < (enemyLandThreat * 0.6) then
+            shouldSplit = true
+        end
     end
+
+    local function AssignToPlatoon(unitsToAssign)
+        local ventPlatoon
+        if plan == 'LandCombatBehavior' then
+            ventPlatoon = aiBrain:MakePlatoon('', '')
+            aiBrain:AssignUnitsToPlatoon(ventPlatoon, unitsToAssign, 'Attack', 'None')
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ Vented = true}, ventPlatoon, unitsToAssign)
+        elseif plan == 'LandAssaultBehavior' then
+            ventPlatoon = aiBrain:MakePlatoon('', '')
+            aiBrain:AssignUnitsToPlatoon(ventPlatoon, unitsToAssign, 'Attack', 'None')
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ Vented = true }, ventPlatoon, unitsToAssign)
+        else
+            ventPlatoon = aiBrain:MakePlatoon('', plan)
+            ventPlatoon.PlanName = 'Vented Platoon'
+            aiBrain:AssignUnitsToPlatoon(ventPlatoon, unitsToAssign, 'Attack', 'None')
+        end
+    end
+
+    if shouldSplit then
+        local currentBatch = {}
+        for i, u in aliveUnits do
+            table.insert(currentBatch, u)
+            if table.getn(currentBatch) >= splitThreshold or i == count then
+                AssignToPlatoon(currentBatch)
+                currentBatch = {}
+            end
+        end
+    else
+        AssignToPlatoon(aliveUnits)
+    end
+
+    aiBrain:DisbandPlatoon(platoon)
 end
 
 function GetShieldPosition(aiBrain, eng, locationType, whatToBuild, unitTable)
@@ -9366,9 +9402,6 @@ function FindAirTargetForTeamRNG(aiBrain, position, platoon, maxRange, platoonTh
                             local unitPos = unit:GetPosition()
                             local targetZoneID = MAP:GetZoneID(unitPos, aiBrain.Zones.Air.index)
                             local zData = riskMap[targetZoneID]
-                            if not zData then
-                                LOG("RNG TARGETING: Unit in Zone " .. tostring(targetZoneID or 'NIL') .. " is OUTSIDE riskMap range. Skipping safety check.")
-                            end
                             local currentRisk = zData and zData.risk or 0
                             local targetIncentive = zData and zData.priority or 0
 
@@ -9382,20 +9415,20 @@ function FindAirTargetForTeamRNG(aiBrain, position, platoon, maxRange, platoonTh
 
                             local isSafe = true
                             if perceivedRisk > maxAllowableRisk then
-                                LOG('High risk target, risk is '..tostring(zData.risk)..' max allowable '..tostring(maxAllowableRisk))
+                                --LOG('High risk target, risk is '..tostring(zData.risk)..' max allowable '..tostring(maxAllowableRisk))
                                 local hx = emergencyDefensePos[1] - unitPos[1]
                                 local hz = emergencyDefensePos[3] - unitPos[3]
                                 local homeDistSq = hx*hx + hz*hz
                                 -- abort target acquisition
                                 if homeDistSq > 6400 then
                                     --LOG('Threat score is '..tostring(threatScore)..' max threat allowed is '..tostring(maxAllowableThreat)..' platoon threat was '..tostring(platoon.CurrentPlatoonThreatAntiAir))
-                                    LOG('Aborting target during find air target')
+                                    --LOG('Aborting target during find air target')
                                     isSafe = false
                                 end
                             end
                             if isSafe then
                                 if not bestPriority or targetIncentive > bestPriority then
-                                    LOG("TARGET ACCEPTED. | Perceived Risk: " .. perceivedRisk .. " is within Max: " .. maxAllowableRisk)
+                                    --LOG("TARGET ACCEPTED. | Perceived Risk: " .. perceivedRisk .. " is within Max: " .. maxAllowableRisk)
                                     bestPriority = targetIncentive
                                     bestTarget = unit
                                 end
@@ -9611,10 +9644,10 @@ function GetInitialReclaimRings(factoryManager, aiBrain)
     -- 5. Final Result
     -- We ceil the calculated count to get a whole unit, then clamp it 
     -- between our dynamic min/max envelopes.
-    local finalEngCount = math.clamp(math.ceil(calculatedCount), minEngs, maxEngs)
+    local finalEngCount = math.max(minEngs, math.min(math.ceil(calculatedCount), maxEngs))
 
 
     --LOG('Final Engineer Count '..tostring(finalEngCount))
-    --LOG(string.format('RNGAI_RECLAIM_AUDIT: Mass=%d, Energy=%d, Rings=%d, Multiplier=%.2f, EnemyDistSq=%d', totalMassRequired, totalEnergyRequired, ringLimit, shareMultiplier, enemyDistSq))
+    --LOG(string.format('RNGAI_RECLAIM_AUDIT: Mass=%d, Energy=%d, Count=%d', myMassShare, myEnergyShare, finalEngCount))
     return finalEngCount
 end

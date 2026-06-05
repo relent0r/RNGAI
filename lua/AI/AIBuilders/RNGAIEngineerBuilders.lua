@@ -121,6 +121,74 @@ local ActiveExpansion = function(self, aiBrain, builderManager)
     end
 end
 
+function DynamicExpansionEngineerPriority(self, aiBrain, builderManager, builderData)
+    local baseName = builderManager.LocationType
+    local fallbackPriority = (builderData and builderData.Priority) or 0
+
+    if not aiBrain.amanager or not aiBrain.amanager.Demand or not aiBrain.amanager.Demand.Bases or not aiBrain.amanager.Demand.Bases[baseName] then
+        return fallbackPriority
+    end
+    
+    local baseData = aiBrain.BuilderManagers[baseName]
+    if not baseData or not baseData.Zone then 
+        return fallbackPriority 
+    end
+    
+    local zone = baseData.Zone
+    local baseDemand = aiBrain.amanager.Demand.Bases[baseName]
+
+    -- Define threat weights to mirror UnitBuildDemand
+    local threatWeights = { T1 = 0.6, T2 = 1.2, T3 = 2.0 }
+
+    -- 1. Scan Land Threat/Counter Demand
+    if baseDemand.Land then
+        for techTier, counters in pairs(baseDemand.Land) do
+            -- Handle AA Demands with Friendly Threat Mitigation
+            local aaDemand = counters.aa or 0
+            if aaDemand > 0 then
+                local friendlyThreat = zone['friendlylandantiairthreat'] or 0
+                if zone.edges then
+                    for _, edge in ipairs(zone.edges) do
+                        if edge.zone then
+                            friendlyThreat = friendlyThreat + (edge.zone['friendlylandantiairthreat'] or 0)
+                        end
+                    end
+                end
+                local weight = threatWeights[techTier] or 1
+                local calculatedUnitCount = (friendlyThreat <= 0) and 0 or math.ceil(friendlyThreat / weight)
+                
+                -- Only suppress engineers if the combat builder is actively needed!
+                if aaDemand > calculatedUnitCount then
+                    --LOG('Disable engineer builder due to demand builder')
+                    return 0 
+                end
+            end
+
+            -- Handle Arty Demands (Assuming standard raw comparison or future threat matching)
+            if (counters.arty or 0) > 0 and counters.arty > (aiBrain.amanager.Current.Land[techTier].arty or 0) then
+                --LOG('Disable engineer builder due to demand builder')
+                return 0
+            end
+        end
+    end
+
+    -- 2. Scan Air Threat Demand (Future proofing)
+    if baseDemand.Air then
+        for techTier, types in pairs(baseDemand.Air) do
+            if techTier ~= 'T4' then
+                -- Standard non-threat based comparison pattern
+                if (types.bomber or 0) > (aiBrain.amanager.Current.Air[techTier].bomber or 0) or
+                   (types.gunship or 0) > (aiBrain.amanager.Current.Air[techTier].gunship or 0) then
+                    --LOG('Disable engineer builder due to demand builder')
+                    return 0
+                end
+            end
+        end
+    end
+    --LOG('Returning default priority for engineer builder')
+    return fallbackPriority
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI Engineer Builder',
     BuildersType = 'FactoryBuilder',
@@ -541,6 +609,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Expansion Mass',
         PlatoonTemplate = 'T1BuildEngineer',
+        PriorityFunction = DynamicExpansionEngineerPriority,
         Priority = 850,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
@@ -567,6 +636,7 @@ BuilderGroup {
     Builder {
         BuilderName = 'RNGAI Factory Engineer T1 Reclaim Expansion',
         PlatoonTemplate = 'T1BuildEngineer',
+        PriorityFunction = DynamicExpansionEngineerPriority,
         Priority = 900,
         BuilderConditions = {
             { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},

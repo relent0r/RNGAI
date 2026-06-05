@@ -1154,12 +1154,19 @@ StructureManager = Class {
         end
         --RNGLOG('Actual Mex Income '..actualMexIncome)
         --LOG('Highest Team phase is '..tostring(RNGAIGLOBALS.HighestTeamAirPhase[teamReference]))
+        local avgSat = math.max(math.min(aiBrain.BrainIntel.AverageSaturation or 1.0, 1.0), 0.0)
+        local rawGravity = aiBrain.BrainIntel.GlobalEconomicGravity or 0
 
         local t2LandPass = false
         if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 and not disableForT3AirRushStrategy then
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
+                -- TUNING 1: The divisor (10) determines how aggressively gravity raises the ceiling.
+                -- TUNING 2: The clamp max (33) sets the absolute highest mass income requirement possible.
+                local maxCeiling = math.max(18, math.min(18 + (rawGravity / 10), 28))
+                local scaledIncomeTarget = 18 + (1.0 - avgSat) * (maxCeiling - 18)
+                --LOG(string.format("RNGLOG_UPGRADE_DYNAMICS | Gravity: %.2f | Sat: %.2f | TargetIncome23: %.2f | TargetIncome15: %.2f", rawGravity, avgSat, scaledIncomeTarget * multiplier, 15 * multiplier))
                 local distanceByPass = (aiBrain.EnemyIntel.ClosestEnemyBase and aiBrain.EnemyIntel.ClosestEnemyBase > 422500 ) and actualMexIncome >= (15 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0
-                if (not aiBrain.RNGEXP and (actualMexIncome > (23 * multiplier) or aiBrain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier)))
+                if (not aiBrain.RNGEXP and (actualMexIncome > (scaledIncomeTarget * multiplier) or aiBrain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier)))
                 or aiBrain.RNGEXP and (actualMexIncome > (18 * multiplier) or aiBrain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier)) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0 
                 or aiBrain.EnemyIntel.LandPhase > 1 and actualMexIncome > (12 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0 
                 or distanceByPass then
@@ -2607,7 +2614,7 @@ StructureManager = Class {
             end
         end
         if smdPresent > 0 and currentMissiles == 0 then
-            LOG('Requesting SMD assist for '..tostring(aiBrain.Nickname))
+            --LOG('Requesting SMD assist for '..tostring(aiBrain.Nickname))
             aiBrain:RequestEngineerAssistFocus('SMDLoading', 'SMDLoading', 950, 120, false)
         end
     end,

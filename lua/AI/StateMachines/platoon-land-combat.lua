@@ -5,7 +5,6 @@ local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 local GetMarkersRNG = import("/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua").GetMarkersRNG
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
-local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
@@ -798,7 +797,6 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                 WARN('No position passed to LandAssault')
                 return false
             end
-            --local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, self.dest, 3, false)
             local requestId = StateUtils.RequestTransportRNG(self, self.dest, 'Combat')
             if requestId then
                 -- 2. THE WAITING LOOP

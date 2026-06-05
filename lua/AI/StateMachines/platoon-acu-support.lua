@@ -4,7 +4,6 @@ local NavUtils = import('/lua/sim/NavUtils.lua')
 local AIAttackUtils = import("/lua/ai/aiattackutilities.lua")
 local IntelManagerRNG = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
-local TransportUtils = import("/mods/RNGAI/lua/AI/transportutilitiesrng.lua")
 local GetPlatoonPosition = moho.platoon_methods.GetPlatoonPosition
 local GetPlatoonUnits = moho.platoon_methods.GetPlatoonUnits
 local PlatoonExists = moho.aibrain_methods.PlatoonExists
@@ -194,13 +193,14 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            if not acu.Confidence > 3.5 and not acu.Dead and (VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3]) < 14400) and acu.CurrentEnemyThreat < 5 then
-                self:LogDebug(string.format('Request to vent platoon due to distance from home base, current distance is '..tostring(VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3]))))
+            local distToHomeSq = VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3])
+            if acu.Confidence > 3.5 and not acu.Dead and distToHomeSq < 14400 and acu.CurrentEnemyThreat < 5 then
+                self:LogDebug(string.format('Request to vent platoon: ACU is safe at home base.'))
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
                 coroutine.yield(20)
                 return
             end
-            if acu.Retreat and acu.CurrentEnemyThreat < 5 then
+            if acu.Retreat and acu.CurrentEnemyThreat < 2 then
                 --RNGLOG('CDR is not in danger and retreating, vent')
                 self:LogDebug(string.format('Request to vent platoon due to retreating acu and low enemy threat'))
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
@@ -460,8 +460,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local acuUnit = aiBrain.CDRUnit
             local platUnits=GetPlatoonUnits(self)
-            if not self.Pos[1] then
-                self:LogDebug(string.format('1 No self.Pos so we will exit'))
+            if not self.Pos or not self.Pos[1] then
+                self:ChangeState(self.WaitForPos)
                 return
             end
             local ax = self.Pos[1] - acuUnit.Position[1]
@@ -925,7 +925,6 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
-            --local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
             local requestId = StateUtils.RequestTransportRNG(self, builderData.Position)
             if requestId then
                 -- 2. THE WAITING LOOP
@@ -1022,7 +1021,6 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.DecideWhatToDo)
                 return false
             end
-            --local usedTransports = TransportUtils.SendPlatoonWithTransports(brain, self, builderData.Position, 3, false)
             local usedTransports = StateUtils.RequestTransportRNG(self, builderData.Position)
             if usedTransports then
                 --self:LogDebug(string.format('platoon used transports'))
@@ -1054,6 +1052,23 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 end
                 self:ChangeState(self.DecideWhatToDo)
                 return
+            end
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
+    WaitForPos = State {
+
+        StateName = 'WaitForPos',
+
+        --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
+        ---@param self AIPlatoonAdaptiveReclaimBehavior
+        Main = function(self)
+            --LOG('ACUSupport trying to use transport')
+            local brain = self:GetBrain()
+            while not self.Pos or not self.Pos[1] do
+                coroutine.yield(5)
             end
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -1279,6 +1294,7 @@ end
 ---@param data { Behavior: 'AIBehaviorACUSupport' }
 ---@param units Unit[]
 StartACUSupportThreads = function(brain, platoon)
+    --LOG('Start acu support threads')
     brain:ForkThread(ACUSupportPositionThread, platoon)
     brain:ForkThread(StateUtils.ZoneUpdate, platoon)
     brain:ForkThread(ThreatThread, platoon)
@@ -1287,6 +1303,7 @@ end
 ---@param aiBrain AIBrain
 ---@param platoon AIPlatoon
 ACUSupportPositionThread = function(aiBrain, platoon)
+    --LOG('ACU support position thread has started')
     while not IsDestroyed(platoon) do
         local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, platoon)
         if platBiasUnit and not platBiasUnit.Dead then
@@ -1295,7 +1312,22 @@ ACUSupportPositionThread = function(aiBrain, platoon)
             platoon.Pos=GetPlatoonPosition(platoon)
         end
         coroutine.yield(5)
+        if not platoon.Pos[1] then
+            --LOG('Platoons position is currently nil')
+            local platoonUnits = platoon:GetPlatoonUnits()
+            local alive = 0
+            local dead = 0
+            for _, unit in platoonUnits do
+                if not unit.Dead then
+                    alive = alive + 1
+                else
+                    dead = dead + 1
+                end
+            end
+            --LOG('Platoon has '..tostring(alive)..' alive and '..tostring(dead)..' dead units')
+        end
     end
+    --LOG('ACU support position thread is exiting')
 end
 
 ThreatThread = function(aiBrain, platoon)
