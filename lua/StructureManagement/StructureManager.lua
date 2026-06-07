@@ -2393,7 +2393,8 @@ StructureManager = Class {
                 local massTrend = GetEconomyTrend(aiBrain, 'MASS')
                 local energyStored = GetEconomyStored(aiBrain, 'ENERGY')
                 -- Loop through all extractors in the queue
-                for i, extractorInfo in ipairs(upgradeManagementQueue) do
+                for i = table.getn(upgradeManagementQueue), 1, -1 do
+                    local extractorInfo = upgradeManagementQueue[i]
                     currentTableSize = currentTableSize + 1
                     --LOG('Loop through extractor '..i)
                     local extractorUnit = extractorInfo.ExtractorUnit

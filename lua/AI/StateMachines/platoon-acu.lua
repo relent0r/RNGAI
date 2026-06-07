@@ -686,7 +686,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            if not cdr.SuicideMode and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > maxBaseRange and not self.BuilderData.DefendExpansion and brain.GridPresence:GetInferredStatus(cdr.Position) ~= 'Allied' then
+            if not cdr.SuicideMode and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) > maxBaseRange and not self.BuilderData.DefendExpansion then
                 self:LogDebug(string.format('ACU is beyond maxRadius of '..cdr.MaxBaseRange))
                 if not cdr.Caution then
                     ----self:LogDebug(string.format('We are not in caution mode, check if base closer than 6400'))
@@ -709,12 +709,12 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    if not closestPos then
-                        self:LogDebug(string.format('no close base retreat'))
-                        self.BuilderData = {}
-                        --LOG('ACU : We are going to retreat due to max base range')
-                        self:ChangeState(self.Retreating)
-                        return
+                    if not closestPos and brain.GridPresence:GetInferredStatus(cdr.Position) ~= 'Allied' then
+                            self:LogDebug(string.format('no close base retreat'))
+                            self.BuilderData = {}
+                            --LOG('ACU : We are going to retreat due to max base range')
+                            self:ChangeState(self.Retreating)
+                            return
                     end
                     if closestPos then
                         threat = brain:GetThreatAtPosition( closestPos, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface' )
@@ -2435,7 +2435,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local closestPlatoonDistance
             local closestAPlatPos
             local platoonValue = 0
-            local baseRetreat
+            local forceMainRetreat = (cdr.Phase > 2 or brain.EnemyIntel.LandPhase > 2.5)
             local currentTargetPosition
             local distanceToHome = cdr.DistanceToHome
             --RNGLOG('Getting list of allied platoons close by')
@@ -2472,9 +2472,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
 
             end
-            if distanceToHome > (cdr.MaxBaseRange * cdr.MaxBaseRange) or cdr.Phase > 2 or brain.EnemyIntel.LandPhase > 2.5 then
-                baseRetreat = true
-            end
+            local baseRetreat = (distanceToHome > (cdr.MaxBaseRange * cdr.MaxBaseRange)) or forceMainRetreat
+
             local threatLocations = brain:GetThreatsAroundPosition(cdr.Position, 16, true, 'AntiSurface')
             local supportPlatoon = brain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
@@ -2605,8 +2604,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             --LOG('No platoon found, trying for base')
             local closestBase
             local closestBaseDistance
-            if cdr.Phase > 2 or brain.EnemyIntel.LandPhase > 2.5 then
-                closestBase = self.LocationType
+            if forceMainRetreat and brain.BuilderManagers['MAIN'] then
+                closestBase = 'MAIN'
             end
             if not closestBase and brain.BuilderManagers then
                 local takeThreatIntoAccount = false

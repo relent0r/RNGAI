@@ -194,6 +194,9 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 end
             end
             local distToHomeSq = VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3])
+            LOG(string.format('Vent Audit | DistHomeSq: %d | Conf: %.2f | E-Threat: %.1f | F-Threat: %.1f | ACU-Retreat: %s | Timeout: %d', 
+                distToHomeSq, acu.Confidence or 0, acu.CurrentEnemyThreat or 0, acu.CurrentFriendlyThreat or 0, 
+                tostring(acu.Retreat), self.threatTimeout or 0))
             if acu.Confidence > 3.5 and not acu.Dead and distToHomeSq < 14400 and acu.CurrentEnemyThreat < 5 then
                 self:LogDebug(string.format('Request to vent platoon: ACU is safe at home base.'))
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')

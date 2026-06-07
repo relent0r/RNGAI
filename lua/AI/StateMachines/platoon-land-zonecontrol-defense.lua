@@ -115,7 +115,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.Navigating)
                         return
                     else
-                        self.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.AIR - categories.INSIGNIFICANTUNIT, cdrPos, self.MaxRadius, 'Enemy')
+                        self.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.AIR - categories.INSIGNIFICANTUNIT - categories.UNTARGETABLE, cdrPos, self.MaxRadius, 'Enemy')
                         --self:LogDebug(string.format('DecideWhatToDo number of candidates acu protection')..table.getn(self.targetcandidates))
                         if not table.empty(self.targetcandidates) then
                             --self:LogDebug(string.format('DecideWhatToDo found simple target'))
@@ -148,7 +148,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             local target
             if not target then
                 --self:LogDebug(string.format('DecideWhatToDo no target look around at max radius'))
-                self.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.AIR - categories.INSIGNIFICANTUNIT, platPos, self.MaxRadius, 'Enemy')
+                self.targetcandidates=aiBrain:GetUnitsAroundPoint(categories.AIR - categories.INSIGNIFICANTUNIT - categories.UNTARGETABLE, platPos, self.MaxRadius, 'Enemy')
                 --self:LogDebug(string.format('DecideWhatToDo number of candidates')..table.getn(self.targetcandidates))
                 if not table.empty(self.targetcandidates) then
                     --self:LogDebug(string.format('DecideWhatToDo found simple target'))

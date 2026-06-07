@@ -4977,6 +4977,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
     EcoMassManagerRNG = function(self)
     -- Watches for low power states
+        local unitTypePaused = {}
         coroutine.yield(Random(1,7))
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
@@ -4985,13 +4986,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     continue
                 end
                 local massStateCaution, deficit = self:EcoManagerMassStateCheck()
-                local unitTypePaused = false
                 
                 if massStateCaution then
                     --LOG('Mass Deficit at start is '..tostring(deficit))
                     --LOG('massStateCaution State Caution is true')
                     local massCycle = 0
-                    local unitTypePaused = {}
                     local resourcesSaved = 0
                     while massStateCaution do
                         local massPriorityTable = {}
@@ -5232,13 +5231,12 @@ AIBrain = Class(RNGAIBrainClass) {
                             local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, TMLs, 'pause', 'MASS')
                         end
-                        massStateCaution = self:EcoManagerMassStateCheck()
-                        deficit = math.max(deficit - resourcesSaved, 0)
+                        massStateCaution, deficit = self:EcoManagerMassStateCheck()
                         --LOG('Mass Resources saved on this loop '..tostring(resourcesSaved))
                         --LOG('Mass Deficit during loop is now '..tostring(deficit))
                         if resourcesSaved >= deficit then
                             coroutine.yield(15)
-                            massStateCaution = self:EcoManagerMassStateCheck()
+                            massStateCaution, deficit = self:EcoManagerMassStateCheck()
                             --LOG('We should be out of our mass stall, checked again and powerStateCaution is '..tostring(massStateCaution))
                         end
                         if massStateCaution then
@@ -5254,7 +5252,14 @@ AIBrain = Class(RNGAIBrainClass) {
                         coroutine.yield(5)
                         --RNGLOG('unitTypePaused table is :'..repr(unitTypePaused))
                     end
-                    for k, v in unitTypePaused do
+                    massStateCaution = false
+                end
+
+                -- Process unpausing if we aren't in caution and have leftovers
+                if not massStateCaution and RNGGETN(unitTypePaused) > 0 then
+                    RNGLOG(string.format("MassManager (%s): Memory stack contains %d categories. Attempting recovery.", self.Nickname, RNGGETN(unitTypePaused)))
+                    for i = RNGGETN(unitTypePaused), 1, -1 do
+                        local v = unitTypePaused[i]
                         if v == 'ENGINEER' then
                             local Engineers = GetListOfUnits(self, ( categories.ENGINEER + categories.SUBCOMMANDER ) - categories.STATIONASSISTPOD - categories.COMMAND, false, false)
                             self:EcoSelectorManagerRNG(v, Engineers, 'unpause', 'MASS')
@@ -5301,8 +5306,10 @@ AIBrain = Class(RNGAIBrainClass) {
                             local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(v, TMLs, 'unpause', 'MASS')
                         end
+                        RNGLOG(string.format("MassManager (%s): Unpaused %s. Remaining in stack: %d", self.Nickname, tostring(v), i - 1))
+                        table.remove(unitTypePaused, i)
+                        if self:EcoManagerMassStateCheck() then break end
                     end
-                    massStateCaution = false
                 end
             end
             coroutine.yield(20)
@@ -5310,7 +5317,9 @@ AIBrain = Class(RNGAIBrainClass) {
     end,
 
     EcoManagerMassStateCheck = function(self)
-        if GetEconomyTrend(self, 'MASS') <= 0.0 and GetEconomyStored(self, 'MASS') <= 150 then
+        local income = self.cmanager.income.r.m or 0
+        local buffer = math.max(150, income * 2) -- 2 seconds of income buffer
+        if GetEconomyTrend(self, 'MASS') <= 0.0 and GetEconomyStored(self, 'MASS') <= buffer then
             local deficit =  GetEconomyRequested(self,'MASS') - GetEconomyIncome(self,'MASS')
             return true, deficit
         end
@@ -5327,6 +5336,7 @@ AIBrain = Class(RNGAIBrainClass) {
     
     EcoPowerManagerRNG = function(self)
         -- Watches for low power states
+        local unitTypePaused = {}
         while true do
             if self.EcoManager.EcoManagerStatus == 'ACTIVE' then
                 if GetGameTimeSeconds() < 150 then
@@ -5334,14 +5344,12 @@ AIBrain = Class(RNGAIBrainClass) {
                     continue
                 end
                 local powerStateCaution, deficit = self:EcoManagerPowerStateCheck()
-                local unitTypePaused = false
                 
                 if powerStateCaution then
                     --RNGLOG('Power State Caution is true')
                     --LOG('Power Deficit at start is '..tostring(deficit))
                     self.EngineerAssistManagerFocusPower = true
                     local powerCycle = 0
-                    local unitTypePaused = {}
                     local resourcesSaved = 0
                     while powerStateCaution do
                         local priorityNum = 0
@@ -5560,14 +5568,13 @@ AIBrain = Class(RNGAIBrainClass) {
                             resourcesSaved = resourcesSaved + self:EcoSelectorManagerRNG(priorityUnit, Nukes, 'pause', 'ENERGY')
                         end
                         coroutine.yield(5)
-                        powerStateCaution = self:EcoManagerPowerStateCheck()
-                        deficit = math.max(deficit - resourcesSaved, 0)
+                        powerStateCaution, deficit = self:EcoManagerPowerStateCheck()
                         --LOG('Energy stall management for '..self.Nickname)
                         --LOG('Energy Resources saved on this loop '..tostring(resourcesSaved))
                         --LOG('Energy Deficit during loop is now '..tostring(deficit))
                         if resourcesSaved >= deficit then
                             coroutine.yield(15)
-                            powerStateCaution = self:EcoManagerPowerStateCheck()
+                            powerStateCaution, deficit = self:EcoManagerPowerStateCheck()
                             --LOG('We should be out of our power stall, checked again and powerStateCaution is '..tostring(powerStateCaution))
                         end
                         if powerStateCaution then
@@ -5580,7 +5587,29 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                         --LOG('unitTypePaused table is :'..repr(unitTypePaused))
                     end
-                    for k, v in unitTypePaused do
+                    powerStateCaution = false
+                else
+                    self.EngineerAssistManagerFocusPower = false
+                end
+
+                -- Process unpausing if we have recovery buffer and survivors in the stack
+                if not powerStateCaution and RNGGETN(unitTypePaused) > 0 then
+                    RNGLOG(string.format("PowerManager (%s): Memory stack contains %d categories. Attempting recovery.", self.Nickname, RNGGETN(unitTypePaused)))
+                    for i = RNGGETN(unitTypePaused), 1, -1 do
+                        local v = unitTypePaused[i]
+
+                        -- Wait for safe recovery buffer (50% storage and stable trend) before unpausing the next group
+                        local recoveryWait = 0
+                        while (GetEconomyStoredRatio(self, 'ENERGY') < 0.5 or GetEconomyTrend(self, 'ENERGY') < 10) and recoveryWait < 10 do
+                            coroutine.yield(15)
+                            recoveryWait = recoveryWait + 1
+                            -- If we crash again mid-recovery, exit to re-trigger the pause loop
+                            if self:EcoManagerPowerStateCheck() then break end
+                        end
+
+                        -- Safety break: if unpausing previous groups caused a stall, stop here
+                        if self:EcoManagerPowerStateCheck() then break end
+
                         if v == 'ENGINEER' then
                             local Engineers = GetListOfUnits(self, ( categories.ENGINEER + categories.SUBCOMMANDER ) - categories.STATIONASSISTPOD - categories.COMMAND, false, false)
                             self:EcoSelectorManagerRNG(v, Engineers, 'unpause', 'ENERGY')
@@ -5630,11 +5659,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(v, TMLs, 'unpause', 'ENERGY')
                         end
+                        RNGLOG(string.format("PowerManager (%s): Unpaused %s. Remaining in stack: %d", self.Nickname, tostring(v), i - 1))
+                        table.remove(unitTypePaused, i)
                     end
-                    RNGLOG('PowerRecovery: Unpaused '..table.getn(unitTypePaused)..' groups. Post-recovery Trend: '..self.EconomyOverTimeCurrent.EnergyTrendOverTime..' | Storage: '..GetEconomyStored(self, "ENERGY"))
-                    powerStateCaution = false
-                else
-                    self.EngineerAssistManagerFocusPower = false
                 end
             end
             coroutine.yield(20)
@@ -7321,7 +7348,7 @@ AIBrain = Class(RNGAIBrainClass) {
             -- Economic Values
             local maxEcoSpend = highestPhase == 3 and 0.45 or 0.40
             local maxAssistSpend = 1.0
-            local ecoFloor = 0.05
+            local ecoFloor = 0.05 * highestPhase
             local assistFloor = 0.02 * highestPhase
 
             local ignoreZoneControl = brainIntel.PlayerRole.AirPlayer or brainIntel.PlayerRole.ExperimentalPlayer
@@ -7521,16 +7548,22 @@ AIBrain = Class(RNGAIBrainClass) {
             
             local basePressure = math.max(threatPressure, expansionPressure)
             local combinedPressure = basePressure
+            -- Reduce the impact of global expansion pressure if local claims are already covering production needs.
+            -- This prevents double-counting expansion urgency when many bases are locally demanding units.
+            combinedPressure = math.max(threatPressure, expansionPressure * (1.0 - clamp(totalLocalClaims, 0, 0.75)))
 
             if economicDebugEnabled then
                 LOG(string.format("RNGLOG_PROJECTION_AUDIT | Label: %s | LandProj: %.2f | NavProj: %.2f", tostring(myLabel), landProjection, navalProjection))
                 LOG(string.format("RNGLOG_RISK_AUDIT | LandRisk: %.2f | NavRisk: %.2f | ExpPress: %.2f | Combined: %.2f", projectedLandRisk, projectedNavalRisk, expansionPressure, combinedPressure))
             end
-            -- Bump maxProd to 0.90 to ensure expansion has 'teeth' when needed
-            local minProd, maxProd = 0.45, 0.85
+            -- Dynamic Production Ceiling: Tied to the tech floor to ensure unit spam cannot starve tech
+            -- Iterative fix: Ensure the production ceiling respects the tech floors.
+            -- This prevents "T1 spam" from starving the tech budget in the late game.
+            local minProd = 0.45
+            local maxProd = 1.0 - ecoFloor - assistFloor
+            if maxProd > 0.85 then maxProd = 0.85 end
 
-            local productionAllocation = clamp(minProd + (basePressure * (maxProd - minProd)) + totalLocalClaims, minProd, maxProd)
-
+            local productionAllocation = clamp(minProd + (combinedPressure * (maxProd - minProd)) + totalLocalClaims, minProd, maxProd)
             local isHighPressure = math.max(projectedLandRisk, projectedNavalRisk) > 0.35
 
             if self.RNGDEBUG then
@@ -7663,10 +7696,13 @@ AIBrain = Class(RNGAIBrainClass) {
 
             local totalWeight = ecoWeight + assistWeight + 0.01
             economyUpgradeSpend = clamp(leftover * (ecoWeight / totalWeight), ecoFloor, maxEcoSpend)
-            local leftoverAfterEco = math.max(0, leftover - economyUpgradeSpend)
             engineerAssistRatio = clamp(leftover - economyUpgradeSpend, assistFloor, leftover)
+
+            -- Calculate redistribution potential
             if excessAllocation > 0 then
                 economyUpgradeSpend = clamp(economyUpgradeSpend + (excessAllocation * 0.4), ecoFloor, maxEcoSpend)
+                -- We don't apply Assist here yet, we let Step 8 handle the base 
+                -- then add the bonus after the nudge.
                 engineerAssistRatio = clamp(engineerAssistRatio + (excessAllocation * 0.6), assistFloor, maxAssistSpend)
             end
 
@@ -7674,6 +7710,8 @@ AIBrain = Class(RNGAIBrainClass) {
             -- 8) CONSTRUCTION / ECO HEALTH TEMPERING
             ----------------------------------------------------------------------
             local assistConsumption = self.EngineerAssistManagerCurrentConsumption or 0
+            local leftoverTotal = math.max(0, 1.0 - (newLand + newAir + newNaval))
+            local leftoverAfterEco = math.max(0, leftoverTotal - economyUpgradeSpend)
             local spend = (self.cmanager and self.cmanager.categoryspend and self.cmanager.categoryspend.eng) or {}
             local totalEngSpend = (spend.T1 or 0) + (spend.T2 or 0) + (spend.T3 or 0) + (spend.com or 0)
             local constructionRatio = safeDiv(math.max(0, totalEngSpend - assistConsumption), math.max(1, totalIncome), 0)
@@ -7681,16 +7719,17 @@ AIBrain = Class(RNGAIBrainClass) {
             
             -- The Nudge: We reduce assist if building heavily, but we CLAMP it to assistFloor
             -- This ensures the "Nudge" can never zero out the assist budget.
+            local baseAssist = clamp(leftover * (assistWeight / totalWeight), assistFloor, leftover)
             local nudgeValue = (constructionRatio * 0.15)
-            local temperedAssist = math.max(assistFloor, engineerAssistRatio - nudgeValue)
+            local temperedAssist = math.max(assistFloor, baseAssist - nudgeValue)
 
             -- Final eco health scaling
-            engineerAssistRatio = clamp(temperedAssist * trendFactor, assistFloor, leftoverAfterEco)
+            engineerAssistRatio = clamp((temperedAssist * trendFactor) + (excessAllocation * 0.6), assistFloor, leftoverAfterEco)
 
             -- Final Safety: If the two together somehow exceed leftover, scale them back
             local combined = economyUpgradeSpend + engineerAssistRatio
-            if combined > leftover and leftover > 0 then
-                local scale = leftover / combined
+            if combined > leftoverTotal and leftoverTotal > 0 then
+                local scale = leftoverTotal / combined
                 economyUpgradeSpend = economyUpgradeSpend * scale
                 engineerAssistRatio = engineerAssistRatio * scale
             end
@@ -7741,7 +7780,7 @@ AIBrain = Class(RNGAIBrainClass) {
             
             if economicDebugEnabled then
                 LOG(string.format("RNGLOG_CITIZEN_AUDIT | Leftover:%f | EcoTook:%f | PostEcoRemaining:%f | ConstRatioNudge:%f | FinalAssist:%f | EngSpend:%f", leftover, economyUpgradeSpend, leftoverAfterEco, nudgeValue, engineerAssistRatio, totalEngSpend))
-                LOG(string.format("RNGLOG_ALLOCATION_AUDIT | FinalProdAlloc: %.2f | Land: %.2f | Air: %.2f | Naval: %.2f | EcoSpend: %.2f | Assist: %.2f",productionAllocation, newLand, newAir, newNaval, economyUpgradeSpend, engineerAssistRatio))
+                LOG(string.format("RNGLOG_ALLOCATION_AUDIT | ProdBudget: %.2f | ActualUnits: %.2f | Land: %.2f | Air: %.2f | Naval: %.2f | EcoSpend: %.2f | Assist: %.2f", productionAllocation, (newLand + newAir + newNaval), newLand, newAir, newNaval, economyUpgradeSpend, engineerAssistRatio))
             end
         end
     end,

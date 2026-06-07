@@ -153,7 +153,6 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 if threat.allySurface > threat.enemySurface and threat.allyRadiusThreat > 0 and threat.enemySurface > threat.allyRadiusThreat then
-                    self:LogDebug(string.format('DecideWhatToDo enemy threat is greater than our short radius threat but we have more actual threat'))
                     self.retreat=true
                     self:ChangeState(self.Retreating)
                     return

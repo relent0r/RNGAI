@@ -1159,7 +1159,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
                                         -- Even for a Factory, don't walk half the map. 
                                         -- 120 units is already a long swim for an ACU.
                                         highValue = true
-                                    elseif v.distance < 2500 then -- 50 units (Shoreline cleanup)
+                                    elseif v.distance < 2500 and (cdr.Phase or 1) < 3 then -- 50 units (Shoreline cleanup)
                                         highValue = true
                                     end
                                 end
