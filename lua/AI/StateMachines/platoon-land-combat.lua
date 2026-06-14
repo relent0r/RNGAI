@@ -128,7 +128,7 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             else
-                if threat.allyACU > 0 and threat.enemyStructure > 0 and not table.empty(threat.enemyStructureUnits) then
+                if threat.allyACU > 0 and threat.enemyStructure > 0 and not RNGTableEmpty(threat.enemyStructureUnits) then
                     for _, v in threat.enemyStructureUnits do
                         if not v.Dead then
                             local structurePos = v:GetPosition()
@@ -224,10 +224,6 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            --local defenseCheck = StateUtils.CheckDefenseClusters(aiBrain, self.Pos, self['rngdata'].MaxPlatoonWeaponRange, self.MovementLayer, self.CurrentPlatoonThreatAntiSurface)
-            --if defenseCheck then
-            --    LOG('Platoon is almost within range of defense cluster')
-            --end
             if VDist3Sq(self.Pos, aiBrain.BuilderManagers[self.LocationType].Position) < 14400 then
                 local hiPriTargetPos
                 local hiPriTarget = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)

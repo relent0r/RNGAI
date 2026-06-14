@@ -103,6 +103,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'CanAffordLuxuryProject',{} },
             { UCBC, 'HaveUnitRatioAtLocationRNG', { 'LocationType', 1.0, categories.STRUCTURE * categories.SHIELD, '<=',categories.STRUCTURE * categories.TECH3 * (categories.ENERGYPRODUCTION + categories.FACTORY) } },
             { MIBC, 'FactionIndex', { 1, 3, 4 }}, -- 1: UEF, 2: Aeon, 3: Cybran, 4: Seraphim, 5: Nomads 
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.95 } },
@@ -138,6 +139,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Shield', 5},
         InstanceCount = 1,
         BuilderConditions = {
+            { EBC, 'CanAffordLuxuryProject',{} },
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.95 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1 }},
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 2, categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.TECH3}},

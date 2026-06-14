@@ -621,4 +621,20 @@ function LateGamePowerScale(aiBrain)
     end
 
 end
+
+--- Returns true if the AI can afford to start a new high-drain project without stalling production.
+---@param aiBrain AIBrain
+---@param projectMassDrain number The expected mass-per-second drain of the construction project.
+---@return boolean
+function CanAffordLuxuryProject(aiBrain, projectMassDrain)
+    local econ = aiBrain.EconomyAllocation
+
+    -- Do not start new luxuries if the budget is already redlining.
+    LOG('ConstructionBudgetStatus is '..tostring(econ.ConstructionBudgetStatus))
+    if econ.ConstructionBudgetStatus == 'Blocked' then
+        return false
+    end
+
+    return true
+end
     

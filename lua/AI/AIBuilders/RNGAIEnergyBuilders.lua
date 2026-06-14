@@ -31,6 +31,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 90 } },
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 28.0 } }, -- If our energy is trending into negatives
             { EBC, 'GreaterThanMassStorageOrEfficiency', { 225, 1.0 }},
+            { EBC, 'CanAffordLuxuryProject',{} },
             { UCBC, 'ValidateHydroIncome', { categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3 + categories.HYDROCARBON) } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.STRUCTURE * categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }}, -- Don't build after 1 T2 Pgens Exist
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -154,6 +155,7 @@ BuilderGroup {
             { EBC, 'LessThanEnergyTrendCombinedRNG', { 120.0 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.8 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.30}},
+            { EBC, 'CanAffordLuxuryProject',{} },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 3, categories.ENERGYPRODUCTION * categories.TECH2, 1, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION *  categories.TECH3 - categories.HYDROCARBON }},
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -228,6 +230,7 @@ BuilderGroup {
             { EBC, 'LessThanEnergyTrendCombinedRNG', { 500.0, true } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.1, 0.8 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.15, 0.30}},
+            { EBC, 'CanAffordLuxuryProject',{} },
             { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 2, categories.ENERGYPRODUCTION * categories.TECH3 - categories.HYDROCARBON }},
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -297,6 +300,7 @@ BuilderGroup {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 28.0 } },
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.1 }},
+            { EBC, 'CanAffordLuxuryProject',{} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }}, -- Don't build after 1 T2 Pgens Exist
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -483,6 +487,7 @@ BuilderGroup {
         Priority = 750,
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1 }},
+            { EBC, 'CanAffordLuxuryProject',{} },
             { UCBC, 'RequireEnergyStorage', { }},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },

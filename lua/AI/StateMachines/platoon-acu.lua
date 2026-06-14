@@ -1297,6 +1297,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         --LOG('ACU at position '..repr(destination))
                         --LOG('Cutoff distance was '..navigateDistanceCutOff)
                         self:LogDebug(string.format('Were at destination break from navigating'))
+                        cdr.Retreat = false
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
@@ -2428,7 +2429,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local cdr = self.cdr
             if cdr:IsUnitState('Attached') then
-                 return false
+                coroutine.yield(40)
+                self:ChangeState(self.DecideWhatToDo)
+                return
             end
             local brain = self:GetBrain()
             local closestPlatoon

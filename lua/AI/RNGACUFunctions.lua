@@ -874,7 +874,7 @@ function CDRCallPlatoon(cdr, surfaceThreatRequired, antiAirThreatRequired)
     if not aiBrain then
         return
     end
-    --LOG('ACU call platoon , threat required '..threatRequired)
+    --LOG('ACU call platoon , threat required '..surfaceThreatRequired)
     surfaceThreatRequired = surfaceThreatRequired + 10
     local supportPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed('ACUSupportPlatoon')
     --local platoonPos = GetPlatoonPosition(supportPlatoonAvailable)
@@ -995,13 +995,18 @@ function CDRCallPlatoon(cdr, surfaceThreatRequired, antiAirThreatRequired)
         bMergedPlatoons = true
         dontStopPlatoon = true
     end
+    --LOG('CDR Called platoon')
     if bMergedPlatoons and dontStopPlatoon then
+        --LOG('bMergedPlatoons and dontStopPlatoon')
+        supportPlatoonAvailable:ChangeState(supportPlatoonAvailable.DecideWhatToDo)
         return true
     elseif bMergedPlatoons then
+        --LOG('bMergedPlatoons')
         cdr.SupportPlatoon = supportPlatoonAvailable
         supportPlatoonAvailable:Stop()
         return true
     end
+    --LOG('No platoons found')
     return false
 end
 

@@ -441,7 +441,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 local timeout = 0
                 local maxWait = 120 -- Ticks/Loops before we give up (approx 2 mins at 20-tick intervals)
                 
-                while timeout < maxWait do
+                while timeout < maxWait and not IsDestroyed(self) do
                     local units = self:GetPlatoonUnits()
                     if table.getn(units) == 0 then return end -- Platoon dead
 

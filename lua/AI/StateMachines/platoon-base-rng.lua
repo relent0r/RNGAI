@@ -16,7 +16,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
 
     ---@param self AIPlatoon
     OnDestroy = function(self)
-        --LOG('Platoon has been destroyed, name was '..tostring(self.PlatoonName))
+        LOG('Platoon has been destroyed, name was '..tostring(self.PlatoonName))
         if self.BuilderHandle then
             self.BuilderHandle:RemoveHandle(self)
         end

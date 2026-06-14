@@ -1676,8 +1676,8 @@ IntelManager = Class {
                 (zonePressureValue * weights.zonePressureWeight)
 
             if not bestScore or finalScore > (bestScore - 0.5) then
-                LOG(string.format("RNG_ZONE_DECISION: Plat=%s | Zone=%s | Final=%.2f | Base=%.2f | Opp=%.2f | DistP=%.4f | PressP=%.4f | Stab=%.1f | Status=%s", 
-                    platoon.BuilderName or "Unk", v.id, finalScore, baseScore, (threatValue * weights.threatOpportunityWeight), (distanceValue * weights.zoneDistanceWeight), (zonePressureValue * weights.zonePressureWeight), currentStab, v.status or "None"))
+                --LOG(string.format("RNG_ZONE_DECISION: Plat=%s | Zone=%s | Final=%.2f | Base=%.2f | Opp=%.2f | DistP=%.4f | PressP=%.4f | Stab=%.1f | Status=%s", 
+                    --platoon.BuilderName or "Unk", v.id, finalScore, baseScore, (threatValue * weights.threatOpportunityWeight), (distanceValue * weights.zoneDistanceWeight), (zonePressureValue * weights.zonePressureWeight), currentStab, v.status or "None"))
             end
 
             if zonetype == 'aadefense' then
@@ -4974,6 +4974,7 @@ IntelManager = Class {
             zoneId = MAP:GetZoneID(position,self.Brain.Zones.Land.index)
         end
         if gridZ and gridZ then
+            LOG('Structre being requested '..tostring(structureType))
             if self.StructureRequests[structureType] then
                 table.insert(self.StructureRequests[structureType], {
                     Position = position,

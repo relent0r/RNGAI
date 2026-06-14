@@ -107,6 +107,7 @@ BuilderGroup {
         Priority = 650,
         BuilderConditions = {
             { UCBC, 'StructureBuildDemand', { 'Structure', 'intel', 'Optics'} },
+            { EBC, 'CanAffordLuxuryProject',{} },
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.AEON * categories.OPTICS * categories.STRUCTURE}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 1.05, 1.3 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},

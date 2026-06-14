@@ -91,6 +91,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self:GetBrain()
             local acu = aiBrain.CDRUnit
             local rangedAttack 
+            local distToHomeSq = VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3])
             if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
                 local suicideTarget = aiBrain.BrainIntel.SuicideModeTarget
                 local enemyAcuPosition = suicideTarget:GetPosition()
@@ -162,7 +163,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 --LOG('ACUSUPPORT: we are not retreating')
                 self.retreat=false
             end
-            if acu.Confidence < 3 or acu.Retreat then
+            if (acu.Confidence < 3 or acu.Retreat) and distToHomeSq > 225 then
                 self:ChangeState(self.SupportACU)
                 return
             end
@@ -193,21 +194,16 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
-            local distToHomeSq = VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3])
-            LOG(string.format('Vent Audit | DistHomeSq: %d | Conf: %.2f | E-Threat: %.1f | F-Threat: %.1f | ACU-Retreat: %s | Timeout: %d', 
-                distToHomeSq, acu.Confidence or 0, acu.CurrentEnemyThreat or 0, acu.CurrentFriendlyThreat or 0, 
-                tostring(acu.Retreat), self.threatTimeout or 0))
+            
             if acu.Confidence > 3.5 and not acu.Dead and distToHomeSq < 14400 and acu.CurrentEnemyThreat < 5 then
                 self:LogDebug(string.format('Request to vent platoon: ACU is safe at home base.'))
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
-                coroutine.yield(20)
                 return
             end
             if acu.Retreat and acu.CurrentEnemyThreat < 2 then
                 --RNGLOG('CDR is not in danger and retreating, vent')
                 self:LogDebug(string.format('Request to vent platoon due to retreating acu and low enemy threat'))
                 RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
-                coroutine.yield(20)
                 return
             end
             if acu.CurrentEnemyThreat < 5 and acu.CurrentFriendlyThreat > 15 then
@@ -216,14 +212,12 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 if self.threatTimeout > 10 then
                     self:LogDebug(string.format('Request to vent platoon due to low enemy threat and high friendly threat'))
                     RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
-                    coroutine.yield(20)
                     return
                 end
             end
             if self.MovementLayer == 'Land' and RUtils.PositionOnWater(acu.Position[1], acu.Position[3]) then
                 self:LogDebug(string.format('Request to vent platoon just to acu in water'))
                 RUtils.VentToPlatoon(self, aiBrain, 'LandAssaultBehavior')
-                coroutine.yield(20)
                 return
             end
             if acu.Position and NavUtils.CanPathTo(self.MovementLayer, self.Pos, acu.Position) then
@@ -935,7 +929,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 local timeout = 0
                 local maxWait = 120 -- Ticks/Loops before we give up (approx 2 mins at 20-tick intervals)
                 
-                while timeout < maxWait do
+                while timeout < maxWait and not IsDestroyed(self) do
                     local units = self:GetPlatoonUnits()
                     if table.getn(units) == 0 then return end -- Platoon dead
 

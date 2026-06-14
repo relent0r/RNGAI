@@ -6940,11 +6940,11 @@ function VentToPlatoon(platoon, aiBrain, plan)
         if plan == 'LandCombatBehavior' then
             ventPlatoon = aiBrain:MakePlatoon('', '')
             aiBrain:AssignUnitsToPlatoon(ventPlatoon, unitsToAssign, 'Attack', 'None')
-            import("/mods/rngai/lua/ai/statemachines/platoon-land-combat.lua").AssignToUnitsMachine({ Vented = true}, ventPlatoon, unitsToAssign)
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ PlatoonData = {Vented = true} }, ventPlatoon, unitsToAssign)
         elseif plan == 'LandAssaultBehavior' then
             ventPlatoon = aiBrain:MakePlatoon('', '')
             aiBrain:AssignUnitsToPlatoon(ventPlatoon, unitsToAssign, 'Attack', 'None')
-            import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ Vented = true }, ventPlatoon, unitsToAssign)
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ PlatoonData = {Vented = true} }, ventPlatoon, unitsToAssign)
         else
             ventPlatoon = aiBrain:MakePlatoon('', plan)
             ventPlatoon.PlanName = 'Vented Platoon'

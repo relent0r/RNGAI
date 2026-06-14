@@ -526,7 +526,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 eng['rngdata'].WaitingForTransport = true
                 local requestId, requestData = StateUtils.RequestTransportRNG(self, builderData.Position, transportType)
                 
-                if requestId then
+                if requestId and requestData then
                     local estWait = (requestData and requestData.EstimatedWait) or 30
                     local walkTime = (math.sqrt(navigateDist) / (eng.Blueprint.Physics.MaxSpeed or 2.5))
                     --LOG('estWait '..tostring(estWait)..' walk time '..tostring(walkTime))
