@@ -7397,8 +7397,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 dominanceRiskThreshold = 0.30,
                 
                 -- Ledger Model Normalizations
-                phaseNormDivisor = 2.0,
-                trendNormOffset = 0.5,
                 phaseNormDivisor = 3.0,
                 trendNormOffset = 0.4,
                 trendNormFactor = 0.5,
@@ -7408,7 +7406,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 ecoBaseWeight = 0.30,
                 ecoPhaseWeight = 0.20,
                 ecoTrendWeight = 0.20,
-                ecoExpansionWeight = 0.20,
                 ecoExpansionWeight = 0.35,
                 tacticalGreedMultiplier = 1.5,
                 assistBaseWeight = 0.10,
@@ -7491,7 +7488,6 @@ AIBrain = Class(RNGAIBrainClass) {
             local massStored = self:GetEconomyStored('MASS') or 0
             local massTrend = (self.EconomyOverTimeCurrent and self.EconomyOverTimeCurrent.MassTrendOverTime) or 0
             local countedGravityLabels = {}
-            local zoneCount = 0
             local totalLocalClaims = 0
             local brToMassFactor = cfg.brToMassFactor
 
@@ -7598,7 +7594,6 @@ AIBrain = Class(RNGAIBrainClass) {
                         local tSat = fmgr.TeamSaturationRatio or fmgr.SaturationRatio or 1
                         teamWeightedSat = teamWeightedSat + (tSat * fCount)
                         totalFactories = totalFactories + fCount
-                        zoneCount = zoneCount + 1
                     end
                 end
             end
@@ -7643,7 +7638,6 @@ AIBrain = Class(RNGAIBrainClass) {
             local saturationNeed = clamp(1.0 - brainIntel.AverageSaturation, 0, 1)
             local expansionPressure = gravityPressure * saturationNeed
             
-            local basePressure = math.max(threatPressure, expansionPressure)
             local combinedPressure = math.max(threatPressure, expansionPressure * (1.0 - clamp(totalLocalClaims, 0, cfg.localClaimsMaxClamp)))
 
             if economicDebugEnabled then
@@ -7758,10 +7752,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     newNaval = caps.Naval
                 end
                 
-                if economicDebugEnabled then
-                    local currentCapMass = caps and caps.Land or 0
-                    LOG(string.format("RNGLOG_EXPANSION_AUDIT | Intent: %.2f | Cap: %.2f | Final: %.2f", landIntent, currentCapMass, self.ProductionRatios.Land))
-                end
             end
 
             if economicDebugEnabled then
@@ -7801,22 +7791,26 @@ AIBrain = Class(RNGAIBrainClass) {
             ----------------------------------------------------------------------
             -- 8) CONSTRUCTION / ECO HEALTH TEMPERING
             ----------------------------------------------------------------------
-            local totalDemand = totalUnitAllocation + actualConstRatio + economyUpgradeSpend + engineerAssistRatio
             local trendFactor = clamp(1 + safeDiv(massTrend, math.max(1, totalIncome), 0), cfg.trendFactorMin, cfg.trendFactorMax)
             
+            -- Apply initial trend scaling before calculating final demand
+            economyUpgradeSpend = clamp(economyUpgradeSpend * trendFactor, ecoFloor, maxEcoSpend)
+            engineerAssistRatio = clamp(engineerAssistRatio * trendFactor, assistFloor, maxAssistSpend)
+
+            local totalDemand = totalUnitAllocation + actualConstRatio + economyUpgradeSpend + engineerAssistRatio
+            
+            -- Final squeeze pass: Trend scaling may have pushed totalDemand back over 1.0
             if totalDemand > 1.0 then
                 local overage = totalDemand - 1.0
                 local variableSum = economyUpgradeSpend + engineerAssistRatio
                 if variableSum > 0 then
+                    -- Proportional reduction of variable components to fit within the 1.0 hard cap
                     local scale = math.max(cfg.scaleFloor, (variableSum - overage) / variableSum)
                     economyUpgradeSpend = math.max(ecoFloor, economyUpgradeSpend * scale)
                     engineerAssistRatio = math.max(assistFloor, engineerAssistRatio * scale)
                 end
             end
-
-            economyUpgradeSpend = clamp(economyUpgradeSpend * trendFactor, ecoFloor, maxEcoSpend)
-            engineerAssistRatio = clamp(engineerAssistRatio * trendFactor, assistFloor, maxAssistSpend)
-            local leftoverAfterEco = math.max(0, 1.0 - totalUnitAllocation - actualConstRatio - economyUpgradeSpend)
+            local leftoverAfterEco = math.max(0, 1.0 - totalUnitAllocation - actualConstRatio - economyUpgradeSpend - engineerAssistRatio)
 
             ----------------------------------------------------------------------
             -- 9) FINAL ASSIGNMENT & BASE DISTRIBUTION
@@ -7845,6 +7839,8 @@ AIBrain = Class(RNGAIBrainClass) {
                     fmgr.BaseLandRatio  = (totalLandNeed > 0)  and (((fmgr.LandBuildRate or 0) * mod) / totalLandNeed) * newLand or 0
                     fmgr.BaseAirRatio   = (totalAirNeed > 0)   and (((fmgr.AirBuildRate or 0) * mod) / totalAirNeed) * newAir or 0
                     fmgr.BaseNavalRatio = (totalNavalNeed > 0) and (((fmgr.NavalBuildRate or 0) * mod) / totalNavalNeed) * newNaval or 0
+                else
+                    fmgr.BaseLandRatio, fmgr.BaseAirRatio, fmgr.BaseNavalRatio = 0, 0, 0
                 end
             end
             
