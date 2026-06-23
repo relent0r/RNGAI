@@ -59,6 +59,7 @@ local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local RNGINSERT = table.insert
 local RNGGETN = table.getn
 local RNGTableEmpty = table.empty
+local RNGSORT = table.sort
 local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 local StandardBrain = import("/lua/aibrain.lua").AIBrain
 
@@ -1931,6 +1932,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.CalculateMassMarkersRNG)
         self:ForkThread(self.AdjustEconomicAllocation)
         self:ForkThread(self.SendGameStartTaunt)
+        self:ForkThread(self.ZoneAllocationDebugThread)
         if self.RNGDEBUG then
             self:ForkThread(self.LogDataThreadRNG)
         end
@@ -5262,7 +5264,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
                 -- Process unpausing if we aren't in caution and have leftovers
                 if not massStateCaution and RNGGETN(unitTypePaused) > 0 then
-                    RNGLOG(string.format("MassManager (%s): Memory stack contains %d categories. Attempting recovery.", self.Nickname, RNGGETN(unitTypePaused)))
+                    --RNGLOG(string.format("MassManager (%s): Memory stack contains %d categories. Attempting recovery.", self.Nickname, RNGGETN(unitTypePaused)))
                     for i = RNGGETN(unitTypePaused), 1, -1 do
                         local v = unitTypePaused[i]
                         if v == 'ENGINEER' then
@@ -5311,7 +5313,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(v, TMLs, 'unpause', 'MASS')
                         end
-                        RNGLOG(string.format("MassManager (%s): Unpaused %s. Remaining in stack: %d", self.Nickname, tostring(v), i - 1))
+                        --RNGLOG(string.format("MassManager (%s): Unpaused %s. Remaining in stack: %d", self.Nickname, tostring(v), i - 1))
                         table.remove(unitTypePaused, i)
                         if self:EcoManagerMassStateCheck() then break end
                     end
@@ -5599,7 +5601,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
                 -- Process unpausing if we have recovery buffer and survivors in the stack
                 if not powerStateCaution and RNGGETN(unitTypePaused) > 0 then
-                    RNGLOG(string.format("PowerManager (%s): Memory stack contains %d categories. Attempting recovery.", self.Nickname, RNGGETN(unitTypePaused)))
+                    --RNGLOG(string.format("PowerManager (%s): Memory stack contains %d categories. Attempting recovery.", self.Nickname, RNGGETN(unitTypePaused)))
                     for i = RNGGETN(unitTypePaused), 1, -1 do
                         local v = unitTypePaused[i]
 
@@ -5664,7 +5666,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             local TMLs = GetListOfUnits(self, categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, false, false)
                             self:EcoSelectorManagerRNG(v, TMLs, 'unpause', 'ENERGY')
                         end
-                        RNGLOG(string.format("PowerManager (%s): Unpaused %s. Remaining in stack: %d", self.Nickname, tostring(v), i - 1))
+                        --RNGLOG(string.format("PowerManager (%s): Unpaused %s. Remaining in stack: %d", self.Nickname, tostring(v), i - 1))
                         table.remove(unitTypePaused, i)
                     end
                 end
@@ -6687,6 +6689,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         end
                         if unit.zoneid then
+                            if unit.zoneid then
+                                unit:SetCustomName(string.format("Zone: %s", tostring(unit.zoneid)))
+                            end
                             if not zoneIncome[unit.zoneid] then
                                 zoneIncome[unit.zoneid] = 0
                             end
@@ -7335,7 +7340,7 @@ AIBrain = Class(RNGAIBrainClass) {
         while self.Status ~= 'Defeat' do
             -- Extract tuning parameters into a unified, hot-swappable configuration structure
             local cfg = self.EcoConfig or {
-                debugEnabled = true,
+                debugEnabled = false,
                 threatFactorThreshold = 1.3,
                 brToMassFactor = 0.5,
                 mapWaterRatioThreshold = 0.45,
@@ -7372,10 +7377,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 maxShiftAirDefault = 0.75,
                 maxShiftNavalDefault = 0.75,
                 maxShiftLandSpam = 0.80,
-                spamEconomyUpgradeSpend = 0.05,
+                spamEconomyUpgradeSpend = 0.10,
                 spamEngineerAssistRatio = 0.05,
-                spamEconomyUpgradeSpend = 0.12,
-                spamEngineerAssistRatio = 0.08,
                 lowSatThreshold = 0.85,
                 lowSatPhaseThreshold = 2,
                 
@@ -7400,7 +7403,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 phaseNormDivisor = 3.0,
                 trendNormOffset = 0.4,
                 trendNormFactor = 0.5,
-                storageNormDivisor = 200.0,
                 
                 -- Discretionary Weight Distributions
                 ecoBaseWeight = 0.30,
@@ -7455,8 +7457,8 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EconomyAllocation.ActualConstructionRatio = actualConstRatio
 
             local highestPhase = math.max(brainIntel.LandPhase or 1, brainIntel.AirPhase or 1, brainIntel.NavalPhase or 1)
-            local economyUpgradeSpend = self.EconomyUpgradeSpendDefault or cfg.spamEconomyUpgradeSpend
-            local engineerAssistRatio = self.EngineerAssistRatioDefault or cfg.spamEngineerAssistRatio
+            local economyUpgradeSpend = self.EconomyUpgradeSpendDefault
+            local engineerAssistRatio = self.EngineerAssistRatioDefault
 
             -- Variable bounds derived from config
             local maxEcoSpend = (highestPhase == 3) and cfg.maxEcoSpendPhase3 or cfg.maxEcoSpendDefault
@@ -7604,9 +7606,9 @@ AIBrain = Class(RNGAIBrainClass) {
             ----------------------------------------------------------------------
             -- 2) ECONOMY & ASSIST BASELINE
             ----------------------------------------------------------------------
-            if (brainIntel.HighestPhase or 0) > cfg.phaseUpgradeThreshold then
+            if (highestPhase or 0) > cfg.phaseUpgradeThreshold then
                 if massTrend > cfg.phaseUpgradeMassTrendMin or massStored > cfg.phaseUpgradeMassStoredMin then
-                    economyUpgradeSpend = economyUpgradeSpend + (cfg.phaseUpgradeSpendFactor * (brainIntel.HighestPhase or 0))
+                    economyUpgradeSpend = economyUpgradeSpend + (cfg.phaseUpgradeSpendFactor * (highestPhase or 0))
                 end
             end
 
@@ -7624,9 +7626,6 @@ AIBrain = Class(RNGAIBrainClass) {
             elseif brainIntel.AverageSaturation < cfg.lowSatThreshold and highestPhase < cfg.lowSatPhaseThreshold and not ignoreZoneControl then
                 economyUpgradeSpend = cfg.spamEconomyUpgradeSpend
                 engineerAssistRatio = cfg.spamEngineerAssistRatio
-                -- When saturation is low (empty spots available), we still want a floor for scaling
-                economyUpgradeSpend = math.max(economyUpgradeSpend, cfg.spamEconomyUpgradeSpend)
-                engineerAssistRatio = math.max(engineerAssistRatio, cfg.spamEngineerAssistRatio)
             end
 
             ----------------------------------------------------------------------
@@ -7727,7 +7726,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 Air = newAir,
                 Naval = newNaval
             }
-            local landIntent = newLand
 
             ----------------------------------------------------------------------
             -- 6) THROUGHPUT CLAMPING (SAFE MODE ONLY)
@@ -7768,7 +7766,6 @@ AIBrain = Class(RNGAIBrainClass) {
 
             local phaseNorm   = clamp((highestPhase - 1) / cfg.phaseNormDivisor, 0, 1) 
             local trendNorm   = clamp(cfg.trendNormOffset + safeDiv(massTrend, math.max(1, totalIncome), 0) * cfg.trendNormFactor, 0, 1)
-            local storageNorm = clamp(massStored / cfg.storageNormDivisor, 0, 1)
 
             local ecoWeight = cfg.ecoBaseWeight + (cfg.ecoPhaseWeight * phaseNorm) + (cfg.ecoTrendWeight * trendNorm) + (cfg.ecoExpansionWeight * expansionPressure)
             if self.EcoManager and self.EcoManager.TacticalGreedAllowed and not brainIntel.PlayerRole.SpamPlayer then
@@ -7845,6 +7842,66 @@ AIBrain = Class(RNGAIBrainClass) {
             end
             
             if economicDebugEnabled then
+                ----------------------------------------------------------------------
+                -- ZONE STATUS AGGREGATION
+                ----------------------------------------------------------------------
+                local zoneStats = {
+                    Land = { Allied = 0, Hostile = 0, Contested = 0, Unoccupied = 0, Total = 0 },
+                    Naval = { Allied = 0, Hostile = 0, Contested = 0, Unoccupied = 0, Total = 0 }
+                }
+                
+                local landZones = (self.Zones and self.Zones.Land and self.Zones.Land.zones) or {}
+                for _, z in landZones do
+                    local status = z.status or 'Unoccupied'
+                    if zoneStats.Land[status] then
+                        zoneStats.Land[status] = zoneStats.Land[status] + 1
+                    end
+                    zoneStats.Land.Total = zoneStats.Land.Total + 1
+                end
+                
+                local navalZones = (self.Zones and self.Zones.Naval and self.Zones.Naval.zones) or {}
+                for _, z in navalZones do
+                    local status = z.status or 'Unoccupied'
+                    if zoneStats.Naval[status] then
+                        zoneStats.Naval[status] = zoneStats.Naval[status] + 1
+                    end
+                    zoneStats.Naval.Total = zoneStats.Naval.Total + 1
+                end
+
+                -- AI Understanding Heartbeat - Global Zone Status
+                LOG(string.format("ZONE_GLOBAL_SUMMARY | Land [A:%d, H:%d, C:%d, U:%d / %d] | Naval [A:%d, H:%d, C:%d, U:%d / %d]",
+                    zoneStats.Land.Allied, zoneStats.Land.Hostile, zoneStats.Land.Contested, zoneStats.Land.Unoccupied, zoneStats.Land.Total,
+                    zoneStats.Naval.Allied, zoneStats.Naval.Hostile, zoneStats.Naval.Contested, zoneStats.Naval.Unoccupied, zoneStats.Naval.Total))
+
+                -- Log Frontline Zone Details (Top 3 by threat for Land)
+                local frontlineList = {}
+                if im.CurrentFrontLineZones then
+                    for id, _ in pairs(im.CurrentFrontLineZones) do
+                        local z = landZones[id]
+                        if z then RNGINSERT(frontlineList, z) end
+                    end
+                    RNGSORT(frontlineList, function(a,b) return (a.enemylandthreat or 0) > (b.enemylandthreat or 0) end)
+                    
+                    for i = 1, math.min(3, RNGGETN(frontlineList)) do
+                        local z = frontlineList[i]
+                        local enemyIdx = currentEnemy and currentEnemy:GetArmyIndex()
+                        local distToEnemy = (z.enemystartdata and enemyIdx and z.enemystartdata[enemyIdx]) and math.sqrt(z.enemystartdata[enemyIdx].startdistance) or -1
+                        LOG(string.format("ZONE_FRONTLINE_DETAIL | ID: %d | Status: %s | E_LandThr: %.1f | F_AntiSurf: %.1f | ResVal: %d | TeamVal: %.2f | DistToEnemy: %.1f",
+                            z.id, z.status, z.enemylandthreat or 0, z.friendlyantisurfacethreat or 0, z.resourcevalue or 0, z.teamvalue or 0, distToEnemy))
+                    end
+                end
+
+                -- Log Top Land Zones by Strategic Score (to evaluate GetBestZoneForPlatoon inputs)
+                local landStrategicList = {}
+                for _, z in landZones do RNGINSERT(landStrategicList, z) end
+                RNGSORT(landStrategicList, function(a,b) return (a.staticcontrolscore or 0) > (b.staticcontrolscore or 0) end)
+                
+                for i = 1, math.min(3, RNGGETN(landStrategicList)) do
+                    local z = landStrategicList[i]
+                    LOG(string.format("ZONE_STRATEGIC_TOP | ID: %d | Status: %s | ControlScore: %.2f | RaidScore: %.2f | AAScore: %.2f",
+                        z.id, z.status, z.staticcontrolscore or 0, z.staticraidscore or 0, z.staticaascore or 0))
+                end
+                
                 LOG(string.format('RNGLOG: Pressure=%0.2f | Units=%0.2f | ProdAlloc=%0.2f | Leftover=%0.2f',combinedPressure, totalUnitAllocation, productionAllocation, leftover))
                 LOG(string.format('RNGLOG_ECO: UnitClaim=%.2f | Eco=%.2f | Assist=%.2f | Excess=%.2f',totalUnitAllocation, economyUpgradeSpend, engineerAssistRatio, excessAllocation))
                 LOG(string.format("AI: %s | Time: %s | Income: %.2f",tostring(self.Nickname), tostring(GetGameTimeSeconds()), totalIncome))
@@ -7860,8 +7917,180 @@ AIBrain = Class(RNGAIBrainClass) {
                 LOG(string.format("TUNING_PULSE | Time: %d | Inc: %.1f | Budg: %s | T(Me/En): %d/%d | Gaps(L/A/N): %.1f/%.1f/%.1f | Allocs(L/A/N/E/As): %.2f/%.2f/%.2f/%.2f/%.2f",
                     GetGameTimeSeconds(), totalIncome, self.EconomyAllocation.ConstructionBudgetStatus, highestPhase, (self.EnemyIntel.HighestPhase or 1),
                     landGap, airGap, navalGap,
-                    newLand, newAir, newNaval, economyUpgradeSpend, engineerAssistRatio))
+                    newLand, newAir, newNaval, economyUpgradeSpend, engineerAssistRatio)) 
+
+                -- Macro-level economic health indicators
+                LOG(string.format("MACRO_ECO_HEALTH | Time: %d | Income: %.1f | MassStored: %.1f | MassTrend: %.1f | ConstBudget: %s",
+                    GetGameTimeSeconds(), totalIncome, massStored, massTrend, self.EconomyAllocation.ConstructionBudgetStatus))
+                LOG(string.format("MACRO_ALLOC_FINAL | Time: %d | Land: %.2f | Air: %.2f | Naval: %.2f | EcoUp: %.2f | EngAssist: %.2f",
+                    GetGameTimeSeconds(), newLand, newAir, newNaval, economyUpgradeSpend, engineerAssistRatio))
+                LOG(string.format("MACRO_STRAT_GAPS | Time: %d | LandGap: %.1f | AirGap: %.1f | NavalGap: %.1f | LandRisk: %.2f | NavalRisk: %.2f",
+                    GetGameTimeSeconds(), landGap, airGap, navalGap, projectedLandRisk, projectedNavalRisk))
+                LOG(string.format("MACRO_PRESSURE | Time: %d | CombinedPressure: %.2f | IsHighPressure: %s | AvgSaturation: %.2f | TotalFactories: %d",
+                    GetGameTimeSeconds(), combinedPressure, tostring(isHighPressure), brainIntel.AverageSaturation, totalFactories))
+                
+                -- Micro-level indicators (how platoons are performing/influencing macro)
+                -- Summarize for MAIN base as a key indicator
+                local mainFmgr = self.BuilderManagers['MAIN'].FactoryManager
+                if mainFmgr then
+                    LOG(string.format("MICRO_MAIN_BASE | Time: %d | LocalDefFund: %.2f | ZoneThreatAss: %.2f | EcoGravity: %.2f | SatRatio: %.2f",
+                        GetGameTimeSeconds(), (mainFmgr.LocalDefenseFunding or 0), (mainFmgr.ZoneThreatAssignment or 0), (mainFmgr.EconomicGravity or 0), (mainFmgr.SaturationRatio or 0)))
+                end
+
+                -- Log for a few other active expansion bases if they exist
+                local loggedExpansions = 0
+                for _, bm in self.BuilderManagers do
+                    if bm.LocationType ~= 'MAIN' and bm.FactoryManager and bm.FactoryManager.LocationActive and loggedExpansions < 2 then
+                        local fmgr = bm.FactoryManager
+                        RNGLOG(string.format("MICRO_EXP_BASE | Time: %d | Base: %s | LocalDefFund: %.2f | ZoneThreatAss: %.2f | EcoGravity: %.2f | SatRatio: %.2f",
+                            GetGameTimeSeconds(), bm.LocationType, (fmgr.LocalDefenseFunding or 0), (fmgr.ZoneThreatAssignment or 0), (fmgr.EconomicGravity or 0), (fmgr.SaturationRatio or 0)))
+                        loggedExpansions = loggedExpansions + 1
+                    end
+                end
+
+                -- Log the overall production intent to see if it aligns with the macro strategy
+                RNGLOG(string.format("MICRO_PROD_INTENT | Time: %d | LandIntent: %.2f | AirIntent: %.2f | NavalIntent: %.2f",
+                    GetGameTimeSeconds(), self.ProductionIntent.Land, self.ProductionIntent.Air, self.ProductionIntent.Naval))
             end
+        end
+    end,
+
+    ZoneAllocationDebugThread = function(self)
+        ------------------------------------------------------------------------
+        -- DEBUG VISUALIZATION GUIDE (ZoneAllocationDebugThread)
+        ------------------------------------------------------------------------
+        -- GLOBAL HUD (Rendered as concentric rings centered at 'MAIN' base):
+        --   • Purple Ring  = Engineer Assist Ratio (self.EngineerAssistRatio)
+        --   • Orange Ring  = Economy Upgrade Spend (self.EconomyUpgradeSpend)
+        --   • White Ring   = Actual Construction Ratio (EconomyAllocation)
+        --
+        -- PER-BASE STATUS HALOS (Concentric rings around each base position):
+        --   • Orange-Red Outer Ring = Frontline Base (SecurityDepth == 0)
+        --   • Dark Gray Inner Ring  = Secured Backline Base Anchor
+        --   • Pure Red Ring         = Zone Threat Assignment (Calculated Risk)
+        --   • Pure Yellow Ring      = Economic Gravity (Resource "Pull" Value)
+        --
+        -- STRATEGIC SPOKE ARRAY (Lines radiating from base center coordinates):
+        --   • NORTH Line (Green)    = Base Land Ratio Allocation
+        --   • EAST Line  (Cyan)     = Base Air Ratio Allocation
+        --   • SOUTH Line (Blue)     = Base Naval Ratio Allocation
+        --   • WEST Line  (White)    = Production Modifier (Calculated Priority)
+        ------------------------------------------------------------------------
+        -- Wait until global structures exist
+        while not self.ProductionRatios or not self.EconomyAllocation or not self.IntelManager.ProductionZones do
+            coroutine.yield(10)
+        end
+
+        local aiBrain = self.Brain
+        local logTimer = 0
+
+        while aiBrain.Result ~= "defeat" do
+            -- 1. TRACK GLOBAL VALUES
+            local actualConstRatio = self.EconomyAllocation.ActualConstructionRatio or 0
+            local engineerAssist = self.EngineerAssistRatio or 0
+            local ecoUpgrade = self.EconomyUpgradeSpend or 0
+
+            -- Find main base position to anchor global stats visually
+            local mainPos = self.BuilderManagers['MAIN'] and self.BuilderManagers['MAIN'].Position or nil
+
+            if mainPos then
+                -- Concentric rings at the main base for macro economic tracking
+                DrawCircle(mainPos, engineerAssist * 15, 'ffb266ff') -- Purple: Assist Ratio
+                DrawCircle(mainPos, ecoUpgrade * 15, 'ffffa500')     -- Orange: Upgrade Spend
+                DrawCircle(mainPos, actualConstRatio * 15, 'ffffff') -- White: Actual Construction
+            end
+
+            -- 2. PER-BASE FACTORY MANAGER ALLOCATIONS & STRATEGIC THREATS
+            for id, v in self.BuilderManagers do
+                local fmgr = v.FactoryManager
+                if fmgr and fmgr.LocationActive then
+                    local zone = self.Zones.Land.zones[v.ZoneID]
+                    local drawPos = zone and zone.pos or v.Position
+
+                    if drawPos then
+                        -- Base Anchor Status Ring
+                        if fmgr.SecurityDepth == 0 then
+                            DrawCircle(drawPos, 2.5, 'ffFF5500') -- Jagged Orange-Red for Frontline Base
+                        else
+                            DrawCircle(drawPos, 2.0, 'ff444444') -- Gray for Deep Backline Base
+                        end
+
+                        ------------------------------------------------------------
+                        -- INPUT THREAT & GRAVITY METRICS (Concentric Base Rings)
+                        ------------------------------------------------------------
+                        -- Zone Threat Assignment: Red Ring (1 radius unit = 1 threat value, capped for view)
+                        local threatRadius = fmgr.ZoneThreatAssignment or 0
+                        if threatRadius > 0 then
+                            DrawCircle(drawPos, math.min(threatRadius, 40), 'ffFF0000')
+                        end
+
+                        -- Economic Gravity (The Pull): Yellow Ring
+                        local gravityRadius = (fmgr.EconomicGravity or 0) * 0.2
+                        if gravityRadius > 0 then
+                            DrawCircle(drawPos, math.min(gravityRadius, 40), 'ffFFFF00')
+                        end
+
+                        ------------------------------------------------------------
+                        -- STRATEGIC OUTPUTS (Spoke Array)
+                        ------------------------------------------------------------
+                        local scale = 20 
+
+                        -- Land Ratio -> Green Line pointing NORTH (Z-)
+                        if (fmgr.BaseLandRatio or 0) > 0 then
+                            local landEnd = Vector(drawPos[1], drawPos[2], drawPos[3] - (fmgr.BaseLandRatio * scale))
+                            DrawLinePop(drawPos, landEnd, 'ff00ff00')
+                        end
+
+                        -- Air Ratio -> Cyan Line pointing EAST (X+)
+                        if (fmgr.BaseAirRatio or 0) > 0 then
+                            local airEnd = Vector(drawPos[1] + (fmgr.BaseAirRatio * scale), drawPos[2], drawPos[3])
+                            DrawLinePop(drawPos, airEnd, 'ff00ffff')
+                        end
+
+                        -- Naval Ratio -> Blue Line pointing SOUTH (Z+)
+                        if (fmgr.BaseNavalRatio or 0) > 0 then
+                            local navalEnd = Vector(drawPos[1], drawPos[2], drawPos[3] + (fmgr.BaseNavalRatio * scale))
+                            DrawLinePop(drawPos, navalEnd, 'ff0000ff')
+                        end
+
+                        -- Production Modifier (Calculated Policy) -> White Line pointing WEST (X-)
+                        -- Allows visual comparison: Intent (West Line) vs Allocations (North/East/South Lines)
+                        if (fmgr.ProductionModifier or 0) > 0 then
+                            local modEnd = Vector(drawPos[1] - (fmgr.ProductionModifier * 15), drawPos[2], drawPos[3])
+                            DrawLinePop(drawPos, modEnd, 'ffffffff')
+                            DrawCircle(modEnd, 0.5, 'ffffffff')
+                        end
+                    end
+                end
+            end
+
+            -- 3. THROTTLED LOGGING (Once every 30 ticks / ~3 seconds)
+            logTimer = logTimer + 1
+            if logTimer >= 30 then
+                logTimer = 0
+                LOG("=== RNGAI ECONOMY & THREAT ALLOCATION TICK ===")
+                LOG(string.format("GLOBAL | Land: %.2f | Air: %.2f | Naval: %.2f | Assist: %.2f | Upgrade: %.2f | Const: %.2f",
+                    self.ProductionRatios.Land or 0, self.ProductionRatios.Air or 0, self.ProductionRatios.Naval or 0,
+                    engineerAssist, ecoUpgrade, actualConstRatio))
+                
+                for id, v in self.BuilderManagers do
+                    local fmgr = v.FactoryManager
+                    if fmgr and fmgr.LocationActive then
+                        LOG(string.format("  ZONE %s | Ratios -> L: %.2f A: %.2f N: %.2f | Mod: %.2f | Threat: %.1f | Gravity: %.1f | Depth: %d",
+                            tostring(v.ZoneID), 
+                            fmgr.BaseLandRatio or 0, fmgr.BaseAirRatio or 0, fmgr.BaseNavalRatio or 0,
+                            fmgr.ProductionModifier or 1.0,
+                            fmgr.ZoneThreatAssignment or 0,
+                            fmgr.EconomicGravity or 0,
+                            fmgr.SecurityDepth or 0))
+                        if v.LocationType ~= 'MAIN' and fmgr.LocationActive then
+                            LOG(string.format("RNGLOG_STARVATION_AUDIT | Zone: %s | BuildRate: %d | Mod: %.2f | FinalRatio: %.4f", tostring(v.ZoneID), fmgr.LandBuildRate or 0, (fmgr.ProductionModifier or 1.0), fmgr.BaseLandRatio or 0))
+                        end
+                    end
+                end
+            end
+
+            coroutine.yield(1)
         end
     end,
 

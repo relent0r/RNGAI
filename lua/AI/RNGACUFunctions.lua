@@ -218,6 +218,7 @@ if cdr.Active then
 
                 -- Condition A: No support platoon exists, or it has fallen below required capability thresholds
                 local supportNeedsReplenishment = not hasValidSupport or (supportSurfaceThreat < minSurfaceThreat) or (supportAirThreat < minAirThreat)
+                --LOG(string.format("RNGLOG ACU_Audit: DistSq=%f, EnemyThr=%f, FriendThr=%f, SuppSurf=%f", cdr.DistanceToHome, cdr.CurrentEnemyThreat, cdr.CurrentFriendlyThreat, supportSurfaceThreat))
 
                 if (cdr.Confidence < 3.5 or cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat or supportNeedsReplenishment) and (gameTime - 20) > lastPlatoonCall then
                     cdr.PlatoonHandle:LogDebug(string.format('ACU escort requirements unfulfilled. Calling support. Surface: %d/%d, Air: %d/%d', supportSurfaceThreat, minSurfaceThreat, supportAirThreat, minAirThreat))

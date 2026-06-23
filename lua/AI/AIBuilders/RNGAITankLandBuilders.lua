@@ -724,7 +724,7 @@ BuilderGroup {
             LocationType = 'LocationType',
             Defensive = true,
             SearchRadius = 'BaseEnemyArea',
-            StateMachine = 'LandCombat'
+            StateMachine = 'ZoneControl'
         },
     },
     Builder {

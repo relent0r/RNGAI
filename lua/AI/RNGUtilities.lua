@@ -8497,7 +8497,17 @@ function GetZoneIncomeValue(zone, zoneSelectionType, enemyStartClose, allyStartC
         enemyWeight = 0.2
         resourceValueWeight = 1.5
     end
-    local resourceValueBonus = (zone.resourcevalue or 0 ) * 0.5
+    local rawResource = zone.resourcevalue or 0
+    
+    -- If it's an enemy start location and they haven't built infrastructure yet, suppress it
+    if zoneSelectionType == 'raid' and enemyStartClose then
+        rawResource = math.max(0, rawResource - 3.5)
+    end
+    if zoneSelectionType == 'raid' and allyStartClose then
+        rawResource = math.max(0, rawResource - 5.5)
+    end
+
+    local resourceValueBonus = rawResource * 0.5
     local incomeScore = zone.zoneincome.selfincome * selfWeight +
         zone.zoneincome.allyincome * allyWeight +
         zone.zoneincome.enemyincome * enemyWeight +
@@ -8536,7 +8546,7 @@ function GetZoneIncomeValue(zone, zoneSelectionType, enemyStartClose, allyStartC
         end
     end
 
-    return math.min(math.max(incomeScore, 0), 50)
+    return math.min(math.max(incomeScore, 0), 30)
 end
 
 function GetDistanceValue(mapDiagonalSq, zone, platoonPosition, enemyPosition, ownStartDistance)
@@ -8588,7 +8598,7 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
     local score
     local allocated = 0
     if zone.platoonallocations then
-        if zoneSelectionType == 'aadefense' then
+        if zoneSelectionType == 'aadefense' or zoneSelectionType == 'airsurface' then
             allocated = zone.platoonallocations.friendlyantiairallocatedthreat or 0
         else
             allocated = zone.platoonallocations.friendlydirectfireallocatedthreat or 0
@@ -8597,7 +8607,7 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
 
     -- Apply allocation to the friendly total
     if (zone.status == 'Allied' or zone.status == 'Contested') and zoneSelectionType ~= 'raid' then
-        friendly = friendly + (allocated * 0.6)
+        friendly = friendly + (allocated * 0.5) -- Slightly reduce the impact of already allocated units to encourage more spread.
     end
 
     -- Fix: Use the correct platoon threat property
@@ -8651,7 +8661,7 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
     if zoneSelectionType == 'airsurface' then
         -- Allow gunships to appreciate their own strength more
         cappedFriendly = math.min(friendly, enemy * 4.0) 
-    else
+    else -- control, aadefense, raid
         cappedFriendly = math.min(friendly, enemy * 1.5)
     end
     local ratio = cappedFriendly / enemy
@@ -8662,7 +8672,7 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
         score = math.min(math.max((ratio - 0.5), 0), 2.0)
     end
 
-    if friendly < 10 then
+    if friendly < 10 and zoneSelectionType ~= 'raid' then -- Don't give low threat bonus to raiders, they want easy targets.
         local lowThreatBonus = (10 - friendly) * 0.1  -- up to +1
         score = score + lowThreatBonus
     end
@@ -8672,14 +8682,14 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
         enemy = zone.enemyairthreat or 0
         friendly = zone.friendlylandantiairthreat or 0
     
-        -- Only penalize if we have more than double the enemy air threat
-        -- This provides a "Safety Buffer" for gunship spikes.
-        
-
-        if friendly > (enemy * 2.0) + 5 then 
-            local excessRatio = (friendly - (enemy * 2.0)) / (enemy + 5)
-            -- Lower multiplier (0.8) and lower cap (2.0)
-            -- This is enough to discourage idling, but not enough to ignore a threat.
+        -- Only penalize if we have more than 1.5x the enemy air threat + a small buffer.
+        -- This provides a "Safety Buffer" for AA, but still discourages massive overstacking.
+        local aaSafetyBuffer = 5.0 -- Small buffer to avoid penalizing for minor excess
+        if friendly > (enemy * 1.5) + aaSafetyBuffer then 
+            local excessRatio = (friendly - (enemy * 1.5) - aaSafetyBuffer) / (enemy + aaSafetyBuffer)
+            -- Moderate multiplier (1.0) and cap (3.0)
+            -- This is enough to discourage idling, but not enough to ignore a critical threat.
+            -- The penalty is now more sensitive to actual excess.
             local saturationCap = (enemy == 0) and 50.0 or 2.0
             local overcommitPenalty = math.min(excessRatio * 0.8, saturationCap) 
             score = score - overcommitPenalty
@@ -8688,14 +8698,14 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
             local assetProtectionBonus = (zone.teamvalue or 0) * 0.75
             score = score + assetProtectionBonus
         end
-    elseif zoneSelectionType == 'airsurface' then
-        -- Gunships shouldn't be penalized as heavily for overcommitting
-        if friendly > enemy * 4.0 then 
-            -- Only penalize if we are truly triple the enemy strength
-            local excessRatio = (friendly - enemy * 4.0) / enemy
-            score = score - math.min(excessRatio * 0.4, 1.0)
+    elseif zoneSelectionType == 'airsurface' then -- Gunships
+        -- Gunships should be more willing to overcommit if it means clearing a path or securing a kill.
+        -- Penalty only if friendly is more than 5x enemy.
+        if friendly > enemy * 5.0 then 
+            local excessRatio = (friendly - enemy * 5.0) / enemy
+            score = score - math.min(excessRatio * 0.2, 0.5) -- Very light penalty
         end
-    elseif friendly > enemy * 1.5 then
+    elseif friendly > enemy * 1.5 then -- control, raid (default)
         local excessRatio = (friendly - enemy * 1.5) / enemy
         local overcommitPenalty = math.min(excessRatio * 1.2, 4.0) -- up to -1
         score = score - overcommitPenalty
@@ -8939,34 +8949,32 @@ function GetZoneFlankRiskValue(zone)
     return math.min(resourceValue, 6) * 0.25  -- range: 0 to 1.5
 end
 
-function GetRaidFlankBonusValue(zone, baselineAngleDeg, flankMaxBonus)
-    flankMaxBonus = flankMaxBonus or 2.0
-
-    -- Find closest enemy start angle from the zone's cached data
-    local enemyBaseAngleDeg = nil
-    local minDist
-
-    for _, v in pairs(zone.enemystartdata or {}) do
-        if not minDist or v.startdistance < minDist then
-            minDist = v.startdistance
-            enemyBaseAngleDeg = v.startangle  -- already precomputed!
-        end
-    end
-
-    if not enemyBaseAngleDeg then
+function GetRaidFlankBonusValue(zone, aiBrain, enemyIndex, mapDiagonalSq)
+    local enemyData = zone.enemystartdata and zone.enemystartdata[enemyIndex]
+    if not enemyData or not enemyData.startangle or not enemyData.startdistance then
         return 0
     end
 
-    -- Calculate angular difference (0 to 180)
-    local diff = modulo(math.abs(enemyBaseAngleDeg - baselineAngleDeg), 360)
-    if diff > 180 then
-        diff = 360 - diff
+    local enemyStart = aiBrain.EnemyIntel.EnemyStartLocations[enemyIndex] and aiBrain.EnemyIntel.EnemyStartLocations[enemyIndex].Position
+    if not enemyStart or not aiBrain.BrainIntel.StartPos then
+        return 0
     end
 
-    -- Flank bonus peaks at 90 degrees difference
-    local bonus = math.sin(math.rad(diff)) * flankMaxBonus
+    -- 1. Calculate the main conflict axis heading (From Player to Enemy Base)
+    local mapAxisAngle = GetAngleToPosition(aiBrain.BrainIntel.StartPos, enemyStart)
 
-    return bonus
+    -- 2. Calculate relative angular deviation from that axis line
+    local relativeAngle = enemyData.startangle - mapAxisAngle
+    local angularBonus = math.abs(math.sin(math.rad(relativeAngle)))
+
+    -- 3. Proximity scaling to ensure we prefer enemy-side flanks over home-side flanks
+    -- Using the opponent's max possible squared distance baseline to protect against VDist3Sq traps
+    -- (Assuming a standard 512x512 map max squared distance or dynamic max)
+    local maxDistanceSq = mapDiagonalSq or 524288
+    local proximityFactor = 1.0 - math.min(1.0, enemyData.startdistance / maxDistanceSq)
+
+    -- 4. Combine: High value only if the zone is wide of the lane AND close to the enemy side
+    return angularBonus * proximityFactor
 end
 
 function GetAdaptiveStatusValue(zone, intelmanager)

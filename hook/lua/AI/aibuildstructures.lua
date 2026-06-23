@@ -42,13 +42,13 @@ function AIBuildBaseTemplateOrderedRNG(aiBrain, builder, buildingType , closeToB
                 for m,bString in bType[1] do
                     if bString == buildingType then
                         for n,position in bType do
-                            if n > 1 and CanBuildStructureAt(aiBrain, whatToBuild, {position[1], GetSurfaceHeight(position[1], position[2]), position[2]}) then
+                            local checkPos = Vector(position[1], GetSurfaceHeight(position[1], position[2]), position[2])
+                            if n > 1 and CanBuildStructureAt(aiBrain, whatToBuild, checkPos) then
                                 if buildingType == 'MassStorage' then
                                     AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false, true)
                                 else
                                     AddToBuildQueueRNG(aiBrain, builder, whatToBuild, position, false)
                                 end
-                                table.remove(bType,n)
                                 return
                             end
                         end 
