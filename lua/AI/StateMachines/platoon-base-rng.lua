@@ -16,10 +16,44 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
 
     ---@param self AIPlatoon
     OnDestroy = function(self)
+        self:DeregisterPlatoon(self:GetBrain())
         if self.BuilderHandle then
             self.BuilderHandle:RemoveHandle(self)
         end
         self.Trash:Destroy()
+    end,
+
+    RegisterPlatoon = function(self, aiBrain)
+        if self.PlatoonData and self.PlatoonData.StateMachine then
+            local stateMachine = self.PlatoonData.StateMachine
+            if stateMachine == 'ZoneControl' then
+                local zoneType = self.PlatoonData.ZoneType or 'NoZoneType'
+                local currentCounters = aiBrain.PlatoonRegistry and aiBrain.PlatoonRegistry.Counters
+                local platoonRole = stateMachine .. '_' .. zoneType
+                if currentCounters then
+                    if not currentCounters[platoonRole] then
+                        currentCounters[platoonRole] = 0
+                    end
+                    currentCounters[platoonRole] = math.max(0, currentCounters[platoonRole] + 1)
+                end
+                --LOG('Current Count is '..tostring(currentCounters[platoonRole]))
+            end
+        end
+    end,
+
+    DeregisterPlatoon = function(self, aiBrain)
+        if self.PlatoonData and self.PlatoonData.StateMachine then
+            local stateMachine = self.PlatoonData.StateMachine
+            if stateMachine == 'ZoneControl' then
+                local zoneType = self.PlatoonData.ZoneType or 'NoZoneType'
+                local currentCounters = aiBrain.PlatoonRegistry and aiBrain.PlatoonRegistry.Counters
+                local platoonRole = stateMachine .. '_' .. zoneType
+                if currentCounters and currentCounters[platoonRole] then
+                    currentCounters[platoonRole] = math.max(0, currentCounters[platoonRole] - 1)
+                end
+                --LOG('Count after deregister is '..tostring(currentCounters[platoonRole]))
+            end
+        end
     end,
 
     ---@param self AIPlatoon
@@ -27,6 +61,10 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         local units = self:GetPlatoonUnits()
         if not self['rngdata'] then
             self['rngdata'] = {}
+        end
+        if not self['rngdata'].PlatoonRegistered then
+            self:RegisterPlatoon(self:GetBrain())
+            self['rngdata'].PlatoonRegistered = true
         end
         if not self['rngdata'].UIDSet then
             local uid = string.format("%d_%d", GetGameTick(), Random(1000, 9999))

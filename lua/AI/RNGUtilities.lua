@@ -8607,7 +8607,7 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
 
     -- Apply allocation to the friendly total
     if (zone.status == 'Allied' or zone.status == 'Contested') and zoneSelectionType ~= 'raid' then
-        friendly = friendly + (allocated * 0.5) -- Slightly reduce the impact of already allocated units to encourage more spread.
+        friendly = friendly + (allocated * 0.7) -- Slightly reduce the impact of already allocated units to encourage more spread.
     end
 
     -- Fix: Use the correct platoon threat property
@@ -8707,10 +8707,16 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
         end
     elseif friendly > enemy * 1.5 then -- control, raid (default)
         local excessRatio = (friendly - enemy * 1.5) / enemy
-        local overcommitPenalty = math.min(excessRatio * 1.2, 4.0) -- up to -1
+        local maxPenaltyCap = (zoneSelectionType == 'raid') and 20.0 or 8.0
+        local overcommitPenalty = math.min(excessRatio * 1.2, maxPenaltyCap) -- up to -1
         score = score - overcommitPenalty
     end
-    return math.max(score, -2.0)
+    local floorClamp = -8.0
+    if zoneSelectionType == 'raid' then
+        floorClamp = -20.0
+    end
+    
+    return math.max(score, floorClamp)
 end
 
 GetZonePressureValue = function(enemyStartClose, zone, platoon, zonetype)

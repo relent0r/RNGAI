@@ -39,6 +39,26 @@ local InitialBuildQueueComplete = function(self, aiBrain, builderManager)
     return 820
 end
 
+local RaidPlatoonIncrement = function(self, aiBrain)
+    local registry = aiBrain.PlatoonRegistry
+    local currentCounters = registry and registry.Counters
+
+    if not currentCounters then
+        return 700
+    end
+
+    local controlCount = currentCounters['ZoneControl_control'] or 0
+    local noZoneCount = currentCounters['ZoneControl_NoZoneType'] or 0
+    local raidCount = currentCounters['ZoneControl_raid'] or 0
+
+    -- Evaluates total active ZoneControl state machines (both variants)
+    if (controlCount + noZoneCount) > 3 and raidCount < 2 then
+        return 850
+    end
+
+    return 700
+end
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI TankLandBuilder Small',
     BuildersType = 'FactoryBuilder',
@@ -1051,11 +1071,11 @@ BuilderGroup {
         BuilderName = 'RNGAI Mass Raid Small',                              -- Random Builder Name.
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 700,                                                          -- Priority. 1000 is normal.
-        PriorityFunction = NoSmallFrys,
+        PriorityFunction = RaidPlatoonIncrement,
         InstanceCount = 2,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 3, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.SCOUT  } },
+            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.SCOUT  } },
         },
         BuilderData = {
             StateMachine = 'ZoneControl',

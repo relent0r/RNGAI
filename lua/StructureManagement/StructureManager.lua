@@ -1162,9 +1162,9 @@ StructureManager = Class {
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
                 -- TUNING 1: The divisor (10) determines how aggressively gravity raises the ceiling.
                 -- TUNING 2: The clamp max (33) sets the absolute highest mass income requirement possible.
-                local maxCeiling = math.max(18, math.min(18 + (rawGravity / 10), 28))
-                local scaledIncomeTarget = 18 + (1.0 - avgSat) * (maxCeiling - 18)
-                --LOG(string.format("RNGLOG_UPGRADE_DYNAMICS | Gravity: %.2f | Sat: %.2f | TargetIncome23: %.2f | TargetIncome15: %.2f", rawGravity, avgSat, scaledIncomeTarget * multiplier, 15 * multiplier))
+                local baseCeiling = math.max(18, math.min(18 + (rawGravity / 10), 28))
+                local scaledIncomeTarget = baseCeiling + (1.0 - avgSat) * (28 - baseCeiling)
+                LOG(string.format("RNGLOG_UPGRADE_DYNAMICS | Gravity: %.2f | Sat: %.2f | TargetIncome23: %.2f | TargetIncome15: %.2f", rawGravity, avgSat, scaledIncomeTarget * multiplier, 15 * multiplier))
                 local distanceByPass = (aiBrain.EnemyIntel.ClosestEnemyBase and aiBrain.EnemyIntel.ClosestEnemyBase > 422500 ) and actualMexIncome >= (15 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0
                 if (not aiBrain.RNGEXP and (actualMexIncome > (scaledIncomeTarget * multiplier) or aiBrain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier)))
                 or aiBrain.RNGEXP and (actualMexIncome > (18 * multiplier) or aiBrain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier)) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0 
@@ -1177,7 +1177,9 @@ StructureManager = Class {
                         if (distanceByPass or MassEfficiency >= 1.015 or aiBrain.EnemyIntel.LandPhase > 1 and MassEfficiency >= 0.7) and (EnergyEfficiency >= 0.8 or ((distanceByPass or aiBrain.EnemyIntel.LandPhase > 1) and EnergyEfficiency >= 0.6)) then
                             local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
-                                --LOG('AI '..tostring(aiBrain.Nickname)..' is upgrading its land factory mass efficiency at the time is '..tostring(MassEfficiency)..' over time is '..tostring(massEfficiencyOverTime))
+                                LOG('AI '..tostring(aiBrain.Nickname)..' is upgrading its land factory mass efficiency at the time is '..tostring(MassEfficiency)..' over time is '..tostring(massEfficiencyOverTime))
+                                local isExp = aiBrain.RNGEXP and true or false
+                                LOG(string.format("RNGLOG_UPGRADE_EXEC | MexIncome: %.2f | EnemyCount: %d | LandPhase: %d | DistBypass: %s | EXP: %s", actualMexIncome or 0, aiBrain.EnemyIntel.EnemyCount or 0, aiBrain.EnemyIntel.LandPhase or 0, tostring(distanceByPass), tostring(isExp)))
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                                 t2LandPass = true
                                 coroutine.yield(20)

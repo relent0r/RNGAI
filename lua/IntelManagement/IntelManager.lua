@@ -504,7 +504,7 @@ IntelManager = Class {
         self:ForkThread(self.StructureRequestThread)
         self:ForkThread(self.IntelGridThreatThread, self.Brain)
         self:ForkThread(self.ZoneMetricUpdateThread)
-        self:ForkThread(self.ZoneRenderDebugThread)
+        --self:ForkThread(self.ZoneRenderDebugThread)
         self.Brain:ForkThread(self.Brain.BuildScoutLocationsRNG)
         --self:ForkThread(self.DrawZoneArmyValue)
         if self.Debug then
@@ -528,7 +528,6 @@ IntelManager = Class {
             local scoutPosTable = self:GetDefensiveCurveZones(zones, mainZoneID, nil)
             self.ScoutingCurveZones = scoutPosTable
             --[[
-            LOG('scoutPosTable has '..tostring(table.getn(scoutPosTable))..' positions')
             local counter = 0
             while counter < 150 do
                 coroutine.yield(2)
@@ -538,6 +537,7 @@ IntelManager = Class {
                 counter = counter + 1
             end
             ]]
+            
         end
     end,
 
@@ -1377,7 +1377,8 @@ IntelManager = Class {
                 adjacencyThreatWeight = 0.9,
                 encirclementWeight = 2.0,
                 zoneHomeWeight = 1.0,
-                zoneFlankRiskWeight = 1.3
+                zoneFlankRiskWeight = 1.3,
+                frontlineWeight = 2.5,     -- High gravity for main combat groups
             },
             raid = {
                 zoneDistanceWeight = 0.5,
@@ -1391,6 +1392,7 @@ IntelManager = Class {
                 adjacencyThreatWeight = 0.8,
                 zonePressureWeight = 1.2,
                 zoneFlankWeight = 2.5,
+                frontlineBypassWeight = -1.5, -- Discourages raw raiding straight into a locked front wall
             },
             aadefense = {
                 teamValue = 0.3,
@@ -1438,6 +1440,7 @@ IntelManager = Class {
             end
             local zones = aiBrain.Zones.Land.zones
             local intel = self.EnemyIntel.EnemyThreatCurrent
+            local currentFrontlines = self.CurrentFrontLineZones or {}
     
             -- 1. BFS PHASE: Path-Distance Mapping
             -- This determines homeDistanceValue and reachability via edges
@@ -1475,11 +1478,17 @@ IntelManager = Class {
                 -- homeDistanceValue is replaced by BFS path depth.
                 local homePathDist = (homeDepths[id] or MaxBfsDepth) / MaxBfsDepth
                 local enemyDistValue = (v.enemystartdata and v.enemystartdata[enemyArmyIndex]) and (v.enemystartdata[enemyArmyIndex].startdistance / mapDiagonalSq) or 1.0
+
+                local isFrontlineNode = currentFrontlines[id] and 1.0 or 0.0
+                local maxMapIncome = self.MapMaximumValues.MaximumResourceValue
+                if not maxMapIncome or maxMapIncome <= 0 then
+                    maxMapIncome = 1.0
+                end
     
                 -- C. RUtils Calculations (Leveraging your snippet)
                 local controlValue = RUtils.GetAdaptiveStatusValue(v, self) * aggressionScale
-                local resourceValueControl = RUtils.GetZoneIncomeValue(v, 'control', enemyStartClose, allyStartClose)
-                local resourceValueRaid = RUtils.GetZoneIncomeValue(v, 'raid', enemyStartClose, allyStartClose)
+                local resourceValueControl = RUtils.GetZoneIncomeValue(v, 'control', enemyStartClose, allyStartClose) / maxMapIncome
+                local resourceValueRaid = RUtils.GetZoneIncomeValue(v, 'raid', enemyStartClose, allyStartClose) / maxMapIncome
                 local zoneHomeValue = RUtils.GetZoneHomeBiasValue(allyStartClose, enemyStartClose, v)
                 local encirclementValue = RUtils.GetZoneEncirclementValue(v) * aggressionScale
                 local adjacencyValue = RUtils.GetAdjacencyThreatBonus(self, v, statusValueTable, 'Surface') * aggressionScale
@@ -1491,7 +1500,7 @@ IntelManager = Class {
                 local airUtilityValue = RUtils.GetZoneAirSurfaceUtility(v, teamValueBonus)
                 local airSurfaceViabilityValue = RUtils.GetZoneAirSurfaceViability(self.MapMaximumValues.MaximumResourceValue, v)
                 local airExposureValue = RUtils.GetZoneExposureValue(myStart, enemyStart, v.pos, mapDiagonalSq)
-    
+
                 -- D. CALCULATE STATIC SCORES
                 -- Note: We omit distanceValue, threatValue, and zonePressureValue (calculated by platoon)
                 v.staticcontrolscore = (
@@ -1504,7 +1513,8 @@ IntelManager = Class {
                     teamValueBonus * weightTable.control.teamValueWeight + 
                     adjacencyValue * weightTable.control.adjacencyThreatWeight + 
                     encirclementValue * weightTable.control.encirclementWeight -
-                    zoneFlankRisk * weightTable.control.zoneFlankRiskWeight
+                    zoneFlankRisk * weightTable.control.zoneFlankRiskWeight +
+                    isFrontlineNode * weightTable.control.frontlineWeight
                 )
     
                 -- D2. STATIC RAID SCORE
@@ -1515,7 +1525,8 @@ IntelManager = Class {
                     controlValue * weightTable.raid.zoneStatusWeight +
                     contiguityValue * weightTable.raid.contiguityWeight - 
                     teamValueBonus * weightTable.raid.teamValueWeight +
-                    zoneFlankRaidBonus * weightTable.raid.zoneFlankWeight
+                    zoneFlankRaidBonus * weightTable.raid.zoneFlankWeight +
+                    isFrontlineNode * weightTable.aadefense.frontlineWeight
                 )
     
                 -- D3. STATIC AA DEFENSE SCORE
@@ -1560,14 +1571,14 @@ IntelManager = Class {
                     LOG(string.format("    > Encircle:     %.2f * %.1f = %.2f", encirclementValue, weightTable.control.encirclementWeight, encirclementValue * weightTable.control.encirclementWeight))
                     LOG(string.format("    > FlankRisk:    -%.2f * %.1f = -%.2f", zoneFlankRisk, weightTable.control.zoneFlankRiskWeight, zoneFlankRisk * weightTable.control.zoneFlankRiskWeight))
                     
-                    --WARN(string.format("  [RAID SCORE: %.3f]", v.staticraidscore))
-                    --LOG(string.format("    > EnemyDist:    (1.0 - %.2f) * %.1f = %.2f", enemyDistValue, weightTable.raid.enemyDistanceWeight, (1.0 - enemyDistValue) * weightTable.raid.enemyDistanceWeight))
-                    --LOG(string.format("    > HomeBfsDist:  %.2f * %.1f = %.2f", homePathDist, weightTable.raid.homeDistanceWeight, homePathDist * weightTable.raid.homeDistanceWeight))
-                    --LOG(string.format("    > ZoneIncome:   %.2f * %.1f = %.2f", resourceValueRaid, weightTable.raid.incomeValueWeight, resourceValueRaid * weightTable.raid.incomeValueWeight))
-                    --LOG(string.format("    > AdaptiveStat: %.2f * %.1f = %.2f", controlValue, weightTable.raid.zoneStatusWeight, controlValue * weightTable.raid.zoneStatusWeight))
-                    --LOG(string.format("    > Contiguity:   %.2f * %.1f = %.2f", contiguityValue, weightTable.raid.contiguityWeight, contiguityValue * weightTable.raid.contiguityWeight))
-                    --LOG(string.format("    > TeamBonus:    -%.2f * %.1f = -%.2f", teamValueBonus, weightTable.raid.teamValueWeight, teamValueBonus * weightTable.raid.teamValueWeight))
-                    --LOG(string.format("    > ZoneFlankBonus:    %.2f * %.1f = %.2f", zoneFlankRaidBonus, weightTable.raid.zoneFlankWeight, zoneFlankRaidBonus * weightTable.raid.zoneFlankWeight))
+                    WARN(string.format("  [RAID SCORE: %.3f]", v.staticraidscore))
+                    LOG(string.format("    > EnemyDist:    (1.0 - %.2f) * %.1f = %.2f", enemyDistValue, weightTable.raid.enemyDistanceWeight, (1.0 - enemyDistValue) * weightTable.raid.enemyDistanceWeight))
+                    LOG(string.format("    > HomeBfsDist:  %.2f * %.1f = %.2f", homePathDist, weightTable.raid.homeDistanceWeight, homePathDist * weightTable.raid.homeDistanceWeight))
+                    LOG(string.format("    > ZoneIncome:   %.2f * %.1f = %.2f", resourceValueRaid, weightTable.raid.incomeValueWeight, resourceValueRaid * weightTable.raid.incomeValueWeight))
+                    LOG(string.format("    > AdaptiveStat: %.2f * %.1f = %.2f", controlValue, weightTable.raid.zoneStatusWeight, controlValue * weightTable.raid.zoneStatusWeight))
+                    LOG(string.format("    > Contiguity:   %.2f * %.1f = %.2f", contiguityValue, weightTable.raid.contiguityWeight, contiguityValue * weightTable.raid.contiguityWeight))
+                    LOG(string.format("    > TeamBonus:    -%.2f * %.1f = -%.2f", teamValueBonus, weightTable.raid.teamValueWeight, teamValueBonus * weightTable.raid.teamValueWeight))
+                    LOG(string.format("    > ZoneFlankBonus:    %.2f * %.1f = %.2f", zoneFlankRaidBonus, weightTable.raid.zoneFlankWeight, zoneFlankRaidBonus * weightTable.raid.zoneFlankWeight))
                 end
 
                 -- =================================================================
@@ -1669,7 +1680,13 @@ IntelManager = Class {
                     end
                 end
             end
-            coroutine.yield(1)
+            for id, data in self.CurrentFrontLineZones do
+                if aiBrain.Zones.Land.zones[id] then
+                    local renderPos = aiBrain.Zones.Land.zones[id].pos
+                    DrawCircle(renderPos, 10, 'FFFFFF')
+                end
+            end
+            coroutine.yield(2)
         end
     end,
 
@@ -1917,6 +1934,47 @@ IntelManager = Class {
         end
     end,
 
+    UpdateThreatMemoryScan = function(self, timeNow, threatType)
+        local gridSize = self.IMAPConfig.IMAPSize
+        local scanData = self.Brain:GetThreatsAroundPosition(
+            {ScenarioInfo.size[1]/2, 0, ScenarioInfo.size[2]/2},
+            16, true, threatType
+        )
+    
+        for _, data in scanData do
+            local gx, gz = self:GetIntelGrid({data[1], 0, data[2]})
+            local threatVal = data[3]
+    
+            local cell = self.MapIntelGrid[gx] and self.MapIntelGrid[gx][gz]
+            if cell then
+                cell.IMAPCurrentThreat[threatType] = threatVal
+                -- Keep the max between new threat and decayed memory
+                if threatVal > 0 then
+                    -- Active threat sighted: lock in the highest peak seen
+                    cell.IMAPHistoricalThreat[threatType] = math.max(cell.IMAPHistoricalThreat[threatType] or 0, threatVal)
+                else
+                    -- Threat is 0 at this position
+                    if cell.IntelCoverage then
+                        -- If we have active radar/vision and it's empty, wipe it instantly
+                        cell.IMAPHistoricalThreat[threatType] = 0
+                    else
+                        -- It's in the fog of war. Decay the memory based on elapsed time!
+                        local lastUpdate = cell.LastThreatUpdate or timeNow
+                        local timeDelta = timeNow - lastUpdate
+                        local currentHist = cell.IMAPHistoricalThreat[threatType] or 0
+                        
+                        if currentHist > 0 and timeDelta > 0 then
+                            -- Decay Rate: Loses 0.5 threat points per second in the dark
+                            -- (Adjust 0.5 to change how "forgetful" or "paranoid" the AI is)
+                            cell.IMAPHistoricalThreat[threatType] = math.max(0, currentHist - (timeDelta * 0.5))
+                        end
+                    end
+                end
+                cell.LastThreatUpdate = timeNow
+            end
+        end
+    end,
+
     IntelGridThreatThread = function(self, aiBrain)
         while not self.MapIntelGrid do
             coroutine.yield(30)
@@ -1937,9 +1995,9 @@ IntelManager = Class {
                 self:UpdateThreatMemoryScan(gameTime, ttype)
                 coroutine.yield(2)
             end
-            self:AssignIMAPThreat(aiBrain, 'Land')
-            self:AssignIMAPThreat(aiBrain, 'Naval')
-            self:AssignIMAPThreat(aiBrain, 'Air')
+            self:AssignIMAPThreat(aiBrain, 'Land', gameTime)
+            self:AssignIMAPThreat(aiBrain, 'Naval', gameTime)
+            self:AssignIMAPThreat(aiBrain, 'Air', gameTime)
             self.ProductionZones = {}
             self:AssignThreatToFactories(aiBrain.Zones['Land'].zones, 'Land')
             self:AssignThreatToFactories(aiBrain.Zones['Naval'].zones, 'Naval')
@@ -1953,7 +2011,7 @@ IntelManager = Class {
         end
     end,
 
-    AssignIMAPThreat = function(self, aiBrain, zoneType)
+    AssignIMAPThreat = function(self, aiBrain, zoneType, imapTime)
         local zoneTable = aiBrain.Zones[zoneType].zones
         local labelTable = {}
         local zoneToGridMap = self.ZoneToGridMap[zoneType]
@@ -1977,6 +2035,12 @@ IntelManager = Class {
     
             for _, cell in cells do
                 if not cell.Enabled then continue end
+                if (cell.LastUpdate_Land or 0) < imapTime then cell.IMAPCurrentThreat.Land = 0 end
+                if (cell.LastUpdate_Air or 0) < imapTime then cell.IMAPCurrentThreat.Air = 0 end
+                if (cell.LastUpdate_AntiAir or 0) < imapTime then cell.IMAPCurrentThreat.AntiAir = 0 end
+                if (cell.LastUpdate_Naval or 0) < imapTime then cell.IMAPCurrentThreat.Naval = 0 end
+                if (cell.LastUpdate_AntiSurface or 0) < imapTime then cell.IMAPCurrentThreat.AntiSurface = 0 end
+                if (cell.LastUpdate_StructuresNotMex or 0) < imapTime then cell.IMAPCurrentThreat.StructuresNotMex = 0 end
                 
                 local current = cell.IMAPCurrentThreat
                 local hist = cell.IMAPHistoricalThreat
@@ -3031,30 +3095,6 @@ IntelManager = Class {
         return teamTable
     end,
 
-    UpdateThreatMemoryScan = function(self, timeNow, threatType)
-        local gridSize = self.IMAPConfig.IMAPSize
-        local scanData = self.Brain:GetThreatsAroundPosition(
-            {ScenarioInfo.size[1]/2, 0, ScenarioInfo.size[2]/2},
-            16, true, threatType
-        )
-    
-        for _, data in scanData do
-            local gx, gz = self:GetIntelGrid({data[1], 0, data[2]})
-            local threatVal = data[3]
-    
-            local cell = self.MapIntelGrid[gx] and self.MapIntelGrid[gx][gz]
-            if cell then
-                cell.IMAPCurrentThreat[threatType] = threatVal
-                -- Keep the max between new threat and decayed memory
-                if threatVal == 0 and cell.IntelCoverage then
-                    cell.IMAPHistoricalThreat[threatType] = 0
-                else
-                    cell.IMAPHistoricalThreat[threatType] = math.max(cell.IMAPHistoricalThreat[threatType] or 0, threatVal)
-                end
-                cell.LastThreatUpdate = timeNow
-            end
-        end
-    end,
 
     GetHistoricalThreatInRings = function(self, gridX, gridZ, threatType, ringCount)
         local intelGrid = self.MapIntelGrid
@@ -5415,38 +5455,44 @@ IntelManager = Class {
                         local neighborZone = neighbor.zone
                         --LOG(string.format("RNGAI_DEBUG: BFS Hop %d | Zone %s -> Neighbor %s | Status: %s", currentHopCount, tostring(zoneId), tostring(edgeId), tostring(neighborZone.status)))
                         if zone.label == neighborZone.label then
-                            local fThreat = neighborZone[friendlyThreatKey] or 0
-                            local eThreat = neighborZone[enemyThreatKey] or 0
-                            local status = neighborZone.status
-                            local currentRatio = fThreat / math.max(eThreat, 1.0)
-                            -- The security of this node is the lower of its own ratio or its parent in the path
-                            local localRatio = fThreat / math.max(eThreat, 1.0)
-                            local accumulatedSecurity = math.min(zonePathSecurity[zoneId], localRatio)
                             visited[edgeId] = true
-                
-                            local isSafe = fThreat > eThreat * THREAT_DOMINANCE_RATIO
-                            local isUnchallenged = fThreat > 0 and eThreat == 0
-                            local isEnemyDominated = eThreat > fThreat * THREAT_DOMINANCE_RATIO
-                
-                            if status == 'Allied' then
-                                if isUnchallenged or isSafe then
-                                    controlledZones[edgeId] = true
-                                    nextFrontier[edgeId] = true
-                                    zonePathSecurity[edgeId] = accumulatedSecurity
-                                    zoneSecurityDepth[edgeId] = currentHops + 1
-                                else
-                                    frontlineZones[edgeId] = true
-                                end
-                
-                            elseif status == 'Hostile' then
-                                if isSafe then
-                                    frontlineZones[edgeId] = true  -- not controlled even if pushed
-                                else
-                                    frontlineZones[edgeId] = true
-                                end
-                
-                            elseif status == 'Contested' or status == 'Unoccupied' then
-                                -- Always considered at risk or unknown
+
+                            -- Comprehensive Enemy Threat Calculation
+                            local eThreatGrid = neighborZone[enemyThreatKey] or 0
+                            local eThreatRaw = (layer == 'Land') and (neighborZone.enemylandthreat or 0) or 0
+                            local eThreatStruct = (layer == 'Land') and ((neighborZone.enemystructurethreat or 0) + (neighborZone.enemydefensestructurethreat or 0)) or 0
+                            local totalEnemyThreat = math.max(eThreatGrid, eThreatRaw, eThreatStruct)
+
+                            -- NEW: Comprehensive Friendly Threat Aggregation
+                            local fDirect = neighborZone[friendlyThreatKey] or 0
+                            local fDef = (layer == 'Land') and (neighborZone.friendlydefenseantisurfacethreat or 0) or 0
+                            local fInd = (layer == 'Land') and (neighborZone.friendlyindirectfireantisurfacethreat or 0) or 0
+                            local totalFriendlyThreat = fDirect + fDef + fInd
+
+                            local status = neighborZone.status
+
+                            -- --- REVISED PASSABILITY CALCULUS ---
+                            -- 1. Allied territory: Passable if clear, OR if our combined presence protects it from being overwhelmed
+                            local isPassableAllied = (status == 'Allied') and 
+                                                        ((totalEnemyThreat == 0) or ((totalFriendlyThreat * THREAT_DOMINANCE_RATIO) >= totalEnemyThreat))
+                            
+                            -- 2. Contested/Unoccupied territory: Push forward unless a significant enemy presence blocks us
+                            local isCurrentZoneAllied = (zone.status == 'Allied')
+                            local hasPresenceOrProximity = isCurrentZoneAllied or (((zone[friendlyThreatKey] or 0) + (zone.friendlydefenseantisurfacethreat or 0)) > 0)
+                            
+                            local isPassableContested = (status == 'Unoccupied' or status == 'Contested') and 
+                                                        hasPresenceOrProximity and 
+                                                        ((totalEnemyThreat <= 1.0) or (totalFriendlyThreat >= totalEnemyThreat))
+
+                            if isPassableAllied or isPassableContested then
+                                controlledZones[edgeId] = true
+                                nextFrontier[edgeId] = true
+                                
+                                local localRatio = totalFriendlyThreat / math.max(totalEnemyThreat, 1.0)
+                                zonePathSecurity[edgeId] = math.min(zonePathSecurity[zoneId], localRatio)
+                                zoneSecurityDepth[edgeId] = currentHops + 1
+                            else
+                                -- Hard boundary hit: This is where our combat front locks down
                                 frontlineZones[edgeId] = true
                             end
                         end
@@ -6996,6 +7042,9 @@ TruePlatoonPriorityDirector = function(aiBrain)
             Naval = {}
         }
         --RNGLOG('Check lastknown')
+        for i = 1, table.getn(landZones) do
+            landZones[i].gridenemylandthreat = 0
+        end
         
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do

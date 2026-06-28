@@ -780,6 +780,9 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EconomyCurrentTick = 1
         self.EconomyMonitorThread = self:ForkThread(self.EconomyMonitorRNG)
         self.ExtractorUpgradeThread = false
+        self.PlatoonRegistry = {
+            Counters = {}, -- e.g., ["Raid"] = 3,
+        }
         self.EconomyOverTimeCurrent = {}
         self.TransportSlotTable = {} -- Cache slots sizes for transports by unit id
         self.ACUData = {}
@@ -1932,7 +1935,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.CalculateMassMarkersRNG)
         self:ForkThread(self.AdjustEconomicAllocation)
         self:ForkThread(self.SendGameStartTaunt)
-        self:ForkThread(self.ZoneAllocationDebugThread)
+        --self:ForkThread(self.ZoneAllocationDebugThread)
         if self.RNGDEBUG then
             self:ForkThread(self.LogDataThreadRNG)
         end
@@ -7331,6 +7334,146 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
+    --[[
+    1. General & Visual Debugging
+    debugEnabled
+
+    What it does: Toggles verbose diagnostic RNGLOG prints tracking the threat projections, risk audits, and pressure model evaluations.
+    Increasing / Toggling True: Activates deep performance logs. This impacts simulation performance if left enabled in heavy production runs but is crucial for tracing logic deviations.
+    Decreasing / Toggling False: Suppresses logging, saving processing cycles.
+
+    2. Vector Projection & Threat Normalization
+    projectionDefaultLand / projectionDefaultNaval
+
+    What it does: Baseline multipliers used to calculate projected threat layers when pathing to the enemy is clear and direct.
+    Increasing Impact: Amplifies the perceived scale of enemy units/threats. The AI over-estimates danger, triggering defensive adaptations, higher military production allocation, and scaling back greed.
+    Decreasing Impact: Suppresses perceived enemy strength, causing the AI to play significantly more aggressively or greedily.
+
+    projectionStalledLand
+
+    What it does: The threat projection multiplier applied to land domains when the direct pathing to the current enemy is blocked or stalled (e.g., on island maps or behind impassable geometry).
+    Increasing Impact: Forces the AI to keep building land units despite pathing restrictions, potentially causing unit staging clutter.
+    Decreasing Impact: Lowers land priority on un-pathable maps, allowing the AI to quickly divert resources into Air and Naval production layers.
+
+    projectionEnemyStructureLand / projectionEnemyUnitsLand
+
+    What it does: Specific weight weights applied to separate static enemy defense structures versus mobile enemy units during projection modeling.
+    Increasing Impact: Heightens localized defense-spending triggers based on the respective target category's presence.
+    Decreasing Impact: Desensitizes the AI to enemy fortifications or mobile columns.
+
+    landThreatDivisor / airThreatDivisor / navalThreatDivisor
+
+    What it does: Normalization divisors used to scale localized zone and perimeter threat values down into a [0, 1] pressure metric for individual Factory Managers.
+    Increasing Impact: Desensitizes the local managers. Higher threat is required to cause local distress, lowering the calculated local pressure and reducing the funding diverted to local area defense.
+    Decreasing Impact: Sensitizes the local managers. Tiny threat variations trigger high manager pressure scores, leading local factories to immediately request localized defensive funding.
+
+    landGapWeight / navalGapWeight
+
+    What it does: Differential scaling weights applied to the computed deficit between enemy threat vectors and friendly standing armies.
+    Increasing Impact: Forces the allocation model to respond aggressively to raw numbers deficits, causing abrupt and heavy production swings to bridge the security gap.
+    Decreasing Impact: Smooths out the production response curves, generating steady, gradual production scaling.
+
+    3. Structural Expansion & Saturation Model
+    gravityPressureDivisor  
+
+    What it does: Scaling divisor applied to the global economic gravity metric to determine expansion pressure.
+    Increasing Impact: Suppresses computed expansion pressure. The AI will act comfortably with fewer map zones and slow its land-grab expansion speed.
+    Decreasing Impact: Amplifies expansion pressure. The AI treats uncaptured map zones as high-priority emergencies, aggressively driving expansion queues.
+
+    localClaimsMaxClamp
+
+    What it does: Sets the maximum reduction ceiling that localized territory claims can exert against expansion pressure.
+    Increasing Impact: Allows active local claims to almost entirely halt expansion momentum, focusing the AI on consolidating current holdings before pushing outward.
+    Decreasing Impact: Forces the AI to continue expanding relentlessly, disregarding localized expansion claims or over-extension risks.
+
+    lowSatThreshold / lowSatPhaseThreshold
+
+    What it does: Interlocking threshold boundaries defining what constitutes a low-saturation/under-built factory condition relative to the tech phase.
+    Increasing Impact: Expands the classification envelope for "low saturation," causing the AI to trigger catch-up spam modifiers under a wider variety of circumstances.
+    Decreasing Impact: Restricts catch-up modifiers to complete factory starvation states.
+
+    4. Production Clamps & Strategic Shifts
+    minAllocation
+
+    What it does: The absolute minimum floor fraction granted to any active layer during resource allocation.
+    Increasing Impact: Guarantees continuous trickle-production across all domains, preventing complete layer starvation, but severely limiting the AI's ability to hyper-specialize or complete deep strategic pivots.
+    Decreasing Impact: Allows dominant or completely safe layers to drop down to near-zero production, maximizing the concentration of capital into contested or critical layers.
+
+    maxShiftLandDefault / maxShiftAirDefault / maxShiftNavalDefault 
+
+    What it does: Caps the maximum allowable re-allocation shift modifier for each respective layer when moving resources away from baseline values.
+    Increasing Impact: Enables volatile, sweeping production adaptations. Factories will swing drastically from one layer to another to close threat gaps rapidly.
+    Decreasing Impact: Acts as a stabilizing filter, forcing smooth, measured production steps but rendering the AI slower to respond to sudden enemy unit composition changes.
+
+    threatFactorThreshold
+
+    What it does: The maximum dominance multiplier threshold checking if friendly threat outstrips the enemy. If friendly layer threat exceeds this threshold, production allocation drops to minAllocation and excess budget is recycled.
+    Increasing Impact: The AI will over-produce and build substantial threat buffers before stopping production on a layer.
+    Decreasing Impact: Prevents over-production, forcing the AI to clamp spending early and transfer the budget to other sectors where it does not hold dominance.
+
+    dominanceRiskThreshold
+
+    What it does: Risk ceiling factor determining if friendly forces hold enough dominance to safely trim production back down to minimum limits.
+    Increasing Impact: Requires absolute certainty and minimal danger before clamping production down, making the AI safer but less efficient with resources.
+    Decreasing Impact: Triggers resource cut-offs and redistributions under less secure conditions.
+
+    minProdBudget / maxProdBudget
+
+    What it does: Global boundaries clipping the total allowable production allocation fraction.
+    Increasing Impact: Directs more raw income into unit factories, accelerating army assembly but squeezing the funds available for economic tech upgrades or assistance chains.
+    Decreasing Impact: Limits active factory spending, preserving massive capital reserves for infrastructure, mass extractors, and technology upgrades.
+
+    5. Construction Budget Allocation
+    targetConstRatioDefault / targetConstRatioHighPressure
+
+    What it does: Background budget target ratios designated for structural construction (e.g., base defenses, power generators, radar upgrades) relative to unit factory streams.
+    Increasing Impact: Prioritizes engineering construction, leading to reinforced static defenses and extensive power structures, while reducing mobile unit replacement rates.
+    Decreasing Impact: Defunds construction lines, giving mobile unit factory output absolute priority.
+
+    pressureHighThreshold
+
+    What it does: The combined system pressure limit that triggers a drop from the default construction ratio down to the restricted high-pressure ratio.
+    Increasing Impact: Maintains steady background structure building under high duress.
+    Decreasing Impact: Instantly panics background construction into a minimized state at the slightest hint of system threat, prioritizing raw unit production.
+
+    constRatioOverageMultiplier
+
+    What it does: Multiplier tracking if actual construction spending significantly exceeds the target construction ratio, changing construction budget status to 'Blocked'.
+    Increasing Impact: Grants wider spending tolerances before freezing active engineering construction projects.
+    Decreasing Impact: Enforces immediate, strict penalties on construction over-spending, stalling new build queues until targets are restored.
+
+    6. Discretionary Weight Distributions (Econ vs. Assist)
+    ecoBaseWeight / ecoPhaseWeight / ecoTrendWeight / ecoExpansionWeight
+
+    What it does: Composition weights that calculate the total discretionary budget weight for upgrading and building the economy (ecoWeight). They scale based on tech phases, normalized trend indicators, and expansion pressures.
+    Increasing Impact: Shifts the discretionary budget heavily toward upgrading mass extractors, building mass fabricators, and securing tech grids.
+    Decreasing Impact: Lowers priority on macro-economic scaling, resulting in a lean, unit-heavy army configuration.
+
+    assistBaseWeight / assistPressureWeight
+
+    What it does: Composition weights determining engineer assistance distribution metrics (assistWeight) based on current structural and threat pressure models.
+    Increasing Impact: Diverts engineering power to help factories build units, perform field repairs, or speed up ongoing projects.
+    Decreasing Impact: Leaves engineers idling or restricted to independent construction queues rather than boosting active factory throughput.
+
+    tacticalGreedMultiplier
+
+    What it does: An economic weight scaling multiplier triggered when tactical conditions are deemed completely safe and greed is permitted.
+    Increasing Impact: Causes exponential economic booming and fast tech upgrades when the map is stable.
+    Decreasing Impact: Maintains standard, cautious allocation ratios regardless of safety.
+
+    maxEcoSpendDefault / maxEcoSpendPhase3
+
+    What it does: Hard caps preventing the economy upgrade track from consuming too much leftover discretionary income.
+    Increasing Impact: Allows the AI to commit nearly all surplus income into raw economy upgrades during high tech tiers, resulting in massive late-game income scaling.
+    Decreasing Impact: Ensures a steady stream of income remains locked to factory production loops, guarding against tech-upgrading starvation.
+
+    7. Strategic Bias Matrix (biases)
+
+    What it does: Static modifier weights mapped to specialized personality profiles (Default, Land, Air, Naval, ChokePoint) to shape multi-domain output.
+    Increasing coefficients: Forces a permanent strategic leaning for that profile. For instance, increasing Land.Land guarantees that when the AI chooses a Land focus, its land shifting mechanics scale with high intensity.
+    Decreasing coefficients: Mutes the focus profile, leveling out tactical behavior across domains.
+    ]]
+
     AdjustEconomicAllocation = function (self)
         coroutine.yield(50)
         -- Small helpers
@@ -7345,9 +7488,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 brToMassFactor = 0.5,
                 mapWaterRatioThreshold = 0.45,
                 navalFocusMultiplier = 1.75,
-                
+
                 -- Vector Projection Dampeners
-                projectionDefaultLand = 1.0,
+                projectionDefaultLand = 1.0, 
                 projectionDefaultNaval = 1.0,
                 projectionStalledLand = 0.2,
                 projectionEnemyStructureLand = 0.8,
@@ -7405,7 +7548,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 trendNormFactor = 0.5,
                 
                 -- Discretionary Weight Distributions
-                ecoBaseWeight = 0.30,
+                ecoBaseWeight = 0.35,
                 ecoPhaseWeight = 0.20,
                 ecoTrendWeight = 0.20,
                 ecoExpansionWeight = 0.35,
@@ -8069,6 +8212,7 @@ AIBrain = Class(RNGAIBrainClass) {
             if logTimer >= 30 then
                 logTimer = 0
                 LOG("=== RNGAI ECONOMY & THREAT ALLOCATION TICK ===")
+                LOG('Current Phase '..tostring(math.max(aiBrain.BrainIntel.LandPhase or 1, aiBrain.BrainIntel.AirPhase or 1, aiBrain.BrainIntel.NavalPhase or 1)))
                 LOG(string.format("GLOBAL | Land: %.2f | Air: %.2f | Naval: %.2f | Assist: %.2f | Upgrade: %.2f | Const: %.2f",
                     self.ProductionRatios.Land or 0, self.ProductionRatios.Air or 0, self.ProductionRatios.Naval or 0,
                     engineerAssist, ecoUpgrade, actualConstRatio))
