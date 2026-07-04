@@ -3075,7 +3075,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             end
 
             if cdr:IsIdleState() or (priorityGunUpgradeRequired or priorityThreatUpgradeRequired) then
-                if (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95 and brain.EconomyOverTimeCurrent.EnergyTrendOverTime > 250) or (priorityGunUpgradeRequired or priorityThreatUpgradeRequired) then
+                if (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95 and brain.EconomyOverTimeCurrent.EnergyTrendOverTime > 35) or (priorityGunUpgradeRequired or priorityThreatUpgradeRequired) then
                     cdr.Combat = false
                     cdr.Upgrading = false
                     local foundEnhancement
@@ -3150,10 +3150,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             HaveEcoForEnhancement = true
                         end
                     end
-                    if not NextEnhancement then
-
-                    end
-
                     if NextEnhancement and HaveEcoForEnhancement then
                         local priorityUpgrades = {
                             'HeavyAntiMatterCannon',

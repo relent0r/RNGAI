@@ -144,6 +144,8 @@ function CDRBrainThread(cdr)
                 -- No enemy gun threat.
                 cdr.GunUpgradeRequired = false
             end
+        else
+            cdr.GunUpgradeRequired = false
         end
         if aiBrain.EnemyIntel.LandPhase == 2 or aiBrain.EnemyIntel.LandPhase == 1.5 then
             --LOG('Enemy is in land phase 2')
@@ -151,7 +153,6 @@ function CDRBrainThread(cdr)
             if not CDRGunCheck(cdr, true) then
                 --LOG('Enemy is phase 2 and I dont have gun')
                 if aiBrain.EconomyOverTimeCurrent.EnergyIncome > 65 or (cdr.DistanceToHome > 6400 and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 45) then
-                    --LOG('Income matches we should be requesting a gun upgrade')
                     cdr.Phase = 2
                     cdr.GunUpgradeRequired = true
                 end
@@ -187,7 +188,7 @@ function CDRBrainThread(cdr)
                 cdr.HighThreatUpgradeRequired = true
             end
         end
-if cdr.Active then
+        if cdr.Active then
             -- Aggregate current support platoon threat levels safely
             local supportSurfaceThreat = 0
             local supportAirThreat = 0
@@ -403,7 +404,9 @@ function CDRThreatAssessmentRNG(cdr)
                         if v.Blueprint.CategoriesHash.COMMAND then
                             enemyACUPresent = true
                             enemyUnitThreatInner = enemyUnitThreatInner + v:EnhancementThreatReturn()
+                            --LOG('enemyUnitThreatInner is '..tostring(enemyUnitThreatInner))
                             enemyACUHealthModifier = enemyACUHealthModifier + (v:GetHealth() / cdr.Health)
+                            --LOG('Enemy ACU Health Modifier is '..tostring(enemyACUHealthModifier))
                             local ax = unitPos[1] - cdr.CDRHome[1]
                             local az = unitPos[3] - cdr.CDRHome[3]
                             local enemyDistanceToHome = ax * ax + az * az
@@ -464,6 +467,7 @@ function CDRThreatAssessmentRNG(cdr)
             end
             --RNGLOG('Continue Fighting is set to true')
             --RNGLOG('ACU Cutoff Threat '..cdr.ThreatLimit)
+            --LOG('Enemy CDR Present is set to '..tostring(cdr.EnemyCDRPresent))
             cdr.CurrentEnemyThreat = enemyUnitThreat
             cdr.CurrentEnemyDefenseThreat = enemyDefenseThreat
             --LOG('Pure enemy defense threat '..tostring(enemyDefenseThreat))
@@ -478,6 +482,7 @@ function CDRThreatAssessmentRNG(cdr)
             --LOG('Current Enemy Threat '..cdr.CurrentEnemyThreat)
             --LOG('Current Friendly Inner Threat '..cdr.CurrentFriendlyInnerCircle)
             --LOG('Current Friendly Threat '..cdr.CurrentFriendlyThreat)
+            --LOG('Current Enemy Defense Threat '..cdr.CurrentEnemyDefenseThreat)
             --LOG('Current CDR Confidence '..cdr.Confidence)
             --LOG('Enemy Bomber threat '..cdr.CurrentEnemyAirThreat)
             --LOG('Friendly AA threat '..cdr.CurrentFriendlyAntiAirThreat)
@@ -635,11 +640,15 @@ function CDRThreatAssessmentRNG(cdr)
             -- Main function to calculate cdr.Confidence
             local function calculateConfidence(aiBrain, cdr, friendlyUnitThreatInner, friendlyUnitThreatOuter, enemyUnitThreatInner, enemyUnitThreatOuter, enemyDefenseThreat, cdrDistanceToBase, localEnemyThreatRatio, weights)
                 local friendlyThreatConfidenceModifier = calculateFriendlyThreatModifier(aiBrain, friendlyUnitThreatInner, friendlyUnitThreatOuter, cdr, weights)
-                local enemyThreatConfidenceModifier = calculateEnemyThreatModifier(aiBrain, enemyUnitThreatInner, enemyUnitThreatOuter, enemyDefenseThreat, weights)
+                local trueEnemyUnitThreat = enemyUnitThreatInner
+                if cdr.EnemyCDRPresent and cdr.EnemyACUModifiedThreat then
+                    trueEnemyUnitThreat = trueEnemyUnitThreat * cdr.EnemyACUModifiedThreat 
+                end
+                local enemyThreatConfidenceModifier = calculateEnemyThreatModifier(aiBrain, trueEnemyUnitThreat, enemyUnitThreatOuter, enemyDefenseThreat, weights)
 
                 -- Add influence of new metrics with weights
                 local distanceToEnemyBase
-                if aiBrain.EnemyIntel.ClosestEnemyBase then
+                if aiBrain.EnemyIntel.EnemyStartLocations and not table.empty(aiBrain.EnemyIntel.EnemyStartLocations) then
                     for k, v in aiBrain.EnemyIntel.EnemyStartLocations do
                         local rx = cdr.Position[1] - v.Position[1]
                         local rz = cdr.Position[3] - v.Position[3]
@@ -651,13 +660,16 @@ function CDRThreatAssessmentRNG(cdr)
                 end
                 if not distanceToEnemyBase then
                     local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
-                    distanceToEnemyBase = math.max(playableArea[3], playableArea[4])
-                    distanceToEnemyBase = distanceToEnemyBase * distanceToEnemyBase
-                    if not distanceToEnemyBase then
+                    if playableArea then
+                        local mapWidth = playableArea[3] - playableArea[1]
+                        local mapHeight = playableArea[4] - playableArea[2]
+                        local maxExtent = math.max(mapWidth, mapHeight)
+                        distanceToEnemyBase = maxExtent * maxExtent
+                    else
+                        -- Real fallback if the mapping module is missing entirely
                         local scenarioMapSizeX, scenarioMapSizeZ = GetMapSize()
-                        if not playableArea then
-                            distanceToEnemyBase = math.max(scenarioMapSizeX[3], scenarioMapSizeZ[4])
-                        end
+                        local maxExtent = math.max(scenarioMapSizeX, scenarioMapSizeZ)
+                        distanceToEnemyBase = maxExtent * maxExtent
                     end
                 end
                 --LOG('Distance to enemy base '..tostring(math.sqrt(distanceToEnemyBase)))
@@ -693,7 +705,7 @@ function CDRThreatAssessmentRNG(cdr)
                     overchargeFactor = weights.overchargeBoost * threatScaling * healthScaling
                 end
                 
-                --LOG('AI '..tostring(aiBrain.Nickname)..' health percent '..tostring(cdr.HealthPercent)..' friendlyThreatConfidenceModifier '..tostring(friendlyThreatConfidenceModifier)..' enemyThreatConfidenceModifier '..tostring(enemyThreatConfidenceModifier)..' ratio '..tostring(friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier)..' survivability '..tostring(survivability)..' overcharge '..tostring(overchargeFactor))
+                --  LOG('AI '..tostring(aiBrain.Nickname)..' health percent '..tostring(cdr.HealthPercent)..' friendlyThreatConfidenceModifier '..tostring(friendlyThreatConfidenceModifier)..' enemyThreatConfidenceModifier '..tostring(enemyThreatConfidenceModifier)..' ratio '..tostring(friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier)..' survivability '..tostring(survivability)..' overcharge '..tostring(overchargeFactor))
 
 
                 -- Normalize the threat divisor to 1.0. 
@@ -1137,34 +1149,27 @@ EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)
     if not enhancement.BuildTime then
         WARN('* RNGAI: EcoGoodForUpgrade: Enhancement has no buildtime: '..tostring(enhancement))
     end
-    --RNGLOG('Enhancement EcoCheck for '..enhancementName)
     for k, v in priorityUpgrades do
         if enhancementName == v then
             priorityUpgrade = true
-            --RNGLOG('Priority Upgrade is true')
             break
         end
     end
-    --RNGLOG('* RNGAI: cdr:GetBuildRate() '..BuildRate..'')
+    --LOG('* RNGAI: cdr:GetBuildRate() '..BuildRate..'')
     local drainMass = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostMass
     local drainEnergy = (BuildRate / enhancement.BuildTime) * enhancement.BuildCostEnergy
-    --RNGLOG('* RNGAI: drain: m'..drainMass..'  e'..drainEnergy..'')
-    --RNGLOG('* RNGAI: Pump: m'..math.floor(aiBrain:GetEconomyTrend('MASS')*10)..'  e'..math.floor(aiBrain:GetEconomyTrend('ENERGY')*10)..'')
     if priorityUpgrade and cdr.GunUpgradeRequired and not aiBrain.RNGEXP then
         if (GetEconomyIncome(aiBrain, 'ENERGY') > 40) and (GetEconomyIncome(aiBrain, 'MASS') > 1.0) then
-            --RNGLOG('* RNGAI: Gun Upgrade Eco Check True')
             return true
         end
     elseif priorityUpgrade and cdr.HighThreatUpgradeRequired and not aiBrain.RNGEXP then
         if (GetEconomyIncome(aiBrain, 'ENERGY') > 60) and (GetEconomyIncome(aiBrain, 'MASS') > 1.0) then
-            --RNGLOG('* RNGAI: Gun Upgrade Eco Check True')
             return true
         end
     elseif aiBrain.EconomyOverTimeCurrent.MassTrendOverTime*10 >= (drainMass * 1.2) and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime*10 >= (drainEnergy * 1.2)
     and GetEconomyStoredRatio(aiBrain, 'MASS') > 0.05 and GetEconomyStoredRatio(aiBrain, 'ENERGY') > 0.95 then
         return true
     end
-    --RNGLOG('* RNGAI: Upgrade Eco Check False')
     return false
 end
 

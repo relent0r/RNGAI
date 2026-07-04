@@ -245,102 +245,89 @@ StructureManager = Class {
         while not aiBrain.ZonesInitialized do
             coroutine.yield(20)
         end
-    
+
         local zoneTypes = {
             'Land',
             'Naval'
         }
-    
+
         while aiBrain.Status ~= 'Defeat' do
-            local uniqueAlliedZones = {}
-            local totalZones = 0
-            local safeZones = {}
-            local zoneUpgradeBias = {}
+            local globalSafeZones = {}
+            local globalZoneUpgradeBias = {}
             local frontlineDefenseRatio = {}
-    
-            for _, layer in zoneTypes do
+            
+            local totalAlliedZonesCount = 0
+            local totalZonesCount = 0
+
+            for _, layer in ipairs(zoneTypes) do
                 local zoneSet = aiBrain.Zones[layer].zones
-    
-                -- Count total zones (all zones in layer)
-                totalZones = totalZones + table.getn(zoneSet)
-    
-                -- Mark unique allied zones by status
-                for _, zone in zoneSet do
+                
+                -- Keep layer data strict and isolated
+                local layerAlliedZones = {}
+                local allyZonesList = {}
+
+                -- Correctly count total zones in this specific layer table layout
+                for _, zone in pairs(zoneSet) do
+                    totalZonesCount = totalZonesCount + 1
                     if zone.status == 'Allied' then
-                        uniqueAlliedZones[zone.id] = zone
+                        layerAlliedZones[zone.id] = zone
+                        table.insert(allyZonesList, zone)
+                        totalAlliedZonesCount = totalAlliedZonesCount + 1
                     end
                 end
-    
-                -- Prepare list of allied zone objects for ComputeSafetyState
-                local allyZonesList = {}
-                for _, zone in pairs(uniqueAlliedZones) do
-                    table.insert(allyZonesList, zone)
-                end
-    
-                -- Call safety function with unique allied zones list and full zoneSet
-                local barrier, zoneDepths, layerSafeZones, layerUpgradeBias = RUtils.ComputeSafetyState(aiBrain, allyZonesList, zoneSet)
-    
-                -- Merge layerSafeZones into safeZones global for this tick
+
+                -- Execute safety sweep with layer-pure lists
+                local barrier, zoneDepths, layerSafeZones, layerUpgradeBias = RUtils.ComputeSafetyState(aiBrain, allyZonesList, zoneSet, layer)
+
+                -- Merge into global tracking maps
                 for id, _ in pairs(layerSafeZones) do
-                    safeZones[id] = true
+                    globalSafeZones[id] = true
                 end
-    
-                -- Merge upgrade bias per zone into global
+
                 for id, bias in pairs(layerUpgradeBias) do
-                    zoneUpgradeBias[id] = bias
+                    globalZoneUpgradeBias[id] = bias
                 end
-    
+
                 -- Frontline defense calculation
                 local defendedFrontlines = 0
                 local totalFrontlines = 0
-    
+
                 for _, zone in ipairs(allyZonesList) do
                     local zoneID = zone.id
-                    if zoneDepths[zoneID] == 1 then  -- adjacent to enemy zones
+                    if zoneDepths[zoneID] == 1 then  -- Purely tracking this layer's frontier depth
                         local defenseAllocated = zone.platoonallocations.friendlydirectfireallocatedthreat or 0
                         local defensePresent = zone.friendlydirectfireantisurfacethreat or 0
                         local defense = defenseAllocated + defensePresent
                         local threat = zone.gridenemylandthreat or 0
-    
+
                         if defense > threat * 1.25 then
                             defendedFrontlines = defendedFrontlines + 1
                         end
                         totalFrontlines = totalFrontlines + 1
                     end
                 end
-    
+
                 frontlineDefenseRatio[layer] = totalFrontlines > 0 and (defendedFrontlines / totalFrontlines) or 0
-                --LOG('Frontline Defense Ratio ('..layer..'): '..tostring(frontlineDefenseRatio[layer]))
-                --LOG('Total frontlines ('..layer..'): '..totalFrontlines..' | Defended frontlines: '..defendedFrontlines)
             end
-    
-            -- Count unique allied zones after processing all layers
-            local alliedZonesCount = 0
-            for _, _ in pairs(uniqueAlliedZones) do
-                alliedZonesCount = alliedZonesCount + 1
-            end
-    
-            -- Count safe zones
+
             local safeZoneCount = 0
-            for _ in pairs(safeZones) do
+            for _ in pairs(globalSafeZones) do
                 safeZoneCount = safeZoneCount + 1
             end
-    
-            --LOG('Total Zones: '..tostring(totalZones))
-            --LOG('Allied Zones: '..tostring(alliedZonesCount))
+
+            --LOG('Total Zones: '..tostring(totalZonesCount))
+            --LOG('Allied Zones: '..tostring(totalAlliedZonesCount))
             --LOG('Safe Zones: '..tostring(safeZoneCount))
-    
-            local zoneControlRatio = alliedZonesCount / math.max(1, totalZones)
-    
             
-            aiBrain.EcoManager.SafeMassZones = safeZones
-            aiBrain.EcoManager.ZoneUpgradeBias = zoneUpgradeBias
+            aiBrain.EcoManager.SafeMassZones = globalSafeZones
+            aiBrain.EcoManager.ZoneUpgradeBias = globalZoneUpgradeBias
+            
+            -- Land frontline security status now safely resolves
             aiBrain.EcoManager.TacticalGreedAllowed = (safeZoneCount > 0 and frontlineDefenseRatio['Land'] > 0.5)
-    
+
             --LOG('TacticalGreedAllowed: '..tostring(aiBrain.EcoManager.TacticalGreedAllowed))
-            --LOG('SafeMassZones: '..tostring(repr(aiBrain.EcoManager.SafeMassZones)))
-            --LOG('ZoneUpgradeBias: '..tostring(repr(aiBrain.EcoManager.ZoneUpgradeBias)))
-    
+            --LOG(string.format("[RNGLOG] Final Verification - LandFrontlineRatio: %.2f", frontlineDefenseRatio['Land'] or 0))
+
             coroutine.yield(60)
         end
     end,
@@ -1164,7 +1151,6 @@ StructureManager = Class {
                 -- TUNING 2: The clamp max (33) sets the absolute highest mass income requirement possible.
                 local baseCeiling = math.max(18, math.min(18 + (rawGravity / 10), 28))
                 local scaledIncomeTarget = baseCeiling + (1.0 - avgSat) * (28 - baseCeiling)
-                LOG(string.format("RNGLOG_UPGRADE_DYNAMICS | Gravity: %.2f | Sat: %.2f | TargetIncome23: %.2f | TargetIncome15: %.2f", rawGravity, avgSat, scaledIncomeTarget * multiplier, 15 * multiplier))
                 local distanceByPass = (aiBrain.EnemyIntel.ClosestEnemyBase and aiBrain.EnemyIntel.ClosestEnemyBase > 422500 ) and actualMexIncome >= (15 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0
                 if (not aiBrain.RNGEXP and (actualMexIncome > (scaledIncomeTarget * multiplier) or aiBrain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier)))
                 or aiBrain.RNGEXP and (actualMexIncome > (18 * multiplier) or aiBrain.EnemyIntel.EnemyCount > 1 and actualMexIncome > (15 * multiplier)) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0 
@@ -1177,9 +1163,6 @@ StructureManager = Class {
                         if (distanceByPass or MassEfficiency >= 1.015 or aiBrain.EnemyIntel.LandPhase > 1 and MassEfficiency >= 0.7) and (EnergyEfficiency >= 0.8 or ((distanceByPass or aiBrain.EnemyIntel.LandPhase > 1) and EnergyEfficiency >= 0.6)) then
                             local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
-                                LOG('AI '..tostring(aiBrain.Nickname)..' is upgrading its land factory mass efficiency at the time is '..tostring(MassEfficiency)..' over time is '..tostring(massEfficiencyOverTime))
-                                local isExp = aiBrain.RNGEXP and true or false
-                                LOG(string.format("RNGLOG_UPGRADE_EXEC | MexIncome: %.2f | EnemyCount: %d | LandPhase: %d | DistBypass: %s | EXP: %s", actualMexIncome or 0, aiBrain.EnemyIntel.EnemyCount or 0, aiBrain.EnemyIntel.LandPhase or 0, tostring(distanceByPass), tostring(isExp)))
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                                 t2LandPass = true
                                 coroutine.yield(20)
@@ -2040,6 +2023,18 @@ StructureManager = Class {
                 --LOG('Trigger all tiers true '..tostring(aiBrain.Nickname))
                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(50)
+                continue
+            end
+            if aiBrain.EcoManager.TacticalGreedAllowed 
+            and aiBrain.EcoManager.CoreExtractorT3Count < aiBrain.EcoManager.CoreMassMarkerCount
+            and coreExtractorT2Count > 0 
+            and extractorsDetail.TECH2Upgrading < 1 
+            and energyEfficiencyOverTime > 1.0 
+            and currentEnergyEfficiency >= 1.0 
+            and energyStorage > 4000 then
+                --LOG('Tactical Greed Triggered: Advancing core extractor to T3 due to secure map state.')
+                self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
+                coroutine.yield(60)
                 continue
             end
             if massStorage > massBuffer and aiBrain.EcoManager.CoreExtractorT3Count < aiBrain.EcoManager.CoreMassMarkerCount

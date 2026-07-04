@@ -630,7 +630,6 @@ function CanAffordLuxuryProject(aiBrain, projectMassDrain)
     local econ = aiBrain.EconomyAllocation
 
     -- Do not start new luxuries if the budget is already redlining.
-    LOG('ConstructionBudgetStatus is '..tostring(econ.ConstructionBudgetStatus))
     if econ.ConstructionBudgetStatus == 'Blocked' then
         return false
     end

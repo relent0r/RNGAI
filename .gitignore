@@ -1,3 +1,4 @@
-.vscode
-.gemini
-.agents
+.vscode/
+.gemini/
+.agents/
+.continue/

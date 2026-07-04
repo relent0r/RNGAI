@@ -1170,9 +1170,6 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
                                     --LOG('Returning valid target via amphib'..tostring(v.unit.UnitId)..' distance was '..tostring(v.distance)..' is defending home? '..tostring(isDefendingHome))
                                     validTarget = true
                                 end
-                                if not highValue then
-                                    LOG(string.format("RNGLOG: ACU_Target_Rejected | Unit: %s | Reason: Amphibious path exists but highValue is false", v.unit.UnitId))
-                                end
                             end
                         end
                     end
@@ -8758,6 +8755,43 @@ GetZonePressureValue = function(enemyStartClose, zone, platoon, zonetype)
     return pressure
 end
 
+GetZoneStagingPressureValue = function(intelmanager, zone) 
+    local enemyProjection = 0 
+    local friendlyCoverage = zone.friendlyantisurfacethreat or 0 
+    local enemyStructure = zone.enemystructurethreat or 0 
+    local enemySurface = zone.enemyantisurfacethreat or 0
+    local threatValue = intelmanager.Brain.EnemyIntel.EnemyThreatCurrent.Land or 0
+
+    enemyProjection = enemyProjection + enemyStructure + enemySurface
+
+    if zone.edges then
+        for _, edge in zone.edges do
+            local neighbor = edge.zone
+            if neighbor then
+                enemyProjection = enemyProjection +
+                    ((neighbor.enemystructurethreat or 0) * 0.75) +
+                    ((neighbor.enemyantisurfacethreat or 0) * 0.5)
+
+                friendlyCoverage = friendlyCoverage +
+                    ((neighbor.friendlyantisurfacethreat or 0) * 0.4)
+            end
+        end
+    end
+
+    local deficit = enemyProjection - friendlyCoverage
+    local safeDeficit = math.max(0, deficit)
+
+    if safeDeficit <= 0 then
+        return 0
+    end
+
+    local dynamicDenominator = math.max(50, threatValue * 0.10)
+
+    -- Normalize into a rough 0-1-ish range. Tune denominator.
+    return safeDeficit / (safeDeficit + dynamicDenominator)
+
+end
+
 GetZoneContiguityValue = function(intelmanager, zone)
     local bonus = 0
     local totalAdj = 0
@@ -8769,9 +8803,8 @@ GetZoneContiguityValue = function(intelmanager, zone)
 
     for _, adj in zone.edges do
         local neighbor = adj.zone
-        totalAdj = totalAdj + 1
-
         if neighbor then
+            totalAdj = totalAdj + 1
             local neighborId = neighbor.id
             if frontlineZones and frontlineZones[neighborId] then
                 bonus = bonus + 1.5
@@ -8998,7 +9031,7 @@ function GetAdaptiveStatusValue(zone, intelmanager)
     if zone.edges then
         for _, adj in zone.edges do
             local neighbor = adj.zone
-            if zone.label == neighbor.label and neighbor and neighbor.status == 'Hostile' then
+            if neighbor and zone.label == neighbor.label and neighbor.status == 'Hostile' then
                 isAdjacentToHostile = true
                 break
             end
@@ -9021,7 +9054,7 @@ function GetAdaptiveStatusValue(zone, intelmanager)
     return valueTable[status] or 1
 end
 
-function ComputeSafetyState(aiBrain, allZones, zoneLayerSet)
+function ComputeSafetyState(aiBrain, allZones, zoneLayerSet, layer)
     local visited = {}
     local depths = {}
     local barrier = {}
@@ -9030,9 +9063,11 @@ function ComputeSafetyState(aiBrain, allZones, zoneLayerSet)
 
     local frontier = {}
 
+    local intelManager = aiBrain.IntelManager
+
     -- Start from zones that are Hostile or Contested
     for zoneId, zone in pairs(zoneLayerSet) do
-        if zone.status == 'Hostile' or zone.status == 'Contested' or zone.status == 'Unoccupied' then
+        if zone.status == 'Hostile' or zone.status == 'Contested' then
             visited[zoneId] = true
             depths[zoneId] = 0
             barrier[zoneId] = 0
@@ -9049,12 +9084,28 @@ function ComputeSafetyState(aiBrain, allZones, zoneLayerSet)
             local currentDepth = depths[zoneId] or 0
             local currentZone = zoneLayerSet[zoneId]
             local currentScore, isSafe = GetZoneGreedSafetyScore(aiBrain.Army, currentZone)
+            ------
+            local parentContig = GetZoneContiguityValue(intelManager, currentZone)
+            local parentStaging = GetZoneStagingPressureValue(intelManager, currentZone)
+            ------
 
             for _, edge in ipairs(currentZone.edges or {}) do
                 local neighbor = edge.zone
                 local neighborId = neighbor.id
 
                 if not visited[neighborId] then
+                    --------------
+                    local enemyStartClose = IsEnemyStartClose(neighbor)
+                    local allyStartClose = IsAllyStartClose(neighbor)
+                    local contiguityValue = GetZoneContiguityValue(intelManager, neighbor)
+                    local stagingPressureValue = GetZoneStagingPressureValue(intelManager, neighbor)
+                    local controlValue = GetAdaptiveStatusValue(neighbor, intelManager)
+
+                    --LOG(string.format("[GreedEdgeAudit] Edge %d -> %d | Parent Contig: %.2f, Child Contig: %.2f | Parent Staging: %.2f, Child Staging: %.2f", currentZone.id, neighborId, parentContig or 0, contiguityValue or 0, parentStaging or 0, stagingPressureValue or 0))
+
+                    --LOG(string.format("[GreedMetricAudit] Zone %d | Status: %s | Contig: %.2f | StagingPres: %.2f | Control: %.2f", neighborId, tostring(neighbor.status), contiguityValue or 0, stagingPressureValue or 0, controlValue or 0))
+
+                    -----------
                     local neighborScore, isSafe = GetZoneGreedSafetyScore(aiBrain.Army, neighbor)
                     local minBarrier = math.min(currentScore, neighborScore)
 
@@ -9077,8 +9128,92 @@ function ComputeSafetyState(aiBrain, allZones, zoneLayerSet)
 
         frontier = nextFrontier
     end
+    for zoneId, zone in pairs(zoneLayerSet) do
+        -- 1. High depth, no threat, and not already marked safe
+        if not safeZones[zoneId] and zone.status == 'Allied' and (depths[zoneId] or 0) >= 2 and (zone.gridenemylandthreat or 0) == 0 then
+            local secureNeighborsCount = 0
+            local totalNeighborBuildRate = 0
+
+            for _, edge in ipairs(zone.edges or {}) do
+                local neighbor = edge.zone
+                if neighbor then
+                    local nId = neighbor.id
+                    -- 2. Neighboring zone must be verified safe
+                    if safeZones[nId] then
+                        local nMgr = neighbor.BuilderManager
+                        if nMgr and nMgr.FactoryManager then
+                            local fMgr = nMgr.FactoryManager
+                            local buildRate = fMgr[layer .. 'BuildRate'] or 0
+                            -- 3. Neighbor must be a functional factory hub
+                            if buildRate > 0 then
+                                secureNeighborsCount = secureNeighborsCount + 1
+                                totalNeighborBuildRate = totalNeighborBuildRate + buildRate
+                            end
+                        end
+                    end
+                end
+            end
+
+            -- 4. Must be surrounded by verified safe, high-capacity industrial hubs
+            if secureNeighborsCount >= 1 and totalNeighborBuildRate >= 20 then
+                safeZones[zoneId] = true
+                if zone.zoneincome and zone.zoneincome.selfincome > 1.0 then
+                    zoneUpgradeBias[zoneId] = 1.2
+                end
+                -- Assign an artificial barrier score equivalent to its safest neighboring anchor
+                barrier[zoneId] = 2.0 
+            end
+        end
+    end
+    if layer == 'Land' then
+            --LOG("Greed Safety State Computation Complete for Land Layer")
+        -- Populate Visual Debug Table
+        aiBrain.GreedVisualDebugData = {}
+        for zoneId, zone in pairs(zoneLayerSet) do
+            aiBrain.GreedVisualDebugData[zoneId] = {
+                pos = zone.pos,
+                depth = depths[zoneId] or -1, -- -1 highlights isolated/island zones never reached by BFS
+                isSafe = safeZones[zoneId] or false,
+                barrierScore = barrier[zoneId] or 0,
+                parentPos = zone.BFSGreedParentPos
+            }
+        end
+    end
 
     return barrier, depths, safeZones, zoneUpgradeBias
+end
+
+GreedZoneRenderDebugThread = function(aiBrain)
+    -- Wait until data starts populating
+    while not aiBrain.GreedVisualDebugData do
+        coroutine.yield(10)
+    end
+
+    while aiBrain.Result ~= "defeat" do
+        local debugData = aiBrain.GreedVisualDebugData
+        if debugData then
+            for id, data in pairs(debugData) do
+                if data.pos then
+                    if data.depth == -1 then
+                        -- ISOLATED/ISLAND ZONE: No valid land path exists from enemy seeds
+                        DrawCircle(data.pos, 4, '777777') -- Muted Gray
+                    elseif data.isSafe then
+                        -- SAFE ZONE: Clear for tactical greed modifications
+                        DrawCircle(data.pos, 8, '00FF00') -- Bright Green
+                    else
+                        -- FRONT/TIER ZONE: Reachable by enemy, but not safe enough yet
+                        DrawCircle(data.pos, 6, 'FF9900') -- Orange
+                    end
+                    
+                    -- Render Cyan vector lines tracing the path of depth accumulation
+                    if data.parentPos then
+                        DrawLinePop(data.pos, data.parentPos, 'ff00FFFF')
+                    end
+                end
+            end
+        end
+        coroutine.yield(2)
+    end
 end
 
 function IsEnemyStartClose(zone)
@@ -9121,7 +9256,8 @@ function GetZoneGreedSafetyScore(armyIndex, zone)
 
     -- 2. Builder presence (can reinforce or defend)
     if zone.BuilderManager and zone.BuilderManager.FactoryManager and zone.BuilderManager.FactoryManager.LocationActive then
-     score = score + 1
+        local eThreat = zone.gridenemylandthreat or 0
+        score = score + (eThreat == 0 and 1.5 or 1.0)
     end
 
     -- 3. Existing defensive layout
@@ -9137,7 +9273,7 @@ function GetZoneGreedSafetyScore(armyIndex, zone)
                     totalAntiAirThreat = (spoke.AntiAirThreat or 0)
                     if spoke.Shields then
                         for _, sunit in ipairs(spoke.Shields) do
-                            if shieldUnit and not shieldUnit.Dead then
+                            if sunit and not sunit.Dead then
                                 totalShields = totalShields + 1
                             end
                         end
@@ -9164,7 +9300,7 @@ function GetZoneGreedSafetyScore(armyIndex, zone)
     end
 
     -- 4. Threat alignment (basic version: no strong enemy threat)
-    local enemySiloCount = zone.enemySilos and zone.enemySilos > 0
+    local enemySiloCount = zone.enemySilos or 0
     if enemySiloCount > 0 then
         score = score - 2
     end

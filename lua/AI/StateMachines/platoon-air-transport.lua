@@ -672,11 +672,11 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
                     self:ChangeState(self.DecideWhatToDo)
                     return
                 end
-                if loadingTimeout == 30 then
+                if loadingTimeout == 30 or loadingTimeout == 45 then
                     self:LogDebug(string.format('Reorder attachment request'))
                     self:ReorderAttachment(transportAssignment)
                     coroutine.yield(35)
-                elseif loadingTimeout == 45 then
+                elseif loadingTimeout == 55 then
                     self:LogDebug(string.format('Reorder warp attachment request'))
                     self:ReorderAttachment(transportAssignment, true)
                     coroutine.yield(35)

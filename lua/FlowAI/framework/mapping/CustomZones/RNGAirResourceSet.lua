@@ -107,6 +107,7 @@ RNGAirResourceSet = Class(ZoneSet){
                     friendlyantiairallocatedthreat = 0, 
                     friendlydirectfireallocatedthreat = 0
                 },
+                intelassignment = {},
             })
         end
     end,

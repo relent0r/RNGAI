@@ -1935,6 +1935,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.CalculateMassMarkersRNG)
         self:ForkThread(self.AdjustEconomicAllocation)
         self:ForkThread(self.SendGameStartTaunt)
+        self:ForkThread(RUtils.GreedZoneRenderDebugThread, self)
         --self:ForkThread(self.ZoneAllocationDebugThread)
         if self.RNGDEBUG then
             self:ForkThread(self.LogDataThreadRNG)
@@ -7925,8 +7926,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 engineerAssistRatio = clamp(engineerAssistRatio + (excessAllocation * cfg.excessAssistFactor), assistFloor, maxAssistSpend)
             end
 
-            LOG(string.format("RNGLOG_DOM_CLAMP | ProdAlloc: %.2f | TotNeed: %.2f | DesL/A/N: %.2f/%.2f/%.2f | NewL/A/N: %.2f/%.2f/%.2f", productionAllocation, totalUnitNeeds, desiredLand, desiredAir, desiredNaval, newLand, newAir, newNaval))
-            LOG(string.format("RNGLOG_ASSIST_CONFLICT | ExcessAlloc: %.2f | Leftover: %.2f | EcoSpend: %.2f | AssistRatio: %.2f", excessAllocation, leftover, economyUpgradeSpend, engineerAssistRatio))
+            --LOG(string.format("RNGLOG_DOM_CLAMP | ProdAlloc: %.2f | TotNeed: %.2f | DesL/A/N: %.2f/%.2f/%.2f | NewL/A/N: %.2f/%.2f/%.2f", productionAllocation, totalUnitNeeds, desiredLand, desiredAir, desiredNaval, newLand, newAir, newNaval))
+            --LOG(string.format("RNGLOG_ASSIST_CONFLICT | ExcessAlloc: %.2f | Leftover: %.2f | EcoSpend: %.2f | AssistRatio: %.2f", excessAllocation, leftover, economyUpgradeSpend, engineerAssistRatio))
 
             ----------------------------------------------------------------------
             -- 8) CONSTRUCTION / ECO HEALTH TEMPERING

@@ -1378,7 +1378,8 @@ IntelManager = Class {
                 encirclementWeight = 2.0,
                 zoneHomeWeight = 1.0,
                 zoneFlankRiskWeight = 1.3,
-                frontlineWeight = 2.5,     -- High gravity for main combat groups
+                frontlineWeight = 2.5,    -- High gravity for main combat groups
+                stagingPressureWeight = 3.5,
             },
             raid = {
                 zoneDistanceWeight = 0.5,
@@ -1461,11 +1462,7 @@ IntelManager = Class {
                     end
                 end
             end
-    
-            -- 2. RESET LABEL & PRODUCTION TABLES
-            self.LabelMetrics = {}
-            self.ProductionDemand = { Land = 0, Air = 0, AntiAir = 0 }
-    
+       
             -- 3. THE MAIN SCORING PASS (One loop for performance)
             for id, v in zones do
                 -- A. Core Variable Setup (From your snippet)
@@ -1500,6 +1497,7 @@ IntelManager = Class {
                 local airUtilityValue = RUtils.GetZoneAirSurfaceUtility(v, teamValueBonus)
                 local airSurfaceViabilityValue = RUtils.GetZoneAirSurfaceViability(self.MapMaximumValues.MaximumResourceValue, v)
                 local airExposureValue = RUtils.GetZoneExposureValue(myStart, enemyStart, v.pos, mapDiagonalSq)
+                local stagingPressureValue = RUtils.GetZoneStagingPressureValue(self, v)
 
                 -- D. CALCULATE STATIC SCORES
                 -- Note: We omit distanceValue, threatValue, and zonePressureValue (calculated by platoon)
@@ -1514,7 +1512,8 @@ IntelManager = Class {
                     adjacencyValue * weightTable.control.adjacencyThreatWeight + 
                     encirclementValue * weightTable.control.encirclementWeight -
                     zoneFlankRisk * weightTable.control.zoneFlankRiskWeight +
-                    isFrontlineNode * weightTable.control.frontlineWeight
+                    isFrontlineNode * weightTable.control.frontlineWeight +
+                    stagingPressureValue * weightTable.control.stagingPressureWeight
                 )
     
                 -- D2. STATIC RAID SCORE
@@ -1526,7 +1525,7 @@ IntelManager = Class {
                     contiguityValue * weightTable.raid.contiguityWeight - 
                     teamValueBonus * weightTable.raid.teamValueWeight +
                     zoneFlankRaidBonus * weightTable.raid.zoneFlankWeight +
-                    isFrontlineNode * weightTable.aadefense.frontlineWeight
+                    isFrontlineNode * weightTable.raid.frontlineBypassWeight
                 )
     
                 -- D3. STATIC AA DEFENSE SCORE
@@ -1579,80 +1578,30 @@ IntelManager = Class {
                     LOG(string.format("    > Contiguity:   %.2f * %.1f = %.2f", contiguityValue, weightTable.raid.contiguityWeight, contiguityValue * weightTable.raid.contiguityWeight))
                     LOG(string.format("    > TeamBonus:    -%.2f * %.1f = -%.2f", teamValueBonus, weightTable.raid.teamValueWeight, teamValueBonus * weightTable.raid.teamValueWeight))
                     LOG(string.format("    > ZoneFlankBonus:    %.2f * %.1f = %.2f", zoneFlankRaidBonus, weightTable.raid.zoneFlankWeight, zoneFlankRaidBonus * weightTable.raid.zoneFlankWeight))
-                end
-
-                -- =================================================================
-                -- LIVE VISUAL DEBUG ENGINE INJECTION
-                -- =================================================================
-                self.VisualDebugData = self.VisualDebugData or {}
-                if v.pos then
-                    self.VisualDebugData[id] = {
-                        pos = v.pos,
-                        controlRadius = math.max(1, v.staticcontrolscore * 4),
-                        raidRadius = math.max(1, v.staticraidscore * 4),
-                        parentPos = nil
-                    }
-                    
-                    -- Trace structural paths for BFS without drawing yet
-                    if homeDepths[id] and homeDepths[id] > 0 then
-                        for _, edge in ipairs(v.edges or {}) do
-                            if homeDepths[edge.zone.id] and homeDepths[edge.zone.id] < homeDepths[id] then
-                                self.VisualDebugData[id].parentPos = edge.zone.pos
-                                break
+                                    -- =================================================================
+                    -- LIVE VISUAL DEBUG ENGINE INJECTION
+                    -- =================================================================
+                    self.VisualDebugData = self.VisualDebugData or {}
+                    if v.pos then
+                        self.VisualDebugData[id] = {
+                            pos = v.pos,
+                            controlRadius = math.max(1, v.staticcontrolscore * 4),
+                            raidRadius = math.max(1, v.staticraidscore * 4),
+                            parentPos = nil
+                        }
+                        
+                        -- Trace structural paths for BFS without drawing yet
+                        if homeDepths[id] and homeDepths[id] > 0 then
+                            for _, edge in ipairs(v.edges or {}) do
+                                if homeDepths[edge.zone.id] and homeDepths[edge.zone.id] < homeDepths[id] then
+                                    self.VisualDebugData[id].parentPos = edge.zone.pos
+                                    break
+                                end
                             end
                         end
                     end
                 end
-                -- =================================================================
-
-
-    
-                -- E. LABEL AGGREGATION
-                local lbl = v.label
-                if not self.LabelMetrics[lbl] then
-                    self.LabelMetrics[lbl] = { EnemyLandThreat = 0, Reachable = (homeDepths[id] ~= nil), Mass = 0 }
-                end
-                local lm = self.LabelMetrics[lbl]
-                lm.EnemyLandThreat = lm.EnemyLandThreat + v.enemylandthreat
-                lm.Mass = lm.Mass + (v.resourcevalue or 0)
-    
-                -- F. PRODUCTION DEMAND LOGIC
-                if lm.Reachable then
-                    self.ProductionDemand.Land = self.ProductionDemand.Land + math.max(0, v.enemylandthreat - v.friendlyantisurfacethreat)
-                else
-                    -- High value/threat on unreachable label? Demand Air/Transports.
-                    if lm.EnemyLandThreat > 10 or lm.Mass > 20 then
-                        self.ProductionDemand.Air = self.ProductionDemand.Air + 5
-                    end
-                end
             end
-            local bestC, bestR, bestA, bestAs = {s = -999}, {s = -999}, {s = -999}, {s = -999}
-            for id, v in zones do
-                if v.staticcontrolscore > bestC.s then 
-                    bestC = {id = id, s = v.staticcontrolscore, dist = (v.enemystartdata[enemyArmyIndex] and v.enemystartdata[enemyArmyIndex].startdistance or -1)} 
-                end
-                if v.staticraidscore > bestR.s then 
-                    bestR = {id = id, s = v.staticraidscore, dist = (v.enemystartdata[enemyArmyIndex] and v.enemystartdata[enemyArmyIndex].startdistance or -1)} 
-                end
-                if v.staticaascore > bestA.s then 
-                    bestA = {id = id, s = v.staticaascore, dist = (v.enemystartdata[enemyArmyIndex] and v.enemystartdata[enemyArmyIndex].startdistance or -1)} 
-                end
-                if v.staticsurfaceairscore > bestAs.s then 
-                    bestAs = {id = id, s = v.staticsurfaceairscore, dist = (v.enemystartdata[enemyArmyIndex] and v.enemystartdata[enemyArmyIndex].startdistance or -1)} 
-                end
-            end
-    
-            --LOG(string.format("RNGAI THREAD VALIDATION | Update Complete"))
-            --LOG(string.format("  > BEST CONTROL: Zone %s (Score: %.2f | EnemyDist: %.0f)", tostring(bestC.id), bestC.s, bestC.dist))
-            --LOG(string.format("  > BEST RAID:    Zone %s (Score: %.2f | EnemyDist: %.0f)", tostring(bestR.id), bestR.s, bestR.dist))
-            --LOG(string.format("  > BEST AA DEF:  Zone %s (Score: %.2f | EnemyDist: %.0f)", tostring(bestA.id), bestA.s, bestA.dist))
-            --LOG(string.format("  > BEST AirSurface :  Zone %s (Score: %.2f | EnemyDist: %.0f)", tostring(bestAs.id), bestAs.s, bestAs.dist))
-            
-            -- Check if BFS actually reached anything beyond the start zone
-            local reachableCount = 0
-            for k, _ in homeDepths do reachableCount = reachableCount + 1 end
-            --LOG(string.format("  > BFS REACH: %d zones reachable from MAIN", reachableCount))
-    
             coroutine.yield(20) 
         end
     end,
@@ -1857,9 +1806,6 @@ IntelManager = Class {
         if not bestZone or (bestZone and bestScore < minThreshold) then
             return nil, nil
         end
-        RNGLOG(string.format("DECISION_TRACE | Plat: %s | Logic: %s | Target: %s | Score: %.2f | Min: %.2f", platoon.BuilderName or "Unk", zonetype or "None", tostring(bestZone.id), bestScore, minThreshold))
-        local logZone = bestZone or {id = 'None'}
-        --LOG(string.format("ZONE_DECISION: Plat=%s | BestZone=%s | Score=%.2f | MinReq=%.2f | PlatThreat=%.1f  | Current Zone=%s", platoon.PlatoonName, logZone.id, bestScore or 0, minThreshold, (platoon.CurrentPlatoonThreatAntiSurface or 0), tostring(platoon.ZoneID)))
         return bestZone.id, bestPos
     end,
 
@@ -5077,7 +5023,6 @@ IntelManager = Class {
             zoneId = MAP:GetZoneID(position,self.Brain.Zones.Land.index)
         end
         if gridZ and gridZ then
-            LOG('Structre being requested '..tostring(structureType))
             if self.StructureRequests[structureType] then
                 table.insert(self.StructureRequests[structureType], {
                     Position = position,
