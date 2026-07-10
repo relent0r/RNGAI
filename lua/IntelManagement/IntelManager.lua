@@ -1442,6 +1442,9 @@ IntelManager = Class {
             local zones = aiBrain.Zones.Land.zones
             local intel = self.EnemyIntel.EnemyThreatCurrent
             local currentFrontlines = self.CurrentFrontLineZones or {}
+            local totalHighValueRaidTargets = 0
+            local totalFrontlinePressure = 0
+            local totalContestedIncomeZones = 0
     
             -- 1. BFS PHASE: Path-Distance Mapping
             -- This determines homeDistanceValue and reachability via edges
@@ -1498,6 +1501,21 @@ IntelManager = Class {
                 local airSurfaceViabilityValue = RUtils.GetZoneAirSurfaceViability(self.MapMaximumValues.MaximumResourceValue, v)
                 local airExposureValue = RUtils.GetZoneExposureValue(myStart, enemyStart, v.pos, mapDiagonalSq)
                 local stagingPressureValue = RUtils.GetZoneStagingPressureValue(self, v)
+
+                local enemyIncome = (v.zoneincome and v.zoneincome.enemyincome) or 0
+                if v.staticraidscore > 0.8 and enemyIncome > 0 then
+                    totalHighValueRaidTargets = totalHighValueRaidTargets + 1
+                end
+
+                -- Track active macro tactical pressure (Staging or contested stress)
+                if stagingPressureValue > 2.0 or (currentFrontlines[id] and adjacencyValue > 1.5) then
+                    totalFrontlinePressure = totalFrontlinePressure + 1
+                end
+
+                -- Track income nodes currently floating in the open or actively contested
+                if (v.status == 'Contested' or v.status == 'Unoccupied') and (v.resourcevalue or 0) > 0 then
+                    totalContestedIncomeZones = totalContestedIncomeZones + 1
+                end
 
                 -- D. CALCULATE STATIC SCORES
                 -- Note: We omit distanceValue, threatValue, and zonePressureValue (calculated by platoon)
@@ -1556,6 +1574,10 @@ IntelManager = Class {
                     (airExposureValue * weightTable.airsurface.exposurePenaltyWeight)
                 ) * globalAirScale
 
+                self.HighValueRaidTargets = totalHighValueRaidTargets
+                self.FrontlinePressureCount = totalFrontlinePressure
+                self.ContestedIncomeCount = totalContestedIncomeZones
+
                if debugFocusZoneID then
                     WARN(string.format("RNGLOG AUDIT: --- TUNING DATA FOR ZONE %s ---", tostring(id)))
                     WARN(string.format("  [CONTROL SCORE: %.3f]", v.staticcontrolscore))
@@ -1578,9 +1600,9 @@ IntelManager = Class {
                     LOG(string.format("    > Contiguity:   %.2f * %.1f = %.2f", contiguityValue, weightTable.raid.contiguityWeight, contiguityValue * weightTable.raid.contiguityWeight))
                     LOG(string.format("    > TeamBonus:    -%.2f * %.1f = -%.2f", teamValueBonus, weightTable.raid.teamValueWeight, teamValueBonus * weightTable.raid.teamValueWeight))
                     LOG(string.format("    > ZoneFlankBonus:    %.2f * %.1f = %.2f", zoneFlankRaidBonus, weightTable.raid.zoneFlankWeight, zoneFlankRaidBonus * weightTable.raid.zoneFlankWeight))
-                                    -- =================================================================
+                    -- =====================================
                     -- LIVE VISUAL DEBUG ENGINE INJECTION
-                    -- =================================================================
+                    -- =====================================
                     self.VisualDebugData = self.VisualDebugData or {}
                     if v.pos then
                         self.VisualDebugData[id] = {
@@ -4135,7 +4157,9 @@ IntelManager = Class {
             -- 3. IDENTIFY DEMAND
             -- To make the claiming fair, we ideally want to process High Value zones first.
             -- However, for performance, a standard loop with the claim system is usually sufficient.
+            local minThreatThreshold = 2.5
             for zoneID, zoneData in aiBrain.Zones.Land.zones do
+
                 
                 local isDefensiveZone = (zoneData.teamvalue and zoneData.teamvalue > 0)
                 local myLandThreat = zoneData.friendlylandthreat or 0
@@ -4183,7 +4207,7 @@ IntelManager = Class {
                     -- D. DETERMINE FINAL REQUIREMENT
                     local finalThreatNeed = math.max(totalReactiveThreat, umbrellaThreatNeed)
                     
-                    if finalThreatNeed > 5 then 
+                    if finalThreatNeed > minThreatThreshold then 
                         local rawUnitsNeeded = math.ceil(finalThreatNeed / airThreatToUnitRatio)
                         
                         local cap = 60 

@@ -17,6 +17,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
     ---@param self AIPlatoon
     OnDestroy = function(self)
         self:DeregisterPlatoon(self:GetBrain())
+        --import('/mods/RNGAI/lua/AI/RNGDebug.lua').DeregisterPlatoonForVisualization(self)
         if self.BuilderHandle then
             self.BuilderHandle:RemoveHandle(self)
         end
@@ -270,6 +271,9 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         if not self['rngdata'].MinPlatoonSpeed then
             self['rngdata'].MinPlatoonSpeed = minPlatoonSpeed
         end
+        --if self.Visualize and self:GetBrain().RNGDEBUG then
+        --    import('/mods/RNGAI/lua/AI/RNGDebug.lua').RegisterPlatoonForVisualization(self)
+        --end
     end,
 
     ChangeStateExt = function(self, name, state)
@@ -278,6 +282,24 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         if not IsDestroyed(self) then
             self.State = state
             ChangeState(self, name)
+        end
+    end,
+
+    Visualize = function(self)
+        if IsDestroyed(self) then return end
+        local position = self:GetPlatoonPosition()
+        if position then
+            local target = self.dest or (self.BuilderData and self.BuilderData.Position)
+            if not target and self.BuilderData and self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) then
+                if self.BuilderData.AttackTarget.GetPosition then
+                    target = self.BuilderData.AttackTarget:GetPosition()
+                end
+            end
+            local color = self.StateColor or 'ffffff'
+            DrawCircle(position, 3, color)
+            if target then
+                DrawLinePop(position, target, color)
+            end
         end
     end,
 

@@ -115,3 +115,42 @@ DrawIntelGrid = function()
         WaitTicks(2)
     end
 end
+
+local ActiveVisualizePlatoons = {}
+local visualizeThread = nil
+
+AIStateMachineVisualize = function()
+    local IsDestroyed = IsDestroyed
+    while true do
+        local count = 0
+        for platoon, _ in ActiveVisualizePlatoons do
+            if IsDestroyed(platoon) then
+                ActiveVisualizePlatoons[platoon] = nil
+            else
+                count = count + 1
+                if platoon.VisualizeEnabled then
+                    local ok, msg = pcall(platoon.Visualize, platoon)
+                    if not ok then
+                        WARN(msg)
+                    end
+                end
+            end
+        end
+        if count == 0 then
+            visualizeThread = nil
+            break
+        end
+        WaitTicks(2)
+    end
+end
+
+RegisterPlatoonForVisualization = function(platoon)
+    ActiveVisualizePlatoons[platoon] = true
+    if not visualizeThread then
+        visualizeThread = ForkThread(AIStateMachineVisualize)
+    end
+end
+
+DeregisterPlatoonForVisualization = function(platoon)
+    ActiveVisualizePlatoons[platoon] = nil
+end

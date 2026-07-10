@@ -280,6 +280,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local targetPos
             local maxEnemyDirectIndirectRange
             local maxEnemyDirectIndirectRangeDistance
+            local friendlyAcuPos = aiBrain.CDRUnit and not aiBrain.CDRUnit.Dead and aiBrain.CDRUnit.Position
             for _,v in units do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
@@ -376,7 +377,25 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                     local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self['rngdata'].MaxPlatoonWeaponRange})
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 else
-                                    IssueAggressiveMove({v},targetPos)
+                                    local pocketPosition = nil
+                                    if targetCats.COMMAND and friendlyAcuPos and not aiBrain.BrainIntel.SuicideModeActive and not aiBrain.CDRUnit.Retreating and (aiBrain.CDRUnit.Confidence and aiBrain.CDRUnit.Confidence <= 3.0) then
+                                        local cdrUnit = aiBrain.CDRUnit
+                                        local cdrWeaponRange = cdrUnit.WeaponRange or 20
+                                        cdrWeaponRange = cdrWeaponRange * cdrWeaponRange
+                                        local friendlyThreat = cdrUnit.CurrentFriendlyThreat or 0
+                                        local enemyThreat = (cdrUnit.CurrentEnemyThreat or 0) + (cdrUnit.CurrentEnemyDefenseThreat or 0)
+                                        
+                                        -- Only break pocket if we have overwhelming local force (> 3.5x) to secure the kill safely
+                                        local isOverwhelmingSuperiority = friendlyThreat > (enemyThreat * 3.5)
+                                        if cdrUnit.Confidence >= 3.0 and not cdrUnit.Retreating and not isOverwhelmingSuperiority then
+                                            pocketPosition = StateUtils.GetEscortPocketPosition(v:GetEntityId(), unitPos, friendlyAcuPos, targetPos, cdrWeaponRange)
+                                        end
+                                    end
+                                    if pocketPosition then
+                                        StateUtils.IssueNavigationMove(v, pocketPosition)
+                                    else
+                                        IssueAggressiveMove({v}, targetPos)
+                                    end
                                 end
                                 continue
                             end
@@ -408,7 +427,26 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                     local movePos = RUtils.lerpy(unitPos, targetPos, {closestTarget, closestTarget - self['rngdata'].MaxPlatoonWeaponRange})
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 else
-                                    IssueAggressiveMove({v},targetPos)
+                                    local pocketPosition = nil
+                                    if targetCats.COMMAND and friendlyAcuPos and not aiBrain.BrainIntel.SuicideModeActive and not aiBrain.CDRUnit.Retreating then
+                                        local cdrUnit = aiBrain.CDRUnit
+                                        local cdrWeaponRange = cdrUnit.WeaponRange or 20
+                                        cdrWeaponRange = cdrWeaponRange * cdrWeaponRange
+                                        local friendlyThreat = cdrUnit.CurrentFriendlyThreat or 0
+                                        local enemyThreat = (cdrUnit.CurrentEnemyThreat or 0) + (cdrUnit.CurrentEnemyDefenseThreat or 0)
+                                        
+                                        -- Only break pocket if we have overwhelming local force (> 3.5x) to secure the kill safely
+                                        local isOverwhelmingSuperiority = friendlyThreat > (enemyThreat * 3.5)
+                                        
+                                        if cdrUnit.Confidence >= 3.0 and not cdrUnit.Retreating and not isOverwhelmingSuperiority then
+                                            pocketPosition = StateUtils.GetEscortPocketPosition(v:GetEntityId(), unitPos, friendlyAcuPos, targetPos, cdrWeaponRange)
+                                        end
+                                    end
+                                    if pocketPosition then
+                                        StateUtils.IssueNavigationMove(v, pocketPosition)
+                                    else
+                                        IssueAggressiveMove({v}, targetPos)
+                                    end
                                 end
                             elseif unitRole == 'Shield' and closestTarget then
                                 --LOG('UnitRole is Shield')
@@ -1309,20 +1347,6 @@ ACUSupportPositionThread = function(aiBrain, platoon)
             platoon.Pos=GetPlatoonPosition(platoon)
         end
         coroutine.yield(5)
-        if not platoon.Pos[1] then
-            --LOG('Platoons position is currently nil')
-            local platoonUnits = platoon:GetPlatoonUnits()
-            local alive = 0
-            local dead = 0
-            for _, unit in platoonUnits do
-                if not unit.Dead then
-                    alive = alive + 1
-                else
-                    dead = dead + 1
-                end
-            end
-            --LOG('Platoon has '..tostring(alive)..' alive and '..tostring(dead)..' dead units')
-        end
     end
     --LOG('ACU support position thread is exiting')
 end

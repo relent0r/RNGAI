@@ -642,7 +642,7 @@ function CDRThreatAssessmentRNG(cdr)
                 local friendlyThreatConfidenceModifier = calculateFriendlyThreatModifier(aiBrain, friendlyUnitThreatInner, friendlyUnitThreatOuter, cdr, weights)
                 local trueEnemyUnitThreat = enemyUnitThreatInner
                 if cdr.EnemyCDRPresent and cdr.EnemyACUModifiedThreat then
-                    trueEnemyUnitThreat = trueEnemyUnitThreat * cdr.EnemyACUModifiedThreat 
+                    trueEnemyUnitThreat = cdr.EnemyACUModifiedThreat 
                 end
                 local enemyThreatConfidenceModifier = calculateEnemyThreatModifier(aiBrain, trueEnemyUnitThreat, enemyUnitThreatOuter, enemyDefenseThreat, weights)
 
@@ -705,7 +705,7 @@ function CDRThreatAssessmentRNG(cdr)
                     overchargeFactor = weights.overchargeBoost * threatScaling * healthScaling
                 end
                 
-                --  LOG('AI '..tostring(aiBrain.Nickname)..' health percent '..tostring(cdr.HealthPercent)..' friendlyThreatConfidenceModifier '..tostring(friendlyThreatConfidenceModifier)..' enemyThreatConfidenceModifier '..tostring(enemyThreatConfidenceModifier)..' ratio '..tostring(friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier)..' survivability '..tostring(survivability)..' overcharge '..tostring(overchargeFactor))
+                --LOG('AI '..tostring(aiBrain.Nickname)..' health percent '..tostring(cdr.HealthPercent)..' friendlyThreatConfidenceModifier '..tostring(friendlyThreatConfidenceModifier)..' enemyThreatConfidenceModifier '..tostring(enemyThreatConfidenceModifier)..' ratio '..tostring(friendlyThreatConfidenceModifier / enemyThreatConfidenceModifier)..' survivability '..tostring(survivability)..' overcharge '..tostring(overchargeFactor))
 
 
                 -- Normalize the threat divisor to 1.0. 

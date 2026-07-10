@@ -42,21 +42,65 @@ end
 local RaidPlatoonIncrement = function(self, aiBrain)
     local registry = aiBrain.PlatoonRegistry
     local currentCounters = registry and registry.Counters
+    local intelManager = aiBrain.IntelManager
 
-    if not currentCounters then
+    if not currentCounters or not intelManager then
         return 700
     end
 
+    -- Pull pre-aggregated O(1) global trackers from the IntelManager
+    local frontlinePressure = intelManager.FrontlinePressureCount or 0
+    local highValueTargets = intelManager.HighValueRaidTargets or 0
+    local contestedIncome = intelManager.ContestedIncomeCount or 0
+
+    -- Platoon density states
     local controlCount = currentCounters['ZoneControl_control'] or 0
     local noZoneCount = currentCounters['ZoneControl_NoZoneType'] or 0
     local raidCount = currentCounters['ZoneControl_raid'] or 0
+    local activeControlPlatoons = controlCount + noZoneCount
 
-    -- Evaluates total active ZoneControl state machines (both variants)
-    if (controlCount + noZoneCount) > 3 and raidCount < 2 then
-        return 850
+    local basePriority = 700
+
+    -- Only push raid escalation if the mainline baseline structure is established
+    if activeControlPlatoons > 3 then
+        
+        -- SCENARIO A: High Frontline Pressure AND High-Value Targets exist
+        if frontlinePressure > 1 and highValueTargets > 2 then
+            if raidCount < 2 then
+                --LOG(string.format("RNGLOG: RaidPlatoonIncrement [Scenario A - Initial Counter] -> Priority: 875 | CurrentRaiders: %d | Pressure: %d | RaidTargets: %d", raidCount, frontlinePressure, highValueTargets))
+                return 875 
+            else
+                local pressureBase = 825
+                local platoonPenalty = raidCount * 25
+                local progressivePriority = math.max(710, pressureBase - platoonPenalty)
+                --LOG(string.format("RNGLOG: RaidPlatoonIncrement [Scenario A - Progressive Counter] -> Priority: %d | CurrentRaiders: %d | Pressure: %d | RaidTargets: %d", progressivePriority, raidCount, frontlinePressure, highValueTargets))
+                return progressivePriority
+            end
+        end
+
+        -- SCENARIO B: High Frontline Pressure BUT No Targets available
+        if frontlinePressure > 2 and highValueTargets == 0 then
+            --LOG(string.format("RNGLOG: RaidPlatoonIncrement [Scenario B - Fallback Suppression] -> Priority: 300 | CurrentRaiders: %d | Pressure: %d | RaidTargets: %d", raidCount, frontlinePressure, highValueTargets))
+            return 300 
+        end
+
+        -- SCENARIO C: Standard Tactical Scaling (No crisis conditions)
+        if highValueTargets > 0 or contestedIncome > 1 then
+            local scaleMaxBase = 860 
+            local dynamicReduction = raidCount * 50
+            local progressivePriority = math.max(710, scaleMaxBase - dynamicReduction)
+            
+            if highValueTargets > 4 then
+                progressivePriority = progressivePriority + 20
+            end
+
+            --LOG(string.format("RNGLOG: RaidPlatoonIncrement [Scenario C - Progressive Scale] -> Priority: %d | CurrentRaiders: %d | RaidTargets: %d | ContestedIncome: %d", progressivePriority, raidCount, highValueTargets, contestedIncome))
+            return progressivePriority
+        end
     end
 
-    return 700
+    --LOG(string.format("RNGLOG: RaidPlatoonIncrement [Base Output] -> Priority: 700 | CurrentRaiders: %d | ActiveControlPlatoons: %d", raidCount, activeControlPlatoons))
+    return basePriority
 end
 
 BuilderGroup {
@@ -1072,7 +1116,7 @@ BuilderGroup {
         PlatoonTemplate = 'LandCombatStateMachineRNG',                          -- Template Name. 
         Priority = 700,                                                          -- Priority. 1000 is normal.
         PriorityFunction = RaidPlatoonIncrement,
-        InstanceCount = 2,                                                      -- Number of platoons that will be formed.
+        InstanceCount = 3,                                                      -- Number of platoons that will be formed.
         BuilderType = 'Any',
         BuilderConditions = {     
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE - categories.ENGINEER - categories.SCOUT  } },

@@ -88,6 +88,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
     DecideWhatToDo = State {
 
         StateName = 'DecideWhatToDo',
+        StateColor = 'FFC400',
 
         --- The platoon searches for a target
         ---@param self AIPlatoonZoneControlBehavior
@@ -548,19 +549,12 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             self:ChangeState(self.DecideWhatToDo)
             return
         end,
-
-        Visualize = function(self)
-            local position = self:GetPlatoonPosition()
-            local target = self.LoiterPos
-            if position and target then
-                DrawLinePop(position, target, self.StateColor)
-            end
-        end
     },
 
     ZoneLoiter = State {
 
         StateName = 'ZoneLoiter',
+        StateColor = 'FFC400',
 
         --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
         ---@param self AIPlatoonLandCombatBehavior
@@ -914,6 +908,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
 
     RangedSkirmishCombatLoop = State {
         StateName = 'RangedSkirmishCombatLoop',
+        StateColor = 'FFC400',
     
         ---@param self AIPlatoonLandCombatBehavior
         Main = function(self)
@@ -1033,6 +1028,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
     Retreating = State {
 
         StateName = "Retreating",
+        StateColor = 'FFC400',
 
         --- The platoon retreats from a threat
         ---@param self AIPlatoonZoneControlBehavior
@@ -1149,6 +1145,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
     Transporting = State {
 
         StateName = 'Transporting',
+        StateColor = 'FFC400',
 
         --- The platoon avoids danger or attempts to reclaim if they are too close to avoid
         ---@param self AIPlatoonAdaptiveReclaimBehavior
@@ -1274,7 +1271,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
     Navigating = State {
 
         StateName = "Navigating",
-        StateColor = 'ffffff',
 
         --- The platoon retreats from a threat
         ---@param self AIPlatoonLandCombatBehavior
@@ -1343,7 +1339,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     self.navigating=false
                     self.path=false
                     if self.retreat then
-                        StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandMergeStateMachine', 80, 35, false)
+                        local ignoreRaid = true
+                        if self.PlatoonStrengthNone or self.PlatoonStrengthNone then
+                            ignoreRaid = false
+                        end
+                        StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandMergeStateMachine', 80, 35, false, ignoreRaid)
                         self.retreat = false
                     end
                     coroutine.yield(10)
@@ -1482,14 +1482,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 coroutine.yield(20)
             end
         end,
-
-        Visualize = function(self)
-            local position = self.Pos
-            local target = self.dest
-            if position and target then
-                DrawLinePop(position, target, self.StateColor)
-            end
-        end
     },
 
     SupportUnit = State {
@@ -1552,12 +1544,30 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             return
         end,
     },
+
+    Visualize = function(self)
+        local position = self:GetPlatoonPosition()
+        local target = self.BuilderData.TargetZone
+        if position and target then
+            local aiBrain = self:GetBrain()
+            local targetPosition = aiBrain.Zones.Land.zones[target].pos
+            if self.ZoneType == 'raid' then
+                DrawLinePop(position, targetPosition, 'FF0000')
+            else
+                DrawLinePop(position, targetPosition, '00FF00')
+            end
+        end
+    end
 }
 
 ---@param data { Behavior: 'AIBehavior' }
 ---@param units Unit[]
 AssignToUnitsMachine = function(data, platoon, units)
     if units and not table.empty(units) then
+        --if not platoon.VisualizeEnabled then
+        --    platoon.VisualizeEnabled = true
+        --    import('/mods/RNGAI/lua/AI/RNGDebug.lua').RegisterPlatoonForVisualization(platoon)
+        --end
         -- meet platoon requirements
         --LOG('Assigning units to zone control')
         import("/lua/sim/navutils.lua").Generate()

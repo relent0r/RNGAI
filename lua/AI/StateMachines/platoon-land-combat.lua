@@ -950,7 +950,11 @@ AIPlatoonLandCombatBehavior = Class(AIPlatoonRNG) {
                     self.navigating=false
                     self.path=false
                     if self.retreat then
-                        StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandMergeStateMachine', 80, 35, false)
+                        local ignoreRaid = true
+                        if self.PlatoonStrengthNone or self.PlatoonStrengthNone then
+                            ignoreRaid = false
+                        end
+                        StateUtils.MergeWithNearbyPlatoonsRNG(self, 'LandMergeStateMachine', 80, 35, false, ignoreRaid)
                         self.retreat = false
                     end
                     coroutine.yield(10)

@@ -907,7 +907,7 @@ MergeIntoTargetPlatoonRNG = function(self, targetPlatoon)
     return false
 end
 
-MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNumber, ignoreBase, mergeInto)
+MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNumber, ignoreBase, mergeInto, ignoreRaid)
     -- check to see we're not near an ally base
     -- ignoreBase is not worded well, if false then ignore if too close to base
     if IsDestroyed(self) then
@@ -963,6 +963,9 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNu
             continue
         end
         if aPlat.PlatoonName == 'ACUSupportBehavior' then
+            continue
+        end
+        if ignoreRaid and aPlat.PlatoonData and aPlat.PlatoonData.ZoneType and aPlat.PlatoonData.ZoneType == 'raid' then
             continue
         end
         if aPlat.ExcludeFromMerge then
@@ -3251,4 +3254,35 @@ function RemoveFromZoneMarkersCache(zoneMarkers, zoneIndex, markerObject)
             end
         end
     end
+end
+
+function GetEscortPocketPosition(unitId, unitPos, acuPos, targetPos, cdrWeaponRange)
+    local distUnitToTargetSq = VDist2Sq(unitPos[1], unitPos[3], targetPos[1], targetPos[3])
+    local distAcuToTargetSq = VDist2Sq(acuPos[1], acuPos[3], targetPos[1], targetPos[3])
+    
+    -- Leash constraint: Unit is extending past the ACU while the ACU is outside direct engagement range
+    if distUnitToTargetSq < distAcuToTargetSq or distAcuToTargetSq > cdrWeaponRange then
+        local dirX = acuPos[1] - targetPos[1]
+        local dirZ = acuPos[3] - targetPos[3]
+        local len = math.sqrt(dirX * dirX + dirZ * dirZ)
+        
+        if len > 0 then
+            dirX = dirX / len
+            dirZ = dirZ / len
+            
+            -- Perpendicular normal step for flanking
+            local sideX = -dirZ
+            local sideZ = dirX
+            
+            -- Safe Moho engine modulo math for odd/even entity IDs
+            local sideSign = (math.mod(unitId, 2) == 0) and 1 or -1
+            
+            -- 9 units behind the ACU spine, 12 units offset laterally to open the escape corridor
+            local pocketX = acuPos[1] + (dirX * 9) + (sideX * 12 * sideSign)
+            local pocketZ = acuPos[3] + (dirZ * 9) + (sideZ * 12 * sideSign)
+            
+            return {pocketX, acuPos[2], pocketZ}
+        end
+    end
+    return nil
 end

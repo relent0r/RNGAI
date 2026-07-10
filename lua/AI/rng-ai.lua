@@ -1935,7 +1935,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self:ForkThread(self.CalculateMassMarkersRNG)
         self:ForkThread(self.AdjustEconomicAllocation)
         self:ForkThread(self.SendGameStartTaunt)
-        self:ForkThread(RUtils.GreedZoneRenderDebugThread, self)
+        --self:ForkThread(RUtils.GreedZoneRenderDebugThread, self)
         --self:ForkThread(self.ZoneAllocationDebugThread)
         if self.RNGDEBUG then
             self:ForkThread(self.LogDataThreadRNG)
@@ -6693,9 +6693,9 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         end
                         if unit.zoneid then
-                            if unit.zoneid then
-                                unit:SetCustomName(string.format("Zone: %s", tostring(unit.zoneid)))
-                            end
+                            --if unit.zoneid then
+                            --    unit:SetCustomName(string.format("Zone: %s", tostring(unit.zoneid)))
+                            --end
                             if not zoneIncome[unit.zoneid] then
                                 zoneIncome[unit.zoneid] = 0
                             end

@@ -8504,7 +8504,7 @@ function GetZoneIncomeValue(zone, zoneSelectionType, enemyStartClose, allyStartC
         rawResource = math.max(0, rawResource - 5.5)
     end
 
-    local resourceValueBonus = rawResource * 0.5
+    local resourceValueBonus = rawResource * 0.7
     local incomeScore = zone.zoneincome.selfincome * selfWeight +
         zone.zoneincome.allyincome * allyWeight +
         zone.zoneincome.enemyincome * enemyWeight +
@@ -8541,6 +8541,9 @@ function GetZoneIncomeValue(zone, zoneSelectionType, enemyStartClose, allyStartC
                 incomeScore = math.min(incomeScore, 8)
             end
         end
+    end
+    if enemyStartClose and zoneSelectionType == 'raid' then
+        incomeScore = incomeScore * 0.3
     end
 
     return math.min(math.max(incomeScore, 0), 30)
@@ -9165,6 +9168,7 @@ function ComputeSafetyState(aiBrain, allZones, zoneLayerSet, layer)
             end
         end
     end
+    --[[
     if layer == 'Land' then
             --LOG("Greed Safety State Computation Complete for Land Layer")
         -- Populate Visual Debug Table
@@ -9179,6 +9183,7 @@ function ComputeSafetyState(aiBrain, allZones, zoneLayerSet, layer)
             }
         end
     end
+    ]]
 
     return barrier, depths, safeZones, zoneUpgradeBias
 end

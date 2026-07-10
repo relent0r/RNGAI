@@ -2063,13 +2063,13 @@ StructureManager = Class {
             end
             if extractorsDetail.TECH1Upgrading < 5 and extractorsDetail.TECH2Upgrading < 2 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 800) and 
                    energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and extractorsDetail.TECH2 > 0 and 
-                   (upgradeSpend > (tech2Consumption / 2) or extractorsDetail.TECH1 == 0) and (upgradeSpend > tech2Consumption * 2.2) then
+                   upgradeSpend > tech2Consumption * 2.1 then
                         --LOG('We Could upgrade a t2 extractor now with over time and we are not already upgrading t2 '..tostring(aiBrain.Nickname))
                         self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         coroutine.yield(25)
-            elseif extractorsDetail.TECH1Upgrading < 4 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and ((totalSpend < upgradeSpend and extractorsDetail.TECH1 == 0) or massStorage > 600 or upgradeSpend - totalSpend > (tech2Consumption / 2) or upgradeSpend > tech2Consumption) and 
-                    energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and extractorsDetail.TECH2 > 0 and 
-                    (extractorsDetail.TECH1 > 0 and (extractorsDetail.TECH2 / extractorsDetail.TECH1 >= 1.2) or extractorsDetail.TECH1 == 0) then
+            elseif extractorsDetail.TECH1Upgrading < 4 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and 
+                   (totalSpend < upgradeSpend or massStorage > 600 or upgradeSpend > tech2Consumption) and energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and extractorsDetail.TECH2 > 0 and 
+                   (extractorsDetail.TECH1 == 0 or (extractorsDetail.TECH2 / extractorsDetail.TECH1 >= 1.2)) then
                         --LOG('We Could upgrade a t2 extractor now with over time ratio 1.2 and we are not already upgrading t2 '..tostring(aiBrain.Nickname))
                         --LOG('Upgrade spend at the time was '..tostring(upgradeSpend))
                         --LOG('Tech2 consumption at the time was '..tostring(tech2Consumption))

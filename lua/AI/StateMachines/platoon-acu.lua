@@ -2449,31 +2449,35 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 brain.BrainIntel.SuicideModeTarget = nil
             end
             if cdr['rngdata'].EnemyAirPresent and not cdr.AtHoldPosition then
-                local retreatKey
-                local acuHoldPosition
-                cdr.Retreat = true
-                cdr.BaseLocation = true
-                if brain.BrainIntel.ACUDefensivePositionKeyTable[self.LocationType].PositionKey then
-                    retreatKey = brain.BrainIntel.ACUDefensivePositionKeyTable[self.LocationType].PositionKey
-                    acuHoldPosition = brain.BrainIntel.ACUDefensivePositionKeyTable[self.LocationType].Position
+                local totalAirThreat = (cdr.CurrentEnemyAirThreat or 0) + (cdr.CurrentEnemyAirInnerThreat or 0)
+                local airDefenseCover = cdr.CurrentFriendlyAntiAirInnerThreat or 0
+                local snipeThreat = brain.IntelManager.StrategyFlags.EnemyAirSnipeThreat
+                if (totalAirThreat > 6 and totalAirThreat > airDefenseCover) or cdr.Health < 4000 or snipeThreat then
+                    local retreatKey
+                    local acuHoldPosition
+                    cdr.Retreat = true
+                    cdr.BaseLocation = true
+                    if brain.BrainIntel.ACUDefensivePositionKeyTable[self.LocationType].PositionKey then
+                        retreatKey = brain.BrainIntel.ACUDefensivePositionKeyTable[self.LocationType].PositionKey
+                        acuHoldPosition = brain.BrainIntel.ACUDefensivePositionKeyTable[self.LocationType].Position
+                    end
+                    self.BuilderData = {
+                        Position = acuHoldPosition,
+                        CutOff = 25,
+                        Retreat = true
+                    }
+                    local dx = cdr.Position[1] - acuHoldPosition[1]
+                    local dz = cdr.Position[3] - acuHoldPosition[3]
+                    local distance = dx * dx + dz * dz
+                    if distance > 25 then
+                        self:ChangeState(self.Navigating)
+                        return
+                    else
+                        coroutine.yield(10)
+                        self:ChangeState(self.DecideWhatToDo)
+                        return
+                    end
                 end
-                self.BuilderData = {
-                    Position = acuHoldPosition,
-                    CutOff = 25,
-                    Retreat = true
-                }
-                local dx = cdr.Position[1] - acuHoldPosition[1]
-                local dz = cdr.Position[3] - acuHoldPosition[3]
-                local distance = dx * dx + dz * dz
-                if distance > 25 then
-                    self:ChangeState(self.Navigating)
-                    return
-                else
-                    coroutine.yield(10)
-                    self:ChangeState(self.DecideWhatToDo)
-                    return
-                end
-
             end
             local baseRetreat = (distanceToHome > (cdr.MaxBaseRange * cdr.MaxBaseRange)) or forceMainRetreat
 
