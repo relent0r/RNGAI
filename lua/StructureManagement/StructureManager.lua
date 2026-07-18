@@ -308,6 +308,7 @@ StructureManager = Class {
                 end
 
                 frontlineDefenseRatio[layer] = totalFrontlines > 0 and (defendedFrontlines / totalFrontlines) or 0
+                if layer == 'Land' then aiBrain.EcoManager.LandZoneDepths = zoneDepths end
             end
 
             local safeZoneCount = 0
@@ -1955,9 +1956,14 @@ StructureManager = Class {
         while true do
             local brainIntel = aiBrain.BrainIntel
             local multiplier = aiBrain.EcoManager.EcoMultiplier
+            local baseUpgradeTime = 380
+            if aiBrain.LowResourceMapProfile then
+                baseUpgradeTime = 240
+            end
             local upgradeTrigger = false
-            local upgradeSpend = aiBrain.cmanager.income.r.m*aiBrain.EconomyUpgradeSpend
-            if upgradeSpend > 4 or GetGameTimeSeconds() > (420 / multiplier) or aiBrain.BrainIntel.PlayerRole.AirPlayer or aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer or self.BrainIntel.HighestPhase > 1 then
+            local upgradeSpend = aiBrain.cmanager.income.r.m * aiBrain.EconomyUpgradeSpend
+            --LOG('Upgrade spend ratio is '..tostring(aiBrain.EconomyUpgradeSpend)..' and allowed spend is '..tostring(upgradeSpend)..' player is '..tostring(aiBrain.Nickname))
+            if upgradeSpend > 4 or GetGameTimeSeconds() > (baseUpgradeTime / multiplier) or aiBrain.BrainIntel.PlayerRole.AirPlayer or aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer or self.BrainIntel.HighestPhase > 1 then
                 upgradeTrigger = true
             end
             --LOG('Total income '..tostring(aiBrain.cmanager.income.r.m))

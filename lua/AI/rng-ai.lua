@@ -757,6 +757,7 @@ AIBrain = Class(RNGAIBrainClass) {
         elseif mapSizeX > 200 and mapSizeZ > 200 then
             self.MapSize = 5
         end
+        self.LowResourceMapProfile = false
         self.EconomyUpgradeSpendDefault = 0.0
         self.EconomyUpgradeSpend = 0.0
         self.DefaultProductionRatios['Land'] = 0.0
@@ -2655,6 +2656,9 @@ AIBrain = Class(RNGAIBrainClass) {
         end
         if maximumGraphValue then
             self.IntelManager.MapMaximumValues.MaximumGraphValue = maximumGraphValue
+        end
+        if markerCount then
+            self.IntelManager.MapMaximumValues.MaximumResourceValue = markerCount
         end
         if graphCheck then
             self.GraphZones.HasRun = true
@@ -7568,8 +7572,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 -- Dynamic Cap Limits
                 maxEcoSpendPhase3 = 0.45,
                 maxEcoSpendDefault = 0.40,
-                ecoFloorFactor = 0.05,
-                assistFloorFactor = 0.02,
+                ecoFloorFactor = self.LowResourceMapProfile and 0.10 or 0.05,
+                assistFloorFactor = self.LowResourceMapProfile and 0.10 or 0.02,
                 
                 -- Static Matrix for Strategic Biases (Pure Hash/No Mixed Indexes)
                 biases = {
@@ -7602,6 +7606,7 @@ AIBrain = Class(RNGAIBrainClass) {
 
             local highestPhase = math.max(brainIntel.LandPhase or 1, brainIntel.AirPhase or 1, brainIntel.NavalPhase or 1)
             local economyUpgradeSpend = self.EconomyUpgradeSpendDefault
+            --LOG('economyUpgradeSpend pulled from self.EconomyUpgradeSpendDefault during allocation loop is '..economyUpgradeSpend..' for player '..self.Nickname)
             local engineerAssistRatio = self.EngineerAssistRatioDefault
 
             -- Variable bounds derived from config
@@ -7791,6 +7796,10 @@ AIBrain = Class(RNGAIBrainClass) {
             local minProd = cfg.minProdBudget
             local maxProd = cfg.maxProdBudget
 
+            if brainIntel.AverageSaturation >= cfg.lowSatThreshold and massTrend > 0 then
+                maxProd = clamp(maxProd - (safeDiv(massTrend, totalIncome, 0) * 0.2), cfg.minProdBudget, cfg.maxProdBudget)
+            end
+
             local productionAllocation = clamp(minProd + (combinedPressure * (maxProd - minProd)) + totalLocalClaims, minProd, maxProd)
             
             local targetConstRatio = cfg.targetConstRatioDefault
@@ -7916,9 +7925,11 @@ AIBrain = Class(RNGAIBrainClass) {
                 ecoWeight = ecoWeight * cfg.tacticalGreedMultiplier
             end
             local assistWeight = cfg.assistBaseWeight + (cfg.assistPressureWeight * combinedPressure)
+            local strategicEcoBaseline = economyUpgradeSpend or ecoFloor
 
             local totalWeight = ecoWeight + assistWeight + cfg.weightSafetyBuffer
-            economyUpgradeSpend = clamp(leftover * (ecoWeight / totalWeight), ecoFloor, maxEcoSpend)
+            local calculatedEco = leftover * (ecoWeight / totalWeight)
+            economyUpgradeSpend = clamp(math.max(calculatedEco, strategicEcoBaseline), ecoFloor, maxEcoSpend)
             engineerAssistRatio = clamp(leftover - economyUpgradeSpend, assistFloor, leftover)
 
             if excessAllocation > 0 then

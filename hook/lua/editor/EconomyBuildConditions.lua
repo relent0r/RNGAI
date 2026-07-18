@@ -373,6 +373,13 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
     local resourceCount = 0
     local massSpendTotal = 0
     local zoneBasedIncome = 0
+    if manager.ZoneID then
+        -- Check Land zones first, fallback to Water if managing a naval base
+        local homeZone = aiBrain.Zones.Land.zones[manager.ZoneID] or aiBrain.Zones.Water.zones[manager.ZoneID]
+        if homeZone and homeZone.resourcevalue then
+            resourceCount = resourceCount + homeZone.resourcevalue
+        end
+    end
     if pathableZones and not table.empty(pathableZones.Zones) then
         for _, z in pathableZones.Zones do
             if z.ZoneID then

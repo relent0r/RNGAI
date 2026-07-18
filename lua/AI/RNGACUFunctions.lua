@@ -486,7 +486,22 @@ function CDRThreatAssessmentRNG(cdr)
             --LOG('Current CDR Confidence '..cdr.Confidence)
             --LOG('Enemy Bomber threat '..cdr.CurrentEnemyAirThreat)
             --LOG('Friendly AA threat '..cdr.CurrentFriendlyAntiAirThreat)
-            if cdr['rngdata'].EnemyNavalPresent then
+            local experimentalStriking = false
+            for _, exp in pairs(aiBrain.EnemyIntel.Experimental or {}) do
+                if exp.object and not exp.object.Dead then
+                    local ePos = exp.position or exp.object:GetPosition()
+                    local dx, dz = cdr.Position[1] - ePos[1], cdr.Position[3] - ePos[3]
+                    local expRange = StateUtils.GetUnitMaxWeaponRange(exp.object, false, false) or 100
+                    if (dx * dx + dz * dz) < (expRange + 25) * (expRange + 25) then
+                        experimentalStriking = true
+                        break
+                    end
+                end
+            end
+            if experimentalStriking and not cdr.SuicideMode then
+                cdr.Caution = true
+                cdr.CautionReason = 'experimentalRangeThreat'
+            elseif cdr['rngdata'].EnemyNavalPresent then
                 --RNGLOG('ACU Threat Assessment . Enemy unit is antinaval and hitting me')
                 cdr.Caution = true
                 cdr.CautionReason = 'enemyNavalStriking'
@@ -592,7 +607,6 @@ function CDRThreatAssessmentRNG(cdr)
                     if aiBrain.EnemyIntel.SML and RNGGETN(aiBrain.EnemyIntel.SML) > 0 then strategicFear = strategicFear + 250 end
                     if aiBrain.EnemyIntel.Artillery and RNGGETN(aiBrain.EnemyIntel.Artillery) > 0 then strategicFear = strategicFear + 200 end
                     if aiBrain.EnemyIntel.Experimental and RNGGETN(aiBrain.EnemyIntel.Experimental) > 0 then strategicFear = strategicFear + 150 end
-                    
                     enemyThreatConfidenceModifier = enemyThreatConfidenceModifier + strategicFear
                 end
 

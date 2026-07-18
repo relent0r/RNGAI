@@ -381,6 +381,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
+            if cdr.Caution and cdr.CautionReason == 'experimentalRangeThreat' and cdr.DistanceToHome > 2500 and not cdr.SuicideMode then
+                self:LogDebug(string.format('ACU retreating: experimental range threat detected'))
+                self:ChangeState(self.Retreating)
+                return
+            end
             if cdr.Caution and cdr['rngdata'].EnemyNavalPresent and currentACULayer == 'Seabed' and cdr.DistanceToHome > 2500 then
                 self:LogDebug(string.format('retreating due to seabed'))
                 --LOG('ACU : We are going to retreat due to enemy sea bed')
@@ -587,7 +592,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.Navigating)
                     return
                 end
-                if (brain.MapSize <= 5 and expansionCount < 1 or brain.MapSize > 5 and expansionCount < 2) and VDist3Sq(cdr.Position, self.BuilderData.Position) <= 900 and not cdr.Caution and not self.BuilderData.ExpansionBuilt then
+                if not cdr.EnemyCDRPresent and (brain.MapSize <= 5 and expansionCount < 1 or brain.MapSize > 5 and expansionCount < 2) and VDist3Sq(cdr.Position, self.BuilderData.Position) <= 900 and not cdr.Caution and not self.BuilderData.ExpansionBuilt then
                     ----self:LogDebug(string.format('We are at an expansion location, building base'))
                     self:ChangeState(self.Expand)
                     return

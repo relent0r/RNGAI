@@ -133,6 +133,13 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
+            local radarRequestExists = aiBrain.IntelManager:IsExistingStructureRequestPresent(self:GetPlatoonPosition(), 45, 'RADAR')
+            if radarRequestExists then
+                local radarRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(eng, self:GetPlatoonPosition(), 45, 'RADAR')
+                if radarRequestPos then
+                    import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'RadarBuild', Position = radarRequestPos, LocationType = self.LocationType} }, self, self:GetPlatoonUnits())
+                end
+            end
             if builderData and builderData.StateWanted == 'GetReclaimTable' then
                 self:LogDebug(string.format('We are switching to ReclaimTable state and we already had it set'))
                 self:ChangeState(self.GetReclaimTable)

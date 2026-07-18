@@ -899,9 +899,7 @@ BuilderGroup {
         Priority = 1050,
         InstanceCount = 1,
         BuilderConditions = {
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH1 * categories.LAND * categories.FACTORY }},
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.SUPPORTFACTORY * categories.LAND}},
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { UCBC, 'FactoryTechMixCheckRNG', { 'LocationType', 'Land', 1, 0, 1 } },
                 { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Land' } },
             },
         BuilderData = {
@@ -921,9 +919,7 @@ BuilderGroup {
         Priority = 1040,
         InstanceCount = 1,
         BuilderConditions = {
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH2 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY }},
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.TECH3 * categories.SUPPORTFACTORY * categories.LAND }},
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { UCBC, 'FactoryTechMixCheckRNG', { 'LocationType', 'Land', 2, 0, 1 } },
                 { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Land' } },
             },
         BuilderData = {
@@ -943,8 +939,7 @@ BuilderGroup {
         Priority = 1030,
         InstanceCount = 1,
         BuilderConditions = {
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 3, categories.TECH3 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY }},
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.LAND * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { UCBC, 'FactoryTechMixCheckRNG', { 'LocationType', 'Land', 3, 3 } },
                 { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Land' } },
             },
         BuilderData = {
@@ -969,9 +964,7 @@ BuilderGroup {
         Priority = 1050,
         InstanceCount = 1,
         BuilderConditions = {
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH1 * categories.AIR * categories.FACTORY }},
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, (categories.TECH2 + categories.TECH3 ) * categories.AIR}},
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, (categories.TECH2 + categories.TECH3) * categories.AIR * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { UCBC, 'FactoryTechMixCheckRNG', { 'LocationType', 'Air', 1, 0, 1 } },
                 { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Air' } },
             },
         BuilderData = {
@@ -991,9 +984,7 @@ BuilderGroup {
         Priority = 1040,
         InstanceCount = 1,
         BuilderConditions = {
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH2 * categories.AIR * categories.FACTORY * categories.SUPPORTFACTORY }},
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.TECH3 * categories.AIR }},
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.AIR * categories.FACTORY - categories.SUPPORTFACTORY }},
+                { UCBC, 'FactoryTechMixCheckRNG', { 'LocationType', 'Air', 2, 0, 1 } },
                 { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Air' } },
             },
         BuilderData = {
@@ -1018,8 +1009,7 @@ BuilderGroup {
         Priority = 1050,
         InstanceCount = 1,
         BuilderConditions = {
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH1 * categories.NAVAL * categories.FACTORY }},
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.SUPPORTFACTORY * categories.NAVAL * (categories.TECH2 + categories.TECH3 )}},
+                { UCBC, 'FactoryTechMixCheckRNG', { 'LocationType', 'Naval', 1, 0, 0 } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.NAVAL * categories.FACTORY * (categories.TECH2 + categories.TECH3) - categories.SUPPORTFACTORY }},
                 { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Naval' } },
             },
@@ -1040,8 +1030,7 @@ BuilderGroup {
         Priority = 1040,
         InstanceCount = 1,
         BuilderConditions = {
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 1, categories.TECH2 * categories.NAVAL * categories.FACTORY * categories.SUPPORTFACTORY }},
-                { UCBC, 'FactoryGreaterAtLocationRNG', { 'LocationType', 0, categories.TECH3 * categories.SUPPORTFACTORY * categories.NAVAL }},
+                { UCBC, 'FactoryTechMixCheckRNG', { 'LocationType', 'Naval', 2, 1, 0 } },
                 { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.TECH3 * categories.NAVAL * categories.FACTORY - categories.SUPPORTFACTORY }},
                 { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Naval' } },
             },

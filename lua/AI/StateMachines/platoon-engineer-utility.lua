@@ -329,14 +329,11 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         self:ExitStateMachine()
                     end
                 elseif data.Task == 'RadarBuild' then
-                    --LOG('Engineer Received Radar Build')
                     local radarPosition = data.Position
                     if radarPosition then
-                        --LOG('We have a position')
                         local rx = engPos[1] - radarPosition[1]
                         local rz = engPos[3] - radarPosition[3]
                         local radarPosDistance = rx * rx + rz * rz
-                        --LOG('Pos distance is '..tostring(radarPosDistance))
                         self.BuilderData = {
                             RadarBuild = true,
                             Construction = {
@@ -349,12 +346,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             ResetTaskData = true
                         }
                         if radarPosDistance < 400 then
-                            --LOG('Position is less than 20 units')
+                            LOG('Position is less than 20 units')
                             --LOG('Set Task Data')
                             self:ChangeState(self.SetTaskData)
                             return
                         else
-                            --LOG('Position is greater than 20')
+                            LOG('Position is greater than 20')
                             self:ChangeState(self.NavigateToTaskLocation)
                             return
                         end

@@ -788,6 +788,7 @@ EngineerManager = Class(BuilderManager) {
 
             if layer ~= 'Water' then
                 if self.LocationType == 'FLOATING' then
+                    --LOG('Checking for radar request near position for engineer '..unit.EntityId)
                     local radarRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 75, 'RADAR')
                     if radarRequestPos then
                         -- Fork a lightweight radar builder platoon

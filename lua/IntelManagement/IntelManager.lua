@@ -778,7 +778,7 @@ IntelManager = Class {
                                             local normalizedDistanceValue = mainBaseDistance / maxDistance
                                             local normalizedTeamValue = v.teamvalue / maxTeamValue
                                             local normalizedResourceValue = v.resourcevalue / maxResourceValue
-                                            local normalizedMarkersInGraphValue = markersInGraph  / maxGraphValue
+                                            local normalizedMarkersInGraphValue = markersInGraph / maxGraphValue
                                             local normalizedEnemyLandThreatValue = v.enemylandthreat / maxEnemyLandThreat
                                             local normalizedEnemyAirThreatValue = v.enemyantiairthreat / maxEnemyAirThreat
                                             local normalizedFriendLandThreatValue = v.friendlyantisurfacethreat / maxFriendlyLandThreat
@@ -2652,6 +2652,8 @@ IntelManager = Class {
             'Naval',
             'Air'
         }
+        local myIndex = aiBrain:GetArmyIndex()
+        local myResourceCount = 0
         local expansionSize = math.min((aiBrain.MapDimension / 2), 180)
         for _, v in Zones do
             for _, v1 in aiBrain.Zones[v].zones do
@@ -2671,10 +2673,54 @@ IntelManager = Class {
                     v1.allystartdata[startIndex] = { startangle = startValue.startangle, startdistance = startValue.startdistance}
                 end
                 v1.bestarmy = self:ZoneSetBestArmy(v1)
+                if v == 'Land' and v1.bestarmy == myIndex and v1.teamvalue >= 1.0 then
+                    myResourceCount = myResourceCount + v1.resourcevalue
+                end
             end
         end
         --LOG('Best Armies are set')
-        self.MapMaximumValues.MaximumResourceValue = maximumResourceValue
+        local absoluteFloorMass = 5
+        local optimalCeilingMass = 14
+        local clampedMass = math.max(absoluteFloorMass, math.min(myResourceCount, optimalCeilingMass))
+        
+        -- Calculate base linear starvation factor (0.0 = Rich, 1.0 = Starved)
+        local starvationFactor = (optimalCeilingMass - clampedMass) / (optimalCeilingMass - absoluteFloorMass)
+        
+        -- 3. Calculate game format brakes to prolong map contest in 1v1 and 2v2
+        local numAllies = 0
+        local numOpponents = 0
+        
+        for _, brain in ArmyBrains do
+            local armyIndex = brain:GetArmyIndex()
+            if IsEnemy(myIndex, armyIndex) then
+                numOpponents = numOpponents + 1
+            elseif IsAlly(myIndex, armyIndex) and armyIndex ~= myIndex then
+                numAllies = numAllies + 1
+            end
+        end
+        
+        local formatBrake = 1.0
+        
+        -- A 1v1 game has exactly 0 allies and 1 opponent
+        if numAllies == 0 and numOpponents == 1 then
+            formatBrake = 0.70 -- True 1v1 match: Dampen upgrade spend to enforce early map control pressure
+        -- A 2v2 game has exactly 1 ally and 2 opponents
+        elseif numAllies == 1 and numOpponents == 2 then
+            formatBrake = 0.85 -- True 2v2 match: Maintain higher unit output for early expansion protection
+        end
+        
+        -- 4. Apply final calibrated spend scaling
+        local maxAdditionalSpend = 0.35
+        local dynamicSpendBonus = starvationFactor * maxAdditionalSpend * formatBrake
+
+        --LOG('aiBrain.EconomyUpgradeSpendDefault at start of game is '..tostring(aiBrain.EconomyUpgradeSpendDefault)..' for player '..tostring(aiBrain.Nickname))
+        aiBrain.EconomyUpgradeSpendDefault = aiBrain.EconomyUpgradeSpendDefault + dynamicSpendBonus
+        --LOG('RNG AI: EconomyUpgradeSpendDefault adjusted to ' .. tostring(aiBrain.EconomyUpgradeSpendDefault) .. ' (StarvationFactor: ' .. tostring(starvationFactor) .. ', FormatBrake: ' .. tostring(formatBrake) .. ', DynamicSpendBonus: ' .. tostring(dynamicSpendBonus) .. ' for player '..tostring(aiBrain.Nickname)..')')
+        
+        -- Retain legacy flag support for external modules if necessary
+        if starvationFactor >= 0.65 then
+            aiBrain.LowResourceMapProfile = true
+        end
     end,
 
     MonitorEnemyThreatOnBaseLabels = function(self)
@@ -4338,7 +4384,7 @@ IntelManager = Class {
                     local unitCats = v.object.Blueprint.CategoriesHash
                     if unitCats.ORBITALSYSTEM then
                         experimentalNovaxCount = experimentalNovaxCount + 1
-                    elseif unitCats.ARTILLERY and unitCats.STRUCTURE then
+                    elseif unitCats.ARTILLERY and unitCats.STRUCTURE or unitCats.url0401 then
                         experimentalArtilleryCount = experimentalArtilleryCount + 1
                     elseif unitCats.NUKE then
                         experimentalNukeCount = experimentalNukeCount + 1
@@ -4867,6 +4913,9 @@ IntelManager = Class {
     
         local cellSizeX = cell.Size.sx
         local cellSizeZ = cell.Size.sz
+        if not cellSizeX or not cellSizeZ then
+            return "error"
+        end
     
         -- Determine how many cells the radar range spans, round up to fully cover the area
         local rangeInCellsX = math.ceil(radarRange / cellSizeX)
@@ -5542,6 +5591,12 @@ IntelManager = Class {
                                 break
                             end
                         end
+                    end
+                end
+                local CDRUnit = aiBrain.CDRUnit
+                if CDRUnit and not CDRUnit.Dead and CDRUnit.rngdata and not CDRUnit.rngdata.RadarCoverage then
+                    if CDRUnit.Position and VDist3Sq(CDRUnit.Position, targetZone.pos) < 6400 then
+                        needsForwardRadar = true
                     end
                 end
 

@@ -1181,6 +1181,61 @@ function FactoryGreaterAtLocationRNG(aiBrain, locationType, unitCount, unitCateg
     return FactoryComparisonAtLocationRNG(aiBrain, locationType, unitCount, unitCategory, '>')
 end
 
+
+
+function FactoryTechMixCheckRNG(aiBrain, locationType, layer, targetTier, minReclaim, minMix)
+    local layerConfig = {
+        Land  = { MixFilter = categories.SUPPORTFACTORY, CheckLocalHQ = true },
+        Air   = { MixFilter = categories.FACTORY,        CheckLocalHQ = true },
+        Naval = { MixFilter = categories.SUPPORTFACTORY, CheckLocalHQ = false },
+    }
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    if not factoryManager or not factoryManager.LocationActive then
+        return false
+    end
+
+    local cfg = layerConfig[layer]
+    local layerCat = categories[string.upper(layer)]
+    if not cfg or not layerCat then return false end
+
+    minReclaim = minReclaim or 0
+    minMix = minMix or 1
+
+    local catReclaim, catMix, catHQ
+
+    if targetTier == 1 then
+        catReclaim = categories.TECH1 * layerCat * categories.FACTORY
+        catMix = (categories.TECH2 + categories.TECH3) * cfg.MixFilter * layerCat
+        catHQ = (categories.TECH2 + categories.TECH3) * layerCat * categories.FACTORY - categories.SUPPORTFACTORY
+    elseif targetTier == 2 then
+        catReclaim = categories.TECH2 * layerCat * categories.FACTORY * categories.SUPPORTFACTORY
+        catMix = categories.TECH3 * cfg.MixFilter * layerCat
+        catHQ = categories.TECH3 * layerCat * categories.FACTORY - categories.SUPPORTFACTORY
+    elseif targetTier == 3 then
+        catReclaim = categories.TECH3 * layerCat * categories.FACTORY * categories.SUPPORTFACTORY
+        catHQ = categories.TECH3 * layerCat * categories.FACTORY - categories.SUPPORTFACTORY
+    end
+
+    local reclaimCount = factoryManager:GetNumCategoryFactories(catReclaim)
+    if reclaimCount <= minReclaim then return false end
+
+    if cfg.CheckLocalHQ then
+        local hqCount = factoryManager:GetNumCategoryFactories(catHQ)
+        if hqCount <= 0 then return false end
+    end
+
+    if targetTier == 1 and aiBrain.LowResourceMapProfile then 
+        return true 
+    end
+
+    if catMix then
+        local mixCount = factoryManager:GetNumCategoryFactories(catMix)
+        if mixCount <= minMix then return false end
+    end
+
+    return true
+end
+
 function ForcePathLimitRNG(aiBrain, locationType, unitCategory, pathType, unitCount)
     if not aiBrain:GetCurrentEnemy() then
         return true
