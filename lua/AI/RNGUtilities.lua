@@ -1458,8 +1458,11 @@ function ValidateACUEngagementRisk(aiBrain, cdr, target, targetPos, enemyThreat,
                     local dx = targetPos[1] - v.Position[1]
                     local dz = targetPos[3] - v.Position[3]
                     local acuDist = dx * dx + dz * dz
-                    if acuDist < 1600 and healthFactor < 0.6 then
-                        return true, 'RiskOfEnemyACU'
+                    if acuDist < 1600 then
+                        local enemyHealthFactor = v.Unit.GetHealthPercent and v.Unit:GetHealthPercent() or 1
+                        if healthFactor < 0.3 or healthFactor < 0.6 and (enemyHealthFactor - healthFactor) > 0.15 then
+                          return true, 'RiskOfEnemyACU'
+                        end
                     end
                 end
             end
@@ -8405,7 +8408,7 @@ function EvaluateZonePriority(zone, normalizedDistance)
         Contested = 1.5,
         Unoccupied = 1.0
     }
-    local statusWeight = statusValueTable[zone.status]
+    local statusWeight = statusValueTable[zone.status] or statusValueTable['Unoccupied']
 
     -- Strategic weight from position and team alignment
     local teamValue = zone.teamvalue or 1.0
@@ -8666,7 +8669,13 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
     end
     local ratio = cappedFriendly / enemy
 
-    if zoneSelectionType == 'raid' then
+    if zoneSelectionType == 'control' then
+        if friendly <= enemy * 1.5 then
+            score = 2.0 * (1.0 - (friendly / (enemy * 1.5)))
+        else
+            score = 0
+        end
+    elseif zoneSelectionType == 'raid' then
         score = math.min(math.max((ratio - 1.0), 0), 2.0)
     else
         score = math.min(math.max((ratio - 0.5), 0), 2.0)

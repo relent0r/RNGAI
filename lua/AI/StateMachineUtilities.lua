@@ -1600,6 +1600,9 @@ CaptureDoneRNG = function(unit, params)
 end
 
 BuildAIDoneRNG = function(unit, params)
+    if unit.AIPlatoonReference then
+        unit.AIPlatoonReference:LogDebug(string.format('BuildAIDoneRNG called for unit %s', unit.EntityId))
+    end
     if unit.Active or unit.Dead then 
         return 
     end
@@ -1637,7 +1640,9 @@ BuildAIDoneRNG = function(unit, params)
 end
 
 BuildAIFailedRNG = function(unit, params)
-    if unit.Active or unit.Dead then return end
+    if unit.Active or unit.Dead then 
+        return
+    end
     if not unit.AIPlatoonReference then return end
     --LOG('BuildFailed triggered Platoon was '..tostring(unit.PlatoonHandle.BuilderName))
     -- RNGLOG: Capture callback context
@@ -3284,5 +3289,32 @@ function GetEscortPocketPosition(unitId, unitPos, acuPos, targetPos, cdrWeaponRa
             return {pocketX, acuPos[2], pocketZ}
         end
     end
+    return nil
+end
+
+function GetThreatCentroidRNG(brain, searchPos, searchRadius, searchCategory)
+    local enemyUnits = brain:GetUnitsAroundPoint(searchCategory, searchPos, searchRadius, 'Enemy')
+    if not enemyUnits or table.getn(enemyUnits) == 0 then 
+        return nil 
+    end
+
+    local sumX = 0
+    local sumZ = 0
+    local count = 0
+
+    for _, u in enemyUnits do
+        if not u.Dead then
+            local pos = u:GetPosition()
+            sumX = sumX + pos[1]
+            sumZ = sumZ + pos[3]
+            count = count + 1
+        end
+    end
+
+    if count > 0 then
+        -- Return the average position at the search height level
+        return { sumX / count, searchPos[2], sumZ / count }, count
+    end
+
     return nil
 end

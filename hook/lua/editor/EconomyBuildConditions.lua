@@ -488,6 +488,24 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
         end
          
         local availableResources = math.max(resourceCount * 2, rawIncome, spendableStorage)
+        if aiBrain.LowResourceMapProfile then
+            local factoryCategory
+            if layer == 'Land' then
+                factoryCategory = categories.LAND
+            elseif layer == 'Air' then
+                factoryCategory = categories.AIR
+            elseif layer == 'Naval' then
+                factoryCategory = categories.NAVAL
+            end
+            local highTechCount = manager.FactoryManager:GetNumCategoryFactories(factoryCategory * (categories.TECH2 + categories.TECH3))
+            -- Only throttle if we have transitioned to higher tech.
+            -- This preserves normal T1 scaling early game, but applies tight economic
+            -- discipline the moment high-drain T2/T3 structures exist.
+            if highTechCount > 0 then
+                availableResources = math.max(rawIncome, 0)
+                if availableResources <= 0 then availableResources = 2 end
+            end
+        end
         local productionRatio 
         if aiBrain.ProductionRatios[layer] == 0 then
             productionRatio = aiBrain.DefaultProductionRatios[layer] 

@@ -1203,6 +1203,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
 
             -- sanity check
             local cdr = self.cdr
+            local currentCdrThreat = cdr:EnhancementThreatReturn()
             local builderData = self.BuilderData
             local destination = builderData.Position
             local shortNavigation = builderData.ShortNavigation 
@@ -1321,22 +1322,34 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         local pdRange = StateUtils.GetUnitMaxWeaponRange(enemyPD, 'Direct Fire') or 30
                         local distToPDSq = VDist2Sq(origin[1], origin[3], pdPos[1], pdPos[3])
                         if distToPDSq < (pdRange + 10) * (pdRange + 10) then
-                            local dist = math.sqrt(distToPDSq)
-                            local pushX, pushZ = (origin[1] - pdPos[1]) / dist, (origin[3] - pdPos[3]) / dist
-                            local dirX, dirZ = destination[1] - origin[1], destination[3] - origin[3]
-                            local dirMag = math.sqrt(dirX*dirX + dirZ*dirZ)
-                
-                            if dirMag > 0.1 then
-                                dirX, dirZ = dirX / dirMag, dirZ / dirMag
-                                local tanX, tanZ = -pushZ, pushX 
-                                local nudgeX = (pushX * 1.0) + (tanX * 0.6) + (dirX * 0.8)
-                                local nudgeZ = (pushZ * 1.0) + (tanZ * 0.6) + (dirZ * 0.8)
-                
-                                waypoint = {
-                                    origin[1] + (nudgeX * 20),
-                                    origin[2],
-                                    origin[3] + (nudgeZ * 20)
-                                }
+                            local dynamicNudge = ACUFunc.CalculateThreatNudge(origin, destination, pdPos, 1.0, 0.6, 0.8, 20)
+                            if dynamicNudge then
+                                waypoint = dynamicNudge
+                                wx, wz = waypoint[1], waypoint[3]
+                            end
+                        end
+                    end
+                end
+                if builderData.Retreat and cdr.CurrentEnemyThreat > currentCdrThreat then
+                    --LOG('ACU is retreating and there is a threat present, we will try to nudge away from it')
+                    local lookAheadDist = 25
+                    local dirX, dirZ = destination[1] - origin[1], destination[3] - origin[3]
+                    local dirMag = math.sqrt(dirX * dirX + dirZ * dirZ)
+                    
+                    if dirMag > 0.1 then
+                        local normDirX, normDirZ = dirX / dirMag, dirZ / dirMag
+                        local lookAheadPos = {
+                            origin[1] + (normDirX * lookAheadDist),
+                            origin[2],
+                            origin[3] + (normDirZ * lookAheadDist)
+                        }
+                        local threatPosition, threatCount = StateUtils.GetThreatCentroidRNG(brain, lookAheadPos, 35, categories.MOBILE * (categories.LAND + categories.AMPHIBIOUS) * categories.DIRECTFIRE)
+                        
+                        if threatPosition and threatCount > 0 then
+                            -- Query our new path-safe evaluator
+                            local safeWaypoint = ACUFunc.CalculatePathSafeEscapeRNG(origin, destination, threatPosition, pathCache)
+                            if safeWaypoint then
+                                waypoint = safeWaypoint
                                 wx, wz = waypoint[1], waypoint[3]
                             end
                         end
@@ -2174,7 +2187,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    if brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired and cdr.CurrentEnemyInnerCircle > 8 then
+                    if brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired and cdr.CurrentEnemyInnerCircle > 8 and not acuWeaponUnderWater then
                         local overChargeFired = false
                         local innerCircleEnemies = GetNumUnitsAroundPoint(brain, categories.MOBILE * categories.LAND + categories.STRUCTURE, cdr.Position, cdr.WeaponRange - 3, 'Enemy')
                         if innerCircleEnemies > 0 then
@@ -2384,7 +2397,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    if brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired and cdr.CurrentEnemyInnerCircle > 8 then
+                    if brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired and cdr.CurrentEnemyInnerCircle > 8 and not acuWeaponUnderWater then
                         local overChargeFired = false
                         local innerCircleEnemies = GetNumUnitsAroundPoint(brain, categories.MOBILE * categories.LAND + categories.STRUCTURE, cdr.Position, cdr.WeaponRange - 3, 'Enemy')
                         if innerCircleEnemies > 0 then

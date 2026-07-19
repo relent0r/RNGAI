@@ -504,7 +504,7 @@ IntelManager = Class {
         self:ForkThread(self.StructureRequestThread)
         self:ForkThread(self.IntelGridThreatThread, self.Brain)
         self:ForkThread(self.ZoneMetricUpdateThread)
-        --self:ForkThread(self.ZoneRenderDebugThread)
+        self:ForkThread(self.ZoneRenderDebugThread)
         self.Brain:ForkThread(self.Brain.BuildScoutLocationsRNG)
         --self:ForkThread(self.DrawZoneArmyValue)
         if self.Debug then
@@ -1600,6 +1600,8 @@ IntelManager = Class {
                     LOG(string.format("    > Contiguity:   %.2f * %.1f = %.2f", contiguityValue, weightTable.raid.contiguityWeight, contiguityValue * weightTable.raid.contiguityWeight))
                     LOG(string.format("    > TeamBonus:    -%.2f * %.1f = -%.2f", teamValueBonus, weightTable.raid.teamValueWeight, teamValueBonus * weightTable.raid.teamValueWeight))
                     LOG(string.format("    > ZoneFlankBonus:    %.2f * %.1f = %.2f", zoneFlankRaidBonus, weightTable.raid.zoneFlankWeight, zoneFlankRaidBonus * weightTable.raid.zoneFlankWeight))
+
+                end
                     -- =====================================
                     -- LIVE VISUAL DEBUG ENGINE INJECTION
                     -- =====================================
@@ -1622,7 +1624,6 @@ IntelManager = Class {
                             end
                         end
                     end
-                end
             end
             coroutine.yield(20) 
         end
@@ -1635,6 +1636,7 @@ IntelManager = Class {
         end
 
         local aiBrain = self.Brain
+        local currentTime = GetGameTimeSeconds()
         while aiBrain.Result ~= "defeat" do
             -- Render every single tick for solid, non-flickering visuals
             for id, data in self.VisualDebugData do
@@ -1648,6 +1650,22 @@ IntelManager = Class {
                     -- Solid Yellow lines for BFS paths back to base
                     if data.parentPos then
                         DrawLinePop(data.pos, data.parentPos, 'ffFFFF00')
+                    end
+                    -- Render Active Return Choices (Decays after 5 seconds)
+                    if data.selectionExpiry and data.selectionExpiry > currentTime then
+                        if data.lastSelectionType == 'raid' then
+                            -- Vivid Orange/Red for active Raid Target
+                            DrawCircle(data.pos, 6, 'ffFF4500') 
+                            DrawCircle(data.pos, 8, 'ffFF4500')
+                        elseif data.lastSelectionType == 'control' then
+                            -- Deep Cyan for active Control Target
+                            DrawCircle(data.pos, 6, 'ff00FFFF')
+                            DrawCircle(data.pos, 8, 'ff00FFFF')
+                        else
+                            -- Magenta for any other types (aadefense, airsurface)
+                            DrawCircle(data.pos, 6, 'ffFF00FF')
+                            DrawCircle(data.pos, 8, 'ffFF00FF')
+                        end
                     end
                 end
             end
@@ -1827,6 +1845,12 @@ IntelManager = Class {
         end
         if not bestZone or (bestZone and bestScore < minThreshold) then
             return nil, nil
+        end
+        if bestZone then
+            self.VisualDebugData[bestZone.id] = self.VisualDebugData[bestZone.id] or {}
+            self.VisualDebugData[bestZone.id].pos = bestPos
+            self.VisualDebugData[bestZone.id].lastSelectionType = zonetype
+            self.VisualDebugData[bestZone.id].selectionExpiry = GetGameTimeSeconds() + 10.0
         end
         return bestZone.id, bestPos
     end,

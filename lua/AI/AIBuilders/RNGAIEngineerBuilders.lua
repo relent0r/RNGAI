@@ -121,7 +121,7 @@ local ActiveExpansion = function(self, aiBrain, builderManager)
     end
 end
 
-function DynamicExpansionEngineerPriority(self, aiBrain, builderManager, builderData)
+local DynamicExpansionEngineerPriority = function(self, aiBrain, builderManager, builderData)
     local baseName = builderManager.LocationType
     local fallbackPriority = (builderData and builderData.Priority) or 0
 

@@ -1224,8 +1224,8 @@ function FactoryTechMixCheckRNG(aiBrain, locationType, layer, targetTier, minRec
         if hqCount <= 0 then return false end
     end
 
-    if targetTier == 1 and aiBrain.LowResourceMapProfile then 
-        return true 
+    if targetTier == 1 and aiBrain.LowResourceMapProfile then
+        return true
     end
 
     if catMix then
@@ -1531,7 +1531,7 @@ function LessThanFactoryCountRNG(aiBrain, count, category, navalOnly)
     end
     return true
 end
-
+--[[
 function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
     local currentIncome = aiBrain.cmanager.income.r.m
     local currentBuildPower = 0
@@ -1579,6 +1579,68 @@ function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
             return true
         end
         if aiBrain.cmanager.income.r.m > (300 * multiplier) and aiBrain.cmanager.buildpower.eng.T3 < (800 * multiplier) then
+            return true
+        end
+    elseif type == 4 then
+        if availableIncome - currentBuildPower > 0 then
+            return true
+        end
+    end
+    return false
+end
+]]
+function EngineerBuildPowerRequired(aiBrain, type, ignoreT1)
+    local currentIncome = aiBrain.cmanager.income.r.m
+    local currentBuildPower = 0
+    local engSpend = 0.5
+    local availableIncome = math.ceil(engSpend * currentIncome)
+    local multiplier
+    if aiBrain.CheatEnabled then
+        multiplier = aiBrain.EcoManager.EcoMultiplier
+    else
+        multiplier = 1
+    end
+    for k, v in aiBrain.cmanager.buildpower.eng do
+        if ignoreT1 then
+            if k == 'T1' then continue end
+        end
+        currentBuildPower = currentBuildPower + v
+    end
+    currentBuildPower = currentBuildPower * 0.7
+    if type == 1 then
+        return false
+    elseif type == 2 then
+        if aiBrain.cmanager.buildpower.eng.T2 == 0 then
+            return true
+        end
+        local currentT2 = aiBrain.cmanager.buildpower.eng.T2
+        if currentT2 == 0 then return true end
+        if availableIncome - currentT2 > 0 then return true end
+        local targetBP = math.min(currentIncome * 1.8, 160 * multiplier)
+        
+        if currentIncome > (55 * multiplier) and currentT2 < targetBP then
+            -- Pacing Valve: If we have secured 75% of our preemptive target,
+            -- step aside and let combat units interleave.
+            if currentT2 > (targetBP * 0.75) and currentT2 >= availableIncome then
+                return false
+            end
+            return true
+        end
+    elseif type == 3 then
+        if aiBrain.cmanager.buildpower.eng.T3 == 0 then
+            return true
+        end
+        local currentT3 = aiBrain.cmanager.buildpower.eng.T3
+        if currentT3 == 0 then return true end
+        if availableIncome - currentT3 > 0 then return true end
+        local targetBP = math.min(currentIncome * 2.5, 800 * multiplier)
+        
+        if currentIncome > (100 * multiplier) and currentT3 < targetBP then
+            -- Pacing Valve: Once we reach 75% of our long-term scaling goal,
+            -- slow down production unless available income explicitly demands it.
+            if currentT3 > (targetBP * 0.75) and currentT3 >= availableIncome then
+                return false
+            end
             return true
         end
     elseif type == 4 then

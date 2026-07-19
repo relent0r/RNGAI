@@ -346,12 +346,10 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             ResetTaskData = true
                         }
                         if radarPosDistance < 400 then
-                            LOG('Position is less than 20 units')
                             --LOG('Set Task Data')
                             self:ChangeState(self.SetTaskData)
                             return
                         else
-                            LOG('Position is greater than 20')
                             self:ChangeState(self.NavigateToTaskLocation)
                             return
                         end

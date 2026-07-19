@@ -219,24 +219,29 @@ function CDRBrainThread(cdr)
 
                 -- Condition A: No support platoon exists, or it has fallen below required capability thresholds
                 local supportNeedsReplenishment = not hasValidSupport or (supportSurfaceThreat < minSurfaceThreat) or (supportAirThreat < minAirThreat)
-                --LOG(string.format("RNGLOG ACU_Audit: DistSq=%f, EnemyThr=%f, FriendThr=%f, SuppSurf=%f", cdr.DistanceToHome, cdr.CurrentEnemyThreat, cdr.CurrentFriendlyThreat, supportSurfaceThreat))
+                local pureOuterThreat = cdr.CurrentEnemyThreat - cdr.CurrentEnemyInnerCircle
+                local outerThreatModifier = 0.70
+                local AdjustedEnemyThreat = cdr.CurrentEnemyInnerCircle + (pureOuterThreat * outerThreatModifier)
+                local pureOuterFriendly = cdr.CurrentFriendlyThreat - cdr.CurrentFriendlyInnerCircle
+                local outerFriendlyModifier = 0.70
+                local AdjustedFriendlyThreat = cdr.CurrentFriendlyInnerCircle + (pureOuterFriendly * outerFriendlyModifier)
 
-                if (cdr.Confidence < 3.5 or cdr.CurrentEnemyThreat * 1.3 > cdr.CurrentFriendlyThreat or supportNeedsReplenishment) and (gameTime - 20) > lastPlatoonCall then
+                if (cdr.Confidence < 3.5 or AdjustedEnemyThreat * 1.2 > AdjustedFriendlyThreat or supportNeedsReplenishment) and (gameTime - 20) > lastPlatoonCall then
                     cdr.PlatoonHandle:LogDebug(string.format('ACU escort requirements unfulfilled. Calling support. Surface: %d/%d, Air: %d/%d', supportSurfaceThreat, minSurfaceThreat, supportAirThreat, minAirThreat))
                     
                     -- Request supplemental threat to close the gap
-                    local requestedSurface = math.max(minSurfaceThreat, cdr.CurrentEnemyThreat * 1.3 - cdr.CurrentFriendlyThreat)
+                    local requestedSurface = math.max(minSurfaceThreat, AdjustedEnemyThreat * 1.2 - AdjustedFriendlyThreat)
                     local requestedAir = math.max(minAirThreat, cdr.CurrentEnemyAirThreat - cdr.CurrentFriendlyAntiAirThreat)
                     
                     CDRCallPlatoon(cdr, requestedSurface, requestedAir)
                     lastPlatoonCall = gameTime
                 
                 -- Condition B: Health/Emergency Fallback overrides
-                elseif cdr.Health < 6000 and cdr.CurrentFriendlyThreat < 20 and (gameTime - 15) > lastPlatoonCall then
+                elseif cdr.Health < 6000 and AdjustedFriendlyThreat < 20 and (gameTime - 15) > lastPlatoonCall then
                     cdr.PlatoonHandle:LogDebug(string.format('ACU is low on health and less than 20 CDRCallPlatoon'))
                     CDRCallPlatoon(cdr, 20, 10)
                     lastPlatoonCall = gameTime
-                elseif cdr.DistanceToHome > 40000 and cdr.CurrentFriendlyThreat < 20 and cdr.CurrentEnemyThreat > cdr.CurrentFriendlyThreat and (gameTime - 15) > lastPlatoonCall then
+                elseif cdr.DistanceToHome > 40000 and AdjustedFriendlyThreat < 20 and AdjustedEnemyThreat > AdjustedFriendlyThreat and (gameTime - 15) > lastPlatoonCall then
                     cdr.PlatoonHandle:LogDebug(string.format('ACU is further than 200 units and less than 20 friendly and enemy is greater CDRCallPlatoon'))
                     CDRCallPlatoon(cdr, 20, 5)
                     lastPlatoonCall = gameTime
@@ -1723,6 +1728,88 @@ function GetAreaPowerBalanceRNG(aiBrain, position, depth)
     -- Calculate Power Ratio: > 1.0 means we have the advantage
     data.PowerRatio = data.FriendlySurface / math.max(1, data.EnemySurface)
     return data
+end
+
+--- Calculates a nudged waypoint position away from a specific threat position.
+---@param origin Vector
+---@param destination Vector
+---@param threatPos Vector
+---@param pushWeight number
+---@param tanWeight number
+---@param dirWeight number
+---@param nudgeDistance number
+---@return Vector|nil
+function CalculateThreatNudge(origin, destination, threatPos, pushWeight, tanWeight, dirWeight, nudgeDistance)
+    local distSq = VDist2Sq(origin[1], origin[3], threatPos[1], threatPos[3])
+    if distSq < 0.01 then return nil end
+
+    local dirX, dirZ = destination[1] - origin[1], destination[3] - origin[3]
+    local dirMag = math.sqrt(dirX * dirX + dirZ * dirZ)
+    if dirMag < 0.1 then return nil end
+
+    local normDirX, normDirZ = dirX / dirMag, dirZ / dirMag
+    local dist = math.sqrt(distSq)
+    
+    -- Radial vector away from threat
+    local pushX, pushZ = (origin[1] - threatPos[1]) / dist, (origin[3] - threatPos[3]) / dist
+    -- Perpendicular tangent vector for lateral drift
+    local tanX, tanZ = -pushZ, pushX 
+
+    -- Composite vector blend
+    local nudgeX = (pushX * pushWeight) + (tanX * tanWeight) + (normDirX * dirWeight)
+    local nudgeZ = (pushZ * pushWeight) + (tanZ * tanWeight) + (normDirZ * dirWeight)
+    local nudgeMag = math.sqrt(nudgeX * nudgeX + nudgeZ * nudgeZ)
+
+    if nudgeMag > 0.1 then
+        return {
+            origin[1] + ((nudgeX / nudgeMag) * nudgeDistance),
+            origin[2],
+            origin[3] + ((nudgeZ / nudgeMag) * nudgeDistance)
+        }
+    end
+    return nil
+end
+
+function CalculatePathSafeEscapeRNG(origin, destination, threatCentroid, pathCache)
+    local dirX, dirZ = destination[1] - origin[1], destination[3] - origin[3]
+    local dirMag = math.sqrt(dirX * dirX + dirZ * dirZ)
+    if dirMag < 0.1 then return nil end
+    
+    local normX, normZ = dirX / dirMag, dirZ / dirMag
+    
+    -- Generate 3 candidate test points (Straight down the path, or drifting 30 degrees Left/Right)
+    local candidates = {
+        Straight = { origin[1] + (normX * 20), origin[2], origin[3] + (normZ * 20) },
+        Left = { origin[1] + (normX * 18) - (normZ * 10), origin[2], origin[3] + (normZ * 18) + (normX * 10) },
+        Right = { origin[1] + (normX * 18) + (normZ * 10), origin[2], origin[3] + (normZ * 18) - (normX * 10) }
+    }
+    
+    local bestPoint = nil
+    local bestScore = -999999
+    
+    for label, pos in candidates do
+        -- 1. Structural terrain check first
+        if NavUtils.CanPathTo('Amphibious', origin, pos) then
+            -- 2. Check if moving here preserves a path to the final destination
+            local _, _, testLength = NavUtils.DetailedPathTo('Amphibious', pos, destination)
+            
+            if testLength and testLength > 0 then
+                local distToThreatSq = VDist2Sq(pos[1], pos[3], threatCentroid[1], threatCentroid[3])
+                
+                -- SCORE FUNCTION: We want high threat distance AND low remaining path length.
+                -- If a point leads into a dead-end corner, the testLength will spike massively 
+                -- (or fail completely) because the pathfinder has to loop all the way out.
+                local score = (distToThreatSq * 0.5) - (testLength * 2.0)
+                
+                if score > bestScore then
+                    bestScore = score
+                    bestPoint = pos
+                end
+            end
+        end
+    end
+    
+    return bestPoint
 end
 
 

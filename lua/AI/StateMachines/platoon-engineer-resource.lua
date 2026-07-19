@@ -33,7 +33,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             self.MovementLayer = self:GetNavigationalLayer()
             local platoonUnits = self:GetPlatoonUnits()
             for _,eng in platoonUnits do
-               eng.Active = true
                 if not eng.BuilderManagerData then
                    eng.BuilderManagerData = {}
                 end
@@ -833,7 +832,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local eng = self.eng
             local aiBrain = self:GetBrain()
-            --self:LogDebug(string.format('Current build queue length '..tostring(table.getn(eng.EngineerBuildQueue))))
+            self:LogDebug(string.format('Current build queue length '..tostring(table.getn(eng.EngineerBuildQueue))))
             if self.UsedTransports then
                 if eng.EngineerBuildQueue and RNGGETN(eng:GetCommandQueue()) == 0 and table.getn(eng.EngineerBuildQueue) > 0 then
                     for k, v in eng.EngineerBuildQueue do
@@ -846,12 +845,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
                 self.UsedTransports = false
             end
-            --LOG('Engineer build queue length is '..table.getn(eng.EngineerBuildQueue))
+            self:LogDebug(string.format('Moving into while loop '))
             while not IsDestroyed(eng) and (0<RNGGETN(eng:GetCommandQueue()) or eng:IsUnitState('Building') or eng:IsUnitState("Moving")) do
                 coroutine.yield(1)
                 --RNGLOG('MexBuildAI waiting for mex build completion')
                 local platPos = self:GetPlatoonPosition()
-                if eng:IsUnitState("Moving") or eng:IsUnitState("Capturing") then
+                local engMoving = eng:IsUnitState("Moving")
+                if engMoving or eng:IsUnitState("Capturing") then
                     if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, platPos, 30, 'Enemy') > 0 then
                         local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.MOBILE, platPos, 30, 'Enemy')
                         if enemyUnits then
@@ -893,7 +893,23 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 coroutine.yield(20)
+                if eng:IsIdleState() then
+                    self:LogDebug(string.format('Engineer is idle'))
+                    if eng.EngineerBuildQueue and eng.EngineerBuildQueue[1] then
+                        self:LogDebug(string.format('Engineer has a build queue item'))
+                        local targetPos = {eng.EngineerBuildQueue[1][2][1], GetSurfaceHeight(eng.EngineerBuildQueue[1][2][1], eng.EngineerBuildQueue[1][2][2]), eng.EngineerBuildQueue[1][2][2]}
+                        -- Only check if the engineer is close enough to actually see it (e.g., within 30-40 units)
+                        LOG('Distance to build pos is '..tostring(VDist3Sq(platPos, targetPos)))
+                        if VDist3Sq(platPos, targetPos) < 100 then 
+                            local blockingStructs = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.MASSEXTRACTION, targetPos, 3, 'Enemy')
+                            if blockingStructs and table.getn(blockingStructs) > 0 then
+                                RUtils.EngineerTryReclaimCaptureArea(aiBrain,eng, {targetPos}, 3)
+                            end
+                        end
+                    end
+                end
             end
+            self:LogDebug(string.format('Exiting while loop'))
             coroutine.yield(10)
             self:ChangeState(self.CompleteBuild)
             return

@@ -810,7 +810,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
             end
             if target and not target.Dead and targetPos and aiBrain:CheckBlockingTerrain(self.Pos, targetPos, 'none') then
                 for _, v in units do
-                    if not v.Dead and v['rngdata'].Role ~= 'Artillery' and v['rngdata'].Role ~= 'Silo' and v['rngdata'].Role ~= 'Sniper' then
+                    if not v.Dead and v['rngdata'].Role ~= 'Artillery' and v['rngdata'].Role ~= 'Silo' and v['rngdata'].Role ~= 'Sniper' and v['rngdata'].Role ~= 'Shield' then
                         StateUtils.IssueNavigationMove(v, targetPos)
                     end
                 end
