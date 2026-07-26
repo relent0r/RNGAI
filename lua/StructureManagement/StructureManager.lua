@@ -2620,6 +2620,9 @@ StructureManager = Class {
         if smdPresent > 0 and currentMissiles == 0 then
             --LOG('Requesting SMD assist for '..tostring(aiBrain.Nickname))
             aiBrain:RequestEngineerAssistFocus('SMDLoading', 'SMDLoading', 950, 120, false)
+        elseif aiBrain.EngineerAssistManagerRequests and aiBrain.EngineerAssistManagerRequests['SMDLoading'] then
+            --LOG('Flush SMD assist request for '..tostring(aiBrain.Nickname))
+            aiBrain.EngineerAssistManagerRequests['SMDLoading'] = nil
         end
     end,
 

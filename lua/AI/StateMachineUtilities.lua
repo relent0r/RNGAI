@@ -1655,13 +1655,19 @@ BuildAIFailedRNG = function(unit, params)
     unit.BuildFailedCount = unit.BuildFailedCount + 1
     if unit.BuildFailedCount > 4 and not table.empty(unit.EngineerBuildQueue) then
         table.remove(unit.EngineerBuildQueue, 1)
-        unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.PerformBuildTask)
+        if unit.PlatoonHandle.ChangeStateExt then
+            unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.PerformBuildTask)
+        end
     elseif not unit.PlatoonHandle.HighValueDiscard then
         if not unit.PerformingBuildTask then
-            unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
+            if unit.PlatoonHandle.ChangeStateExt then
+                unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
+            end
         else
             unit.PerformingBuildTask = false
-            unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
+            if unit.PlatoonHandle.ChangeStateExt then
+                unit.PlatoonHandle:ChangeStateExt(unit.PlatoonHandle.CompleteBuild)
+            end
         end
     end
 end

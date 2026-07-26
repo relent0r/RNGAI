@@ -899,7 +899,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         self:LogDebug(string.format('Engineer has a build queue item'))
                         local targetPos = {eng.EngineerBuildQueue[1][2][1], GetSurfaceHeight(eng.EngineerBuildQueue[1][2][1], eng.EngineerBuildQueue[1][2][2]), eng.EngineerBuildQueue[1][2][2]}
                         -- Only check if the engineer is close enough to actually see it (e.g., within 30-40 units)
-                        LOG('Distance to build pos is '..tostring(VDist3Sq(platPos, targetPos)))
+                        --LOG('Distance to build pos is '..tostring(VDist3Sq(platPos, targetPos)))
                         if VDist3Sq(platPos, targetPos) < 100 then 
                             local blockingStructs = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE * categories.MASSEXTRACTION, targetPos, 3, 'Enemy')
                             if blockingStructs and table.getn(blockingStructs) > 0 then

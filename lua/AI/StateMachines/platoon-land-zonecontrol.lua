@@ -358,7 +358,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     self:LogDebug(string.format('Looked for zone at the current label'))
                 end
                 if targetZone then
-                    self:LogDebug(string.format('TargetZone is '..tostring(targetZone)..' our home zone is '..tostring(aiBrain.BuilderManagers[self.LocationType].ZoneID)))
+                    self:LogDebug(string.format('Zone Type is '..tostring(self.ZoneType)..', TargetZone is '..tostring(targetZone)..' our home zone is '..tostring(aiBrain.BuilderManagers[self.LocationType].ZoneID)))
                     if targetZone == self.LastTargetZone then
                         local zonePosition = aiBrain.Zones.Land.zones[targetZone].pos
                         local rx = self.Pos[1] - zonePosition[1]

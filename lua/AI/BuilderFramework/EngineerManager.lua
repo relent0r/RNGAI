@@ -900,7 +900,7 @@ EngineerManager = Class(BuilderManager) {
                 local beingBuiltSmd = self:NumStructuresBeingBuiltTechCategory('TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' })
                 local queuedSmdCount = self:NumStructuresQueued('TECH3', { 'STRUCTURE', 'ANTIMISSILE', 'DEFENSE' })
                 if currentSMD == 0 and beingBuiltSmd == 0 and queuedSmdCount == 0 then
-                    --LOG('We have no SMD, create a request')
+                    --LOG('We have no SMD, create a request for eng '..tostring(unit.EntityId)..' to build SMD')
                     if not aiBrain.IntelManager:IsAssignedStructureRequestPresent(self.Location, 120, 'SMD') then
                         local smdRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 120, 'SMD')
                         if smdRequestPos then

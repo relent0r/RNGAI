@@ -324,6 +324,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         if platUnits then
             for _, unit in platUnits do
                 if unit.Blueprint.CategoriesHash.ENGINEER then
+                    --LOG('Engineer being asked to exit a platoon, why? platoon state is '..tostring(self.StateName)..' and platoon name is '..tostring(self.PlatoonName))
                     StateUtils.UpdateEngineerBuildQueueRNG(unit)
                     unit.PlatoonHandle = nil
                     unit.AssistSet = nil
@@ -464,4 +465,54 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
             end
         end,
     },
+
+    MoveUnitToArmyPoolRNG = function(self, unit)
+        if unit and not unit.Dead then
+            local aiBrain = unit:GetAIBrain()
+            unit.PlatoonHandle = nil
+            if not unit.Dead and unit:IsPaused() then
+                unit:SetPaused( false )
+            end      
+            IssueClearCommands({unit})
+            if unit.Blueprint.CategoriesHash.ENGINEER then
+                unit.AssistSet = nil
+                unit.AssistPlatoon = nil
+                unit.UnitBeingBuilt = nil
+                unit.ReclaimInProgress = nil
+                unit.CaptureInProgress = nil
+                unit.UnitBeingAssist = nil
+                unit['rngdata'].IsAssistAssigned = nil
+                unit.Active = nil
+                unit.CustomState = nil
+                if aiBrain.RNGDEBUG then
+                    unit:SetCustomName('I should be exiting the assist manager')
+                end
+                if self.PlatoonName == 'EngineerAssistManagerBehavior' then
+                    local bp = unit.Blueprint
+                    aiBrain.EngineerAssistManagerBuildPower = aiBrain.EngineerAssistManagerBuildPower - (bp.Economy.BuildRate * self.BuildMultiplier)
+                    self.TotalBuildRate = self.TotalBuildRate - (bp.Economy.BuildRate * self.BuildMultiplier)
+                    if bp.CategoriesHash.TECH1 then
+                        aiBrain.EngineerAssistManagerBuildPowerTech1 = aiBrain.EngineerAssistManagerBuildPowerTech1 - (bp.Economy.BuildRate * self.BuildMultiplier)
+                        self.TotalTechBuildRate[1] = self.TotalTechBuildRate[1] - (bp.Economy.BuildRate * self.BuildMultiplier)
+                    elseif bp.CategoriesHash.TECH2 then
+                        aiBrain.EngineerAssistManagerBuildPowerTech2 = aiBrain.EngineerAssistManagerBuildPowerTech2 - (bp.Economy.BuildRate * self.BuildMultiplier)
+                        self.TotalTechBuildRate[2] = self.TotalTechBuildRate[2] - (bp.Economy.BuildRate * self.BuildMultiplier)
+                    elseif bp.CategoriesHash.TECH3 then
+                        aiBrain.EngineerAssistManagerBuildPowerTech3 = aiBrain.EngineerAssistManagerBuildPowerTech3 - (bp.Economy.BuildRate * self.BuildMultiplier)
+                        self.TotalTechBuildRate[3] = self.TotalTechBuildRate[3] - (bp.Economy.BuildRate * self.BuildMultiplier)
+                    end
+                end
+                if unit.BuilderManagerData.EngineerManager then
+                    --unit:SetCustomName('Running TaskFinished')
+                    unit.BuilderManagerData.EngineerManager:TaskFinished(unit)
+                end
+            end
+            
+
+
+            aiBrain:AssignUnitsToPlatoon('ArmyPool', {unit}, 'Unassigned', 'NoFormation')
+            --LOG('Removed unit from assist platoon')
+            coroutine.yield(3)
+        end
+    end,
 }

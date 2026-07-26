@@ -412,16 +412,6 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                     if target then
                         self.target = target
-                        if not (unitRole == 'Sniper' or unitRole == 'Silo') and VDist3Sq(unitPos,target:GetPosition())>(unitRange+20)*(unitRange+20) then
-                            if not approxThreat then
-                                approxThreat=RUtils.GrabPosDangerRNG(aiBrain,unitPos,self.EnemyRadius * 0.7,self.EnemyRadius, true, false, false, true)
-                            end
-                            if aiBrain.BrainIntel.SuicideModeActive or approxThreat.allySurface and approxThreat.enemySurface and approxThreat.allySurface > (approxThreat.enemyStructure + approxThreat.enemySurface) then
-                                IssueClearCommands({v}) 
-                                IssueMove({v},target:GetPosition())
-                                continue
-                            end
-                        end
                         StateUtils.VariableKite(self,v,target)
                     end
                 end
@@ -857,7 +847,7 @@ ZoneControlThreatThread = function(aiBrain, platoon)
     while aiBrain:PlatoonExists(platoon) do
         coroutine.yield(15)
         if platoon.Pos then
-            platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreat('Air', categories.ALLUNITS)
+            platoon.CurrentPlatoonThreatAntiAir = platoon:CalculatePlatoonThreatAroundPosition('Air', categories.ALLUNITS, platoon.Pos, 45)
             --LOG('Defensive aa platoon has '..platoon.CurrentPlatoonThreatAntiAir..' threat and has label '..repr(platoon.Label)..' with zone '..repr(platoon.Zone))
             local targetThreat = GetThreatAtPosition(aiBrain, platoon.Pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface')
             if not platoon.retreat and targetThreat > 0 then
@@ -871,11 +861,27 @@ ZoneControlThreatThread = function(aiBrain, platoon)
                     local tmpDistance = rx * rx + rz * rz
                     --platoon:LogDebug(string.format('Have enemy unit, tmp distance is '..tmpDistance))
                     --platoon:LogDebug(string.format('Range check is targetRange '..targetRange))
-                    if tmpDistance < math.max(2025, (targetRange * targetRange * 1.3)) then
+                    if tmpDistance < math.max(2025, ((targetRange * targetRange) * 1.69)) then
                         --platoon:LogDebug(string.format('ZoneControlThreatThread found close threat, retreating'))
                         platoon.retreat=true
                         platoon.BuilderData = { RetreatTarget = target }
                         platoon:ChangeState(platoon.Retreating)
+                    end
+                end
+                if not target and platoon.StateName ~= 'CombatLoop' then
+                    if (targetThreat * 0.5) > platoon.CurrentPlatoonThreatAntiAir then
+                        local airTarget = StateUtils.GetClosestUnitRNG(aiBrain, platoon, platoon.Pos, categories.AIR - categories.INSIGNIFICANTUNIT ,false,  false, platoon.EnemyRadius, 'Enemy')
+                        if airTarget then
+                            platoon.BuilderData = { RetreatTarget = airTarget }
+                        end
+                        platoon.retreat=true
+                        platoon:ChangeState(platoon.Retreating)
+                    else
+                        local airTarget = StateUtils.GetClosestUnitRNG(aiBrain, platoon, platoon.Pos, categories.AIR - categories.INSIGNIFICANTUNIT ,false,  false, platoon.EnemyRadius, 'Enemy')
+                        if airTarget then
+                            platoon.targetcandidates = { airTarget }
+                            platoon:ChangeState(platoon.CombatLoop)
+                        end
                     end
                 end
             end

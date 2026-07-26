@@ -504,7 +504,7 @@ IntelManager = Class {
         self:ForkThread(self.StructureRequestThread)
         self:ForkThread(self.IntelGridThreatThread, self.Brain)
         self:ForkThread(self.ZoneMetricUpdateThread)
-        self:ForkThread(self.ZoneRenderDebugThread)
+        --self:ForkThread(self.ZoneRenderDebugThread)
         self.Brain:ForkThread(self.Brain.BuildScoutLocationsRNG)
         --self:ForkThread(self.DrawZoneArmyValue)
         if self.Debug then
@@ -1600,8 +1600,6 @@ IntelManager = Class {
                     LOG(string.format("    > Contiguity:   %.2f * %.1f = %.2f", contiguityValue, weightTable.raid.contiguityWeight, contiguityValue * weightTable.raid.contiguityWeight))
                     LOG(string.format("    > TeamBonus:    -%.2f * %.1f = -%.2f", teamValueBonus, weightTable.raid.teamValueWeight, teamValueBonus * weightTable.raid.teamValueWeight))
                     LOG(string.format("    > ZoneFlankBonus:    %.2f * %.1f = %.2f", zoneFlankRaidBonus, weightTable.raid.zoneFlankWeight, zoneFlankRaidBonus * weightTable.raid.zoneFlankWeight))
-
-                end
                     -- =====================================
                     -- LIVE VISUAL DEBUG ENGINE INJECTION
                     -- =====================================
@@ -1624,6 +1622,9 @@ IntelManager = Class {
                             end
                         end
                     end
+
+                end
+
             end
             coroutine.yield(20) 
         end
@@ -1846,12 +1847,12 @@ IntelManager = Class {
         if not bestZone or (bestZone and bestScore < minThreshold) then
             return nil, nil
         end
-        if bestZone then
-            self.VisualDebugData[bestZone.id] = self.VisualDebugData[bestZone.id] or {}
-            self.VisualDebugData[bestZone.id].pos = bestPos
-            self.VisualDebugData[bestZone.id].lastSelectionType = zonetype
-            self.VisualDebugData[bestZone.id].selectionExpiry = GetGameTimeSeconds() + 10.0
-        end
+        --if bestZone then
+        --    self.VisualDebugData[bestZone.id] = self.VisualDebugData[bestZone.id] or {}
+        --    self.VisualDebugData[bestZone.id].pos = bestPos
+        --    self.VisualDebugData[bestZone.id].lastSelectionType = zonetype
+        --    self.VisualDebugData[bestZone.id].selectionExpiry = GetGameTimeSeconds() + 10.0
+        --end
         return bestZone.id, bestPos
     end,
 
@@ -4277,26 +4278,22 @@ IntelManager = Class {
                     -- D. DETERMINE FINAL REQUIREMENT
                     local finalThreatNeed = math.max(totalReactiveThreat, umbrellaThreatNeed)
                     
-                    if finalThreatNeed > minThreatThreshold then 
-                        local rawUnitsNeeded = math.ceil(finalThreatNeed / airThreatToUnitRatio)
-                        
-                        local cap = 60 
+                    if finalThreatNeed > minThreatThreshold then                       
+                        local threatCap = 600
                         if isDefensiveZone and not isActiveFront then
-                            cap = math.max(10, (zoneData.teamvalue or 1) * 8)
+                            threatCap = math.max(100, (zoneData.teamvalue or 1) * 80)
                         end
-                        rawUnitsNeeded = math.min(rawUnitsNeeded, cap)
+                        local rawThreatNeeded = math.min(finalThreatNeed, threatCap)
 
                         -- E. GAP ANALYSIS
                         local currentFriendlyAA = zoneData.friendlylandantiairthreat or 0
-                        local unitsAlreadyThere = math.ceil(currentFriendlyAA / threatToUnitConversion)
-                        
-                        local netNeeded = math.max(0, rawUnitsNeeded - unitsAlreadyThere)
+                        local netNeededThreat = math.max(0, rawThreatNeeded - currentFriendlyAA)
                         --LOG('netNeeded is '..tostring(netNeeded))
 
-                        if netNeeded > 0 then
+                        if netNeededThreat > 0 then
                             table.insert(zoneRequirements, {
                                 ZoneID = zoneID,
-                                Needed = netNeeded,
+                                Needed = netNeededThreat,
                                 Position = zoneData.pos,
                                 Threat = totalReactiveThreat + (umbrellaThreatNeed * 0.5) 
                             })
@@ -4339,43 +4336,44 @@ IntelManager = Class {
 
                 for _, bestBase in ipairs(potentialBases) do
                     if remainingNeed <= 0 then break end
+                    local threatPerUnit = 10 -- T1 default
+                    if bestBase.Tier == 3 then threatPerUnit = 35
+                    elseif bestBase.Tier == 2 then threatPerUnit = 20 end
 
-                    local techEfficiency = 1
-                    if bestBase.Tier == 3 then techEfficiency = 4
-                    elseif bestBase.Tier == 2 then techEfficiency = 2 end
+                    local unitsNeeded = math.ceil(remainingNeed / threatPerUnit)
 
                     local baseCapacity = bestBase.NumFactories * 4 
-                    local allocation = math.min(remainingNeed, baseCapacity)
+                    local allocation = math.min(unitsNeeded, baseCapacity)
                     
                     -- Buffer Logic
-                    local bufferValue = math.ceil(bestBase.LocalAABuffer / threatToUnitConversion)
+                    local bufferValue = math.ceil(bestBase.LocalAABuffer / threatPerUnit)
                     local filledByBuffer = math.min(allocation, bufferValue)
                     
                     if filledByBuffer > 0 then
-                        bestBase.LocalAABuffer = math.max(0, bestBase.LocalAABuffer - (filledByBuffer * threatToUnitConversion))
+                        bestBase.LocalAABuffer = math.max(0, bestBase.LocalAABuffer - (filledByBuffer * threatPerUnit))
                         allocation = allocation - filledByBuffer
-                        remainingNeed = remainingNeed - filledByBuffer
+                        remainingNeed = remainingNeed - (filledByBuffer * threatPerUnit)
                     end
 
                     if allocation > 0 then
-                        local actualBuildCount = math.ceil(allocation / techEfficiency)
                         local demandTable = aiBrain.amanager.Demand.Bases[bestBase.ID].Land
                         
                         if bestBase.Tier == 3 then
-                            demandTable.T3.aa = (demandTable.T3.aa or 0) + actualBuildCount
+                            demandTable.T3.aa = (demandTable.T3.aa or 0) + allocation
                             --LOG('demandTable.T3.aa is '..tostring(demandTable.T3.aa)..' for base '..tostring(bestBase.ID))
                         elseif bestBase.Tier == 2 then
-                            demandTable.T2.aa = (demandTable.T2.aa or 0) + actualBuildCount
+                            demandTable.T2.aa = (demandTable.T2.aa or 0) + allocation
                             --LOG('demandTable.T2.aa is '..tostring(demandTable.T2.aa)..' for base '..tostring(bestBase.ID))
                         else
-                            demandTable.T1.aa = (demandTable.T1.aa or 0) + actualBuildCount
+                            demandTable.T1.aa = (demandTable.T1.aa or 0) + allocation
                             --LOG('demandTable.T1.aa is '..tostring(demandTable.T1.aa)..' for base '..tostring(bestBase.ID))
                         end
                         
-                        remainingNeed = remainingNeed - (actualBuildCount * techEfficiency)
+                        remainingNeed = remainingNeed - (allocation * threatPerUnit)
                     end
                 end
             end
+            --LOG('Current AA units '..tostring(aiBrain:GetCurrentUnits(categories.MOBILE * categories.ANTIAIR * (categories.LAND + categories.HOVER))))
         elseif productiontype == 'ExperimentalArtillery' then
             local t3ArtilleryCount = 0
             local t3NukeCount = 0
@@ -5093,8 +5091,8 @@ IntelManager = Class {
                 end
                 if data.Assigned and data.AssignedEngineer and not data.AssignedEngineer.Dead then
                     if data.AssignedEngineer.AIPlatoonReference.ExitStateMachine then
-                        --LOG('Aborting existing engineer')
-                        data.AssignedEngineer.AIPlatoonReference:ExitStateMachine()
+                        --LOG('Aborting existing engineer from structure request '..tostring(data.AssignedEngineer.EntityId)..' for structure type '..tostring(structureType))
+                        data.AssignedEngineer.AIPlatoonReference:MoveUnitToArmyPoolRNG(data.AssignedEngineer)
                     end
                 end
             end

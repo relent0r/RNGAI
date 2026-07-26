@@ -226,6 +226,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             if not aiBrain or not aiBrain:PlatoonExists(self) then return end
 
             if aiBrain.EngineerAssistManagerBuildPower <= 0 then
+                --LOG('EngineerAssistManagerBuilderPower is zero')
                 coroutine.yield(5)
                 for _, eng in self:GetPlatoonUnits() do
                     if eng and not eng.Dead then
@@ -254,7 +255,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                     RNGINSERT(available, eng)
                 end
             end
-            --LOG('Number of available engineers for new jobs'..tostring(availableCount))
+            --LOG('Number of available engineers for new jobs'..tostring(availableCount)..' Total units in platoon '..tostring(totalUnitsInPlatoon))
             if availableCount== 0 then
                 if aiBrain.EngineerAssistManagerFocusCategoryLookup == 'EnergyRequired' then
                     self:ChangeState(self.CheckForEngineerReallocation)
@@ -857,6 +858,7 @@ end
 
 EngineerAssistRemoveRNG = function(self, aiBrain, eng)
     if eng and not eng.Dead then
+        --LOG('Removing engineer from assist platoon '..tostring(eng.UnitId))
         eng.PlatoonHandle = nil
         eng.AssistSet = nil
         eng.AssistPlatoon = nil

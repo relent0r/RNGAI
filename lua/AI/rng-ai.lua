@@ -7518,6 +7518,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 phaseUpgradeMassStoredMin = 50,
                 phaseUpgradeSpendFactor = 0.03,
                 t3AirRushAssistBonus = 0.2,
+                gravitySpendModifier = 0.01, -- 1% allocation boost per unit of gravity (e.g. 50 gravity = +50% allocation weight)
                 
                 -- Base Allocations & Shift Clamps
                 minAllocation = 0.20,
@@ -7977,7 +7978,12 @@ AIBrain = Class(RNGAIBrainClass) {
             for _, v in self.BuilderManagers do
                 local fmgr = v.FactoryManager
                 if fmgr.LocationActive then
-                    local mod = (fmgr.ProductionModifier or 1.0) * (1.0 + (fmgr.LocalDefenseFunding or 0))
+                    local gravityMod = 0
+                    if v.BaseType ~= 'MAIN' and fmgr.EconomicGravity and fmgr.EconomicGravity > 0 then
+                        gravityMod = fmgr.EconomicGravity * (cfg.gravitySpendModifier or 0.01)
+                        --LOG('Gravity mod for zone '..tostring(v.ZoneID)..' is '..tostring(gravityMod)..' (Gravity: '..tostring(fmgr.EconomicGravity)..')')
+                    end
+                    local mod = (fmgr.ProductionModifier or 1.0) * (1.0 + (fmgr.LocalDefenseFunding or 0) + gravityMod)
                     totalLandNeed  = totalLandNeed  + ((fmgr.LandBuildRate or 0) * mod)
                     totalAirNeed   = totalAirNeed   + ((fmgr.AirBuildRate or 0) * mod)
                     totalNavalNeed = totalNavalNeed + ((fmgr.NavalBuildRate or 0) * mod)
@@ -7987,10 +7993,16 @@ AIBrain = Class(RNGAIBrainClass) {
             for _, v in self.BuilderManagers do
                 local fmgr = v.FactoryManager
                 if fmgr.LocationActive then
-                    local mod = (fmgr.ProductionModifier or 1.0) * (1.0 + (fmgr.LocalDefenseFunding or 0))
+                    local gravityMod = 0
+                    if v.BaseType ~= 'MAIN' and fmgr.EconomicGravity and fmgr.EconomicGravity > 0 then
+                        gravityMod = fmgr.EconomicGravity * (cfg.gravitySpendModifier or 0.01)
+                        --LOG('Gravity mod for zone '..tostring(v.ZoneID)..' is '..tostring(gravityMod)..' (Gravity: '..tostring(fmgr.EconomicGravity)..')')
+                    end
+                    local mod = (fmgr.ProductionModifier or 1.0) * (1.0 + (fmgr.LocalDefenseFunding or 0) + gravityMod)
                     fmgr.BaseLandRatio  = (totalLandNeed > 0)  and (((fmgr.LandBuildRate or 0) * mod) / totalLandNeed) * newLand or 0
                     fmgr.BaseAirRatio   = (totalAirNeed > 0)   and (((fmgr.AirBuildRate or 0) * mod) / totalAirNeed) * newAir or 0
                     fmgr.BaseNavalRatio = (totalNavalNeed > 0) and (((fmgr.NavalBuildRate or 0) * mod) / totalNavalNeed) * newNaval or 0
+                    --LOG('Setting Base Ratios for '..tostring(fmgr.LocationType)..' | Land: '..tostring(fmgr.BaseLandRatio)..' | Air: '..tostring(fmgr.BaseAirRatio)..' | Naval: '..tostring(fmgr.BaseNavalRatio))
                 else
                     fmgr.BaseLandRatio, fmgr.BaseAirRatio, fmgr.BaseNavalRatio = 0, 0, 0
                 end
