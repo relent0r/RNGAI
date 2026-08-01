@@ -119,7 +119,7 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            --RNGLOG('Ready TML Launchers is '..readyTmlLauncherCount)
+            --LOG('Ready TML Launchers is '..readyTmlLauncherCount)
             if readyTmlLauncherCount < 1 then
                 coroutine.yield(50)
                 self:ChangeState(self.DecideWhatToDo)
@@ -130,6 +130,7 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                 for num, unit in targetUnits do
                     if not unit.Dead and EntityCategoryContains(v, unit) and self:CanAttackTarget('attack', unit) then
                         local targetPosition = unit:GetPosition()
+                        -- We rounded these numbers because of floating point errors
                         local targetHealth
                         if not RUtils.PositionInWater(targetPosition) then
                             -- 6000 damage for TML
@@ -146,15 +147,14 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                                 targetHealth = unit:GetHealth()
                             end
                             
-                            --RNGLOG('Target Health is '..targetHealth)
+                            --LOG('Target Health is '..targetHealth)
                             local missilesRequired = math.ceil(targetHealth / 6000)
                             local shieldMissilesRequired = 0
-                            --RNGLOG('Missiles Required = '..missilesRequired)
-                            --RNGLOG('Total Missiles '..totalMissileCount)
+                            --LOG('Missiles Required = '..missilesRequired)
+                            --LOG('Total Missiles '..totalMissileCount)
                             if (totalMissileCount >= missilesRequired and not EntityCategoryContains(categories.COMMAND, unit)) or (readyTmlLauncherCount >= missilesRequired) then
                                 target = unit
                                 
-                                --enemyTMD = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, targetPosition, 25, 'Enemy')
                                 local enemyTmdCount = AIAttackUtils.AIFindNumberOfUnitsBetweenPointsRNG( aiBrain, self.Home, targetPosition, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH2, 30, 'Enemy')
                                 local enemyShield = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.SHIELD, targetPosition, 25, 'Enemy')
                                 if not table.empty(enemyShield) then
@@ -172,23 +172,27 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                                 --RNGLOG('Missiles Required for Shield Penetration '..shieldMissilesRequired)
 
                                 if enemyTmdCount >= readyTmlLauncherCount then
-                                    --RNGLOG('Target is too protected')
+                                    --LOG('Target is too protected')
                                     --Set flag for more TML or ping attack position with air/land
                                     target = false
                                     continue
                                 else
-                                    --RNGLOG('Target does not have enough defense')
+                                    --LOG('Target does not have enough defense')
                                     for k, tml in readyTmlLaunchers do
                                         local missileCount = tml:GetTacticalSiloAmmoCount()
-                                        --RNGLOG('Missile Count in Launcher is '..missileCount)
+                                        --LOG('Missile Count in Launcher is '..missileCount)
                                         local tmlMaxRange = ALLBPS[tml.UnitId].Weapon[1].MaxRadius
-                                        --RNGLOG('TML Max Range is '..tmlMaxRange)
+                                        --LOG('TML Max Range is '..tmlMaxRange)
                                         local tmlPosition = tml:GetPosition()
+                                        --LOG('Distance from TML to target '..tostring(VDist2Sq(tmlPosition[1], tmlPosition[3], targetPosition[1], targetPosition[3])))
                                         if missileCount > 0 and VDist2Sq(tmlPosition[1], tmlPosition[3], targetPosition[1], targetPosition[3]) < tmlMaxRange * tmlMaxRange then
                                             if (missileCount >= missilesRequired) and (enemyTmdCount < 1) and (shieldMissilesRequired < 1) and missilesRequired == 1 then
-                                                --RNGLOG('Only 1 missile required')
+                                                --LOG('Only 1 missile required')
                                                 if tml.TargetBlackList then
-                                                    if tml.TargetBlackList[targetPosition[1]][targetPosition[3]] then
+                                                    local mult = math.pow(10, 1)
+                                                    local targetX = math.floor(targetPosition[1] * mult + 0.5) / mult
+                                                    local targetZ = math.floor(targetPosition[3] * mult + 0.5) / mult
+                                                    if tml.TargetBlackList[targetX][targetZ] then
                                                         --LOG('TargetPos found in blacklist, skip')
                                                         continue
                                                     end
@@ -197,7 +201,10 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                                                 break
                                             else
                                                 if tml.TargetBlackList then
-                                                    if tml.TargetBlackList[targetPosition[1]][targetPosition[3]] then
+                                                    local mult = math.pow(10, 1)
+                                                    local targetX = math.floor(targetPosition[1] * mult + 0.5) / mult
+                                                    local targetZ = math.floor(targetPosition[3] * mult + 0.5) / mult
+                                                    if tml.TargetBlackList[targetX][targetZ] then
                                                         --LOG('TargetPos found in blacklist, skip')
                                                         continue
                                                     end
@@ -205,17 +212,21 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                                                 RNGINSERT(inRangeTmlLaunchers, tml)
                                                 local readyTML = RNGGETN(inRangeTmlLaunchers)
                                                 if (readyTML >= missilesRequired) and (readyTML > enemyTmdCount + shieldMissilesRequired) then
-                                                    --RNGLOG('inRangeTmlLaunchers table number is enough for kill')
+                                                    --LOG('inRangeTmlLaunchers table number is enough for kill')
                                                     break
                                                 end
                                             end
                                         end
                                     end
-                                    --RNGLOG('Have Target and number of in range ready launchers is '..RNGGETN(inRangeTmlLaunchers))
-                                    break
+                                    --LOG('Have Target and number of in range ready launchers is '..RNGGETN(inRangeTmlLaunchers))
+                                    if RNGGETN(inRangeTmlLaunchers) < 1 then
+                                        target = false
+                                    else
+                                        break
+                                    end
                                 end
                             else
-                                --RNGLOG('Not Enough Missiles Available')
+                                --LOG('Not Enough Missiles Available')
                                 target = false
                                 continue
                             end
@@ -224,12 +235,12 @@ AITMLBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 if target then
-                    --RNGLOG('We have target and can fire, breaking loop')
+                    --LOG('We have target and can fire, breaking loop')
                     break
                 end
             end
             if not table.empty(inRangeTmlLaunchers) then
-                --RNGLOG('Launching Tactical Missile')
+                --LOG('Launching Tactical Missile')
                 self.BuilderData = {
                     AttackTarget = target,
                     Launchers = inRangeTmlLaunchers

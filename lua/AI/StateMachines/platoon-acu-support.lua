@@ -183,7 +183,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 end
             end
             local target
-            if StateUtils.SimpleTarget(self,aiBrain) then
+            local targetCheckPos = acu.Position or self.Pos
+            if StateUtils.SimpleTarget(self,aiBrain, targetCheckPos) then
                 if rangedAttack then
                     --LOG('ACUSUPPORT: we are attempting ranged attack')
                     self:ChangeState(self.RangedCombatLoop)

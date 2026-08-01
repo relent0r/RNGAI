@@ -74,7 +74,7 @@ IntelManager = Class {
         self.ZoneToGridMap = {}
         self.ZoneWeightTable = {
             control = {
-                zonePressureWeight = 2.0,
+                zonePressureWeight = 1.6,
                 zoneDistanceWeight = 1.8,
                 threatOpportunityWeight = 2.0
             },
@@ -1622,7 +1622,6 @@ IntelManager = Class {
                             end
                         end
                     end
-
                 end
 
             end
@@ -3640,7 +3639,7 @@ IntelManager = Class {
                     end
                 end
             end
-        elseif productiontype == 'AirAntiNaval' then
+        elseif productiontype == 'AirAntiNaval' and aiBrain.MapWaterRatio > 0 then
             --RNGLOG(aiBrain.Nickname)
             --RNGLOG('aiBrain.BrainIntel.SelfThreat.AirNow '..aiBrain.BrainIntel.SelfThreat.AirNow)
             --RNGLOG('ally air threat is '..aiBrain.BrainIntel.SelfThreat.AllyAirThreat)

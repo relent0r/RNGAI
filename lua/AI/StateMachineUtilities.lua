@@ -236,7 +236,125 @@ SimpleNavalTarget = function(platoon, aiBrain)
     return false
 end
 
-VariableKite = function(platoon,unit,target, maxPlatoonRangeOverride, checkLayer)--basic kiting function.. complicated as heck
+VariableKite = function(platoon, unit, target, maxPlatoonRangeOverride, checkLayer)
+    local function GetKitePosition(pos, tpos, targetRange, strafeMod, healthMod)
+        local dx = pos[1] - tpos[1]
+        local dz = pos[3] - tpos[3]
+        local dist = VDist3(pos, tpos)
+
+        if dist <= 0.001 then return pos end
+
+        if healthMod and healthMod > 0 then
+            targetRange = targetRange * (1 - healthMod)
+        end
+
+        local invDist = 1 / dist
+        local uX = dx * invDist
+        local uZ = dz * invDist
+
+        local kiteX = tpos[1] + uX * targetRange
+        local kiteZ = tpos[3] + uZ * targetRange
+
+        strafeMod = strafeMod or 0
+        local dir = (math.random(0, 1) == 0) and 1 or -1
+        local strafeOffset = strafeMod * dir
+
+        return {
+            kiteX - uZ * strafeOffset,
+            pos[2],
+            kiteZ + uX * strafeOffset
+        }
+    end
+
+    local function CheckRetreat(pos1, pos2, target)
+        local vel = {}
+        vel[1], vel[2], vel[3] = target:GetVelocity()
+        local dotP = 0
+        for i, k in pos2 do
+            if type(k) ~= 'number' then continue end
+            dotP = dotP + (pos1[i] - k) * vel[i]
+        end
+        return dotP < 0
+    end
+
+    local function GetRoleMod(unit)
+        local healthMod = 20
+        if unit['rngdata'].Role == 'Heavy' or unit['rngdata'].Role == 'Bruiser' then
+            healthMod = 50
+        end
+        local ratio = GetWeightedHealthRatio(unit)
+        healthMod = healthMod * ratio * ratio
+        return healthMod / 100
+    end
+
+    local pos = unit:GetPosition()
+    local tpos = target:GetPosition()
+    local dest
+    local mod = 0
+    local layer
+    local healthMod = GetRoleMod(unit)
+    local strafeMod = 3
+
+    if CheckRetreat(pos, tpos, target) then
+        mod = 5
+    end
+
+    if unit['rngdata'].Role == 'Heavy' or unit['rngdata'].Role == 'Bruiser' or unit['rngdata'].GlassCannon then
+        strafeMod = 7
+    end
+
+    if checkLayer then
+        layer = target:GetCurrentLayer()
+    end
+
+    local distanceCheck = 9
+    if (unit['rngdata'].Role == 'Sniper' or unit['rngdata'].Role == 'Artillery' or unit['rngdata'].Role == 'Silo' or unit['rngdata'].Role == 'MissileShip') and unit['rngdata'].MaxWeaponRange then
+        distanceCheck = 25
+    end
+
+    if unit['rngdata'].Role == 'AA' then
+        dest = GetKitePosition(pos, tpos, platoon['rngdata'].MaxPlatoonWeaponRange + 3, strafeMod, healthMod)
+    elseif (unit['rngdata'].Role == 'Sniper' or unit['rngdata'].Role == 'Artillery' or unit['rngdata'].Role == 'Silo' or unit['rngdata'].Role == 'MissileShip') and unit['rngdata'].MaxWeaponRange then
+        dest = GetKitePosition(pos, tpos, unit['rngdata'].MaxWeaponRange - 2, strafeMod, 0)
+    elseif maxPlatoonRangeOverride and (unit['rngdata'].Role == 'Shield' or unit['rngdata'].Role == 'Stealth') and platoon['rngdata'].MaxDirectFireRange > 0 then
+        dest = GetKitePosition(pos, tpos, platoon['rngdata'].MaxDirectFireRange - math.random(1, 3) - mod, strafeMod, 0)
+    elseif (unit['rngdata'].Role == 'Shield' or unit['rngdata'].Role == 'Stealth') and platoon['rngdata'].MaxDirectFireRange > 0 then
+        dest = GetKitePosition(pos, tpos, platoon['rngdata'].MaxDirectFireRange - math.random(1, 3) - mod, strafeMod, healthMod)
+    elseif unit['rngdata'].Role == 'Scout' then
+        dest = GetKitePosition(pos, tpos, platoon['rngdata'].MaxPlatoonWeaponRange - 3, strafeMod, 0)
+    elseif unit['rngdata'].Role == 'Frigate' then
+        local destRange = unit['rngdata'].MaxWeaponRange - 4 - mod - healthMod
+        dest = GetKitePosition(pos, tpos, destRange, strafeMod, 0)
+    elseif maxPlatoonRangeOverride then
+        dest = GetKitePosition(pos, tpos, platoon['rngdata'].MaxPlatoonWeaponRange, strafeMod, 0)
+    elseif checkLayer then
+        if unit['rngdata'].CategoryAntiNavyRange and (layer == 'Seabed' or layer == 'Sub') then
+            dest = GetKitePosition(pos, tpos, unit['rngdata'].CategoryAntiNavyRange, strafeMod, healthMod)
+        else
+            dest = GetKitePosition(pos, tpos, platoon['rngdata'].MaxPlatoonWeaponRange + 5 - math.random(1, 3) - mod, strafeMod, healthMod)
+        end
+    elseif unit['rngdata'].MaxWeaponRange then
+        dest = GetKitePosition(pos, tpos, unit['rngdata'].MaxWeaponRange - math.random(1, 3) - mod, strafeMod, healthMod)
+    else
+        dest = GetKitePosition(pos, tpos, platoon['rngdata'].MaxPlatoonWeaponRange + 5 - math.random(1, 3) - mod, strafeMod, healthMod)
+    end
+
+    if VDist3Sq(pos, dest) > distanceCheck then
+        if unit.GetNavigator then
+            local navigator = unit:GetNavigator()
+            if navigator then
+                navigator:SetGoal(dest)
+            end
+        else
+            IssueClearCommands({unit})
+            IssueMove({unit}, dest)
+        end
+    end
+
+    return mod
+end
+
+VariableKiteOld = function(platoon,unit,target, maxPlatoonRangeOverride, checkLayer)--basic kiting function.. complicated as heck
     local function KiteDist(pos1,pos2,distance,healthmod)
         local vec={}
         local dist=VDist3(pos1,pos2)
@@ -2989,24 +3107,6 @@ function AssignTransportToPool( unit, aiBrain )
     if not unit['rngdata'] then
         unit['rngdata'] = {}
     end
-
-    -- Disabled for now as we need it to perform a state change instead of assigning to the pool
-    --[[
-	if not unit.EventCallbacks['OnTransportDetach'] then
-		unit:AddUnitCallback( function(unit)
-			if TransportDialog then
-                LOG("*AI DEBUG TRANSPORT "..unit.PlatoonHandle.BuilderName.." Transport "..unit.EntityId.." Fires ReturnToPool callback" )
-			end
-			if TableGetn(unit:GetCargo()) == 0 then
-				if unit.WatchUnloadThread then
-					KillThread(unit.WatchUnloadThread)
-					unit.WatchUnloadThread = nil
-				end
-				ForkTo( AssignTransportToPool, unit, aiBrain )
-			end
-		end, 'OnTransportDetach')
-	end
-    ]]
 
     -- if the unit is not already in the transport Pool --
 	if not unit.Dead and (not unit.PlatoonHandle ~= aiBrain.TransportPool) then

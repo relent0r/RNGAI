@@ -210,11 +210,14 @@ function CDRBrainThread(cdr)
 
             if cdr.DistanceToHome > 900 and cdr.CurrentEnemyThreat > 0 then
                 -- Define minimum dynamic thresholds based on location status
-                local minSurfaceThreat = 15
-                local minAirThreat = 5
+                local phaseSurfaceMap = { [1] = 6, [2] = 18, [3] = 45 }
+                local phaseAirMap     = { [1] = 2, [2] = 6,  [3] = 15 }
+                local currentPhase = aiBrain.BrainIntel.LandPhase or 1
+                local minSurfaceThreat = phaseSurfaceMap[currentPhase]
+                local minAirThreat = phaseAirMap[currentPhase]
                 if cdr.PositionStatus == 'Hostile' then
-                    minSurfaceThreat = 30
-                    minAirThreat = 15
+                    minSurfaceThreat = minSurfaceThreat * 2
+                    minAirThreat = minAirThreat * 2
                 end
 
                 -- Condition A: No support platoon exists, or it has fallen below required capability thresholds
@@ -960,19 +963,37 @@ function CDRCallPlatoon(cdr, surfaceThreatRequired, antiAirThreatRequired)
                     local units = plat.Platoon:GetPlatoonUnits()
                     for _,u in units do
                         if not u.Dead and not u:IsUnitState('Attached') then
-                            surfaceThreatValue = surfaceThreatValue + u.Blueprint.Defense.SurfaceThreatLevel
-                            antiAirThreatValue = antiAirThreatValue + u.Blueprint.Defense.AirThreatLevel
+                            local unitThreat = u.Blueprint.Defense
                             local cats = u.Blueprint.CategoriesHash
-                            if cats.DIRECTFIRE then
-                                RNGINSERT(validUnits.Attack, u)
-                            elseif cats.INDIRECTFIRE then
-                                RNGINSERT(validUnits.Artillery, u)
-                            elseif cats.ANTIAIR or cats.SHIELD then
-                                RNGINSERT(validUnits.Guard, u)
-                            else
-                                RNGINSERT(validUnits.Attack, u)
+                            local added = false
+                            -- 1. Grab AA if we still need it
+                            if unitThreat.AirThreatLevel > 0 and antiAirThreatValue < antiAirThreatRequired then
+                                antiAirThreatValue = antiAirThreatValue + unitThreat.AirThreatLevel
+                                added = true
                             end
-                            bValidUnits = true
+                            -- 2. Grab Surface threat if we still need it
+                            if unitThreat.SurfaceThreatLevel > 0 and surfaceThreatValue < surfaceThreatRequired then
+                                surfaceThreatValue = surfaceThreatValue + unitThreat.SurfaceThreatLevel
+                                added = true
+                            end
+                            if not added and cats.SHIELD and (surfaceThreatValue < surfaceThreatRequired or antiAirThreatValue < antiAirThreatRequired) then
+                                added = true
+                            end
+                            if added then
+                                if cats.DIRECTFIRE then
+                                    RNGINSERT(validUnits.Attack, u)
+                                elseif cats.INDIRECTFIRE then
+                                    RNGINSERT(validUnits.Artillery, u)
+                                elseif cats.ANTIAIR or cats.SHIELD then
+                                    RNGINSERT(validUnits.Guard, u)
+                                else
+                                    RNGINSERT(validUnits.Attack, u)
+                                end
+                                bValidUnits = true
+                            end
+                        end
+                        if surfaceThreatValue >= (surfaceThreatRequired * 1.2) and antiAirThreatValue >= (antiAirThreatRequired * 1.2) then
+                            break
                         end
                     end
                     if bValidUnits and (surfaceThreatValue >= surfaceThreatRequired * 1.2 and antiAirThreatValue >= antiAirThreatRequired * 1.2) then
