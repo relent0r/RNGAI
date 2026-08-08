@@ -3278,6 +3278,7 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
     local zoneSet = aiBrain.Zones[zoneType].zones
     local currentTime = GetGameTimeSeconds()
     local retPos, retName, refZone
+    local transportPosible = aiBrain:GetCurrentUnits(categories.TRANSPORTFOCUS + (categories.STRUCTURE * categories.FACTORY * categories.AIR)) > 0
     local preferredLabel = (position and zoneType == 'Land') and NavUtils.GetLabel('Land', position) or false
     radius = radius * radius
 
@@ -3330,7 +3331,9 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
         end
 
         CheckList(im.ZoneExpansions.Pathable, true)
-        CheckList(im.ZoneExpansions.NonPathable, false)
+        if transportPosible then
+            CheckList(im.ZoneExpansions.NonPathable, false)
+        end
 
         local winner = bestOnLabelEntry or bestGlobalEntry
         if winner then
@@ -8342,19 +8345,20 @@ function GetMobileLandExperimentalBuildPosition(aiBrain, basePos, radius, engPos
         table.sort(candidates, function(a, b)
             return a.score < b.score
         end)
-        --LOG('Returning cadidate pos of '..tostring(repr(candidates[1].pos)))
+        LOG('Returning cadidate pos of '..tostring(repr(candidates[1].pos)))
         return candidates[1].pos
     end
 
     -- Fallback if no good spot found
-    --LOG('Fallback to generic position')
-    return GetGenericMobileExperimentalBuildPosition(aiBrain, basePos, radius, engPos)
+    LOG('Fallback to generic position')
+    return GetGenericMobileExperimentalBuildPosition(aiBrain, basePos)
 end
 
-function GetGenericMobileExperimentalBuildPosition(aiBrain, basePos, enemyPos)
+function GetGenericMobileExperimentalBuildPosition(aiBrain, basePos)
     local maxDistanceFromBase = 65  -- maximum distance from base to place experimental
     local searchRadius = 30         -- radius to use for initial circular candidate search
     local safeMinDistFromEnergy = 8
+    local movementLayer = 'Amphibious'
 
     local enemyBasePos = aiBrain.EnemyIntel and aiBrain.EnemyIntel.EnemyBasePosition or false
     local teamAveragePositions = aiBrain.IntelManager:GetTeamAveragePositions()
@@ -8373,7 +8377,7 @@ function GetGenericMobileExperimentalBuildPosition(aiBrain, basePos, enemyPos)
         end
 
         -- Prefer positions not toward enemy
-        if enemyPos then
+        if teamEnemyAveragePosition then
             local baseToEnemy = VDist2Sq(basePos[1], basePos[3], teamEnemyAveragePosition[1], teamEnemyAveragePosition[3])
             local posToEnemy = VDist2Sq(pos[1], pos[3], teamEnemyAveragePosition[1], teamEnemyAveragePosition[3])
             if posToEnemy < baseToEnemy then
@@ -8382,16 +8386,19 @@ function GetGenericMobileExperimentalBuildPosition(aiBrain, basePos, enemyPos)
         end
 
         local energyNearby = aiBrain:GetNumUnitsAroundPoint(categories.ENERGYPRODUCTION, pos, safeMinDistFromEnergy, 'Ally')
-        if energyNearby == 0 then
-            --LOG('Return enemy not nearby pos ' .. repr(pos))
+        if energyNearby > 0 then
+            continue
+        end
+        if NavUtils.CanPathTo(movementLayer, basePos, pos) then
+            LOG('Return enemy not nearby and canpath to pos ' .. repr(pos))
             return pos
         end
     end
 
     -- Fallback: pick a point directly away from enemy, but clamp within max distance
-    if enemyPos then
-        local dx = basePos[1] - enemyPos[1]
-        local dz = basePos[3] - enemyPos[3]
+    if teamEnemyAveragePosition then
+        local dx = basePos[1] - teamEnemyAveragePosition[1]
+        local dz = basePos[3] - teamEnemyAveragePosition[3]
         local norm = math.sqrt(dx * dx + dz * dz)
         if norm == 0 then norm = 1 end
         local clampedOffset = math.min(maxDistanceFromBase, 30)
@@ -8400,8 +8407,10 @@ function GetGenericMobileExperimentalBuildPosition(aiBrain, basePos, enemyPos)
             0,
             basePos[3] + (dz / norm) * clampedOffset,
         }
-        --LOG('Returning fallback candidate pos (clamped) of ' .. repr(offset))
-        return offset
+        if NavUtils.CanPathTo(movementLayer, basePos, offset) then
+            LOG('Returning fallback candidate pos (clamped) of ' .. repr(offset))
+            return offset
+        end
     end
 
     -- Absolute fallback: offset in safe direction, still within bounds
@@ -8410,7 +8419,7 @@ function GetGenericMobileExperimentalBuildPosition(aiBrain, basePos, enemyPos)
         0,
         basePos[3] + math.min(maxDistanceFromBase, 20),
     }
-    --LOG('Absolute fallback ' .. repr(fallback))
+    LOG('Absolute fallback ' .. repr(fallback))
     return fallback
 end
 
