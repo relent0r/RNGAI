@@ -343,7 +343,7 @@ BuilderGroup {
         PlatoonTemplate = 'CommanderDummyRNG',
         Priority = 1005,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 60, nil, nil, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 60, false, false, 0, 'AntiSurface', 1}},
             { EBC, 'LessThanEconEfficiencyRNG', { 0.8, 2.0 }},
         },
         BuilderType = 'Any',

@@ -614,7 +614,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
             { UCBC, 'LocationDefenseCheck', { 'LocationType', 2, categories.ANTIAIR, 'AntiSurfaceAirUnits' } },
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 60, nil, -1000, 0, 'AntiSurface', 1 }},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 60, false, -1000, 0, 'AntiSurface', 1 }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
@@ -1458,7 +1458,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 750,
         BuilderConditions = {
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 120, nil, nil, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 120, false, false, 0, 'AntiSurface', 1}},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 12, categories.ENGINEER - categories.COMMAND } },
             { UCBC, 'UnitCapCheckLess', { .85 } },

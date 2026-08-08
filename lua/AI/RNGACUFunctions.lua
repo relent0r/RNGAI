@@ -213,38 +213,51 @@ function CDRBrainThread(cdr)
                 local phaseSurfaceMap = { [1] = 6, [2] = 18, [3] = 45 }
                 local phaseAirMap     = { [1] = 2, [2] = 6,  [3] = 15 }
                 local currentPhase = aiBrain.BrainIntel.LandPhase or 1
-                local minSurfaceThreat = phaseSurfaceMap[currentPhase]
-                local minAirThreat = phaseAirMap[currentPhase]
-                if cdr.PositionStatus == 'Hostile' then
-                    minSurfaceThreat = minSurfaceThreat * 2
-                    minAirThreat = minAirThreat * 2
+                local hostileMod = (cdr.PositionStatus == 'Hostile') and 2 or 1
+                local currentGlobalEnemyThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Land
+                local currentGlobalEnemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.Air
+                local minSurfaceThreat = phaseSurfaceMap[currentPhase] * hostileMod
+                local minAirThreat = phaseAirMap[currentPhase] * hostileMod
+                -- I dont love doing this but the only other option is saying if gametime less than x and that wont consider build cheat multipliers etc
+                if currentGlobalEnemyThreat < 20 then
+                    minSurfaceThreat = 0
+                end
+                if currentGlobalEnemyAirThreat < 10 then
+                    minAirThreat = 0
                 end
 
-                -- Condition A: No support platoon exists, or it has fallen below required capability thresholds
-                local supportNeedsReplenishment = not hasValidSupport or (supportSurfaceThreat < minSurfaceThreat) or (supportAirThreat < minAirThreat)
-                local pureOuterThreat = cdr.CurrentEnemyThreat - cdr.CurrentEnemyInnerCircle
-                local outerThreatModifier = 0.70
-                local AdjustedEnemyThreat = cdr.CurrentEnemyInnerCircle + (pureOuterThreat * outerThreatModifier)
-                local pureOuterFriendly = cdr.CurrentFriendlyThreat - cdr.CurrentFriendlyInnerCircle
-                local outerFriendlyModifier = 0.70
-                local AdjustedFriendlyThreat = cdr.CurrentFriendlyInnerCircle + (pureOuterFriendly * outerFriendlyModifier)
+                local adjustedEnemyThreat = (cdr.CurrentEnemyInnerCircle * 0.30) + (cdr.CurrentEnemyThreat * 0.70)
+                local adjustedFriendlyThreat = (cdr.CurrentFriendlyInnerCircle * 0.30) + (cdr.CurrentFriendlyThreat * 0.70)
 
-                if (cdr.Confidence < 3.5 or AdjustedEnemyThreat * 1.2 > AdjustedFriendlyThreat or supportNeedsReplenishment) and (gameTime - 20) > lastPlatoonCall then
+                local requiredEnemySurfaceTarget = adjustedEnemyThreat * 1.2
+                local baseSurfaceTarget          = math.max(minSurfaceThreat, requiredEnemySurfaceTarget)
+                local baseAirTarget              = math.max(minAirThreat, cdr.CurrentEnemyAirThreat)
+                local requestedSurfaceThreat = math.max(0, baseSurfaceTarget - adjustedFriendlyThreat)
+                local requestedAirThreat     = math.max(0, baseAirTarget - cdr.CurrentFriendlyAntiAirThreat)
+                local supportNeedsReplenishment = not hasValidSupport or (requestedSurfaceThreat > 0) or (requestedAirThreat > 0)
+                --LOG('support needs replenishment: '..tostring(supportNeedsReplenishment)..', supportSurfaceThreat: '..supportSurfaceThreat..', minSurfaceThreat: '..minSurfaceThreat..', supportAirThreat: '..supportAirThreat..', minAirThreat: '..minAirThreat)
+
+                if (cdr.Confidence < 3.5 or supportNeedsReplenishment or requiredEnemySurfaceTarget > adjustedFriendlyThreat) and (gameTime - 20) > lastPlatoonCall then
                     cdr.PlatoonHandle:LogDebug(string.format('ACU escort requirements unfulfilled. Calling support. Surface: %d/%d, Air: %d/%d', supportSurfaceThreat, minSurfaceThreat, supportAirThreat, minAirThreat))
-                    
+                    --LOG('Calling for platoon support. Confidence: '..cdr.Confidence..', Adjusted Enemy Threat: '..adjustedEnemyThreat..', Adjusted Friendly Threat: '..adjustedFriendlyThreat..', Support Surface Threat: '..supportSurfaceThreat..', Support Air Threat: '..supportAirThreat)
                     -- Request supplemental threat to close the gap
-                    local requestedSurface = math.max(minSurfaceThreat, AdjustedEnemyThreat * 1.2 - AdjustedFriendlyThreat)
-                    local requestedAir = math.max(minAirThreat, cdr.CurrentEnemyAirThreat - cdr.CurrentFriendlyAntiAirThreat)
+                    local baseSurfaceTarget = math.max(minSurfaceThreat, adjustedEnemyThreat * 1.2)
+                    local baseAirTarget     = math.max(minAirThreat, cdr.CurrentEnemyAirThreat)
+
+                    -- 2. Subtract existing friendly cover (including local/support) to find actual deficit
+                    local requestedSurface = math.max(0, baseSurfaceTarget - adjustedFriendlyThreat)
+                    local requestedAir     = math.max(0, baseAirTarget - cdr.CurrentFriendlyAntiAirThreat)
+                    --LOG(string.format('ACU requesting support platoon. Surface: %d, Air: %d', requestedSurface, requestedAir))
                     
                     CDRCallPlatoon(cdr, requestedSurface, requestedAir)
                     lastPlatoonCall = gameTime
                 
                 -- Condition B: Health/Emergency Fallback overrides
-                elseif cdr.Health < 6000 and AdjustedFriendlyThreat < 20 and (gameTime - 15) > lastPlatoonCall then
+                elseif cdr.Health < 6000 and adjustedFriendlyThreat < 20 and (gameTime - 15) > lastPlatoonCall then
                     cdr.PlatoonHandle:LogDebug(string.format('ACU is low on health and less than 20 CDRCallPlatoon'))
                     CDRCallPlatoon(cdr, 20, 10)
                     lastPlatoonCall = gameTime
-                elseif cdr.DistanceToHome > 40000 and AdjustedFriendlyThreat < 20 and AdjustedEnemyThreat > AdjustedFriendlyThreat and (gameTime - 15) > lastPlatoonCall then
+                elseif cdr.DistanceToHome > 40000 and adjustedFriendlyThreat < 20 and adjustedEnemyThreat > adjustedFriendlyThreat and (gameTime - 15) > lastPlatoonCall then
                     cdr.PlatoonHandle:LogDebug(string.format('ACU is further than 200 units and less than 20 friendly and enemy is greater CDRCallPlatoon'))
                     CDRCallPlatoon(cdr, 20, 5)
                     lastPlatoonCall = gameTime
@@ -379,10 +392,10 @@ function CDRThreatAssessmentRNG(cdr)
             end
             friendlyUnitThreat = friendlyUnitThreatOuter + friendlyUnitThreatInner
             local enemyOverRangedPDCount = 0
-            local enemyACUHealthModifier = 1.0
             local maxEnemyWeaponRange
             local maxEnemyWeaponRangeAnyDistance
             local maxEnemyDistToConsider = cdr.WeaponRange * 2
+            local enemyAcuTotalThreat = 0
             for k,v in enemyUnits do
                 if v and not v.Dead then
                     local unitPos = v:GetPosition()
@@ -411,9 +424,10 @@ function CDRThreatAssessmentRNG(cdr)
                         end
                         if v.Blueprint.CategoriesHash.COMMAND then
                             enemyACUPresent = true
-                            enemyUnitThreatInner = enemyUnitThreatInner + v:EnhancementThreatReturn()
+                            local enemyAcuThreat = v:EnhancementThreatReturn()
+                            local healthRatio = (v:GetHealth() / cdr.Health)
+                            enemyAcuTotalThreat = enemyAcuTotalThreat + (enemyAcuThreat * healthRatio)
                             --LOG('enemyUnitThreatInner is '..tostring(enemyUnitThreatInner))
-                            enemyACUHealthModifier = enemyACUHealthModifier + (v:GetHealth() / cdr.Health)
                             --LOG('Enemy ACU Health Modifier is '..tostring(enemyACUHealthModifier))
                             local ax = unitPos[1] - cdr.CDRHome[1]
                             local az = unitPos[3] - cdr.CDRHome[3]
@@ -442,7 +456,9 @@ function CDRThreatAssessmentRNG(cdr)
                         end
                         if v.Blueprint.CategoriesHash.COMMAND then
                             enemyACUPresent = true
-                            enemyUnitThreatOuter = enemyUnitThreatOuter + v:EnhancementThreatReturn()
+                            local enemyAcuThreat = v:EnhancementThreatReturn()
+                            local healthRatio = (v:GetHealth() / cdr.Health)
+                            enemyAcuTotalThreat = enemyAcuTotalThreat + (enemyAcuThreat * healthRatio)
                         else
                             if v.Blueprint.CategoriesHash.AIR then
                                 enemyAirThreat = enemyAirThreat + v.Blueprint.Defense.SurfaceThreatLevel
@@ -463,7 +479,7 @@ function CDRThreatAssessmentRNG(cdr)
             enemyUnitThreat = enemyUnitThreatOuter + enemyUnitThreatInner
             if enemyACUPresent then
                 cdr.EnemyCDRPresent = true
-                cdr.EnemyACUModifiedThreat = enemyUnitThreatInner * enemyACUHealthModifier
+                cdr.EnemyACUModifiedThreat = enemyUnitThreatInner + enemyAcuTotalThreat
             else
                 cdr.EnemyCDRPresent = false
             end
@@ -579,13 +595,10 @@ function CDRThreatAssessmentRNG(cdr)
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.allyThreat * getThreatValue(aiBrain.BrainIntel.SelfThreat.AllyLandThreat, 0.1))
                 --LOG('(weights.allyThreat * getThreatValue(aiBrain.BrainIntel.SelfThreat.AllyLandThreat, 0.1)) '..tostring(aiBrain.BrainIntel.SelfThreat.AllyLandThreat))
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.friendlyUnitThreatOuter * friendlyUnitThreatOuter)
-                --LOG('(weights.friendlyUnitThreatOuter * friendlyUnitThreatOuter) '..tostring(friendlyThreatConfidenceModifier))
+                --LOG('friendlyUnitThreatOuter added: '..tostring(weights.friendlyUnitThreatOuter * friendlyUnitThreatOuter)..' | Total: '..tostring(friendlyThreatConfidenceModifier))
                 friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier + (weights.friendlyUnitThreatInner * friendlyUnitThreatInner)
-                --LOG('(weights.friendlyUnitThreatInner * friendlyUnitThreatInner) '..tostring(friendlyThreatConfidenceModifier))
+                --LOG('friendlyUnitThreatInner added: '..tostring(weights.friendlyUnitThreatInner * friendlyUnitThreatInner)..' | Total: '..tostring(friendlyThreatConfidenceModifier))
 
-                if cdr.Health > 7000 then
-                    friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * weights.healthBoost
-                end
                 if aiBrain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired then
                     friendlyThreatConfidenceModifier = friendlyThreatConfidenceModifier * 1.1
                 end
@@ -713,16 +726,17 @@ function CDRThreatAssessmentRNG(cdr)
                 end
                 
                     -- **Health + Shield Influence on Confidence**
-                local healthModifer = customSurvivability(math.min(cdr.HealthPercent, 1))
+                local healthModifier = customSurvivability(math.min(cdr.HealthPercent, 1))
+                local healthBoostFactor = 1 + ((weights.healthBoost - 1) * math.max(0, cdr.HealthPercent))
                 --LOG('ACU actual health percent '..tostring(cdr.HealthPercent))
-                --LOG('healthModifer ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(healthModifer))
-                local survivability = (healthModifer * weights.healthBoost) + (shieldFactor or 0)
+                --LOG('healthModifier ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(healthModifier))
+                local survivability = (healthModifier * healthBoostFactor) + (shieldFactor or 0)
                 --LOG('Survivability ratio for '..tostring(aiBrain.Nickname)..' is '..tostring(survivability))
 
                 local overchargeFactor = 0
                 local energyStored = aiBrain:GetEconomyStored('ENERGY')
                 if energyStored and cdr.OverCharge.EnergyRequired and energyStored >= cdr.OverCharge.EnergyRequired then
-                    local threatScaling = math.min(1.5, math.max(0.5, enemyUnitThreat / 150))
+                    local threatScaling = math.min(1.5, math.max(0.5, trueEnemyUnitThreat / 150))
                     local healthScaling = math.max(0, math.min(1, cdr.HealthPercent))  -- Clamp between 0 and 1
                     overchargeFactor = weights.overchargeBoost * threatScaling * healthScaling
                 end
@@ -752,7 +766,7 @@ function CDRThreatAssessmentRNG(cdr)
 
             -- Example weights
             local weights = {
-                selfThreat = 1.0, -- higher means more confidence
+                selfThreat = 1.05, -- higher means more confidence
                 allyThreat = 0.8, -- higher means more confidence
                 friendlyUnitThreatInner = 1.2, -- higher means more confidence
                 friendlyUnitThreatOuter = 0.9, -- higher means more confidence
@@ -761,9 +775,9 @@ function CDRThreatAssessmentRNG(cdr)
                 enemyThreat = 0.7, -- higher means less confidence
                 globalThreat = 1.1,
                 enemyUnitThreatOuter = 0.8, -- higher means less confidence
-                enemyUnitThreatInner = 1.1, -- higher means less confidence
+                enemyUnitThreatInner = 1.05, -- higher means less confidence
                 enemyDefenseThreat = 0.95, -- higher means less confidence
-                localEnemyThreatRatio = 0.9, -- higher means less confidence
+                localEnemyThreatRatio = 0.85, -- higher means less confidence
                 phasePenalty = 0.7, -- higher means less confidence
                 overchargeBoost = 1.25, -- higher means more confidence
                 distanceHomeBonus = 0.8,    -- Increase to be braver at home
@@ -993,10 +1007,12 @@ function CDRCallPlatoon(cdr, surfaceThreatRequired, antiAirThreatRequired)
                             end
                         end
                         if surfaceThreatValue >= (surfaceThreatRequired * 1.2) and antiAirThreatValue >= (antiAirThreatRequired * 1.2) then
+                            --LOG('ACU call platoon, threat required '..surfaceThreatRequired..' threat from surounding units '..surfaceThreatValue..' antiAirThreatValue '..antiAirThreatValue)
                             break
                         end
                     end
                     if bValidUnits and (surfaceThreatValue >= surfaceThreatRequired * 1.2 and antiAirThreatValue >= antiAirThreatRequired * 1.2) then
+                        --LOG('ACU call platoon, threat required '..surfaceThreatRequired..' threat from surounding units '..surfaceThreatValue..' antiAirThreatValue '..antiAirThreatValue)
                         break
                     end
                     if (not surfaceThreatRequired or not antiAirThreatRequired )and bValidUnits then

@@ -1917,14 +1917,8 @@ function UnitBuildDemand(aiBrain, locationType, unitType, tier, unit, threatBase
             if aiBrain.amanager.Demand.Bases[locationType] and aiBrain.amanager.Demand.Bases[locationType][unitType][tier][unit] > calculatedUnitCount then
                 return true
             end
-            if unit == 'aa' then
-              --LOG('Demand for base '..tostring(locationType)..' is false for unit of type '..tostring(unit)..' calcuated count at the time was '..tostring(calculatedUnitCount))
-              --LOG('Demand '..tostring(aiBrain.amanager.Demand.Bases[locationType][unitType][tier][unit]))
-              --LOG('Total current at the time was '..tostring(aiBrain.amanager.Current[unitType][tier][unit]))
-            end
         else
             if aiBrain.amanager.Demand.Bases[locationType] and aiBrain.amanager.Demand.Bases[locationType][unitType][tier][unit] > aiBrain.amanager.Current[unitType][tier][unit] then
-                --LOG('Demand for base '..tostring(locationType)..' is true for unit of type '..tostring(unit))
                 return true
             end
         end
@@ -1937,7 +1931,6 @@ function UnitBuildDemand(aiBrain, locationType, unitType, tier, unit, threatBase
             return true
         end
     end
-
     return false
 end
 

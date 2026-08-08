@@ -337,7 +337,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         return
                     end
                 end
-                self:LogDebug(string.format('cdr has low confidence'))
+                self:LogDebug(string.format('cdr has low confidence '..tostring(cdr.Confidence)))
                 local closestEnemyACU = StateUtils.GetClosestEnemyACU(brain, cdr.CDRHome)
                 local enemyAcuOverride = false
                 if closestEnemyACU and not closestEnemyACU.Dead and RUtils.HaveUnitVisual(brain, closestEnemyACU, true) then

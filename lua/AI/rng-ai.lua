@@ -2229,6 +2229,33 @@ AIBrain = Class(RNGAIBrainClass) {
         else
             WARN('AI DEBUG: No land zones found for expansion base marker to check')
         end
+        if RNGAIGLOBALS.ZoneDistanceCacheGenerated then
+            local manager = self.BuilderManagers[baseName]
+            if baseName == 'MAIN' then
+                manager.MainBaseDistance = 0
+                manager.IsLandConnected = true
+            else
+                local mainManager = self.BuilderManagers['MAIN']
+                if mainManager then
+                    local zoneId = MAP:GetZoneID(position,self.Zones.Land.index)
+                    if zoneId then
+                        local mainBaseZoneId = mainManager.ZoneID
+                        local landCache = RNGAIGLOBALS.ZoneDistanceCache and RNGAIGLOBALS.ZoneDistanceCache.Land
+                        local pathDist = (mainBaseZoneId and zoneId) and 
+                            ((mainBaseZoneId == zoneId) and 0 or (landCache and landCache[mainBaseZoneId] and landCache[mainBaseZoneId][zoneId]))
+
+                        if pathDist == false or pathDist == nil then
+                            -- Unpathable by land or cache not yet generated
+                            manager.IsLandConnected = false
+                            manager.MainBaseDistance = nil
+                        else
+                            manager.IsLandConnected = true
+                            manager.MainBaseDistance = pathDist
+                        end
+                    end
+                end
+            end
+        end
         if not self.amanager.Demand.Bases[baseName] then
             self.amanager.Demand.Bases[baseName] = {
                 Air = {

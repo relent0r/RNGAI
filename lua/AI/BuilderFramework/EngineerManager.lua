@@ -791,6 +791,7 @@ EngineerManager = Class(BuilderManager) {
                     --LOG('Checking for radar request near position for engineer '..unit.EntityId)
                     local radarRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(unit, unit:GetPosition(), 75, 'RADAR')
                     if radarRequestPos then
+                        --LOG('Radar Request found for engineer '..unit.EntityId..' at position '..repr(radarRequestPos))
                         -- Fork a lightweight radar builder platoon
                         local locationPlatoon = aiBrain:MakePlatoon('RadarPlatoon', 'StateMachineAIRNG')
                         aiBrain:AssignUnitsToPlatoon(locationPlatoon, {unit}, 'support', 'none')

@@ -493,6 +493,7 @@ IntelManager = Class {
         self:ForkThread(self.ZoneIntelAssignment)
         self:ForkThread(self.MonitorEnemyThreatOnBaseLabels)
         self:ForkThread(self.EnemyPositionAngleAssignment)
+        self:ForkThread(self.SetInitialEnemyDistanceAssignment)
         self:ForkThread(self.ZoneDistanceValue)
         self:ForkThread(self.ZoneLabelAssignment)
         self:ForkThread(self.IntelGridThread, self.Brain)
@@ -1377,8 +1378,8 @@ IntelManager = Class {
                 adjacencyThreatWeight = 0.9,
                 encirclementWeight = 2.0,
                 zoneHomeWeight = 1.0,
-                zoneFlankRiskWeight = 1.3,
-                frontlineWeight = 2.5,    -- High gravity for main combat groups
+                zoneFlankRiskWeight = 0.7,
+                frontlineWeight = 2.3,    -- High gravity for main combat groups
                 stagingPressureWeight = 3.5,
             },
             raid = {
@@ -1528,7 +1529,7 @@ IntelManager = Class {
                     zoneHomeValue * weightTable.control.zoneHomeWeight - 
                     teamValueBonus * weightTable.control.teamValueWeight + 
                     adjacencyValue * weightTable.control.adjacencyThreatWeight + 
-                    encirclementValue * weightTable.control.encirclementWeight -
+                    encirclementValue * weightTable.control.encirclementWeight +
                     zoneFlankRisk * weightTable.control.zoneFlankRiskWeight +
                     isFrontlineNode * weightTable.control.frontlineWeight +
                     stagingPressureValue * weightTable.control.stagingPressureWeight
@@ -1686,7 +1687,7 @@ IntelManager = Class {
         local weights = self.ZoneWeightTable[string.lower(zonetype or 'control')]
         local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
         local mapDiagonalSq = VDist2Sq(playableArea[1], playableArea[2], playableArea[3], playableArea[4])
-        local stabilityWeight = 6.0 -- Increased to compensate for potentially higher strategic scores
+        local stabilityWeight = 1.0 -- Increased to compensate for potentially higher strategic scores
         
         local bestZone = nil
         local bestScore
@@ -1698,7 +1699,7 @@ IntelManager = Class {
             local reduction = weights.threatScale and (platoonThreat / weights.threatScale) or 0
             minThreshold = math.max(weights.minFloor or 0, weights.minThreshold - reduction)
         end
-    
+            
         for id, v in zones do
             local canPathTo = false
             if platoon.MovementLayer == 'Air' then
@@ -1719,20 +1720,20 @@ IntelManager = Class {
                              (zonetype == 'airsurface') and v.staticsurfaceairscore or 
                              v.staticcontrolscore
 
+            -- 3. Dynamic Distance
+            local distSq = VDist2Sq(platPos[1], platPos[3], v.pos[1], v.pos[3])
+            local distanceValue = distSq / mapDiagonalSq
+            local origZoneSame = id == origZoneID
+            
+            -- 4. Using RUtils with cached platoon values
+            -- Note: RUtils should likely use platoon.CurrentPlatoonThreatAntiSurface etc inside
+            local threatValue = RUtils.GetThreatOportunityValue(v, zonetype, platoon, origZoneSame)
+            local zonePressureValue = RUtils.GetZonePressureValue(RUtils.IsEnemyStartClose(v), v, platoon, zonetype, origZoneSame)
             local currentStab = 0
             if id == origZoneID then
                 currentStab = stabilityWeight
                 baseScore = baseScore + currentStab
             end
-
-            -- 3. Dynamic Distance
-            local distSq = VDist2Sq(platPos[1], platPos[3], v.pos[1], v.pos[3])
-            local distanceValue = distSq / mapDiagonalSq
-            
-            -- 4. Using RUtils with cached platoon values
-            -- Note: RUtils should likely use platoon.CurrentPlatoonThreatAntiSurface etc inside
-            local threatValue = RUtils.GetThreatOportunityValue(v, zonetype, platoon)
-            local zonePressureValue = RUtils.GetZonePressureValue(RUtils.IsEnemyStartClose(v), v, platoon, zonetype)
 
 
             local zoneOwner = v.control or 'None'
@@ -2111,28 +2112,38 @@ IntelManager = Class {
         end
         local Zones = {
             'Land',
-            'Naval'
+            'Naval',
+            'Air'
         }
 
-        local labelThreat = {}
+        
         local threatLayers = { 
             Naval = {
                 friendlyThreatAntiSurface = {},
-                friendlyThreatDirecFireAntiSurface = {},
-                friendlyThreatIndirecFireAntiSurface = {},
+                friendlyThreatDirectFireAntiSurface = {},
+                friendlyThreatIndirectFireAntiSurface = {},
                 friendlyThreatAntiAir = {},
                 friendlyThreatAntiAirAllocated = {},
                 friendlyThreatAntiNavy = {},
-                friendlyThreatDirecFireAntiSurfaceAllocated = {}
+                friendlyThreatDirectFireAntiSurfaceAllocated = {}
             }, 
             Land = {
                 friendlyThreatAntiSurface = {},
-                friendlyThreatDirecFireAntiSurface = {},
-                friendlyThreatIndirecFireAntiSurface = {},
+                friendlyThreatDirectFireAntiSurface = {},
+                friendlyThreatIndirectFireAntiSurface = {},
                 friendlyThreatAntiAir = {},
                 friendlyThreatAntiAirAllocated = {},
                 friendlyThreatAntiNavy = {},
-                friendlyThreatDirecFireAntiSurfaceAllocated = {}
+                friendlyThreatDirectFireAntiSurfaceAllocated = {}
+            },
+            Air = {
+                friendlyThreatAntiSurface = {},
+                friendlyThreatDirectFireAntiSurface = {},
+                friendlyThreatIndirectFireAntiSurface = {},
+                friendlyThreatAntiAir = {},
+                friendlyThreatAntiAirAllocated = {},
+                friendlyThreatAntiNavy = {},
+                friendlyThreatDirectFireAntiSurfaceAllocated = {}
             }
         }
         self:WaitForZoneInitialization()
@@ -2141,6 +2152,7 @@ IntelManager = Class {
         while aiBrain.Status ~= "Defeat" do
             --local startTime = GetSystemTimeSecondsOnlyForProfileUse()
             --local zoneCount = 0
+            local labelThreat = {}
             for layerName, drawer in threatLayers do
                 for threatName, threatTable in drawer do
                     ClearTable(threatTable)
@@ -2152,16 +2164,21 @@ IntelManager = Class {
                     if not v1.MovementLayer then
                         AIAttackUtils.GetMostRestrictiveLayerRNG(v1)
                     end
-                    local layer = v1.MovementLayer == 'Water' and 'Naval' or 'Land'
+                    local layer = 'Land' 
+                    if v1.MovementLayer == 'Water' then
+                        layer = 'Naval'
+                    elseif v1.MovementLayer == 'Air' then
+                        layer = 'Air'
+                    end
                     local bucket = threatLayers[layer]
                     if v1.ZoneID and v1.CurrentPlatoonThreatAntiSurface then
                         bucket.friendlyThreatAntiSurface[v1.ZoneID] = (bucket.friendlyThreatAntiSurface[v1.ZoneID] or 0) + v1.CurrentPlatoonThreatAntiSurface
                     end
                     if v1.ZoneID and v1.CurrentPlatoonThreatDirectFireAntiSurface then
-                        bucket.friendlyThreatDirecFireAntiSurface[v1.ZoneID] = (bucket.friendlyThreatDirecFireAntiSurface[v1.ZoneID] or 0) + v1.CurrentPlatoonThreatDirectFireAntiSurface
+                        bucket.friendlyThreatDirectFireAntiSurface[v1.ZoneID] = (bucket.friendlyThreatDirectFireAntiSurface[v1.ZoneID] or 0) + v1.CurrentPlatoonThreatDirectFireAntiSurface
                     end
                     if v1.ZoneID and v1.CurrentPlatoonThreatIndirectFireAntiSurface then
-                        bucket.friendlyThreatIndirecFireAntiSurface[v1.ZoneID] = (bucket.friendlyThreatIndirecFireAntiSurface[v1.ZoneID] or 0) + v1.CurrentPlatoonThreatIndirectFireAntiSurface
+                        bucket.friendlyThreatIndirectFireAntiSurface[v1.ZoneID] = (bucket.friendlyThreatIndirectFireAntiSurface[v1.ZoneID] or 0) + v1.CurrentPlatoonThreatIndirectFireAntiSurface
                     end
                     if v1.ZoneID and v1.CurrentPlatoonThreatAntiAir then
                         bucket.friendlyThreatAntiAir[v1.ZoneID] = (bucket.friendlyThreatAntiAir[v1.ZoneID] or 0) + v1.CurrentPlatoonThreatAntiAir
@@ -2173,7 +2190,7 @@ IntelManager = Class {
                         bucket.friendlyThreatAntiAirAllocated[v1.ZoneAllocated] = (bucket.friendlyThreatAntiAirAllocated[v1.ZoneAllocated] or 0) + v1.CurrentPlatoonThreatAntiAir
                     end
                     if v1.ZoneAllocated and v1.CurrentPlatoonThreatDirectFireAntiSurface then
-                        bucket.friendlyThreatDirecFireAntiSurfaceAllocated[v1.ZoneAllocated] = (bucket.friendlyThreatDirecFireAntiSurfaceAllocated[v1.ZoneAllocated] or 0) + v1.CurrentPlatoonThreatDirectFireAntiSurface
+                        bucket.friendlyThreatDirectFireAntiSurfaceAllocated[v1.ZoneAllocated] = (bucket.friendlyThreatDirectFireAntiSurfaceAllocated[v1.ZoneAllocated] or 0) + v1.CurrentPlatoonThreatDirectFireAntiSurface
                     end
                 end
             end
@@ -2222,13 +2239,13 @@ IntelManager = Class {
                         zone.platoonallocations.friendlyantiairallocatedthreat = threatValue
                     end
                 end
-                for zoneId, threatValue in threatLayers[v].friendlyThreatDirecFireAntiSurfaceAllocated do
+                for zoneId, threatValue in threatLayers[v].friendlyThreatDirectFireAntiSurfaceAllocated do
                     local zone = aiBrain.Zones[v].zones[zoneId]
                     if zone then
                         zone.platoonallocations.friendlydirectfireallocatedthreat = threatValue
                     end
                 end
-                for zoneId, threatValue in threatLayers[v].friendlyThreatDirecFireAntiSurface do
+                for zoneId, threatValue in threatLayers[v].friendlyThreatDirectFireAntiSurface do
                     local zone = aiBrain.Zones[v].zones[zoneId]
                     if zone then
                         zone.friendlydirectfireantisurfacethreat = threatValue
@@ -2244,7 +2261,7 @@ IntelManager = Class {
                         end
                     end
                 end
-                for zoneId, threatValue in threatLayers[v].friendlyThreatIndirecFireAntiSurface do
+                for zoneId, threatValue in threatLayers[v].friendlyThreatIndirectFireAntiSurface do
                     local zone = aiBrain.Zones[v].zones[zoneId]
                     if zone then
                         zone.friendlyindirectfireantisurfacethreat = threatValue
@@ -2745,6 +2762,45 @@ IntelManager = Class {
         if starvationFactor >= 0.65 then
             aiBrain.LowResourceMapProfile = true
         end
+    end,
+
+    SetInitialEnemyDistanceAssignment = function(self)
+        -- Will setup table for scout assignment to zones
+        -- I did this because I didn't want to assign units directly to the zones since it makes it hard to troubleshoot
+        -- replaces the previous expansion scout assignment so that all mass points can be monitored
+        -- Will also set data for intel based scout production.
+        
+        self:WaitForZoneInitialization()
+        self:WaitForNavmeshGeneration()
+        local aiBrain = self.Brain
+        while not self.MapIntelStats.ScoutLocationsBuilt do
+            LOG('*AI:RNG NavalAttackCheck is waiting for ScoutLocations to be built')
+            coroutine.yield(20)
+        end
+        coroutine.yield(Random(5,20))
+        local enemyIntel = aiBrain.EnemyIntel
+        local mapSizeX = ScenarioInfo.size[1]
+        
+        -- Fallback to max map distance squared if no base detected
+        local distSq = enemyIntel.ClosestEnemyBase or (mapSizeX * mapSizeX)
+        --LOG('enemyDist is '..tostring(distSq))
+        
+        local maxDistance
+        local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
+        if not playableArea then
+            maxDistance = math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])
+        else
+            maxDistance = math.max(playableArea[3] - playableArea[1], playableArea[4] - playableArea[2])
+        end
+        local dist = math.sqrt(distSq)
+        local selfIndex = aiBrain:GetArmyIndex()
+        local enemyArmy = aiBrain:GetCurrentEnemy()
+        local enemyIndex = enemyArmy:GetArmyIndex()
+        if selfIndex and enemyIndex and aiBrain.CanPathToEnemyRNG[selfIndex][enemyIndex]['MAIN'] ~= 'LAND' then
+            dist = dist * 1.3
+        end
+        -- Store O(1) accessible metrics
+        enemyIntel.EffectiveEnemyDist = math.min(dist, maxDistance)
     end,
 
     MonitorEnemyThreatOnBaseLabels = function(self)

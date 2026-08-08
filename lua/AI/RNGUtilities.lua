@@ -2983,7 +2983,7 @@ end
 
 GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface, includeSub, includeAir, includeStructure, allyRadiusReturn)
     if pos and allyRadius and enemyRadius then
-        local brainThreats = {allyTotal=0,allyRadiusThreat=0,enemyTotal=0,allySurface=0,allyACU=0, allyACUUnits = {},enemySurface=0,allyStructure=0,enemyStructure=0, enemyStructureUnits={},allyAir=0,enemyAir=0,allySub=0,enemySub=0,enemyrange=0,allyrange=0, enemyscoutrange=0,allyscoutrange=0}
+        local brainThreats = {allyTotal=0,allyRadiusThreat=0,enemyTotal=0,allySurface=0,allyACU=0, enemyACU=0, allyACUUnits = {},enemyACUUnits = {}, enemySurface=0,allyStructure=0,enemyStructure=0, enemyStructureUnits={},allyAir=0,enemyAir=0,allySub=0,enemySub=0,enemyrange=0,allyrange=0, enemyscoutrange=0,allyscoutrange=0}
         local enemyMaxRadius = 0
         local enemyScoutMaxRadius = 0
         local allyMaxRadius = 0
@@ -3003,6 +3003,12 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
                     local commanderThreat = v:EnhancementThreatReturn()
                     brainThreats.enemySurface = brainThreats.enemySurface + commanderThreat
                     brainThreats.enemyTotal = brainThreats.enemyTotal + commanderThreat
+                    brainThreats.enemyACU = brainThreats.enemyACU + commanderThreat
+                    RNGINSERT(brainThreats.enemyACUUnits, v)
+                    local weaponRange = StateUtils.GetUnitMaxWeaponRange(v) or bp.Weapon[1].MaxRadius or 35
+                    if weaponRange > enemyMaxRadius then
+                        enemyMaxRadius = weaponRange
+                    end
                 else
                     if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil and bp.Defense.SurfaceThreatLevel > 0 and not bp.CategoriesHash.STRUCTURE then
                         brainThreats.enemySurface = brainThreats.enemySurface + bp.Defense.SurfaceThreatLevel*mult
@@ -3078,6 +3084,10 @@ GrabPosDangerRNG = function(aiBrain, pos, allyRadius, enemyRadius,includeSurface
                     brainThreats.allySurface = brainThreats.allySurface + commanderThreat
                     brainThreats.allyTotal = brainThreats.allyTotal + commanderThreat
                     RNGINSERT(brainThreats.allyACUUnits, v)
+                    local weaponRange = StateUtils.GetUnitMaxWeaponRange(v) or bp.Weapon[1].MaxRadius or 35
+                    if weaponRange > allyMaxRadius then
+                        allyMaxRadius = weaponRange
+                    end
                 else
                     if includeSurface and bp.Defense.SurfaceThreatLevel ~= nil and not bp.CategoriesHash.STRUCTURE and bp.Defense.SurfaceThreatLevel > 0 then
                         brainThreats.allySurface = brainThreats.allySurface + bp.Defense.SurfaceThreatLevel*mult
@@ -6945,6 +6955,10 @@ function VentToPlatoon(platoon, aiBrain, plan)
             ventPlatoon = aiBrain:MakePlatoon('', '')
             aiBrain:AssignUnitsToPlatoon(ventPlatoon, unitsToAssign, 'Attack', 'None')
             import("/mods/rngai/lua/ai/statemachines/platoon-land-assault.lua").AssignToUnitsMachine({ PlatoonData = {Vented = true} }, ventPlatoon, unitsToAssign)
+        elseif plan == 'ZoneControlBehavior' then
+            ventPlatoon = aiBrain:MakePlatoon('', '')
+            aiBrain:AssignUnitsToPlatoon(ventPlatoon, unitsToAssign, 'Attack', 'None')
+            import("/mods/rngai/lua/ai/statemachines/platoon-land-zonecontrol.lua").AssignToUnitsMachine({ PlatoonData = {Vented = true} }, ventPlatoon, unitsToAssign)
         else
             ventPlatoon = aiBrain:MakePlatoon('', plan)
             ventPlatoon.PlanName = 'Vented Platoon'
@@ -8567,7 +8581,7 @@ function GetDistanceValue(mapDiagonalSq, zone, platoonPosition, enemyPosition, o
     return zoneDistanceScore, enemyDistanceScore, homeDistanceScore
 end
 
-function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
+function GetThreatOportunityValue(zone, zoneSelectionType, platoon, removePlatoonThreat)
     local enemy = 0
     local friendly = 0
     local isProductionZone = false
@@ -8615,10 +8629,16 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
 
     -- Fix: Use the correct platoon threat property
     if platoon then
-        if zoneSelectionType == 'aadefense' then
-            friendly = friendly + (platoon.CurrentPlatoonThreatAntiAir or 0)
+        local pThreat = (zoneSelectionType == 'aadefense') 
+            and (platoon.CurrentPlatoonThreatAntiAir or 0) 
+            or (platoon.CurrentPlatoonThreatDirectFireAntiSurface or 0)
+
+        if removePlatoonThreat then
+            -- Candidate is origZoneID: subtract to evaluate VIRTUAL DEPARTURE
+            friendly = math.max(0, friendly - pThreat)
         else
-            friendly = friendly + (platoon.CurrentPlatoonThreatDirectFireAntiSurface or 0)
+            -- Candidate is a new zone: add to evaluate VIRTUAL ARRIVAL
+            friendly = friendly + pThreat
         end
     end
 
@@ -8635,7 +8655,6 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
         if zoneSelectionType == 'aadefense' then return 0 end
 
         -- 1. Threat Check (Combat Units only)
-        local existingFriendly = friendly - (platoon and (platoon.CurrentPlatoonThreatDirectFireAntiSurface or 0) or 0)
         local isEngineerAssigned = zone.engineerplatoonallocated and not zone.engineerplatoonallocated.Dead
         
         -- 3. THE OPPORTUNITY PIVOT
@@ -8643,8 +8662,8 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
         -- CASE A: Home Base / Established Expansion
         if isProductionZone then
             -- We only want to 'Pull' units here if it's completely undefended.
-            -- Once existingFriendly hits 1.0 (one scout or light unit), pull drops to 0.
-            if existingFriendly < 1.0 then
+            -- Once friendly hits 1.0 (one scout or light unit), pull drops to 0.
+            if friendly < 1.0 then
                 return 0.5 -- Low priority 'maintenance' pull
             end
         end
@@ -8653,7 +8672,7 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
         if isEngineerAssigned then
             -- This is a high-priority 'Security Gap'. 
             -- We have an engineer walking into the dark; they NEED a guard.
-            if existingFriendly < 1.0 then
+            if friendly < 1.0 then
                 return 2.5 + (zone.resourcevalue * 0.1) -- Strong pull to PROTECT the engineer
             end
         end
@@ -8689,7 +8708,6 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
     -- --- Penalty if grossly overcommitted ---
     if zoneSelectionType == 'aadefense' then
         enemy = zone.enemyairthreat or 0
-        friendly = zone.friendlylandantiairthreat or 0
     
         -- Only penalize if we have more than 1.5x the enemy air threat + a small buffer.
         -- This provides a "Safety Buffer" for AA, but still discourages massive overstacking.
@@ -8728,7 +8746,7 @@ function GetThreatOportunityValue(zone, zoneSelectionType, platoon)
     return math.max(score, floorClamp)
 end
 
-GetZonePressureValue = function(enemyStartClose, zone, platoon, zonetype)
+GetZonePressureValue = function(enemyStartClose, zone, platoon, zonetype, removePlatoonThreat)
 
     local myThreat
     if zonetype == 'airsurface' then
@@ -8736,8 +8754,18 @@ GetZonePressureValue = function(enemyStartClose, zone, platoon, zonetype)
     else
         myThreat = platoon.CurrentPlatoonThreatDirectFireAntiSurface or 1
     end
+    local baseFriendly = zone.friendlyantisurfacethreat or 0
+    local friendlyStrength
+
+    if removePlatoonThreat then
+        -- Virtual Departure (origZoneID)
+        friendlyStrength = math.max(0, baseFriendly - myThreat)
+    else
+        -- Virtual Arrival (Candidate Zone)
+        friendlyStrength = baseFriendly + myThreat
+    end
     
-    local friendlyStrength = math.max(myThreat, zone.friendlyantisurfacethreat or 1)
+    friendlyStrength = math.max(1, friendlyStrength)
 
 
     local hazard = 0

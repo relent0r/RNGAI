@@ -234,6 +234,9 @@ FactoryBuilderManager = Class(BuilderManager) {
             else
                 self:SetupNewFactory(unit, 'Gate')
             end
+            if self.Brain.BuilderManagers[self.LocationType].ZoneID then
+                unit:SetCustomName(string.format("Zone: %s", tostring(self.Brain.BuilderManagers[self.LocationType].ZoneID)))
+            end
             self.LocationActive = true
             if self.LocationType then
                 local zone = self.Brain.BuilderManagers[self.LocationType].ZoneID

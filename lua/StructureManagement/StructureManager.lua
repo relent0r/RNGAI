@@ -1146,6 +1146,7 @@ StructureManager = Class {
         local rawGravity = aiBrain.BrainIntel.GlobalEconomicGravity or 0
 
         local t2LandPass = false
+
         if totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 and not disableForT3AirRushStrategy then
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
                 -- TUNING 1: The divisor (10) determines how aggressively gravity raises the ceiling.
@@ -1164,6 +1165,7 @@ StructureManager = Class {
                         if (distanceByPass or MassEfficiency >= 1.015 or aiBrain.EnemyIntel.LandPhase > 1 and MassEfficiency >= 0.7) and (EnergyEfficiency >= 0.8 or ((distanceByPass or aiBrain.EnemyIntel.LandPhase > 1) and EnergyEfficiency >= 0.6)) then
                             local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                             if factoryToUpgrade and not factoryToUpgrade.Dead then
+                                --LOG('Structure Manager Triggering T2 standard based Land HQ Upgrade')
                                 self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                                 t2LandPass = true
                                 coroutine.yield(20)
@@ -1174,12 +1176,14 @@ StructureManager = Class {
             end
         end
         if not t2LandPass and totalLandT2HQCount < 1 and totalLandT3HQCount < 1 and self.Factories.LAND[1].UpgradingCount < 1 and self.Factories.LAND[1].Total > 0 then
+            local isSafeDistance = (aiBrain.EnemyIntel.EffectiveEnemyDist or 500) >= 400
             if aiBrain:GetCurrentUnits(categories.ENGINEER * categories.TECH1) > 2 then
-                if GetEconomyStored(aiBrain, 'MASS') >= 920 and (GetEconomyStored(aiBrain, 'ENERGY') >= 2990 or energyEfficiencyOverTime >= 0.8) then
+                local massStorage = GetEconomyStored(aiBrain, 'MASS')
+                if (massStorage >= 920 and isSafeDistance or massStorage >= 1150 ) and (GetEconomyStored(aiBrain, 'ENERGY') >= 2990 or energyEfficiencyOverTime >= 0.8) then
                     --RNGLOG('Factory T2 Upgrade HQ Excess Check passed')
                     local factoryToUpgrade = self:GetClosestFactory('MAIN', 'LAND', 'TECH1')
                     if factoryToUpgrade and not factoryToUpgrade.Dead then
-                        --RNGLOG('Structure Manager Triggering T2 Land HQ Upgrade')
+                        --LOG('Structure Manager Triggering T2 Storage based Land HQ Upgrade')
                         self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'LAND')
                         t2LandPass = true
                         coroutine.yield(20)
@@ -2037,8 +2041,8 @@ StructureManager = Class {
             and extractorsDetail.TECH2Upgrading < 1 
             and energyEfficiencyOverTime > 1.0 
             and currentEnergyEfficiency >= 1.0 
-            and energyStorage > 4000 then
-                --LOG('Tactical Greed Triggered: Advancing core extractor to T3 due to secure map state.')
+            and energyStorage > 4000 
+            and upgradeSpend > 10 then
                 self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                 coroutine.yield(60)
                 continue
@@ -2070,7 +2074,7 @@ StructureManager = Class {
             if extractorsDetail.TECH1Upgrading < 5 and extractorsDetail.TECH2Upgrading < 2 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 800) and 
                    energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and extractorsDetail.TECH2 > 0 and 
                    upgradeSpend > tech2Consumption * 2.1 then
-                        --LOG('We Could upgrade a t2 extractor now with over time and we are not already upgrading t2 '..tostring(aiBrain.Nickname))
+                        --LOG('We Could upgrade a t2 extractor now with over time and we are not already upgrading t2 '..tostring(aiBrain.Nickname)..' upgradeSpend is '..tostring(upgradeSpend)..' tech2 consumption is '..tostring(tech2Consumption * 2.1))
                         self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, true)
                         coroutine.yield(25)
             elseif extractorsDetail.TECH1Upgrading < 4 and extractorsDetail.TECH2Upgrading < 1 and upgradeTrigger and 

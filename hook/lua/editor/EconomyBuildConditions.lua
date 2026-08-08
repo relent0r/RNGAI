@@ -555,13 +555,18 @@ function FactorySpendRatioRNG(aiBrain, LocationType, uType, upgradeType, noStora
     
     -- 1. Budget Gate (Command Economy for Land, Global for others)
     local productionRatio = fmgr["Base"..uType.."Ratio"] or aiBrain.ProductionRatios[uType] or 0
-
+    
     if demandBuilder then
         productionRatio = math.max(productionRatio, aiBrain.DefaultProductionRatios[uType] or 0)
     end
 
     local cman = aiBrain.cmanager
-    local factorySpend = cman.categoryspend.fact[uType] - cman.categoryspend.fact[upgradeType]
+    local factorySpend
+    if upgradeType then
+        factorySpend = cman.categoryspend.fact[uType] - cman.categoryspend.fact[upgradeType]
+    else
+        factorySpend = cman.categoryspend.fact[uType]
+    end
     local availableIncome = math.max(cman.income.r.m, 0.1)
     local currentRatio = factorySpend / math.max(availableIncome, 0.1)
     local mStored = GetEconomyStored(aiBrain, 'MASS')

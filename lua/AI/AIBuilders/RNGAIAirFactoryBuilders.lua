@@ -45,7 +45,7 @@ BuilderGroup {
         Priority = 750, -- After second engie group
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T1', 'scout'} },
-            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', false, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Air',
@@ -84,7 +84,7 @@ BuilderGroup {
         Priority = 881,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType','Air', 'T1', 'gunship'} },
-            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', false, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Air',
@@ -98,7 +98,7 @@ BuilderGroup {
         Priority = 950,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType','Air', 'T1', 'transport'} },
-            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', false, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Air',
@@ -117,7 +117,7 @@ BuilderGroup {
         Priority = 891,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType','Air', 'T2', 'bomber'} },
-            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', false, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Air',
@@ -133,7 +133,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'BuildOnlyOnLocationRNG', { 'LocationType', 'MAIN' } },
             { UCBC, 'UnitBuildDemand', {'LocationType','Air', 'T2', 'mercy'} },
-            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', false, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
     },
@@ -144,7 +144,7 @@ BuilderGroup {
         PriorityFunction = ACUUnderNavalAttack,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T2', 'torpedo'} },
-            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', false, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Air',
@@ -155,7 +155,7 @@ BuilderGroup {
         Priority = 889,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T2', 'gunship'} },
-            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', false, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Air',
@@ -174,7 +174,7 @@ BuilderGroup {
         Priority = 755,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T3', 'scout'} },
-            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', false, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Air',
@@ -203,7 +203,7 @@ BuilderGroup {
         PriorityFunction = T3BomberRushActivated,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T3', 'bomber'} },
-            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', false, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Air',
@@ -217,7 +217,7 @@ BuilderGroup {
         Priority = 890,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T3', 'gunship'} },
-            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', false, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Air',
@@ -231,7 +231,7 @@ BuilderGroup {
         Priority = 891,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T3', 'torpedo'} },
-            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', nil, true}},
+            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', false, true}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
         },
         BuilderType = 'Air',

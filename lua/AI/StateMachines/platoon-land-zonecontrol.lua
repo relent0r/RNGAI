@@ -353,7 +353,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     if currentLabel then
                         --LOG('We are requesting a position on our current label, which is '..tostring(self.Label))
                     end
-                    targetZone = IntelManagerRNG.GetIntelManager(aiBrain):GetBestZoneForPlatoon(self, self.ZoneType)
+                    targetZone = IntelManagerRNG.GetIntelManager(aiBrain):GetBestZoneForPlatoon(self, self.ZoneType, self.ZoneID)
                     --LOG('Zone selected with GetBestZoneForPlatoon : '..tostring(targetZone)..' with zone type '..tostring(self.ZoneType))
                     self:LogDebug(string.format('Looked for zone at the current label'))
                 end

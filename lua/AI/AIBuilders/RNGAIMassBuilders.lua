@@ -20,7 +20,7 @@ BuilderGroup {
         Priority = 1005,
         InstanceCount = 2,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 45, nil, nil, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 45, false, false, 0, 'AntiSurface', 1}},
         },
         BuilderType = 'Any',
         BuilderData = {
@@ -46,7 +46,7 @@ BuilderGroup {
         Priority = 997,
         InstanceCount = 3,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 120, nil, nil, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 120, false, false, 0, 'AntiSurface', 1}},
             --{ UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
         },
         BuilderType = 'Any',
@@ -76,7 +76,7 @@ BuilderGroup {
         Priority = 850,
         InstanceCount = 1,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 120, nil, nil, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 120, false, false, 0, 'AntiSurface', 1}},
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 2, categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND }},
         },
         BuilderType = 'Any',
@@ -103,7 +103,7 @@ BuilderGroup {
         Priority = 800,
         InstanceCount = 4,
         BuilderConditions = { 
-            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 240, nil, nil, 0, 'AntiSurface', 1}},
+            { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 240, false, false, 0, 'AntiSurface', 1}},
             { UCBC, 'PoolGreaterAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
         },
         BuilderType = 'Any',
@@ -370,7 +370,7 @@ BuilderGroup {
         Priority = 700,
         InstanceCount = 2,
         BuilderConditions = {
-                { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0,  150, nil, nil, 0, 'AntiSurface', 1 }},
+                { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0,  150, false, false, 0, 'AntiSurface', 1 }},
             },
         BuilderType = 'Any',
         BuilderData = {

@@ -283,6 +283,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 local processed = {} 
                 local lastPos = platoonPos 
                 local markers = foundZone.ResourceMarkers
+                local transportPressure = aiBrain.TransportPressure.PressureLevel or 0
                 self:LogDebug(string.format('Zone found, looping through resource markers in zone, count was '..tostring(table.getn(markers))))
                 
                 for i = 1, RNGGETN(markers) do
@@ -316,8 +317,22 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 --LOG('No one owns this marker so we can have it')
                                 self:LogDebug(string.format('No one owns this marker so we can have it'))
                             else
+                                local requireTransport = not NavUtils.CanPathTo(self.MovementLayer, platoonPos, massMarker.position)
+                                local threshold = 0.7225 -- Standard 15% distance advantage (squared)
+                                if requireTransport then
+                                    if transportPressure >= 3 then
+                                        -- High/Urgent pressure: Do not steal spots if we need a transport
+                                        threshold = 0 
+                                    elseif transportPressure >= 1 then
+                                        -- Low/Med pressure: Require a huge distance advantage (~50% closer, 0.5^2)
+                                        threshold = 0.25 
+                                    else
+                                        -- No transport pressure: Require ~30% closer distance advantage (0.7^2)
+                                        threshold = 0.49 
+                                    end
+                                end
                                 -- Yes 0.7225 is intentional because its a squared number
-                                if massMarker.reservationDistSq and closestDistSq < (massMarker.reservationDistSq * 0.7225) then
+                                if massMarker.reservationDistSq and closestDistSq < (massMarker.reservationDistSq * threshold) then
                                     self:LogDebug(string.format('Someone owns it but we are closer'))
                                     canBuild = true
                                     --LOG('Taking another engineers mass point because we are closer my distance '..tostring(closestDistSq)..' existing '..tostring(massMarker.reservationDistSq))

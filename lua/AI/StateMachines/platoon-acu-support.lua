@@ -90,6 +90,12 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
         Main = function(self)
             local aiBrain = self:GetBrain()
             local acu = aiBrain.CDRUnit
+            local acuValid = acu and not acu.Dead
+            if not acuValid then
+                self:LogDebug('ACU is dead or missing; venting support platoon to ZoneControlBehavior.')
+                RUtils.VentToPlatoon(self, aiBrain, 'ZoneControlBehavior')
+                return
+            end
             local rangedAttack 
             local distToHomeSq = VDist2Sq(acu.CDRHome[1], acu.CDRHome[3], acu.Position[1], acu.Position[3])
             if aiBrain.BrainIntel.SuicideModeActive and aiBrain.BrainIntel.SuicideModeTarget and not aiBrain.BrainIntel.SuicideModeTarget.Dead then
@@ -118,15 +124,67 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
-            local threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius, self.EnemyRadius, true, false, true, true)
+            local distToAcuSq = 0
+            if acu and not acu.Dead and acu.Position then
+                local rx = self.Pos[1] - acu.Position[1]
+                local rz = self.Pos[3] - acu.Position[3]
+                distToAcuSq = rx * rx + rz * rz
+            end
+            local testLocation = self.Pos
+            if distToAcuSq < 1600 and acu and not acu.Dead and acu.Position then
+                testLocation = acu.Position
+            end
+
+            local threat=RUtils.GrabPosDangerRNG(aiBrain,testLocation,self.EnemyRadius, self.EnemyRadius, true, false, true, true)
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
                 --self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
                 local label = NavUtils.GetLabel('Land', self.Pos)
                 aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase, label)
             end
-            if not acu.Caution and threat.allySurface and threat.enemySurface and threat.allySurface*1.1 < threat.enemySurface then
-                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*1.5 > (threat.enemySurface - threat.enemyStructure) then
+
+            -- Get distance between ally ACU and closest enemy ACU
+            local distAllyToEnemyAcuSq = nil
+            if acu and not acu.Dead and acu.Position then
+                local enemyAcu = StateUtils.GetClosestEnemyACU(aiBrain, acu.Position)
+                if enemyAcu and not enemyAcu.Dead then
+                    local enemyAcuPos = enemyAcu:GetPosition()
+                    if enemyAcuPos then
+                        local rx = acu.Position[1] - enemyAcuPos[1]
+                        local rz = acu.Position[3] - enemyAcuPos[3]
+                        distAllyToEnemyAcuSq = rx * rx + rz * rz
+                    end
+                end
+            end
+
+            local acuThreatened = (acu.CurrentEnemyThreat and acu.CurrentEnemyThreat > 2)
+
+            local enemyAcuNearAcu = (distAllyToEnemyAcuSq and distAllyToEnemyAcuSq < 6400) -- 80^2
+            --LOG('enemy acu near distance is '..tostring(distAllyToEnemyAcuSq))
+
+            -- If our ACU is threatened or engaged with the enemy ACU, and we are not close to it,
+            -- rush to support the ACU instead of evaluating local retreat or independent combat.
+            if (acuThreatened or enemyAcuNearAcu) and distToAcuSq > 1600 then
+                self:ChangeState(self.SupportACU)
+                return
+            end
+
+            -- Filter out "phantom threat support" if the ally ACU is too far away to protect the platoon
+            local friendlyThreat = threat.allySurface or 0
+            if distToAcuSq > 2025 and threat.allyACU and threat.allyACU > 0 then
+                friendlyThreat = friendlyThreat - threat.allyACU
+            end
+
+            local checkThreatRetreat = false
+            if friendlyThreat > 0 and threat.enemySurface and threat.enemySurface > 0 then
+                if friendlyThreat * 1.1 < threat.enemySurface then
+                    checkThreatRetreat = true
+                end
+            end
+            --LOG(string.format('[ACUSupport] distToAcuSq: %s | acuThreat: %s | enemySurface: %s | friendlyThreat: %s | checkRetreat: %s', tostring(distToAcuSq), tostring(acu and acu.CurrentEnemyThreat), tostring(threat.enemySurface), tostring(friendlyThreat), tostring(checkThreatRetreat)))
+
+            if checkThreatRetreat then
+                if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and friendlyThreat*1.5 > (threat.enemySurface - threat.enemyStructure) then
                     rangedAttack = true
                 else
                     --self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
@@ -152,7 +210,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                     acuDistance = ax * ax + az * az
                                 end
                             end
-                            if structureDistance < acuDistance + 25 and threat.allySurface - threat.allyACU < threat.enemyStructure then
+                            if structureDistance < acuDistance + 25 and friendlyThreat - threat.allyACU < threat.enemyStructure then
                                 self.retreat=true
                                 self:ChangeState(self.Retreating)
                                 return
@@ -167,6 +225,26 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.SupportACU)
                 return
             end
+
+            -- Enemy ACU check: ensure we support the ally ACU rather than engaging independently if ally ACU is not in range
+            if threat.enemyACU and threat.enemyACU > 0 and acu and not acu.Dead and acu.Position then
+                local enemyAcuPos
+                for _, v in threat.enemyACUUnits or {} do
+                    if not v.Dead then
+                        enemyAcuPos = v:GetPosition()
+                        break
+                    end
+                end
+                if enemyAcuPos then
+                    local distAllyToEnemySq = VDist2Sq(acu.Position[1], acu.Position[3], enemyAcuPos[1], enemyAcuPos[3])
+                    local allyAcuRange = StateUtils.GetUnitMaxWeaponRange(acu) or 35
+                    if distAllyToEnemySq > (allyAcuRange * allyAcuRange) or distToAcuSq > 1600 then
+                        self:ChangeState(self.SupportACU)
+                        return
+                    end
+                end
+            end
+
             --LOG('ACUSUPPORT: ACU confidence is '..tostring(acu.Confidence))
             --LOG('ACUSUPPORT: Is ACU retreating '..tostring(acu.Retreat))
             --LOG('ACUSUPPORT: Is ACU caution '..tostring(acu.Caution))
@@ -198,13 +276,13 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             
             if acu.Confidence > 3.5 and not acu.Dead and distToHomeSq < 14400 and acu.CurrentEnemyThreat < 5 then
                 self:LogDebug(string.format('Request to vent platoon: ACU is safe at home base.'))
-                RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
+                RUtils.VentToPlatoon(self, aiBrain, 'ZoneControlBehavior')
                 return
             end
             if acu.Retreat and acu.CurrentEnemyThreat < 2 then
                 --RNGLOG('CDR is not in danger and retreating, vent')
                 self:LogDebug(string.format('Request to vent platoon due to retreating acu and low enemy threat'))
-                RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
+                RUtils.VentToPlatoon(self, aiBrain, 'ZoneControlBehavior')
                 return
             end
             if acu.CurrentEnemyThreat < 5 and acu.CurrentFriendlyThreat > 15 then
@@ -212,7 +290,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 self.threatTimeout = self.threatTimeout + 1
                 if self.threatTimeout > 10 then
                     self:LogDebug(string.format('Request to vent platoon due to low enemy threat and high friendly threat'))
-                    RUtils.VentToPlatoon(self, aiBrain, 'LandCombatBehavior')
+                    RUtils.VentToPlatoon(self, aiBrain, 'ZoneControlBehavior')
                     return
                 end
             end
@@ -379,7 +457,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 else
                                     local pocketPosition = nil
-                                    if targetCats.COMMAND and friendlyAcuPos and not aiBrain.BrainIntel.SuicideModeActive and not aiBrain.CDRUnit.Retreating and (aiBrain.CDRUnit.Confidence and aiBrain.CDRUnit.Confidence <= 3.0) then
+                                    if targetCats.COMMAND and friendlyAcuPos and not aiBrain.BrainIntel.SuicideModeActive then
                                         local cdrUnit = aiBrain.CDRUnit
                                         local cdrWeaponRange = cdrUnit.WeaponRange or 20
                                         cdrWeaponRange = cdrWeaponRange * cdrWeaponRange
@@ -388,7 +466,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                         
                                         -- Only break pocket if we have overwhelming local force (> 3.5x) to secure the kill safely
                                         local isOverwhelmingSuperiority = friendlyThreat > (enemyThreat * 3.5)
-                                        if cdrUnit.Confidence >= 3.0 and not cdrUnit.Retreating and not isOverwhelmingSuperiority then
+                                        if not isOverwhelmingSuperiority or cdrUnit.Retreating then
                                             pocketPosition = StateUtils.GetEscortPocketPosition(v:GetEntityId(), unitPos, friendlyAcuPos, targetPos, cdrWeaponRange)
                                         end
                                     end
@@ -429,7 +507,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                     StateUtils.IssueNavigationMove(v, movePos)
                                 else
                                     local pocketPosition = nil
-                                    if targetCats.COMMAND and friendlyAcuPos and not aiBrain.BrainIntel.SuicideModeActive and not aiBrain.CDRUnit.Retreating then
+                                    if targetCats.COMMAND and friendlyAcuPos and not aiBrain.BrainIntel.SuicideModeActive then
                                         local cdrUnit = aiBrain.CDRUnit
                                         local cdrWeaponRange = cdrUnit.WeaponRange or 20
                                         cdrWeaponRange = cdrWeaponRange * cdrWeaponRange
@@ -439,7 +517,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                         -- Only break pocket if we have overwhelming local force (> 3.5x) to secure the kill safely
                                         local isOverwhelmingSuperiority = friendlyThreat > (enemyThreat * 3.5)
                                         
-                                        if cdrUnit.Confidence >= 3.0 and not cdrUnit.Retreating and not isOverwhelmingSuperiority then
+                                        if not isOverwhelmingSuperiority or cdrUnit.Retreating then
                                             pocketPosition = StateUtils.GetEscortPocketPosition(v:GetEntityId(), unitPos, friendlyAcuPos, targetPos, cdrWeaponRange)
                                         end
                                     end
