@@ -1966,10 +1966,12 @@ StructureManager = Class {
             end
             local upgradeTrigger = false
             local upgradeSpend = aiBrain.cmanager.income.r.m * aiBrain.EconomyUpgradeSpend
-            --LOG('Upgrade spend ratio is '..tostring(aiBrain.EconomyUpgradeSpend)..' and allowed spend is '..tostring(upgradeSpend)..' player is '..tostring(aiBrain.Nickname))
-            if upgradeSpend > 4 or GetGameTimeSeconds() > (baseUpgradeTime / multiplier) or aiBrain.BrainIntel.PlayerRole.AirPlayer or aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer or self.BrainIntel.HighestPhase > 1 then
+            local highestPhase = brainIntel.HighestPhase
+            --LOG('Upgrade spend ratio is '..tostring(aiBrain.EconomyUpgradeSpend)..' and allowed spend is '..tostring(upgradeSpend)..' player is '..tostring(aiBrain.Nickname)..' lowresourceprofile is '..tostring(aiBrain.LowResourceMapProfile)..' multiplier is '..tostring(multiplier)..' baseUpgradeTime is '..tostring(baseUpgradeTime)..' current game time is '..tostring(GetGameTimeSeconds())..' highestphase is '..tostring(aiBrain.BrainIntel.HighestPhase))
+            if upgradeSpend > 4 or GetGameTimeSeconds() > (baseUpgradeTime / multiplier) or aiBrain.BrainIntel.PlayerRole.AirPlayer or aiBrain.BrainIntel.PlayerRole.ExperimentalPlayer or highestPhase > 1 then
                 upgradeTrigger = true
             end
+            --LOG('Upgrade Trigger is '..tostring(upgradeTrigger)..' for player '..tostring(aiBrain.Nickname)..' with upgrade spend ratio of '..tostring(aiBrain.EconomyUpgradeSpend)..' and allowed spend of '..tostring(upgradeSpend)..' and current game time of '..tostring(GetGameTimeSeconds())..' and highestphase of '..tostring(aiBrain.BrainIntel.HighestPhase))
             --LOG('Total income '..tostring(aiBrain.cmanager.income.r.m))
             --LOG('Economy Upgrade spend ratio '..tostring(aiBrain.EconomyUpgradeSpend))
             --LOG('Allowed Upgrade spend '..tostring(upgradeSpend))
@@ -2097,7 +2099,7 @@ StructureManager = Class {
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                     coroutine.yield(50)
             elseif extractorsDetail.TECH1 > 0 and extractorsDetail.TECH1Upgrading < 4 and upgradeTrigger and (totalSpend < upgradeSpend or massStorage > 450) 
-                   and energyEfficiencyOverTime >= 1.0 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and massStorage < 2500 then
+                   and energyEfficiencyOverTime >= 0.9 and currentEnergyEfficiency >= 1.0 and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and massStorage < 2500 then
                     --LOG('Upgrading if we have less than 5 t1 upgrading t1')
                     self:ValidateExtractorUpgradeRNG(aiBrain, extractorTable, false)
                     coroutine.yield(50)

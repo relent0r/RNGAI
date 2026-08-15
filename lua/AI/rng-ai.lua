@@ -4294,7 +4294,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 local lastSpotted = 0
                 local enemyIndex = enemy:GetArmyIndex()
                 if not ArmyIsCivilian(enemyIndex) then
-                    local enemyAir = GetListOfUnits( enemy, categories.MOBILE * categories.AIR - categories.TRANSPORTFOCUS - categories.SATELLITE - categories.INSIGNIFICANTUNIT, false, false)
+                    local enemyAir = GetListOfUnits( enemy, (categories.MOBILE * categories.AIR - categories.TRANSPORTFOCUS - categories.SATELLITE - categories.INSIGNIFICANTUNIT) + categories.uea0203, false, false)
                     for _,v in enemyAir do
                         -- previous method of getting unit ID before the property was added.
                         --local unitbpId = v:GetUnitId()
@@ -4389,7 +4389,7 @@ AIBrain = Class(RNGAIBrainClass) {
                             local mexPos = GetPosition(v)
                             if RUtils.PositionOnWater(mexPos[1], mexPos[3]) then
                                 -- tbd define water based zones
-                                v.zoneid = MAP:GetZoneID(v.position,self.Zones.Naval.index)
+                                v.zoneid = MAP:GetZoneID(mexPos,self.Zones.Naval.index)
                             else
                                 v.zoneid = MAP:GetZoneID(mexPos,self.Zones.Land.index)
                                 --LOG('Unit zone is '..unit.zoneid)

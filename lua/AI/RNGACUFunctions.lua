@@ -563,9 +563,10 @@ function CDRThreatAssessmentRNG(cdr)
                 --LOG('Firebase Detected ACU check range')
                 for _, v in aiBrain.EnemyIntel.DirectorData.DefenseCluster do
                     if v.MaxLandRange and v.MaxLandRange > 0 and v.aggx and v.aggz then
+                        local defLandRange = v.MaxLandRange + 8
                         local ax = cdr.Position[1] - v.aggx
                         local az = cdr.Position[3] - v.aggz
-                        if ax * ax + az * az < v.MaxLandRange * v.MaxLandRange then
+                        if ax * ax + az * az < defLandRange * defLandRange then
                             --LOG('ACU is within firebase range')
                             inFirebaseRange = true
                         end
@@ -759,13 +760,31 @@ function CDRThreatAssessmentRNG(cdr)
                 if aiBrain.EnemyIntel.LandPhase > 2 then
                     cdr.Confidence = cdr.Confidence * weights.phasePenalty
                 end
+                local baseThreshold = math.min(150, math.max(80, mapSizeX * 0.275))
+                local enemyBaseThreashold = baseThreshold * baseThreshold
+                if not cdr['rngdata']['RadarCoverage'] and distanceToEnemyBase < enemyBaseThreashold then
+                    local totalFriendlyThreat = friendlyUnitThreatInner + friendlyUnitThreatOuter
+                    local totalEnemyThreat = enemyUnitThreatInner + enemyUnitThreatOuter + enemyDefenseThreat
+                    local supportRatio = totalFriendlyThreat / math.max(totalEnemyThreat, 1.0)
+
+                    if supportRatio < weights.minSupportRatioThreshold then
+                        -- Linear distance decay from enemy base perimeter to center
+                        local linearEnemyBaseDist = math.sqrt(distanceToEnemyBase)
+                        local maxProximityRadius = math.sqrt(enemyBaseThreashold)
+                        local closenessFactor = 1.0 - (linearEnemyBaseDist / maxProximityRadius) -- 0 at edge, 1 at base center
+
+                        local radarPenalty = 1.0 - (closenessFactor * weights.noRadarBasePenalty)
+                        cdr.Confidence = cdr.Confidence * math.max(0.15, radarPenalty)
+                    end
+                end
                 --LOG('Current ACU Confidence for '..tostring(aiBrain.Nickname)..' is '..tostring(cdr.Confidence))
                 --LOG('Threat check antisurface'..tostring(aiBrain:GetThreatAtPosition(cdr.Position, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface' )))
                 --LOG('--  End of Confidence  --')
             end
 
-            -- Example weights
             local weights = {
+                minSupportRatioThreshold = 1.25,
+                noRadarBasePenalty = 0.40,
                 selfThreat = 1.05, -- higher means more confidence
                 allyThreat = 0.8, -- higher means more confidence
                 friendlyUnitThreatInner = 1.2, -- higher means more confidence
@@ -787,9 +806,24 @@ function CDRThreatAssessmentRNG(cdr)
             }
             local enemyThreatRatio = friendlyUnitThreat > 0 and (enemyUnitThreat / friendlyUnitThreat) or 0.5
             -- Example call
-            calculateConfidence(aiBrain, cdr, friendlyUnitThreatInner, friendlyUnitThreatOuter, enemyUnitThreatInner, (enemyUnitThreatOuter + enemyAirThreat), enemyDefenseThreat, cdr.DistanceToHome, enemyThreatRatio, weights)
+            if aiBrain.IntelManager then
+                local gridX, gridZ = im:GetIntelGrid(cdr.Position)
+                if im.MapIntelGrid[gridX][gridZ].IntelCoverage then
+                    if not cdr['rngdata'] then
+                        cdr['rngdata'] = {}
+                    end
+                    cdr['rngdata']['RadarCoverage'] = true
+                    --LOG('ACU has radar coverage')
+                else
+                    if not cdr['rngdata'] then
+                        cdr['rngdata'] = {}
+                    end
+                    cdr['rngdata']['RadarCoverage'] = false
+                    --LOG('ACU Does not currently have radar coverage')
+                end
+            end
 
-            
+            calculateConfidence(aiBrain, cdr, friendlyUnitThreatInner, friendlyUnitThreatOuter, enemyUnitThreatInner, (enemyUnitThreatOuter + enemyAirThreat), enemyDefenseThreat, cdr.DistanceToHome, enemyThreatRatio, weights)
 
             if aiBrain.RNGEXP then
                 cdr.MaxBaseRange = 80
@@ -812,22 +846,6 @@ function CDRThreatAssessmentRNG(cdr)
             --LOG('Current cdr confidence is '..tostring(cdr.Confidence))
             --LOG('Max base range '..tostring(cdr.MaxBaseRange))
             --LOG('Current distance to home '..tostring(cdr.DistanceToHome))
-            if aiBrain.IntelManager then
-                local gridX, gridZ = im:GetIntelGrid(cdr.Position)
-                if im.MapIntelGrid[gridX][gridZ].IntelCoverage then
-                    if not cdr['rngdata'] then
-                        cdr['rngdata'] = {}
-                    end
-                    cdr['rngdata']['RadarCoverage'] = true
-                    --LOG('ACU has radar coverage')
-                else
-                    if not cdr['rngdata'] then
-                        cdr['rngdata'] = {}
-                    end
-                    cdr['rngdata']['RadarCoverage'] = false
-                    --LOG('ACU Does not currently have radar coverage')
-                end
-            end
             --LOG('Current CDR Max Base Range '..cdr.MaxBaseRange)
         end
         coroutine.yield(20)
@@ -934,6 +952,31 @@ function CDRCallPlatoon(cdr, surfaceThreatRequired, antiAirThreatRequired)
     for _,aPlat in AlliedPlatoons do
         if aPlat == cdr.PlatoonHandle or aPlat == supportPlatoonAvailable then
             continue
+        end
+        if antiAirThreatRequired and antiAirThreatRequired > 0 and aPlat.MergeType == 'LandAAStateMachine' then
+            if aPlat.UsingTransport then
+                continue
+            end
+
+            local allyPlatPos = GetPlatoonPosition(aPlat)
+            if not allyPlatPos or not PlatoonExists(aiBrain, aPlat) then
+                continue
+            end
+
+            if not aPlat.MovementLayer then
+                AIAttackUtils.GetMostRestrictiveLayerRNG(aPlat)
+            end
+
+            -- make sure we're the same movement layer type to avoid hamstringing air of amphibious
+            if aPlat.MovementLayer == 'Water' or aPlat.MovementLayer == 'Air' then
+                continue
+            end
+            local dx = cdr.Position[1] - allyPlatPos[1]
+            local dz = cdr.Position[3] - allyPlatPos[3]
+            local platDistance = dx * dx + dz * dz          
+            if platDistance <= 32400 then
+                RNGINSERT(platoonTable, {Platoon = aPlat, Distance = platDistance, Position = allyPlatPos})
+            end
         end
         if aPlat.MergeType == 'LandMergeStateMachine' then
             if aPlat.UsingTransport then

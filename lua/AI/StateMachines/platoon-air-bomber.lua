@@ -104,7 +104,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             end
             if not self.StratBomberPresent and self.PlatoonData.Defensive and homeDist and homeDist > 25600 and self.BuilderData.AttackTarget and not self.BuilderData.AttackTarget.Dead then
                 local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, nil, nil, nil, false, self.StratBomberPresent)
-                if target then
+                if target and not target.Dead then
                     --LOG('Gunship high Priority Target Found '..target.UnitId)
                     self.BuilderData = {
                         AttackTarget = target,
@@ -137,7 +137,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
             end
             if not target then
                 local target, countRequired , acuIndex, strikeDamage = RUtils.CheckACUSnipe(aiBrain, 'Air')
-                if target then
+                if target and not target.Dead then
                     --LOG('ACU Snipe found for bombers, strike damage required is '..tostring(strikeDamage))
                     local enemyAcuHealth = aiBrain.EnemyIntel.ACU[acuIndex].HP
                     if self['rngdata'].PlatoonStrikeDamage > enemyAcuHealth * 0.80 or enemyAcuHealth < 2500 then
@@ -145,7 +145,6 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                             AttackTarget = target,
                             Position = target:GetPosition()
                         }
-                        --LOG('Bomber sniping acu')
                         local targetPosition = self.BuilderData.Position
                         local tx = platPos[1] - targetPosition[1]
                         local tz = platPos[3] - targetPosition[3]

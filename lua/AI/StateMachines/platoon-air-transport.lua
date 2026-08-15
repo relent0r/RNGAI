@@ -560,6 +560,7 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
 
             local transportUnits = self:GetPlatoonUnits()
             local cargoUnits = pickupPlatoon:GetPlatoonUnits()
+            --LOG('Number of units to pickup '..tostring(table.getn(cargoUnits)))
             if pickupPlatoon and not pickupPlatoon.Dead then
                 -- Check if this specific platoon type has been "upgraded" with the new state
                 if pickupPlatoon.WaitingForTransport then
@@ -624,6 +625,7 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
                     self:LogDebug(string.format('Platoon Distance is '..tostring(VDist3(pickupPlatoon:GetPlatoonPosition(), self:GetPlatoonPosition()))))
 
                     --LOG('Issue Transport load for loadBatch for '..tostring(pickupPlatoon.BuilderName)..' batch size '..tostring(table.getn(loadBatch)))
+                    --LOG('Current cargo count is '..tostring(table.getn(transport:GetCargo())))
                     safecall("Unable to IssueTransportLoad", IssueTransportLoad, loadBatch, transport )
                     transportAssignment[transport.EntityId] = {
                         transportObject = transport,
@@ -673,13 +675,15 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
                     return
                 end
                 if loadingTimeout == 30 or loadingTimeout == 45 then
+                    --LOG('Reorder attachment request at timeout '..tostring(loadingTimeout))
                     self:LogDebug(string.format('Reorder attachment request'))
                     self:ReorderAttachment(transportAssignment)
                     coroutine.yield(35)
                 elseif loadingTimeout == 55 then
+                    --LOG('Reorder attachment request at timeout '..tostring(loadingTimeout))
                     self:LogDebug(string.format('Reorder warp attachment request'))
                     self:ReorderAttachment(transportAssignment, true)
-                    coroutine.yield(35)
+                    coroutine.yield(55)
                 end
 
                 loadingTimeout = loadingTimeout + 1
@@ -849,7 +853,9 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
             end
             if table.getn(unitsToLoad) > 0 then
                 IssueClearCommands({transport})
-                IssueMove({transport}, transPos)
+                if not warpUnits then
+                    IssueMove({transport}, transPos)
+                end
                 safecall("Unable to IssueTransportLoad remaining units", IssueTransportLoad, unitsToLoad, transport )
             end
         end

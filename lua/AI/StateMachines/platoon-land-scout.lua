@@ -1015,7 +1015,7 @@ LandScoutThreatThread = function(aiBrain, platoon)
                         local ignoreUnit = false
 
                         local enemyUnitRange = v['rngdata'].MaxWeaponRange or 20
-                        local threatDistance = math.max(0, enemyDistance - enemyUnitRange)
+                        local threatDistance = math.max(0, enemyDistance - (enemyUnitRange * enemyUnitRange))
                         local oldEnemy = platoon.BuilderData.RetreatFrom
                         if oldEnemy and not IsDestroyed(oldEnemy) then
                             local oldEnemyPos = oldEnemy:GetPosition()
@@ -1023,7 +1023,7 @@ LandScoutThreatThread = function(aiBrain, platoon)
                             local cz = platPos[3] - oldEnemyPos[3]
                             local oldEnemyDistance = cx * cx + cz * cz
                             local oldEnemyRange = oldEnemy['rngdata'] and oldEnemy['rngdata'].MaxWeaponRange or 20
-                            local oldThreatDistance = math.max(0, oldEnemyDistance - oldEnemyRange)
+                            local oldThreatDistance = math.max(0, oldEnemyDistance - (oldEnemyRange * oldEnemyRange))
                             if threatDistance < oldThreatDistance then
                                 local originLocation
                                 if platoon.BuilderData.SupportUnit and not platoon.BuilderData.SupportUnit.Dead then
@@ -1096,7 +1096,6 @@ LandScoutThreatThread = function(aiBrain, platoon)
                                 break
                             end
                         end
-                        coroutine.yield(1)
                     end
                 end
             end

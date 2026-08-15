@@ -136,6 +136,10 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             end
 
             local threat=RUtils.GrabPosDangerRNG(aiBrain,testLocation,self.EnemyRadius, self.EnemyRadius, true, false, true, true)
+            local friendlyThreat = threat.allySurface or 0
+            if distToAcuSq > 2025 and threat.allyACU and threat.allyACU > 0 then
+                friendlyThreat = friendlyThreat - threat.allyACU
+            end
             if threat.enemySurface > 0 and threat.enemyAir > 0 and self.CurrentPlatoonThreatAntiAir == 0 and threat.allyAir == 0 then
                 --self:LogDebug(string.format('DecideWhatToDo we have no antiair threat and there are air units around'))
                 local closestBase = StateUtils.GetClosestBaseRNG(aiBrain, self, self.Pos)
@@ -164,7 +168,11 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
 
             -- If our ACU is threatened or engaged with the enemy ACU, and we are not close to it,
             -- rush to support the ACU instead of evaluating local retreat or independent combat.
-            if (acuThreatened or enemyAcuNearAcu) and distToAcuSq > 1600 then
+            if (acuThreatened or enemyAcuNearAcu) and distToAcuSq > 2025 then
+                if StateUtils.SimpleTarget(self, aiBrain, acu.Position) then
+                    self:ChangeState(self.CombatLoop)
+                    return
+                end
                 self:ChangeState(self.SupportACU)
                 return
             end
@@ -177,7 +185,9 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
 
             local checkThreatRetreat = false
             if friendlyThreat > 0 and threat.enemySurface and threat.enemySurface > 0 then
-                if friendlyThreat * 1.1 < threat.enemySurface then
+                -- Bypass local retreat if we are near an endangered ACU that needs protection
+                local protectAcu = (distToAcuSq <= 2025 or enemyAcuNearAcu) and (acu.Confidence < 3 or acuThreatened or acu.Retreat)
+                if not protectAcu and (friendlyThreat * 1.1 < threat.enemySurface) then
                     checkThreatRetreat = true
                 end
             end
@@ -194,6 +204,22 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 end
             else
                 --LOG('ACUSUPPORT: ACU is in caution')
+                local cdrRange = acu.WeaponRange or 20
+                local enemyMobileThreat = threat.enemySurface or 0
+                local enemyStructureThreat = threat.enemyStructure or 0
+                local outRanged = threat.enemyrange and cdrRange and (threat.enemyrange > cdrRange)
+
+                if outRanged and enemyMobileThreat > 0 and (acu.Confidence < 3 or acu.Retreat or acuThreatened) then
+                    -- Detect PD Trap: Do not charge if structure threat equals or exceeds mobile threat unless friendly force can crush both
+                    local pdTrap = enemyStructureThreat > 0 and (enemyStructureThreat >= enemyMobileThreat) and (friendlyThreat < enemyStructureThreat * 1.5)
+
+                    if not pdTrap then
+                        if StateUtils.SimpleTarget(self, aiBrain, acu.Position) then
+                            self:ChangeState(self.CombatLoop)
+                            return
+                        end
+                    end
+                end
                 if threat.allyACU > 0 and threat.enemyStructure > 0 and not table.empty(threat.enemyStructureUnits) then
                     for _, v in threat.enemyStructureUnits do
                         if not v.Dead then
@@ -1419,7 +1445,7 @@ end
 ACUSupportPositionThread = function(aiBrain, platoon)
     --LOG('ACU support position thread has started')
     while not IsDestroyed(platoon) do
-        local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, platoon)
+        local platBiasUnit = RUtils.GetPlatUnitEnemyBias(aiBrain, platoon, true)
         if platBiasUnit and not platBiasUnit.Dead then
             platoon.Pos=platBiasUnit:GetPosition()
         else

@@ -405,7 +405,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.Retreating)
                 return
             end
-            ----self:LogDebug(string.format('Current ACU enemy air threat is '..cdr.CurrentEnemyAirThreat))
             if brain.IntelManager.StrategyFlags.EnemyAirSnipeThreat or ((cdr.CurrentEnemyAirThreat + cdr.CurrentEnemyAirInnerThreat) > 25 and cdr.CurrentFriendlyAntiAirInnerThreat < 20) then
                 if brain.BrainIntel.SelfThreat.AntiAirNow < brain.EnemyIntel.EnemyThreatCurrent.AntiAir then
                     if not cdr['rngdata'] then

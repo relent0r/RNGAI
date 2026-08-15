@@ -532,34 +532,40 @@ ExitConditions = function(self,aiBrain)
         self:ChangeState(self.DecideWhatToDo)
         return
     end
-    if VDist3Sq(self.dest,self.Pos) < 400 then
+    local selfPos = self.Pos
+    if VDist3Sq(self.dest,selfPos) < 400 then
         --self:LogDebug(string.format('Close to destination exit condition true'))
         return true
     end
-    if VDist3Sq(self.path[RNGGETN(self.path)],self.Pos) < 400 then
+    local pathCount = RNGGETN(self.path)
+    if pathCount > 0 and VDist3Sq(self.path[pathCount],selfPos) < 400 then
         --self:LogDebug(string.format('Close to end of path exition condition true'))
         return true
     end
     if self.navigating then
-        if aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.STRUCTURE - categories.WALL, self.Pos, self.EnemyRadius, 'Enemy') > 0 then
-            local enemies=GetUnitsAroundPoint(aiBrain, categories.LAND + categories.STRUCTURE - categories.WALL, self.Pos, self.EnemyRadius, 'Enemy')
+        local enemyRadius = self.EnemyRadius
+        local targetCategories = categories.LAND + categories.STRUCTURE - categories.WALL
+        if aiBrain:GetNumUnitsAroundPoint(targetCategories, selfPos, enemyRadius, 'Enemy') > 0 then
+            local enemies=GetUnitsAroundPoint(aiBrain, targetCategories, selfPos, enemyRadius, 'Enemy')
             if enemies and not RNGTableEmpty(enemies) then
                 local enemyThreat = 0
                 for _,enemy in enemies do
                     local unitBp = enemy.Blueprint
-                    if unitBp.CategoriesHash.COMMAND then
+                    local isRaid = (self.ZoneType == 'raid')
+                    local catHash = unitBp.CategoriesHash
+                    if catHash.COMMAND then
                         enemyThreat = enemyThreat + enemy:EnhancementThreatReturn()
                     else
                         enemyThreat = enemyThreat + unitBp.Defense.SurfaceThreatLevel
                     end
-                    if self.ZoneType == 'raid' and not self.retreat and unitBp.CategoriesHash.ENGINEER and not unitBp.CategoriesHash.COMMAND then
+                    if isRaid and not self.retreat and catHash.ENGINEER and not catHash.COMMAND then
                         return true
                     end
                     if enemyThreat * 1.1 > self.CurrentPlatoonThreatAntiSurface and not self.retreat then
                         local ignoreEnemy = false
-                        if self.ZoneType == 'raid' then
+                        if isRaid then
                             local teamAveragePositions = aiBrain.IntelManager:GetTeamAveragePositions()
-                            local teamValue = aiBrain.IntelManager:GetTeamDistanceValue(self.Pos, teamAveragePositions)
+                            local teamValue = aiBrain.IntelManager:GetTeamDistanceValue(selfPos, teamAveragePositions)
                             if teamValue <= 0.8 then
                                 ignoreEnemy = true
                             end
@@ -569,9 +575,19 @@ ExitConditions = function(self,aiBrain)
                             return true
                         end
                     end
-                    if enemy and not enemy.Dead and NavUtils.CanPathTo(self.MovementLayer, self.Pos, enemy:GetPosition()) then
-                        local dist=VDist3Sq(enemy:GetPosition(),self.Pos)
-                        if self.raid or self.guard then
+                    local enemyPos = enemy:GetPosition()
+                    if enemy and not enemy.Dead and NavUtils.CanPathTo(self.MovementLayer, selfPos, enemyPos) then
+                        local dist=VDist3Sq(enemyPos,selfPos)
+                        if catHash.STRUCTURE and catHash.DIRECTFIRE then
+                            local range = GetUnitMaxWeaponRange(enemy)
+                            if range and range > 0 then
+                                local bufferedRange = range + 8
+                                if dist <= (bufferedRange * bufferedRange) then
+                                    return true
+                                end
+                            end
+                        end
+                        if isRaid or self.guard then
                             if dist<2025 then
                                 --RNGLOG('Exit Path Navigation for raid')
                                 --self:LogDebug(string.format('Enemy detected during navigation and less than 45'))

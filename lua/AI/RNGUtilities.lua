@@ -8345,12 +8345,12 @@ function GetMobileLandExperimentalBuildPosition(aiBrain, basePos, radius, engPos
         table.sort(candidates, function(a, b)
             return a.score < b.score
         end)
-        LOG('Returning cadidate pos of '..tostring(repr(candidates[1].pos)))
+        --LOG('Returning cadidate pos of '..tostring(repr(candidates[1].pos)))
         return candidates[1].pos
     end
 
     -- Fallback if no good spot found
-    LOG('Fallback to generic position')
+    --LOG('Fallback to generic position')
     return GetGenericMobileExperimentalBuildPosition(aiBrain, basePos)
 end
 
@@ -8390,7 +8390,7 @@ function GetGenericMobileExperimentalBuildPosition(aiBrain, basePos)
             continue
         end
         if NavUtils.CanPathTo(movementLayer, basePos, pos) then
-            LOG('Return enemy not nearby and canpath to pos ' .. repr(pos))
+            --LOG('Return enemy not nearby and canpath to pos ' .. repr(pos))
             return pos
         end
     end
@@ -8408,7 +8408,7 @@ function GetGenericMobileExperimentalBuildPosition(aiBrain, basePos)
             basePos[3] + (dz / norm) * clampedOffset,
         }
         if NavUtils.CanPathTo(movementLayer, basePos, offset) then
-            LOG('Returning fallback candidate pos (clamped) of ' .. repr(offset))
+            --LOG('Returning fallback candidate pos (clamped) of ' .. repr(offset))
             return offset
         end
     end
@@ -8419,7 +8419,7 @@ function GetGenericMobileExperimentalBuildPosition(aiBrain, basePos)
         0,
         basePos[3] + math.min(maxDistanceFromBase, 20),
     }
-    LOG('Absolute fallback ' .. repr(fallback))
+    --LOG('Absolute fallback ' .. repr(fallback))
     return fallback
 end
 
