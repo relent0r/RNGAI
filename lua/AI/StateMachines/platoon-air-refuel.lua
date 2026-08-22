@@ -155,9 +155,14 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                 else
                     if not IsDestroyed(unit) and not unit.Loading then
                         if self.PreviousStateMachine == 'Gunship' then
-                            local plat = aiBrain:MakePlatoon('', 'none')
-                            aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
-                            import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({ }, plat, {unit})
+                            local plat = StateUtils.GetClosestPlatoonRNG(self, 'GunshipBehavior', false, 120)
+                            if not plat then
+                                plat = aiBrain:MakePlatoon('', 'none')
+                                aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
+                                import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({ }, plat, {unit})
+                            else
+                                aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
+                            end
                         elseif self.PreviousStateMachine == 'Fighter' then
                             local plat = StateUtils.GetClosestPlatoonRNG(self, 'FighterBehavior', false, 450)
                             if not plat then

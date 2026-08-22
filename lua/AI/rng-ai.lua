@@ -91,7 +91,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.GridBrain = import("/lua/ai/gridbrain.lua").Setup()
         self.GridDeposits = import("/lua/ai/griddeposits.lua").Setup()
         --self.GridRecon = import("/lua/ai/gridrecon.lua").Setup(self)
-        self.GridPresence = import("/lua/AI/GridPresence.lua").Setup(self)
+        self.GridPresence = import("/mods/RNGAI/lua/IntelManagement/GridPresence.lua").Setup(self)
     end,
 
     OnCreateAI = function(self, planName)

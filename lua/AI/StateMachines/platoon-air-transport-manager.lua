@@ -89,7 +89,13 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
             if availableTransports == 0 and self.RequestTable then
                 local im = aiBrain.IntelManager
                 local totalMissingSlots = 0
+                local missingSmall = 0
+                local missingMedium = 0
+                local missingLarge = 0
                 local maxWaitTicks = 0
+                local maxSingleRequestSlots = 0
+                local requiresTech2Plus = false
+                local combatDropSlots = 0
                 local currentTick = GetGameTick()
                 local validRequestCount = 0
                 local suicideRequestCount = 0
@@ -109,8 +115,26 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
                         suicideRequestCount = suicideRequestCount + 1
                     else
                         validRequestCount = validRequestCount + 1
-                        local reqTotal = (req.Slots.Large * 10) + (req.Slots.Medium * 5) + req.Slots.Small
+
+                        local mediumSlots = req.Slots.Medium or 0
+                        local largeSlots = req.Slots.Large or 0
+                        local smallSlots = req.Slots.Small or 0
+
+                        if mediumSlots > 0 or largeSlots > 0 then
+                            requiresTech2Plus = true
+                        end
+
+                        missingSmall = missingSmall + req.Slots.Small
+                        missingMedium = missingMedium + req.Slots.Medium
+                        missingLarge = missingLarge + req.Slots.Large
+                        local reqTotal = (largeSlots * 10) + (mediumSlots * 5) + smallSlots
                         totalMissingSlots = totalMissingSlots + reqTotal
+                        if reqTotal > maxSingleRequestSlots then
+                            maxSingleRequestSlots = reqTotal
+                        end
+                        if req.RequestType == 'Combat' then
+                            combatDropSlots = combatDropSlots + reqTotal
+                        end
                         
                         local waitTime = currentTick - req.TimeRequested
                         if waitTime > maxWaitTicks then
@@ -121,6 +145,9 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
 
                 aiBrain.TransportPressure = {
                     MissingSlots = totalMissingSlots,
+                    MaxSingleRequestSlots = maxSingleRequestSlots,
+                    CombatDropSlots = combatDropSlots,
+                    RequiresTech2Plus = requiresTech2Plus,
                     MaxWaitSeconds = maxWaitTicks / 10,
                     RequestCount = validRequestCount,
                     SuicideCount = suicideRequestCount,

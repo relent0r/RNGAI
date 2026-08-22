@@ -151,7 +151,6 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                     end
                     if target then
                         self.targetcandidates = {}
-                        --LOG('Gunship high Priority Target Found '..target.UnitId)
                         self.BuilderData = {
                             AttackTarget = target,
                             Position = table.copy(target:GetPosition())
@@ -175,7 +174,6 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             if not target then
                 local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, nil, nil, nil, false)
                 if target then
-                    --LOG('Gunship high Priority Target Found '..target.UnitId)
                     self.BuilderData = {
                         AttackTarget = target,
                         Position = table.copy(target:GetPosition())
@@ -244,7 +242,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                             AttackTarget = target,
                             Position = table.copy(target:GetPosition())
                         }
-                        ----self:LogDebug(string.format('Gunship navigating to snipe ACU'))
+                        self:LogDebug(string.format('Gunship navigating to snipe ACU'))
                         self:ChangeState(self.Navigating)
                         return
                     end
@@ -253,13 +251,12 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             if not target then
                 local target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self)
                 if target then
-                    --LOG('Gunship high Priority Target Found '..target.UnitId)
                     self.BuilderData = {
                         AttackTarget = target,
                         Position = table.copy(target:GetPosition())
                     }
 
-                    ----self:LogDebug(string.format('Gunship navigating to high priority target'))
+                    self:LogDebug(string.format('Gunship navigating to high priority target'))
                     self:ChangeState(self.Navigating)
                     return
                 end
@@ -275,7 +272,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                                 AttackTarget = point.unit,
                                 Position = point.Position
                             }
-                            ----self:LogDebug(string.format('Gunship navigating to priority point target'))
+                            self:LogDebug(string.format('Gunship navigating to priority point target'))
                             self:ChangeState(self.Navigating)
                             return
                         end
@@ -300,7 +297,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                                 Position = aiBrain.Zones.Land.zones[targetZone].pos,
                                 CutOff = 400
                             }
-                            --LOG('We are already at the zone, move to loiter mode')
+                            self:LogDebug(string.format('Gunship navigating to zone target'))
                             self:ChangeState(self.ZoneLoiter)
                             return
                         end
@@ -393,7 +390,6 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             local cache = { 0, 0, 0 }
 
             while not IsDestroyed(self) do
-                self:LogDebug(string.format('Gunship Navigating top loop'))
                 local origin = self:GetPlatoonPosition()
                 local platoonUnits = self:GetPlatoonUnits()
                 waypoint, length = NavUtils.DirectionTo('Air', origin, destination, 80)
@@ -407,9 +403,9 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                             if not unit.Dead then 
                                 if movementPositions[k] then
                                     --IssueMove({platoonUnits[k]}, movementPositions[k])
-                                    StateUtils.IssueNavigationMove(unit, movementPositions[k])
+                                    StateUtils.IssueNavigationMove(unit, movementPositions[k], true)
                                 else
-                                    StateUtils.IssueNavigationMove(unit, destination)
+                                    StateUtils.IssueNavigationMove(unit, destination, true)
                                 end
                             end
                         end
@@ -426,9 +422,9 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 for k, unit in platoonUnits do
                     if not unit.Dead then
                         if movementPositions[k] then
-                            StateUtils.IssueNavigationMove(unit, movementPositions[k])
+                            StateUtils.IssueNavigationMove(unit, movementPositions[k], true)
                         else
-                            StateUtils.IssueNavigationMove(unit, waypoint)
+                            StateUtils.IssueNavigationMove(unit, waypoint, true)
                         end
                     end
                 end
@@ -536,6 +532,14 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
             if IsDestroyed(self) then
                 return
             end
+            if self.PlatoonCount < 10 then
+                local plat = StateUtils.GetClosestPlatoonRNG(self, 'GunshipBehavior', false, 80)
+                if plat and plat.PlatoonCount and plat.PlatoonCount < 10 then
+                    local platUnits = plat:GetPlatoonUnits()
+                    aiBrain:AssignUnitsToPlatoon(self, platUnits, 'Attack', 'None')
+                    import("/mods/rngai/lua/ai/statemachines/platoon-air-gunship.lua").AssignToUnitsMachine({ }, plat, platUnits)
+                end
+            end
             self.CurrentEnemyAirThreat = 0
             self.BuilderData = {}
             self:ChangeState(self.DecideWhatToDo)
@@ -557,9 +561,9 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 local movementPositions = StateUtils.GenerateGridPositions(targetPos, 6, self.PlatoonCount)
                 for k, unit in platoonUnits do
                     if not unit.Dead and movementPositions[k] then
-                        StateUtils.IssueNavigationMove(unit, movementPositions[k])
+                        StateUtils.IssueNavigationMove(unit, movementPositions[k], true)
                     else
-                        StateUtils.IssueNavigationMove(unit, targetPos)
+                        StateUtils.IssueNavigationMove(unit, targetPos, true)
                     end
                 end
                 coroutine.yield(35)

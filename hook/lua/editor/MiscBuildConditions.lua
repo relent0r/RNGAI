@@ -237,6 +237,30 @@ function TransportPressureLevelRNG(aiBrain, requiredLevel)
     return aiBrain.TransportPressure.PressureLevel >= requiredLevel
 end
 
+function TransportNeedsT2RNG(aiBrain, minSlots)
+    local transportPressure = aiBrain.TransportPressure
+    if not transportPressure then return false end
+    if aiBrain.NoRush and aiBrain.NoRush.Active then return false end
+
+    local slotThreshold = minSlots or 6
+
+    -- 1. Hard Tech Constraint: T2 or T3 units waiting
+    if (transportPressure.MissingMedium or 0) > 0 or (transportPressure.MissingLarge or 0) > 0 then
+        return true
+    end
+
+    -- 2. Payload Volume Constraint: Single dense drop or total combat volume
+    if (transportPressure.MaxSingleRequestSlots or 0) >= slotThreshold then
+        return true
+    end
+
+    if (transportPressure.CombatDropSlots or 0) >= slotThreshold then
+        return true
+    end
+
+    return false
+end
+
 -- Not in use
 function CanBuildOnMassLessThanDistanceRNG(aiBrain, locationType, distance, threatMin, threatMax, threatRings, threatType, maxNum )
     local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager

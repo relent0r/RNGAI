@@ -2589,7 +2589,7 @@ function GetBestPlatoonShieldPos(platoonUnits, shieldUnit, shieldPos, target, pr
     end
 end
 
-function IssueNavigationMove(unit, position, forceNonNavigator)
+function IssueNavigationMove(unit, position, forceNonNavigator, debug)
     if unit.Dead then
         return
     end

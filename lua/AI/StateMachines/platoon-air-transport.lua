@@ -237,9 +237,11 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
                             if not self.LastThreatLog or self.LastThreatLog + 5 < GetGameTimeSeconds() then
                                 local cargoNames = {}
                                 for _, transport in self:GetPlatoonUnits() do
-                                    for _, u in transport:GetCargo() do
-                                        if not u.Dead and u.PlatoonHandle then
-                                            cargoNames[u.PlatoonHandle.BuilderName or u.PlatoonHandle.PlatoonName or "Unknown"] = true
+                                    if transport and not transport.Dead then
+                                        for _, u in transport:GetCargo() do
+                                            if not u.Dead and u.PlatoonHandle then
+                                                cargoNames[u.PlatoonHandle.BuilderName or u.PlatoonHandle.PlatoonName or "Unknown"] = true
+                                            end
                                         end
                                     end
                                 end
@@ -341,9 +343,11 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
                         if not self.LastThreatLog or self.LastThreatLog + 5 < GetGameTimeSeconds() then
                             local cargoNames = {}
                             for _, transport in self:GetPlatoonUnits() do
-                                for _, u in transport:GetCargo() do
-                                    if not u.Dead and u.PlatoonHandle then
-                                        cargoNames[u.PlatoonHandle.BuilderName or u.PlatoonHandle.PlatoonName or "Unknown"] = true
+                                if transport and not transport.Dead then
+                                    for _, u in transport:GetCargo() do
+                                        if not u.Dead and u.PlatoonHandle then
+                                            cargoNames[u.PlatoonHandle.BuilderName or u.PlatoonHandle.PlatoonName or "Unknown"] = true
+                                        end
                                     end
                                 end
                             end
@@ -579,7 +583,7 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
 
             local remainingCargo = {}
             for _, u in cargoUnits do
-                if not u.Dead then table.insert(remainingCargo, u) end
+                if u and not u.Dead and not u:IsUnitState('Attached') then table.insert(remainingCargo, u) end
             end
             self:LogDebug(string.format('WaitAtPickup Cargo Unit count '..tostring(table.getn(remainingCargo))))
             --LOG('Transport Unit count '..tostring(table.getn(transportUnits)))

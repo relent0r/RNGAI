@@ -1412,11 +1412,13 @@ IntelManager = Class {
             },
             airsurface = {
                 incomeValueWeight = 0.7,
-                utilityWeight = 2.0,
                 viabilityWeight = 2.5,        -- Multiplier for the RUtils.GetZoneAirSurfaceViability result
                 utilityWeight = 1.2,          -- Multiplier for the Island/Angle utility
                 enemyAirFrictionWeight = 0.5, -- Extra penalty if global enemy air is strong
                 exposurePenaltyWeight = 5.0,
+                directSurfaceAaWeight = 3.5,    -- Heavy penalty for AA inside the zone
+                adjacentSurfaceAaWeight = 1.2,  -- Light penalty for AA in neighboring zones
+                fighterRiskWeight = 4.0,        -- High penalty for mobile air superiority threat
             }
         }
         self:WaitForZoneInitialization()
@@ -1502,6 +1504,7 @@ IntelManager = Class {
                 local airSurfaceViabilityValue = RUtils.GetZoneAirSurfaceViability(self.MapMaximumValues.MaximumResourceValue, v)
                 local airExposureValue = RUtils.GetZoneExposureValue(myStart, enemyStart, v.pos, mapDiagonalSq)
                 local stagingPressureValue = RUtils.GetZoneStagingPressureValue(self, v)
+                local localSurfaceAA, adjacentSurfaceAA, totalFighterThreat = RUtils.GetZoneAirThreatValues(v)
 
                 local enemyIncome = (v.zoneincome and v.zoneincome.enemyincome) or 0
                 if v.staticraidscore > 0.8 and enemyIncome > 0 then
@@ -1575,6 +1578,12 @@ IntelManager = Class {
                     (airExposureValue * weightTable.airsurface.exposurePenaltyWeight)
                 ) * globalAirScale
 
+                v.airRisk = (
+                  (localSurfaceAA * weightTable.airsurface.directSurfaceAaWeight) +
+                  (adjacentSurfaceAA * weightTable.airsurface.adjacentSurfaceAaWeight) +
+                  (totalFighterThreat * weightTable.airsurface.fighterRiskWeight)
+                )
+
                 self.HighValueRaidTargets = totalHighValueRaidTargets
                 self.FrontlinePressureCount = totalFrontlinePressure
                 self.ContestedIncomeCount = totalContestedIncomeZones
@@ -1610,6 +1619,8 @@ IntelManager = Class {
                             pos = v.pos,
                             controlRadius = math.max(1, v.staticcontrolscore * 4),
                             raidRadius = math.max(1, v.staticraidscore * 4),
+                            airSurfaceRadius = math.max(1, (v.staticsurfaceairscore or 0) * 4),
+                            airRiskRadius = math.max(1, (v.airRisk or 0) * 2),
                             parentPos = nil
                         }
                         
@@ -1637,8 +1648,9 @@ IntelManager = Class {
         end
 
         local aiBrain = self.Brain
-        local currentTime = GetGameTimeSeconds()
+        
         while aiBrain.Result ~= "defeat" do
+            local currentTime = GetGameTimeSeconds()
             -- Render every single tick for solid, non-flickering visuals
             for id, data in self.VisualDebugData do
                 if data.pos then
@@ -1647,11 +1659,18 @@ IntelManager = Class {
                     
                     -- Solid Red for Raid Score Intensity
                     DrawCircle(data.pos, data.raidRadius, 'ffFF0000')
+
+                    -- Solid Green for Air Surface Score
+                    DrawCircle(data.pos, data.airSurfaceRadius, 'ff00FF00')
+
+                    -- Solid Magenta for Air Risk Score
+                    DrawCircle(data.pos, data.airRiskRadius, 'ffFF00FF')
                     
                     -- Solid Yellow lines for BFS paths back to base
                     if data.parentPos then
                         DrawLinePop(data.pos, data.parentPos, 'ffFFFF00')
                     end
+
                     -- Render Active Return Choices (Decays after 5 seconds)
                     if data.selectionExpiry and data.selectionExpiry > currentTime then
                         if data.lastSelectionType == 'raid' then
@@ -1851,7 +1870,7 @@ IntelManager = Class {
         --    self.VisualDebugData[bestZone.id] = self.VisualDebugData[bestZone.id] or {}
         --    self.VisualDebugData[bestZone.id].pos = bestPos
         --    self.VisualDebugData[bestZone.id].lastSelectionType = zonetype
-        --    self.VisualDebugData[bestZone.id].selectionExpiry = GetGameTimeSeconds() + 10.0
+        --    self.VisualDebugData[bestZone.id].selectionExpiry = GetGameTimeSeconds() + 15.0
         --end
         return bestZone.id, bestPos
     end,
@@ -7149,11 +7168,12 @@ TruePlatoonPriorityDirector = function(aiBrain)
         
         for i=im.MapIntelGridXMin, im.MapIntelGridXMax do
             for k=im.MapIntelGridZMin, im.MapIntelGridZMax do
-                if not table.empty(im.MapIntelGrid[i][k].EnemyUnits) then
+                local cell = im.MapIntelGrid[i][k]
+                if not table.empty(cell.EnemyUnits) then
                     local scaledPriority
                     local anglePriority
-                    local position = im.MapIntelGrid[i][k].Position
-                    local distanceToMain = im.MapIntelGrid[i][k].DistanceToMain
+                    local position = cell.Position
+                    local distanceToMain = cell.DistanceToMain
                     local gridPointAngle = RUtils.GetAngleToPosition(aiBrain.BrainIntel.StartPos, position)
                     local angleOfEnemyUnits = math.abs(gridPointAngle - aiBrain.BrainIntel.CurrentIntelAngle)
                     local basePriority = math.ceil((angleOfEnemyUnits * 60) / (distanceToMain / 2))
@@ -7167,13 +7187,13 @@ TruePlatoonPriorityDirector = function(aiBrain)
                     
                     --LOG('angle of enemy units '..angleOfEnemyUnits)
                     --LOG('distance to main '..im.MapIntelGrid[i][k].DistanceToMain)
-                    im.MapIntelGrid[i][k].EnemyUnitDanger = RUtils.GrabPosDangerRNG(aiBrain,position,30,30, true, false, false).enemyTotal
+                    cell.EnemyUnitDanger = RUtils.GetCellDanger(aiBrain, cell)
                     if aiBrain.GridPresence and aiBrain.GridPresence:GetInferredStatus(position) == 'Allied' then
                         statusModifier = 1.8
                     end
                     anglePriority = scaledPriority * statusModifier
                     --RNGLOG('Priority of angle and distance '..anglePriority)
-                    for c, b in im.MapIntelGrid[i][k].EnemyUnits do
+                    for c, b in cell.EnemyUnits do
                         local priority = 0
                         if b.recent and not b.object.Dead then
                             if b.type then
@@ -7198,8 +7218,8 @@ TruePlatoonPriorityDirector = function(aiBrain)
                             local tacticalWeight = 1.0
                             if (unitBp.CategoriesHash.LAND or unitBp.CategoriesHash.HOVER or unitBp.CategoriesHash.AMPHIBIOUS)
                                 and unitBp.Defense.SurfaceThreatLevel and unitBp.Defense.SurfaceThreatLevel > 0 then
-                                if im.MapIntelGrid[i][k].LandZoneID then
-                                    zoneid = im.MapIntelGrid[i][k].LandZoneID
+                                if cell.LandZoneID then
+                                    zoneid = cell.LandZoneID
                                     if not zoneThreatTotals['Land'][zoneid] then
                                         zoneThreatTotals['Land'][zoneid] = 0
                                     end
@@ -7209,7 +7229,7 @@ TruePlatoonPriorityDirector = function(aiBrain)
                                         zoneThreatTotals['Land'][zoneid] = zoneThreatTotals['Land'][zoneid] + unitBp.Defense.SurfaceThreatLevel
                                     end
                                     local zone
-                                    if im.MapIntelGrid[i][k].Water then
+                                    if cell.Water then
                                         zone = aiBrain.Zones.Naval.zones[zoneid]
                                         if zone and zone.teamvalue then
                                             strategicValue = RUtils.EvaluateZonePriority(zone, normalizedDistance)
@@ -7226,12 +7246,12 @@ TruePlatoonPriorityDirector = function(aiBrain)
                             --LOG('Strategic value is '..tostring(strategicValue))
                             --LOG('Priority for unit '..tostring(b.object.UnitId).. ' is '..tostring(priority))
                             unitAddedCount = unitAddedCount + 1
-                            aiBrain.prioritypoints[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}
-                            if im.MapIntelGrid[i][k].DistanceToMain < baseRestrictedArea or priority > 250 then
+                            aiBrain.prioritypoints[c..i..k]={type='raid',Position=b.Position,priority=priority,danger=cell.EnemyUnitDanger,unit=b.object,time=b.time}
+                            if cell.DistanceToMain < baseRestrictedArea or priority > 250 then
                                 if b.type == 'arty' or b.type == 'exp' or b.type == 'pointdefense' then
                                     priority = priority + 100
                                 end
-                                aiBrain.prioritypointshighvalue[c..i..k]={type='raid',Position=b.Position,priority=math.max(priority,250),danger=im.MapIntelGrid[i][k].EnemyUnitDanger,unit=b.object,time=b.time}
+                                aiBrain.prioritypointshighvalue[c..i..k]={type='raid',Position=b.Position,priority=math.max(priority,250),danger=cell.EnemyUnitDanger,unit=b.object,time=b.time}
                             end
                         end
                     end
