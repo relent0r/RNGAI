@@ -225,6 +225,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 --self:LogDebug(string.format('DecideWhatToDo no target zone, look for one'))
                 --Note this yield is to try and avoid a bunch of platoons all selecting the same zone before the allocation thread has looped.
                 coroutine.yield(Random(5,35))
+                if IsDestroyed(self) then
+                    return
+                end
                 targetZone, targetPos = IntelManagerRNG.GetIntelManager(aiBrain):GetBestZoneForPlatoon(self, self.ZoneType, self.ZoneID)
                 --LOG('Zone selected with GetBestZoneForPlatoon : '..tostring(targetZone)..' with zone type '..tostring(self.ZoneType))
                 if targetZone then

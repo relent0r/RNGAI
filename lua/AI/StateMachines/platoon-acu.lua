@@ -306,7 +306,8 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets, acuRisk = RUtils.AIAdvancedFindACUTargetRNG(brain, cdr)
+                    local target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets, defenseCount, acuRisk = RUtils.AIAdvancedFindACUTargetRNG(brain, cdr)
+                    local targetSearchRange = cdr.MaxBaseRange
                     if closestThreatUnit then
                         self.BuilderData = {
                             AttackTarget = closestThreatUnit,
@@ -317,13 +318,25 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         return
                     elseif target then
                         self.BuilderData = {
-                            AttackTarget = closestThreatUnit,
-                            Position = closestThreatUnit:GetPosition(), 
+                            AttackTarget = target,
+                            Position = target:GetPosition(), 
                         }
                         --LOG('Attack Retreat')
                         self:ChangeState(self.AttackRetreat)
                         return
                     elseif not target and closestUnitPosition and closestThreatDistance < (targetSearchRange * targetSearchRange) then
+                        local ignoreTarget = false
+                        if defenseCount > 0 then
+                            if RUtils.IsPathClippingPd(cdr.Position, closestUnitPosition, defenseTargets, defenseCount) then
+                                ignoreTarget = true
+                            end
+                        end
+                        if not ignoreTarget then
+                            local posThreat = GetThreatAtPosition(brain, closestUnitPosition, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') or 0
+                            if posThreat > cdr.ThreatLimit * 1.5 then
+                                ignoreTarget = true
+                            end
+                        end
                         self.BuilderData = {
                             Position = closestUnitPosition,
                             CutOff = 625,
@@ -839,10 +852,10 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 if not cdr.SuicideMode then
                     if self.BuilderData.DefendExpansion then
                         ----self:LogDebug(string.format('Defend expansion looking for target'))
-                        target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets, acuRisk = RUtils.AIAdvancedFindACUTargetRNG(brain, cdr, nil, nil, 80, self.BuilderData.Position)
+                        target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets, defenseCount, acuRisk = RUtils.AIAdvancedFindACUTargetRNG(brain, cdr, nil, nil, 80, self.BuilderData.Position)
                     else
                         self:LogDebug(string.format('Look for normal target'))
-                        target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets, acuRisk = RUtils.AIAdvancedFindACUTargetRNG(brain, cdr)
+                        target, acuTarget, highThreatCount, closestThreatDistance, closestThreatUnit, closestUnitPosition, defenseTargets, defenseCount, acuRisk = RUtils.AIAdvancedFindACUTargetRNG(brain, cdr)
                     end
                 elseif cdr.SuicideMode then
                     self:LogDebug(string.format('Are we in suicide mode?'))
@@ -1011,17 +1024,31 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                     self:ChangeState(self.AttackTarget)
                     return
                 elseif not target and closestUnitPosition and closestThreatDistance < (targetSearchRange * targetSearchRange) then
-                    self.BuilderData = {
-                        Position = closestUnitPosition,
-                        CutOff = 625,
-                        Retreat = false,
-                        ShortNavigation = true
+                    local ignoreTarget = false
+                    if defenseCount > 0 then
+                        if RUtils.IsPathClippingPd(cdr.Position, closestUnitPosition, defenseTargets, defenseCount) then
+                            ignoreTarget = true
+                        end
+                    end
+                    if not ignoreTarget then
+                        local posThreat = GetThreatAtPosition(brain, closestUnitPosition, brain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') or 0
+                        if posThreat > cdr.ThreatLimit * 1.5 then
+                            ignoreTarget = true
+                        end
+                    end
+                    if not ignoreTarget then
+                        self.BuilderData = {
+                            Position = closestUnitPosition,
+                            CutOff = 625,
+                            Retreat = false,
+                            ShortNavigation = true
 
-                    }
-                    self:LogDebug(string.format('No target but there is a closest unit position'))
-                    --LOG('Closest threat distance is '..tostring(closestThreatDistance)..' closest unit is '..tostring(closestThreatUnit.UnitId))
-                    self:ChangeState(self.Navigating)
-                    return
+                        }
+                        self:LogDebug(string.format('No target but there is a closest unit position'))
+                        --LOG('Closest threat distance is '..tostring(closestThreatDistance)..' closest unit is '..tostring(closestThreatUnit.UnitId))
+                        self:ChangeState(self.Navigating)
+                        return
+                    end
                 else
                     ----self:LogDebug(string.format('No target found for ACU'))
                     if not cdr.SuicideMode then
@@ -1092,7 +1119,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 end
                 coroutine.yield(10)
             end
-            if VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < 6400 and not cdr.Caution and cdr.CurrentEnemyThreat < 25 then
+            local safeZoneNotSafe
+            if cdr.EnemyCDRPresent or cdr.CurrentEnemyInnerCircle > 25 then
+                safeZoneNotSafe = true
+            end
+            if not safeZoneNotSafe and VDist2Sq(cdr.CDRHome[1], cdr.CDRHome[3], cdr.Position[1], cdr.Position[3]) < 6400 and not cdr.Caution and cdr.CurrentEnemyThreat < 25 then
                 coroutine.yield(2)
                 self:LogDebug(string.format('We are at base and want to perform an engineering task'))
                 self:ChangeState(self.EngineerTask)
@@ -2033,40 +2064,72 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
             local brain = self:GetBrain()
             local cdr = self.cdr
             local currentACULayer = cdr:GetCurrentLayer()
-            local acuWeaponUnderWater
+            local acuWeaponUnderWater = false
+
             if currentACULayer == 'Seabed' then
                 local weaponPos = StateUtils.GetDFWeaponPos(cdr)
                 if RUtils.PositionInWater(weaponPos) then
                     acuWeaponUnderWater = true
                 end
             end
+
             if self.BuilderData.AttackTarget and not IsDestroyed(self.BuilderData.AttackTarget) and not self.BuilderData.AttackTarget.Tractored then
                 local target = self.BuilderData.AttackTarget
                 local snipeAttempt = false
+                local overchargeAvailable = brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired
+
                 if target and not target.Dead then
                     cdr.Target = target
                     local targetPos = target:GetPosition()
                     local cdrPos = cdr:GetPosition()
                     cdr.TargetPosition = targetPos
-                    local targetDistance = VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
+                    local targetDistanceSq = VDist2Sq(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                     local enemyMaxRange = StateUtils.GetUnitMaxWeaponRange(target, 'Direct Fire') or 0
+
+                    -- Overcharge logic
+                    if overchargeAvailable and cdr.CurrentEnemyInnerCircle > 8 and not acuWeaponUnderWater then
+                        local overChargeFired = false
+                        local innerCircleEnemies = GetNumUnitsAroundPoint(brain, categories.MOBILE * categories.LAND + categories.STRUCTURE, cdr.Position, cdr.WeaponRange - 3, 'Enemy')
+                        if innerCircleEnemies > 0 then
+                            local result, newTarget = ACUFunc.CDRGetUnitClump(brain, cdr.Position, cdr.WeaponRange - 3)
+                            if newTarget and VDist3Sq(cdr.Position, newTarget:GetPosition()) < (cdr.WeaponRange * cdr.WeaponRange) - 9 then
+                                if cdr.GetNavigator then
+                                    IssueOverCharge({cdr}, newTarget)
+                                else
+                                    IssueClearCommands({cdr})
+                                    IssueOverCharge({cdr}, newTarget)
+                                end
+                                overChargeFired = true
+                            end
+                        end
+                        if not overChargeFired and VDist3Sq(cdr:GetPosition(), target:GetPosition()) < cdr.WeaponRange * cdr.WeaponRange then
+                            if cdr.GetNavigator then
+                                IssueOverCharge({cdr}, target)
+                            else
+                                IssueClearCommands({cdr})
+                                IssueOverCharge({cdr}, target)
+                            end
+                        end
+                    end
+
+                    -- Outranged hard retreat
                     if enemyMaxRange > cdr.WeaponRange then
-                        if targetDistance <= (cdr.WeaponRange * cdr.WeaponRange) and brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired and not acuWeaponUnderWater then
+                        if targetDistanceSq <= (cdr.WeaponRange * cdr.WeaponRange) and overchargeAvailable and not acuWeaponUnderWater then
                             IssueOverCharge({cdr}, target)
                             coroutine.yield(10)
                         end
                         local safeDistance = enemyMaxRange + 10
-                        local retreatVector = Vector(cdrPos[1] - targetPos[1], 0, cdrPos[3] - targetPos[3])
-                        retreatVector = RUtils.NormalizeVector(retreatVector)
-                    
-                        local retreatPos = {cdrPos[1] + retreatVector[1] * safeDistance, cdrPos[2], cdrPos[3] + retreatVector[3] * safeDistance}
-                                       
+                        local retreatVector = RUtils.NormalizeVector(Vector(cdrPos[1] - targetPos[1], 0, cdrPos[3] - targetPos[3]))
+                        local retreatPos = {targetPos[1] + retreatVector[1] * safeDistance, cdrPos[2], targetPos[3] + retreatVector[3] * safeDistance}
+                                    
                         StateUtils.IssueNavigationMove(cdr, retreatPos)
                         coroutine.yield(30)
                         self:LogDebug('Enemy outranges ACU, retreating')
                         self:ChangeState(self.DecideWhatToDo)
                         return
                     end
+
+                    -- Snipe / Mode evaluation
                     local targetCat = target.Blueprint.CategoriesHash
                     if targetCat.COMMAND then
                         local enemyACUHealth = target:GetHealth()
@@ -2075,10 +2138,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             enemyACUHealth = enemyACUHealth + shieldHealth
                         end
 
-                        if enemyACUHealth < cdr.Health then
-                            acuAdvantage = true
-                        end
-                        local defenseThreat = RUtils.CheckDefenseThreat(brain, targetPos)
+                        local defenseThreat = RUtils.CheckGroundDefenseThreat(brain, targetPos)
                         if defenseThreat > 45 and cdr.SuicideMode then
                             ACUFunc.SetAcuSnipeMode(cdr, 'DEFAULT')
                             cdr.SnipeMode = false
@@ -2088,7 +2148,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
 
                         if enemyACUHealth < 7000 and cdr.Health - enemyACUHealth > 3250 and not RUtils.PositionInWater(targetPos) and defenseThreat < 45 then
-                            ----self:LogDebug(string.format('Enemy ACU could be killed or drawn, should we try?, enable snipe mode'))
                             if target and not IsDestroyed(target) then
                                 ACUFunc.SetAcuSnipeMode(cdr, 'ACU')
                                 cdr:SetAutoOvercharge(true)
@@ -2106,12 +2165,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                 brain.TacticalMonitor.TacticalMissions.ACUSnipe[index]['AIR'] = { GameTime = gameTime, CountRequired = 4 }
                                 brain.TacticalMonitor.TacticalMissions.ACUSnipe[index]['LAND'] = { GameTime = gameTime, CountRequired = 4 }
                             end
-                        elseif enemyACUHealth < 4500 and cdr.Health - enemyACUHealth < 3000 or cdr.CurrentFriendlyInnerCircle > cdr.CurrentEnemyInnerCircle * 1.3 then
-                                if not cdr.SnipeMode then
-                                    ----self:LogDebug(string.format('Enemy ACU is under HP limit we can potentially draw, enable snipe mode'))
-                                    ACUFunc.SetAcuSnipeMode(cdr, 'ACU')
-                                    cdr.SnipeMode = true
-                                end
+                        elseif (enemyACUHealth < 4500 and cdr.Health - enemyACUHealth < 3000) or (cdr.CurrentFriendlyInnerCircle > cdr.CurrentEnemyInnerCircle * 1.3) then
+                            if not cdr.SnipeMode then
+                                ACUFunc.SetAcuSnipeMode(cdr, 'ACU')
+                                cdr.SnipeMode = true
+                            end
                         elseif cdr.SnipeMode then
                             ACUFunc.SetAcuSnipeMode(cdr, 'DEFAULT')
                             cdr.SnipeMode = false
@@ -2120,7 +2178,6 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             brain.BrainIntel.SuicideModeTarget = nil
                         end
                     elseif targetCat.STRUCTURE and (targetCat.DIRECTFIRE or targetCat.INDIRECTFIRE) then
-                        ----self:LogDebug(string.format('Setting snipe mode for PDs'))
                         ACUFunc.SetAcuSnipeMode(cdr, 'STRUCTURE')
                         cdr.SnipeMode = true
                     elseif cdr.SnipeMode then
@@ -2130,89 +2187,84 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         brain.BrainIntel.SuicideModeActive = false
                         brain.BrainIntel.SuicideModeTarget = nil
                     end
+
+                    -- Movement execution
                     if target and not target.Dead and not target:BeenDestroyed() then
-                        targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
+                        local standoffOffset = (cdr.Health <= 4000) and 1 or 5
+                        local targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
                         local movePos
+
                         if target.Blueprint.CategoriesHash.RECLAIMABLE and currentACULayer == 'Seabed' and targetDistance < 10 then
-                            ----self:LogDebug(string.format('acu is under water and target is close, attempt reclaim, current unit distance is '..VDist3(cdrPos, targetPos)))
                             IssueClearCommands({cdr})
                             IssueReclaim({cdr}, target)
                             movePos = targetPos
                         elseif snipeAttempt then
-                            ----self:LogDebug(string.format('Moving to enemy acu pos'))
                             movePos = targetPos
-                        elseif cdr.CurrentEnemyInnerCircle < 20 then
-                            movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - 14})
                         else
-                            movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 5)})
+                            movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - standoffOffset)})
                         end
+
+                        -- Terrain obstruction handling
+                        local customMoveIssued = false
                         if not snipeAttempt and currentACULayer ~= 'Seabed' and brain:CheckBlockingTerrain(movePos, targetPos, 'none') and targetDistance < (cdr.WeaponRange + 5) then
-                            --LOG('Terrain is blocked, look for an alternative firing position, original move pos is '..tostring(repr(movePos)))
                             local checkPoints = ACUFunc.DrawCirclePoints(6, 15, movePos)
                             local alternateFirePos = false
                             for k, v in checkPoints do
-                                if not brain:CheckBlockingTerrain({v[1],GetTerrainHeight(v[1],v[3]),v[3]}, targetPos, 'none') and VDist3Sq({v[1],GetTerrainHeight(v[1],v[3]),v[3]}, targetPos) < VDist3Sq(cdrPos, targetPos) then
+                                if not brain:CheckBlockingTerrain({v[1], GetTerrainHeight(v[1], v[3]), v[3]}, targetPos, 'none') and VDist3Sq({v[1], GetTerrainHeight(v[1], v[3]), v[3]}, targetPos) < VDist3Sq(cdrPos, targetPos) then
                                     movePos = v
                                     alternateFirePos = true
                                     break
                                 end
                             end
                             if alternateFirePos then
-                                --LOG('We have an alternative firing position of '..tostring(repr(alternateFirePos)))
                                 StateUtils.IssueNavigationMove(cdr, movePos)
+                                customMoveIssued = true
                             else
-                                StateUtils.IssueNavigationMove(cdr, cdr.CDRHome)
-                            end
-                            coroutine.yield(30)
-                            IssueClearCommands({cdr})
-                        end
-                        StateUtils.IssueNavigationMove(cdr, movePos)
-                        coroutine.yield(30)
-                        if not snipeAttempt then
-                            if not IsDestroyed(target) and not ACUFunc.CheckRetreat(cdrPos,targetPos,target) then
-                                targetDistance = VDist2(cdrPos[1], cdrPos[3], targetPos[1], targetPos[3])
-                                local direction = math.random(2) == 1 and 1 or -1
-                                local cdrNewPos = RUtils.GetLateralMovePos(targetPos, cdrPos, 6, direction)
-                                if brain:CheckBlockingTerrain(cdrNewPos, targetPos, 'none') then
-                                    --LOG('ACU is being blocked after selecting the move pos, trying to pick a new pos of '..tostring(repr(cdrNewPos)))
-                                    if direction == 1 then
-                                        cdrNewPos = RUtils.GetLateralMovePos(cdrNewPos, targetPos, 6, -1)
-                                    else
-                                        cdrNewPos = RUtils.GetLateralMovePos(cdrNewPos, targetPos, 6, 1)
-                                    end
-                                end
-                                StateUtils.IssueNavigationMove(cdr, cdrNewPos)
-                                coroutine.yield(30)
-                            end
-                        end
-                    end
-                    if brain:GetEconomyStored('ENERGY') >= cdr.OverCharge.EnergyRequired and cdr.CurrentEnemyInnerCircle > 8 and not acuWeaponUnderWater then
-                        local overChargeFired = false
-                        local innerCircleEnemies = GetNumUnitsAroundPoint(brain, categories.MOBILE * categories.LAND + categories.STRUCTURE, cdr.Position, cdr.WeaponRange - 3, 'Enemy')
-                        if innerCircleEnemies > 0 then
-                            local result, newTarget = ACUFunc.CDRGetUnitClump(brain, cdr.Position, cdr.WeaponRange - 3)
-                            if newTarget and VDist3Sq(cdr.Position, newTarget:GetPosition()) < (cdr.WeaponRange * cdr.WeaponRange) - 9 then
-                                if cdr.GetNavigator then
-                                    IssueOverCharge({cdr}, newTarget)
-                                else
-                                    IssueClearCommands({cdr})
-                                    IssueOverCharge({cdr}, newTarget)
-                                end
+                                local requiredDistance = math.max(enemyMaxRange + 10, cdr.WeaponRange + 10)
+                                local retreatDist = math.max(25, requiredDistance - targetDistance)
+                                local retreatVector = RUtils.NormalizeVector(Vector(cdrPos[1] - targetPos[1], 0, cdrPos[3] - targetPos[3]))
+                                local safeRetreatPos = {cdrPos[1] + retreatVector[1] * retreatDist, cdrPos[2], cdrPos[3] + retreatVector[3] * retreatDist}
                                 
-                                overChargeFired = true
+                                StateUtils.IssueNavigationMove(cdr, safeRetreatPos)
+                                coroutine.yield(30)
+                                self:ChangeState(self.DecideWhatToDo)
+                                return
                             end
                         end
-                        if not overChargeFired and VDist3Sq(cdr:GetPosition(), target:GetPosition()) < cdr.WeaponRange * cdr.WeaponRange then
-                            if cdr.GetNavigator then
-                                IssueOverCharge({cdr}, target)
+
+                        -- Low HP threat standoff calculation
+                        if cdr.Health <= 4000 and RUtils.CheckGroundDefenseThreat(brain, movePos) > 0 then
+                            if enemyMaxRange > cdr.WeaponRange then
+                                local safeDistance = enemyMaxRange + 10
+                                local retreatVector = RUtils.NormalizeVector(Vector(cdrPos[1] - targetPos[1], 0, cdrPos[3] - targetPos[3]))
+                                movePos = {targetPos[1] + retreatVector[1] * safeDistance, cdrPos[2], targetPos[3] + retreatVector[3] * safeDistance}
                             else
-                                IssueClearCommands({cdr})
-                                IssueOverCharge({cdr}, target)
+                                movePos = RUtils.lerpy(cdrPos, targetPos, {targetDistance, targetDistance - (cdr.WeaponRange - 1)})
                             end
+                            customMoveIssued = false -- Override alternate firing pos if high threat exists
+                        end
+
+                        if not customMoveIssued then
+                            StateUtils.IssueNavigationMove(cdr, movePos)
+                            coroutine.yield(30)
+                        else
+                            coroutine.yield(30)
+                        end
+
+                        -- Only dance laterally if not in a critical snipe or retreat scenario
+                        if not snipeAttempt and not IsDestroyed(target) and not ACUFunc.CheckRetreat(cdrPos, targetPos, target) then
+                            local direction = math.random(2) == 1 and 1 or -1
+                            local cdrNewPos = RUtils.GetLateralMovePos(targetPos, cdrPos, 6, direction)
+                            if brain:CheckBlockingTerrain(cdrNewPos, targetPos, 'none') then
+                                cdrNewPos = RUtils.GetLateralMovePos(cdrNewPos, targetPos, 6, -direction)
+                            end
+                            StateUtils.IssueNavigationMove(cdr, cdrNewPos)
+                            coroutine.yield(30)
                         end
                     end
                 end
             end
+
             coroutine.yield(10)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -2220,9 +2272,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
 
         Visualize = function(self)
             local position = self:GetPlatoonPosition()
-            local target = self.BuilderData.AttackTarget:GetPosition()
-            if position and target then
-                DrawLinePop(position, target, self.StateColor)
+            local targetEntity = self.BuilderData.AttackTarget
+            if position and targetEntity and not IsDestroyed(targetEntity) then
+                DrawLinePop(position, targetEntity:GetPosition(), self.StateColor)
             end
         end
     },
@@ -2286,7 +2338,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         if enemyACUHealth < cdr.Health then
                             acuAdvantage = true
                         end
-                        local defenseThreat = RUtils.CheckDefenseThreat(brain, targetPos)
+                        local defenseThreat = RUtils.CheckGroundDefenseThreat(brain, targetPos)
                         if defenseThreat > 45 and cdr.SuicideMode then
                             ACUFunc.SetAcuSnipeMode(cdr, 'DEFAULT')
                             cdr.SnipeMode = false
@@ -2514,7 +2566,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             zonePos = brain.Zones.Land.zones[zoneRetreat].pos
                             closestDistance = VDist3Sq(zonePos, cdr.Position)
                         end
-                        if closestDistance < VDist3Sq(cdr.Position, cdr.CDRHome) then
+                        if zonePos and closestDistance < VDist3Sq(cdr.Position, cdr.CDRHome) then
                             cdr.Retreat = false
                             self.BuilderData = {
                                 Position = zonePos,

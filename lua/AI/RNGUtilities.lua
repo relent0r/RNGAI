@@ -931,6 +931,46 @@ function IsZoneInAlert(aiBrain, zoneId)
     return alertEntry and alertEntry.Threat > 0
 end
 
+-- Helper for avoiding point defenses when looking for targets
+function IsPathClippingPd(startPos, endPos, defenseTargets, defenseCount)
+    if defenseCount == 0 then return false end
+    
+    local startX, startZ = startPos[1], startPos[3]
+    local dx = endPos[1] - startX
+    local dz = endPos[3] - startZ
+    local lenSq = dx * dx + dz * dz
+    if lenSq == 0 then return false end
+    
+    local invLenSq = 1.0 / lenSq
+    
+    -- Fast indexed loop using explicit integer bound (Zero C-API overhead)
+    for i = 1, defenseCount do
+        local pd = defenseTargets[i]
+
+        local pdRadiusSq = pd.radiusSq
+        local pdPos = pd.position
+        
+        if pdRadiusSq then
+            local ux = pdPos[1] - startX
+            local uz = pdPos[3] - startZ
+            local t = (ux * dx + uz * dz) * invLenSq
+            
+            if t < 0 then t = 0 elseif t > 1 then t = 1 end
+            
+            local projX = startX + t * dx
+            local projZ = startZ + t * dz
+            
+            local distX = pdPos[1] - projX
+            local distZ = pdPos[3] - projZ
+            
+            if (distX * distX + distZ * distZ) <= pdRadiusSq then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRange, basePosition, cdrThreat)
 
     if not cdrPos then cdrPos = cdr.Position end
@@ -942,6 +982,14 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
     local operatingArea = aiBrain.OperatingAreas['BaseMilitaryArea']
     local acuDistanceToBase = VDist3Sq(cdrPos, basePosition)
     local cdrHealthPercent = cdr.HealthPercent or 1
+    local cdrHealth = cdr.Health or 10000
+    local maxRangeSquared = maxRange * maxRange
+    local defenseCount = 0
+    local mobileTargets = {}
+    local structureTargets = {}
+    local enemyACUTargets = {}
+    local defenseTargets = {} 
+    local oportunisticTargets = {}
     
     -- Performance Cap: Never search larger than 384 to prevent engine stutter
     local searchRange = maxRange
@@ -964,7 +1012,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
         end
         return nil
     end
-
+ 
     -- 1. DETERMINE SEARCH CENTER
     -- If main base is under heavy duress, we anchor our search from there.
     -- This allows us to find base attackers even if we clamped our searchRange to 384.
@@ -979,13 +1027,7 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
 
     -- 2. GATHER TARGETS
     local allTargets = GetUnitsAroundPoint(aiBrain, categories.ALLUNITS - categories.AIR - categories.SCOUT - categories.INSIGNIFICANTUNIT, searchPos, searchRange, 'Enemy')
-    
-    local mobileTargets = {}
-    local structureTargets = {}
-    local enemyACUTargets = {}
-    local defenseTargets = {} 
-    local oportunisticTargets = {}
-    
+       
     local highThreat = 0
     local returnTarget = false
     local returnAcu = false
@@ -1018,6 +1060,13 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
             local rx = cdrPos[1] - targetPos[1]
             local rz = cdrPos[3] - targetPos[3]
             local rawDist = rx * rx + rz * rz
+
+            local bX = basePosition[1] - targetPos[1]
+            local bZ = basePosition[3] - targetPos[3]
+            local distToBaseSq = bX * bX + bZ * bZ
+            if distToBaseSq > (maxRangeSquared * 2.25) then
+                continue
+            end
             
             -- GRAVITY MODEL: Adjust effective distance based on strategic value
             local distMult = 1.0
@@ -1058,7 +1107,8 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
             }
             
             -- Categorize
-            local cats = target.Blueprint.CategoriesHash
+            local targetBp = target.Blueprint
+            local cats = targetBp.CategoriesHash
 
             
             if cats.COMMAND then
@@ -1067,6 +1117,19 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
                 if target.EntityId then mobileTargets[target.EntityId] = targetData end
             elseif cats.STRUCTURE then
                 local isMex = cats.MASSEXTRACTION
+                if rawDist < 14400 and cats.DEFENSE and (cats.DIRECTFIRE or cats.INDIRECTFIRE) and not cats.ANTIAIR then
+                    if cats.DIRECTFIRE then
+                        local pdRadius = StateUtils.GetUnitMaxWeaponRange(target)
+                        if not pdRadius then
+                            pdRadius = 26
+                            if cats.TECH2 then pdRadius = 50 elseif cats.TECH3 then pdRadius = 40 end
+                        end
+                        targetData.radiusSq = (pdRadius + 3) * (pdRadius + 3)
+                        targetData.surfaceThreat = targetBp.Defense.SurfaceThreatLevel
+                    end
+                    defenseCount = defenseCount + 1
+                    table.insert(defenseTargets, targetData)
+                end
                 if rawDist > maxRangeStructureTarget then
                     targetData.score = targetData.score * 5
                     if target.EntityId then oportunisticTargets[target.EntityId] = targetData end
@@ -1091,7 +1154,18 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
     -- 4. SELECT BEST TARGET
     local function ProcessTargetList(targetList, checkPathing)
         local sortedList = {}
-        for _, v in targetList do table.insert(sortedList, v) end
+        for _, v in targetList do 
+            if checkPathing then
+                -- Runs regardless of defendingBase status
+                if IsPathClippingPd(cdrPos, v.position, defenseTargets, defenseCount) then
+                    v.pathClipped = true
+                    if cdrHealth > 4000 then
+                        v.score = v.score * 3.5
+                    end
+                end
+            end
+            table.insert(sortedList, v) 
+        end
         
         -- Sort by SCORE (Strategic Priority), not just distance
         table.sort(sortedList, function(a,b) return a.score < b.score end)
@@ -1127,6 +1201,9 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
                     if layerCompatible then
                         -- Final Path Check
                         -- Because we filtered by Label, this should pass most of the time
+                        if v.pathClipped and cdrHealth <= 4000 then
+                            continue
+                        end
                         if NavUtils.CanPathTo('Land', v.position, cdrPos) then
                             validTarget = true
                             if v.distance > 14400 and v.civilian then
@@ -1214,11 +1291,6 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
         -- Populating defenseTargets for return value
         for _, v in structureTargets do
             local cats = v.unit.Blueprint.CategoriesHash
-            
-            -- Standard Defense Targeting (Keep this high range/unfiltered)
-            if v.distance < 14400 and cats.DEFENSE and (cats.DIRECTFIRE or cats.INDIRECTFIRE) then
-                table.insert(defenseTargets, v)
-            end
             
             -- OPPORTUNISTIC TARGETING (Mexes)
             if cats.MASSEXTRACTION then
@@ -1400,10 +1472,10 @@ function AIAdvancedFindACUTargetRNG(aiBrain, cdr, cdrPos, movementLayer, maxRang
             aiBrain.ACUSupport.Supported = true
             aiBrain.ACUSupport.TargetPosition = rTargetPos
         end
-        return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets, acuInTrouble
+        return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets, defenseCount, acuInTrouble
     end
 
-    return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets, acuInTrouble
+    return returnTarget, returnAcu, highThreat, closestDistance, closestTarget, closestTargetPosition, defenseTargets, defenseCount, acuInTrouble
 end
 
 function ValidateACUEngagementRisk(aiBrain, cdr, target, targetPos, enemyThreat, defenseTargets)
@@ -5877,20 +5949,26 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                             local restrictedAreaSq = baseRestrictedArea * baseRestrictedArea
                             --LOG(string.format("EXP EVAL | ID: %s | unitDist: %.0f | restrictedAreaSq: %.0f | DistancePass: %s", tostring(v.object.UnitId), unitDist, restrictedAreaSq, tostring(unitDist < restrictedAreaSq)))
                             if movementLayer == 'Air' then
+                                local ignoreAir = unitCats.HIGHALTAIR and not platoon.AntiAirGunshipPlatoon
+                                --local debugZone
                                 local riskModifier = 1.0
-                                if aiBrain.Zones and aiBrain.Zones.Land then
-                                    local zoneId = MAP:GetZoneID(unitPos, aiBrain.Zones.Land.index)
-                                    local targetZone = aiBrain.Zones.Land.zones[zoneId]
-                                    if targetZone then
-                                        riskModifier = AirRiskValidation(aiBrain, platoon, targetZone)
+                                if not ignoreAir then
+                                    if aiBrain.Zones and aiBrain.Zones.Land then
+                                        local zoneId = MAP:GetZoneID(unitPos, aiBrain.Zones.Land.index)
+                                        local targetZone = aiBrain.Zones.Land.zones[zoneId]
+                                        --debugZone = targetZone
+                                        if targetZone then
+                                            riskModifier = AirRiskValidation(aiBrain, platoon, targetZone)
+                                        end
                                     end
-                                end
-                                local tempPoint = ((experimentalBaseValue * riskModifier) / RNGMAX(unitDist, 900))
-                                --LOG('Experimental Distance '..tostring(unitDist))
-                                --LOG('Experimental tempPoint before modifer '..tostring(experimentalBaseValue / RNGMAX(unitDist, 900)))
-                                --LOG('Experimental tempPoint after modifier '..tostring((experimentalBaseValue * riskModifier) / RNGMAX(unitDist, 900)))
-                                if tempPoint > 0.05 then
-                                    closestTarget = v.object
+                                    local tempPoint = ((experimentalBaseValue * riskModifier) / RNGMAX(unitDist, 900))
+                                    --LOG('Experimental Distance '..tostring(unitDist))
+                                    --LOG('Experimental tempPoint before modifer '..tostring(experimentalBaseValue / RNGMAX(unitDist, 900)))
+                                    --LOG('Experimental tempPoint after modifier '..tostring((experimentalBaseValue * riskModifier) / RNGMAX(unitDist, 900)))
+                                    if tempPoint > 0.05 then
+                                        --LOG('Experimental found as target with risk of '..tostring(AirRiskValidation2(aiBrain, platoon, debugZone, true))..' temp point was '..tostring(tempPoint))
+                                        closestTarget = v.object
+                                    end
                                 end
                             end
                             if unitDist < restrictedAreaSq then
@@ -5946,12 +6024,15 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                                     end
                                 end
                             elseif platoon.PlatoonName == 'GunshipBehavior' then
+                                --local debugZone
                                 local isPureFighter = unitCats.AIR and unitCats.ANTIAIR and not unitCats.GROUNDATTACK
-                                if not unitCats.SCOUT and not isPureFighter and (not strategicBomber or (not unitCats.TECH1 or unitCats.COMMAND)) then
+                                local ignoreAir = unitCats.HIGHALTAIR and not platoon.AntiAirGunshipPlatoon
+                                if not ignoreAir and not unitCats.SCOUT and not isPureFighter and (not strategicBomber or (not unitCats.TECH1 or unitCats.COMMAND)) then
                                     local riskModifier = 1.0
                                     if aiBrain.Zones and aiBrain.Zones.Land then
                                         local zoneId = MAP:GetZoneID(v.Position, aiBrain.Zones.Land.index)
                                         local targetZone = aiBrain.Zones.Land.zones[zoneId]
+                                        --debugZone= targetZone
                                         if targetZone then
                                             riskModifier = AirRiskValidation(aiBrain, platoon, targetZone)
                                         end
@@ -5960,6 +6041,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                                     local tempPoint = ((v.priority * riskModifier) + (v.danger or 0)) / RNGMAX(targetDistance, 900)
                                 
                                     if tempPoint > highestPriority and tempPoint > 0.05 then
+                                        --LOG('Experimental found as target with risk of '..tostring(AirRiskValidation2(aiBrain, platoon, debugZone, true))..' temp point was '..tostring(tempPoint))
                                         highestPriority = tempPoint
                                         closestTarget = v.unit
                                     end
@@ -6042,8 +6124,9 @@ CheckPriorityTarget = function(aiBrain, im, platoon, threatType, threatAmount, p
             if platoon.PlatoonName == 'GunshipBehavior' then
                 local unitCats = v.unit.Blueprint.CategoriesHash
                 local isPureFighter = unitCats.AIR and unitCats.ANTIAIR and not unitCats.GROUNDATTACK
+                local ignoreAir = unitCats.HIGHALTAIR and not platoon.AntiAirGunshipPlatoon
                 -- Exclude pure fighters (Air + AntiAir - GroundAttack)
-                if unitCats.SCOUT or isPureFighter then
+                if ignoreAir or unitCats.SCOUT or isPureFighter then
                     validated = false
                 end
             end
@@ -6115,14 +6198,16 @@ GetTargetRange = function(target)
     return maxRange
 end
 
-CheckDefenseThreat = function(aiBrain, targetPos)
+CheckGroundDefenseThreat = function(aiBrain, targetPos)
     
-    local enemyDefenses = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, targetPos, 45, 'Enemy')
+    local enemyDefenses = GetUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE - categories.ANTIAIR, targetPos, 45, 'Enemy')
     local totalDefenseThreat = 0
     for _, v in enemyDefenses do
-        if v and not v.Dead and v.Blueprint.Defense.SurfaceThreatLevel and v.Blueprint.Weapon[1].MaxRadius then
-            if VDist3Sq(v:GetPosition(),targetPos) <= (v.Blueprint.Weapon[1].MaxRadius * v.Blueprint.Weapon[1].MaxRadius) then
-                totalDefenseThreat = totalDefenseThreat + v.Blueprint.Defense.SurfaceThreatLevel
+        if v and not v.Dead then
+            local surFaceThreat = v.Blueprint.Defense.SurfaceThreatLevel
+            local weaponRange = StateUtils.GetUnitMaxWeaponRange(v)
+            if VDist3Sq(v:GetPosition(),targetPos) <= (weaponRange * weaponRange) then
+                totalDefenseThreat = totalDefenseThreat + surFaceThreat
             end
         end
     end
@@ -9559,17 +9644,12 @@ function GetZoneAirThreatValues(zone)
     local eAir = zone.enemyairthreat or 0
     local eAntiAir = zone.enemyantiairthreat or 0
 
-    -- 1. LOCAL THREAT DECOUPLING
-    -- eAir represents airborne assets (fighters/bombers/gunships).
-    -- Ground AA is best estimated by isolating non-air AA, or using eAntiAir directly 
-    -- as the baseline surface threat floor.
-    local localFighters = eAir
-    local localSurfaceAA = eAntiAir
+    local localAirToAir = math.min(eAir, eAntiAir)
+    local localSurfaceAA = math.max(0, eAntiAir - localAirToAir)
 
-    local adjacentFighters = 0
+    local adjacentAirToAir = 0
     local adjacentSurfaceAA = 0
 
-    -- 2. ADJACENT THREAT SPREAD (Zone Edge Traversal)
     if zone.edges then
         for _, edge in ipairs(zone.edges) do
             local neighbor = edge.zone
@@ -9577,27 +9657,28 @@ function GetZoneAirThreatValues(zone)
                 local distSq = edge.distance * edge.distance
                 local nAir = neighbor.enemyairthreat or 0
                 local nAntiAir = neighbor.enemyantiairthreat or 0
-                
-                -- Fighters: Fast mobility (Divisor = 3600.0 -> 50% threat at 60 units)
-                if nAir > 0 then
-                    adjacentFighters = adjacentFighters + (nAir / (1.0 + (distSq / 3600.0)))
+
+                local nAirToAir = math.min(nAir, nAntiAir)
+                local nSurfaceAA = math.max(0, nAntiAir - nAirToAir)
+
+                -- Fighters: Minimal decay (14400.0 = 50% threat at 120 grid steps)
+                -- Enemy ASFs 1-2 zones away will respond immediately
+                if nAirToAir > 0 then
+                    adjacentAirToAir = adjacentAirToAir + (nAirToAir / (1.0 + (distSq / 14400.0)))
                 end
 
-                -- Surface AA: Local area control (Divisor = 900.0 -> 50% threat at 30 units)
-                if nAntiAir > 0 then
-                    adjacentSurfaceAA = adjacentSurfaceAA + (nAntiAir / (1.0 + (distSq / 900.0)))
+                -- Ground AA: Steep decay (400.0 = 50% threat at 20 grid steps)
+                -- Only models weapon range reaching across nearby zone borders
+                if nSurfaceAA > 0 then
+                    adjacentSurfaceAA = adjacentSurfaceAA + (nSurfaceAA / (1.0 + (distSq / 400.0)))
                 end
             end
         end
     end
 
-    local totalFighterThreat = localFighters + adjacentFighters
-    local totalSurfaceAAThreat = localSurfaceAA + adjacentSurfaceAA
+    local totalFighterThreat = localAirToAir + adjacentAirToAir
 
-    --LOG(string.format("[AIR THREAT RAW] Zone: %s | localAir: %.2f | totFighters: %.2f | localAA: %.2f | totAA: %.2f", tostring(zone.id), localFighters, totalFighterThreat, localSurfaceAA, totalSurfaceAAThreat))
-
-    -- Returns: (Surface Ground Risk, Total Airborne Threat, Total Local+Neighbor AA)
-    return totalSurfaceAAThreat, totalFighterThreat, localSurfaceAA
+    return localSurfaceAA, adjacentSurfaceAA, totalFighterThreat
 end
 
 function FindAirTargetForTeamRNG(aiBrain, position, platoon, maxRange, platoonThreat, priorityList)
@@ -9952,33 +10033,103 @@ function GetCellDanger(aiBrain, cell)
 end
 
 function AirRiskValidation(aiBrain, platoon, targetZone, debug)
-    local rawRisk = targetZone.airRisk or 0
-    if rawRisk <= 0 then return 1.0 end
+    local groundAAThreat, airToAirThreat = GetZoneAirThreatValues(targetZone)
+
+    if groundAAThreat <= 0 and airToAirThreat <= 0 then return 1.0 end
 
     local antiSurfaceThreat = platoon.CurrentPlatoonThreatAntiSurface or 0
     local antiAirThreat = platoon.CurrentPlatoonThreatAntiAir or 0
-    if debug then
-        LOG('antiair threat of platoon '..tostring(antiAirThreat))
-    end
 
-    -- Global Air Superiority Modifier
+    -- Global air dominance multiplier
     local globalFriendlyAir = aiBrain.BrainIntel.SelfThreat['AntiAirNow'] or 0
     local globalEnemyAir = aiBrain.BrainIntel.EnemyThreatCurrent['AntiAir'] or 1.0
     local airControlMod = math.min(3.0, math.max(0.5, globalFriendlyAir / math.max(1.0, globalEnemyAir)))
-    if debug then
-        LOG('globalFriendlyAir '..tostring(globalFriendlyAir))
-        LOG('globalEnemyAir '..tostring(globalEnemyAir))
-        LOG('airControlMod '..tostring(airControlMod))
+
+    -------------------------------------------------------------------------
+    -- AXIS 1: Air-to-Air Threat (Only enemy ASFs vs. platoon AA)
+    -------------------------------------------------------------------------
+    local airToAirRiskMod = 1.0
+    if airToAirThreat > 0 then
+        local airCapacity = math.max(1.0, antiAirThreat * airControlMod)
+        local airRatio = airToAirThreat / airCapacity
+        if airRatio > 0.5 then
+            airToAirRiskMod = 1.0 / (1.0 + (airRatio - 0.5) ^ 2)
+        end
     end
 
-    -- AntiSurface tanks ground AA (~0.35 ratio), AntiAir directly counters fighters (~1.0 ratio)
-    local platoonCapacity = (antiSurfaceThreat * 0.35) + (antiAirThreat * 1.0)
-    local effectiveCapacity = math.max(5.0, platoonCapacity * airControlMod)
-
-    local normalizedRisk = rawRisk / effectiveCapacity
-    if debug then
-        LOG('Returning risk '..tostring(1.0 / (1.0 + math.max(0, normalizedRisk - 0.5) ^ 2)))
+    -------------------------------------------------------------------------
+    -- AXIS 2: Ground AA Threat (Only SAMs/Flak vs. gunship surface DPS)
+    -------------------------------------------------------------------------
+    local groundAARiskMod = 1.0
+    if groundAAThreat > 0 then
+        if antiSurfaceThreat > 0 then
+            -- Gunships: Ground AA vs ability to kill SAMs
+            local groundRatio = groundAAThreat / math.max(5.0, antiSurfaceThreat * 1.0)
+            if groundRatio > 1.0 then
+                groundAARiskMod = 1.0 / (groundRatio ^ 2)
+            end
+        else
+            -- Pure Fighters: Ignore light/medium ground AA when chasing aircraft
+            local groundRatio = groundAAThreat / 150.0
+            if groundRatio > 1.0 then
+                groundAARiskMod = 1.0 / groundRatio
+            end
+        end
     end
 
-    return 1.0 / (1.0 + math.max(0, normalizedRisk - 0.5) ^ 2)
+    return math.min(airToAirRiskMod, groundAARiskMod)
+end
+
+function AirRiskValidation2(aiBrain, platoon, targetZone, debug)
+    local groundAAThreat, airToAirThreat = GetZoneAirThreatValues(targetZone)
+
+    if groundAAThreat <= 0 and airToAirThreat <= 0 then return 1.0 end
+
+    local antiSurfaceThreat = platoon.CurrentPlatoonThreatAntiSurface or 0
+    local antiAirThreat = platoon.CurrentPlatoonThreatAntiAir or 0
+
+    local globalFriendlyAir = aiBrain.BrainIntel.SelfThreat['AntiAirNow'] or 0
+    local globalEnemyAir = aiBrain.BrainIntel.EnemyThreatCurrent['AntiAir'] or 1.0
+    local airControlMod = math.min(3.0, math.max(0.5, globalFriendlyAir / math.max(1.0, globalEnemyAir)))
+
+    -------------------------------------------------------------------------
+    -- AXIS 1: Air-to-Air Threat
+    -------------------------------------------------------------------------
+    local airToAirRiskMod = 1.0
+    if airToAirThreat > 0 then
+        local airCapacity = math.max(1.0, antiAirThreat * airControlMod)
+        local airRatio = airToAirThreat / airCapacity
+        if airRatio > 0.5 then
+            airToAirRiskMod = 1.0 / (1.0 + (airRatio - 0.5) ^ 2)
+        end
+    end
+
+    -------------------------------------------------------------------------
+    -- AXIS 2: Ground AA Threat
+    -------------------------------------------------------------------------
+    local groundAARiskMod = 1.0
+    if groundAAThreat > 0 then
+        if antiSurfaceThreat > 0 then
+            local groundRatio = groundAAThreat / math.max(5.0, antiSurfaceThreat * 1.0)
+            if groundRatio > 1.0 then
+                groundAARiskMod = 1.0 / (groundRatio ^ 2)
+            end
+        else
+            local groundRatio = groundAAThreat / 150.0
+            if groundRatio > 1.0 then
+                groundAARiskMod = 1.0 / groundRatio
+            end
+        end
+    end
+
+    local finalRiskMod = math.min(airToAirRiskMod, groundAARiskMod)
+
+    if debug then
+        LOG(string.format(
+            "[AIR RISK] Zone: %s | GroundAA: %.1f | AirToAir: %.1f | Platoon(Surf/AA): %.1f/%.1f | AirCtrl: %.2f | Mod(Air/Ground/Final): %.3f / %.3f / %.3f",
+            tostring(targetZone.id), groundAAThreat, airToAirThreat, antiSurfaceThreat, antiAirThreat, airControlMod, airToAirRiskMod, groundAARiskMod, finalRiskMod
+        ))
+    end
+
+    return finalRiskMod
 end

@@ -305,11 +305,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     end
 
                     if bestMarkerObj then
-                        self:LogDebug(string.format('bestMarkerObj was found'))
+                        self:LogDebug(string.format('bestMarkerObj was found for '..tostring(eng.EntityId) ))
                         local massMarker = bestMarkerObj.Marker
                         processed[massMarker.name] = true
+                        local buildCheck = aiBrain:CanBuildStructureAt('ueb1103', massMarker.position)
 
-                        if aiBrain:CanBuildStructureAt('ueb1103', massMarker.position) then
+                        if buildCheck then
                             local canBuild = false
                         
                             if not massMarker.reservedBy then
@@ -349,6 +350,53 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 lastPos = massMarker.position
                                 currentmarker = massMarker
                                 StateUtils.ReserveMassMarker(eng, massMarker)
+                            end
+                        else
+                            local isOccupiedByEnemy = false
+                            local unitCount = aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.MASSEXTRACTION, massMarker.position, 2, 'Enemy')
+                            if unitCount > 0 then
+                                self:LogDebug(string.format('Found marker occupied by enemy unit'))
+                                self:LogDebug(string.format('Distance to zone is '..tostring(VDist3(massMarker.Position, platoonPos))))
+                                isOccupiedByEnemy = true
+                            end
+                            if isOccupiedByEnemy then
+                                local canBuild = false
+                                if not massMarker.reservedBy then
+                                    canBuild = true
+                                else
+                                    local requireTransport = not NavUtils.CanPathTo(self.MovementLayer, platoonPos, massMarker.position)
+                                    local threshold = 0.7225 -- Standard 15% distance advantage (squared)
+                                    if requireTransport then
+                                        if transportPressure >= 3 then
+                                            -- High/Urgent pressure: Do not steal spots if we need a transport
+                                            threshold = 0 
+                                        elseif transportPressure >= 1 then
+                                            -- Low/Med pressure: Require a huge distance advantage (~50% closer, 0.5^2)
+                                            threshold = 0.25 
+                                        else
+                                            -- No transport pressure: Require ~30% closer distance advantage (0.7^2)
+                                            threshold = 0.49 
+                                        end
+                                    end
+                                    -- Yes 0.7225 is intentional because its a squared number
+                                    if massMarker.reservationDistSq and closestDistSq < (massMarker.reservationDistSq * threshold) then
+                                        self:LogDebug(string.format('Someone owns it but we are closer'))
+                                        canBuild = true
+                                        --LOG('Taking another engineers mass point because we are closer my distance '..tostring(closestDistSq)..' existing '..tostring(massMarker.reservationDistSq))
+                                    end
+                                end
+                                if canBuild then
+                                    self:LogDebug(string.format('Occupied by enemy but we can build there'))
+                                    local borderWarning
+                                    if massMarker.position[1] - playableArea[1] <= 8 or massMarker.position[1] >= playableArea[3] - 8 or massMarker.position[3] - playableArea[2] <= 8 or massMarker.position[3] >= playableArea[4] - 8 then
+                                        borderWarning = true
+                                    end
+                                    local newEntry = {whatToBuild, {massMarker.position[1], massMarker.position[3], 0}, false, massMarker.position, borderWarning or false, false, massMarker}
+                                    RNGINSERT(eng.EngineerBuildQueue, newEntry)
+                                    lastPos = massMarker.position
+                                    currentmarker = massMarker
+                                    StateUtils.ReserveMassMarker(eng, massMarker)
+                                end
                             end
                         end
                     else
@@ -812,7 +860,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     coroutine.yield(10)
                 else
                     coroutine.yield(30)
-                    if eng:IsUnitState('Building') or eng:IsUnitState('Moving') then
+                    if eng:IsUnitState('Building') or eng:IsUnitState('Moving') and not eng:IsUnitState('TransportLoading') then
                         self:ChangeState(self.Constructing)
                         return
                     end
@@ -908,6 +956,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 coroutine.yield(20)
+                if IsDestroyed(eng) then
+                    return
+                end
                 if eng:IsIdleState() then
                     self:LogDebug(string.format('Engineer is idle'))
                     if eng.EngineerBuildQueue and eng.EngineerBuildQueue[1] then

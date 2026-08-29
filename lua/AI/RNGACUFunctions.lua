@@ -413,7 +413,7 @@ function CDRThreatAssessmentRNG(cdr)
                         end
                     end
                     if unitDist < 1225 then
-                        if EntityCategoryContains(CategoryT2Defense, v) then
+                        if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, v) then
                             if v.Blueprint.Defense.SurfaceThreatLevel then
                                 local fraction = v:GetFractionComplete() or 1
                                 if unitDist < (weaponRange + 10) * (weaponRange + 10) then
@@ -847,6 +847,7 @@ function CDRThreatAssessmentRNG(cdr)
             --LOG('Max base range '..tostring(cdr.MaxBaseRange))
             --LOG('Current distance to home '..tostring(cdr.DistanceToHome))
             --LOG('Current CDR Max Base Range '..cdr.MaxBaseRange)
+            --LOG('Pure range would be '..tostring(cdr.DefaultRange * cdr.Confidence))
         end
         coroutine.yield(20)
     end

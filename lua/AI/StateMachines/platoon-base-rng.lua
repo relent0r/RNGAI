@@ -79,6 +79,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         local maxPlatoonStrikeRadiusDistance = 0
         local intelrange = 0
         local minPlatoonSpeed = 999
+        local antiAirGunshipPlatoon = false
         if not self['rngdata'] then
             self['rngdata'] = {}
         end
@@ -150,6 +151,9 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                             end
                         end
                     end
+                end
+                if unitCats.ANTIAIR then
+                    antiAirGunshipPlatoon = true
                 end
             end
             if (unit['rngdata'].CategoryDirectFireRange and not self['rngdata'].MaxDirectFireRange or self['rngdata'].MaxDirectFireRange and self['rngdata'].MaxDirectFireRange < unit['rngdata'].CategoryDirectFireRange) and not unitCats.SCOUT then
@@ -270,6 +274,9 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         if minPlatoonSpeed == 999 then minPlatoonSpeed = 0 end
         if not self['rngdata'].MinPlatoonSpeed then
             self['rngdata'].MinPlatoonSpeed = minPlatoonSpeed
+        end
+        if antiAirGunshipPlatoon then
+            self['rngdata'].AntiAirGunshipPlatoon = antiAirGunshipPlatoon
         end
         --if self.Visualize and self:GetBrain().RNGDEBUG then
         --    import('/mods/RNGAI/lua/AI/RNGDebug.lua').RegisterPlatoonForVisualization(self)
