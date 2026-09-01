@@ -480,6 +480,7 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     return
                 end
             end
+            self:LogDebug('Starting Engineer State Machine for '..tostring(self.BuilderName))
             --LOG('Engineer has not construction job, what is it? '..tostring(self.BuilderName)..' platoon data is '..tostring(repr(self.PlatoonData)))
             coroutine.yield(10)
             self:ChangeState(self.DecideWhatToDo)

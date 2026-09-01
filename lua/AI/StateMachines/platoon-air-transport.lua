@@ -50,6 +50,9 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
                     import("/mods/rngai/lua/ai/statemachines/platoon-air-transport-manager.lua").AssignToUnitsMachine({ PlatoonData = request }, transportPool, units)
                     self:ExitStateMachine()
                     return
+                elseif builderData.StateWanted == 'Recycle' then
+                    self:ChangeState(self.Recycle)
+                    return
                 end
             end
             local requestData = self.PlatoonData
@@ -163,7 +166,7 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
             --LOG('Air Transport Navigation state')
             
             -- 1. Target Selection
-            local destination = (builderData.StateWanted == 'WaitAtPickup') 
+            local destination = (builderData.StateWanted == 'WaitAtPickup' or builderData.StateWanted == 'Recycle') 
                 and builderData.Position 
                 or requestData.Destination
 
@@ -531,6 +534,7 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
                     self:LogDebug(string.format('Navigate to base for recycle'))
                     self.BuilderData = {
                         Position = basePos,
+                        StateWanted = 'Recycle'
                     }
                     self:ChangeState(self.Navigating)
                     return

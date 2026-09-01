@@ -2820,7 +2820,7 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 zonePos = brain.Zones.Land.zones[zoneRetreat].pos
                 closestDistance = VDist3Sq(zonePos, cdr.Position)
             end
-            if closestDistance < VDist3Sq(cdr.Position, cdr.CDRHome) then
+            if zonePos and closestDistance < VDist3Sq(cdr.Position, cdr.CDRHome) then
                 cdr.Retreat = false
                 self.BuilderData = {
                     Position = zonePos,

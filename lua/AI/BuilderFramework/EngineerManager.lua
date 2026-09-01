@@ -73,6 +73,13 @@ EngineerManager = Class(BuilderManager) {
             COMMAND = {},
             DEFENSE = {},
         }
+        self.EngineerTierCounts = {
+            ['COMMAND'] = 0,
+            ['SUBCOMMANDER'] = 0,
+            ['TECH1'] = 0,
+            ['TECH2'] = 0,
+            ['TECH3'] = 0,
+        }
         self:AddBuilderType('Any')
     end,
 
@@ -515,6 +522,13 @@ EngineerManager = Class(BuilderManager) {
             COMMAND = {},
             DEFENSE = {},
         }
+        self.EngineerTierCounts = {
+            ['COMMAND'] = 0,
+            ['SUBCOMMANDER'] = 0,
+            ['TECH1'] = 0,
+            ['TECH2'] = 0,
+            ['TECH3'] = 0,
+        }
 
         self:AddBuilderType('Any')
     end,
@@ -537,10 +551,20 @@ EngineerManager = Class(BuilderManager) {
                 for _, con in v.UnitsList do
                     if con.EntityId == unit.EntityId then
                         alreadyExists = true
+                        break
                     end
                 end
                 if alreadyExists then
                     return
+                end
+                local unitBp = unit.Blueprint
+                if unitBp.CategoriesHash.ENGINEER and unitBp.TechCategory then
+                    local unitTech = unitBp.TechCategory
+                    if not self.EngineerTierCounts[unitTech] then
+                        self.EngineerTierCounts[unitTech] = 0
+                    end
+                    self.EngineerTierCounts[unitTech] = self.EngineerTierCounts[unitTech] + 1
+                    --LOG('Add engineer from tier count '..tostring(unitTech)..' current count '..tostring(self.EngineerTierCounts[unitTech]))
                 end
                 table.insert(v.Units, { Unit = unit, Status = true })
                 table.insert(v.UnitsList, unit)
@@ -700,7 +724,7 @@ EngineerManager = Class(BuilderManager) {
             --   --RNGLOG('*AI DEBUG: ARMY '..self.Brain.Nickname..': Engineer Manager Forming - '..builder.BuilderName..' - Priority: '..builder:GetPriority())
             --end
 
-            --LOG('*AI DEBUG: ARMY ', repr(self.Brain:GetArmyIndex()),': Engineer Manager Forming - ',repr(builder.BuilderName),' - Priority: ', builder:GetPriority())
+            --LOG('*AI DEBUG: ARMY ', repr(self.Brain:GetArmyIndex()),': Engineer Manager Forming - ',repr(builder.BuilderName),' - Priority: ', builder:GetPriority(),' in zone ', tostring(self.ZoneId))
             hndl.PlanName = template[2]
 
             --If we have specific AI, fork that AI thread
@@ -981,6 +1005,12 @@ EngineerManager = Class(BuilderManager) {
     ---@param self EngineerManager
     ---@param unit Unit
     RemoveUnit = function(self, unit)
+        local unitBp = unit.Blueprint
+        if unitBp.CategoriesHash.ENGINEER and unitBp.TechCategory then
+            local unitTech = unitBp.TechCategory
+            self.EngineerTierCounts[unitTech] = self.EngineerTierCounts[unitTech] - 1
+            --LOG('Remove engineer from tier count '..tostring(unitTech)..' current count '..tostring(self.EngineerTierCounts[unitTech]))
+        end
         local found = false
         for k,v in self.ConsumptionUnits do
             if EntityCategoryContains(v.Category, unit) then

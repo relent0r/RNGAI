@@ -1227,3 +1227,17 @@ function AIGetClosestPathExpansionMarkerLocationRNG(aiBrain, markerType, positio
 
     return loc, name, lowest
 end
+
+function IsPositionInPlayableArea(position, margin, bounds)
+    local playableArea = bounds or PLAYABLE_AREA
+    if not position or not playableArea then return false end
+
+    local offset = margin or 0
+    local posX = position[1]
+    local posZ = position[3]
+
+    return posX >= (playableArea[1] + offset) and
+           posX <= (playableArea[3] - offset) and
+           posZ >= (playableArea[2] + offset) and
+           posZ <= (playableArea[4] - offset)
+end

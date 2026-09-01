@@ -187,7 +187,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             if friendlyThreat > 0 and threat.enemySurface and threat.enemySurface > 0 then
                 -- Bypass local retreat if we are near an endangered ACU that needs protection
                 local protectAcu = (distToAcuSq <= 2025 or enemyAcuNearAcu) and (acu.Confidence < 3 or acuThreatened or acu.Retreat)
-                if not protectAcu and (friendlyThreat * 1.1 < threat.enemySurface) then
+                if not protectAcu and (friendlyThreat * 1.0 < threat.enemySurface) then
                     checkThreatRetreat = true
                 end
             end

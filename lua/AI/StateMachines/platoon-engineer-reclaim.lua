@@ -15,6 +15,7 @@ local TableInsert = table.insert
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local IsPositionInPlayableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').IsPositionInPlayableArea
 
 -- I'm up to navigating. Specifically the reclaim check.
 
@@ -597,64 +598,66 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                             local leeway = 2.0
                             for k, square in reclaimGrid do
                                 local squarePos = {square[1], GetTerrainHeight(square[1], square[3]), square[3]}
-                                if NavUtils.CanPathTo('Amphibious', engPos, squarePos) then
-                                    local minX = math.max(square[1] - 8, 0)
-                                    local maxX = math.min(square[1] + 8, self.MapSizeX)
-                                    local minZ = math.max(square[3] - 8, 0)
-                                    local maxZ = math.min(square[3] + 8, self.MapSizeZ) -- Assuming square map size
-                                    local rectDef = Rect(minX, minZ, maxX, maxZ)
-                                    local reclaimRect = GetReclaimablesInRect(rectDef)
-                                    local engReclaiming = false
-                                    if reclaimRect then
-                                        for c, b in reclaimRect do
-                                            if not IsProp(b) or self.BadReclaimables[b] then continue end
-                                            local bPos = b.CachePosition or b:GetPosition()
-                                            if not bPos[1] then
-                                                continue
-                                            end
-                                            
-                                            if bPos[1] < (minX - leeway) or bPos[1] > (maxX + leeway)
-                                            or bPos[3] < (minZ - leeway) or bPos[3] > (maxZ + leeway) then
-                                                continue
-                                            end
-                                            -- Start Blacklisted Props
-                                            local blacklisted = false
-                                            for _, BlackPos in RNGAIGLOBALS.PropBlacklist do
-                                                if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
-                                                    blacklisted = true
-                                                    break
+                                if IsPositionInPlayableArea(squarePos) then
+                                    if NavUtils.CanPathTo('Amphibious', engPos, squarePos) then
+                                        local minX = math.max(square[1] - 8, 0)
+                                        local maxX = math.min(square[1] + 8, self.MapSizeX)
+                                        local minZ = math.max(square[3] - 8, 0)
+                                        local maxZ = math.min(square[3] + 8, self.MapSizeZ) -- Assuming square map size
+                                        local rectDef = Rect(minX, minZ, maxX, maxZ)
+                                        local reclaimRect = GetReclaimablesInRect(rectDef)
+                                        local engReclaiming = false
+                                        if reclaimRect then
+                                            for c, b in reclaimRect do
+                                                if not IsProp(b) or self.BadReclaimables[b] then continue end
+                                                local bPos = b.CachePosition or b:GetPosition()
+                                                if not bPos[1] then
+                                                    continue
+                                                end
+                                                
+                                                if bPos[1] < (minX - leeway) or bPos[1] > (maxX + leeway)
+                                                or bPos[3] < (minZ - leeway) or bPos[3] > (maxZ + leeway) then
+                                                    continue
+                                                end
+                                                -- Start Blacklisted Props
+                                                local blacklisted = false
+                                                for _, BlackPos in RNGAIGLOBALS.PropBlacklist do
+                                                    if b.CachePosition[1] == BlackPos[1] and b.CachePosition[3] == BlackPos[3] then
+                                                        blacklisted = true
+                                                        break
+                                                    end
+                                                end
+                                                if blacklisted then continue end
+                                                if b.MaxMassReclaim and b.MaxMassReclaim >= 5 then
+                                                    engReclaiming = true
+                                                    engineerHasReclaimed = true
+                                                    reclaimCount = reclaimCount + 1
+                                                    IssueReclaim({eng}, b)
                                                 end
                                             end
-                                            if blacklisted then continue end
-                                            if b.MaxMassReclaim and b.MaxMassReclaim >= 5 then
-                                                engReclaiming = true
-                                                engineerHasReclaimed = true
-                                                reclaimCount = reclaimCount + 1
-                                                IssueReclaim({eng}, b)
+                                        end
+                                        if engReclaiming then
+                                            coroutine.yield(1)
+                                            local idleCounter = 0
+                                            while not eng.Dead and 0<RNGGETN(eng:GetCommandQueue()) and aiBrain:PlatoonExists(self) do
+                                                if not eng:IsUnitState('Reclaiming') and not eng:IsUnitState('Moving') then
+                                                    --RNGLOG('We are not reclaiming or moving in the reclaim loop')
+                                                    --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
+                                                    idleCounter = idleCounter + 1
+                                                    if idleCounter > 10 then
+                                                        IssueClearCommands({eng})
+                                                        break
+                                                    end
+                                                end
+                                                --RNGLOG('We are reclaiming stuff')
+                                                coroutine.yield(30)
                                             end
                                         end
                                     end
-                                    if engReclaiming then
-                                        coroutine.yield(1)
-                                        local idleCounter = 0
-                                        while not eng.Dead and 0<RNGGETN(eng:GetCommandQueue()) and aiBrain:PlatoonExists(self) do
-                                            if not eng:IsUnitState('Reclaiming') and not eng:IsUnitState('Moving') then
-                                                --RNGLOG('We are not reclaiming or moving in the reclaim loop')
-                                                --RNGLOG('But we still have '..RNGGETN(self:GetCommandQueue())..' Commands in the queue')
-                                                idleCounter = idleCounter + 1
-                                                if idleCounter > 10 then
-                                                    IssueClearCommands({eng})
-                                                    break
-                                                end
-                                            end
-                                            --RNGLOG('We are reclaiming stuff')
-                                            coroutine.yield(30)
-                                        end
+                                    MexBuild(eng, aiBrain)
+                                    if engineerHasReclaimed then
+                                        break
                                     end
-                                end
-                                MexBuild(eng, aiBrain)
-                                if engineerHasReclaimed then
-                                    break
                                 end
                             end
                             if not engineerHasReclaimed then
@@ -775,17 +778,19 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                     if not needEnergy or v.MaxEnergyReclaim then
                         if v.MaxMassReclaim and v.MaxMassReclaim >= minRec then
                             if not self.BadReclaimables[v] then
+                                if IsPositionInPlayableArea(v.CachePosition) then
                                 local distance = VDist2(engPos[1], engPos[3], v.CachePosition[1], v.CachePosition[3])
-                                if not closestDistance or distance < closestDistance then
-                                    closestReclaim = v.CachePosition
-                                    closestDistance = distance
-                                end
-                                if not furtherestDistance or distance > furtherestDistance then -- and distance < closestDistance + 20
-                                    if NavUtils.CanPathTo(self.MovementLayer, engPos, v.CachePosition) then
-                                        furtherestReclaim = v.CachePosition
-                                        furtherestDistance = distance
-                                        if furtherestDistance - closestDistance > 20 then
-                                            break
+                                    if not closestDistance or distance < closestDistance then
+                                        closestReclaim = v.CachePosition
+                                        closestDistance = distance
+                                    end
+                                    if not furtherestDistance or distance > furtherestDistance then -- and distance < closestDistance + 20
+                                        if NavUtils.CanPathTo(self.MovementLayer, engPos, v.CachePosition) then
+                                            furtherestReclaim = v.CachePosition
+                                            furtherestDistance = distance
+                                            if furtherestDistance - closestDistance > 20 then
+                                                break
+                                            end
                                         end
                                     end
                                 end

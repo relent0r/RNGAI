@@ -244,3 +244,32 @@ function LandDefenseUrgencyCheck(aiBrain, locationType)
     -- Only build if enemy threat exceeds our combined mobile units and static PD
     return totalEnemyThreat > totalFriendlyDefense
 end
+
+function ZoneAirToSurfaceRiskGreaterThanRNG(aiBrain, locationType, baseThreshold, aaBaseline)
+    local builderManager = aiBrain.BuilderManagers[locationType]
+    if not builderManager or not builderManager.ZoneID then
+        return false
+    end
+
+    local zone = aiBrain.Zones.Land.zones[builderManager.ZoneID]
+    if not zone or not zone.airToSurfaceRisk then
+        return false
+    end
+
+    local friendlyAA = zone.friendlydefenseantiairthreat or 0
+    local zoneIncome = zone.zoneincome and zone.zoneincome.selfincome or 0
+    --LOG('ZoneID '..tostring(builderManager.ZoneID))
+    --LOG('Current friendly aa '..tostring(friendlyAA))
+    --LOG('Zone Income '..tostring(zoneIncome))
+
+    -- Exponent: Number of "full turret units" worth of AA placed (defaults to T3 SAM threat value of 33)
+    local threatExponent = friendlyAA / (aaBaseline or 33.0)
+
+    -- Escalation Factor: Higher for low income, lower for high income
+    local escalationFactor = math.max(1.15, 1.65 - (zoneIncome * 0.005))
+    local scaledThreshold = baseThreshold * (escalationFactor ^ threatExponent)
+    --LOG('zone.airToSurfaceRisk at '..tostring(locationType)..' is '..tostring(zone.airToSurfaceRisk))
+    --LOG('Scales threshold '..tostring(scaledThreshold))
+
+    return zone.airToSurfaceRisk > scaledThreshold
+end

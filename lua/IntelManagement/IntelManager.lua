@@ -1405,6 +1405,7 @@ IntelManager = Class {
                 friendlylandantiairthreat = 0.05,
                 startPos = 0.3,
                 control = 0.3,
+                incomeValueWeight = 0.2,
                 alliedAntiAirDeficit = 0.3,
                 contiguityWeight = 0.5,
                 frontlineWeight = 1.5,
@@ -1443,7 +1444,8 @@ IntelManager = Class {
                 enemyStart = aiBrain.MapCenterPoint
             end
             local zones = aiBrain.Zones.Land.zones
-            local intel = self.EnemyIntel.EnemyThreatCurrent
+            local enemyIntel = aiBrain.EnemyIntel.EnemyThreatCurrent
+            local myIntel = aiBrain.BrainIntel.SelfThreat
             local currentFrontlines = self.CurrentFrontLineZones or {}
             local totalHighValueRaidTargets = 0
             local totalFrontlinePressure = 0
@@ -1504,7 +1506,7 @@ IntelManager = Class {
                 local airSurfaceViabilityValue = RUtils.GetZoneAirSurfaceViability(self.MapMaximumValues.MaximumResourceValue, v)
                 local airExposureValue = RUtils.GetZoneExposureValue(myStart, enemyStart, v.pos, mapDiagonalSq)
                 local stagingPressureValue = RUtils.GetZoneStagingPressureValue(self, v)
-                local localSurfaceAA, adjacentSurfaceAA, totalFighterThreat = RUtils.GetZoneAirThreatValues(v)
+                local localSurfaceAA, adjacentSurfaceAA, totalFighterThreat, airSurfacePotentialThreat = RUtils.GetZoneAirThreatValues(v, myIndex, mapDiagonalSq, enemyIntel.AirSurface, enemyIntel.Air)
 
                 local enemyIncome = (v.zoneincome and v.zoneincome.enemyincome) or 0
                 if v.staticraidscore > 0.8 and enemyIncome > 0 then
@@ -1568,7 +1570,7 @@ IntelManager = Class {
                     contiguityValue * weightTable.aadefense.contiguityWeight +
                     adjacencyValue * weightTable.aadefense.adjacenyWeight
                 )
-                local globalAirScale = (aiBrain.BrainIntel.SelfThreat.AirNow > aiBrain.EnemyIntel.EnemyThreatCurrent.Air* 1.5) and 1.3 or 1.0
+                local globalAirScale = (myIntel.AirNow > enemyIntel.Air* 1.5) and 1.3 or 1.0
 
                 -- D4. STATIC AIR SURFACE SCORE (Tunable)
                 v.staticsurfaceairscore = (
@@ -1583,6 +1585,26 @@ IntelManager = Class {
                   (adjacentSurfaceAA * weightTable.airsurface.adjacentSurfaceAaWeight) +
                   (totalFighterThreat * weightTable.airsurface.fighterRiskWeight)
                 )
+                local friendlyAa = (v.friendlydefenseantiairthreat or 0) + (v.friendlylandantiairthreat or 0)
+
+                local netAaDeficit = math.max(0.0, airSurfacePotentialThreat - friendlyAa)
+                local selfIncome = (v.zoneincome and v.zoneincome.selfincome) or 0
+                local allyIncome = (v.zoneincome and v.zoneincome.allyincome) or 0
+                local effectiveIncome = selfIncome + (allyIncome * 0.25)
+                local enemyIncome = (v.zoneincome and v.zoneincome.enemyincome) or 0
+                local airThreatPresence = (airSurfacePotentialThreat > 0) and 1.0 or 0.0
+                
+                local isEnemyZone = enemyIncome > 0 and effectiveIncome == 0
+                if not isEnemyZone then
+                    v.airToSurfaceRisk = math.max(0.0, 
+                        (airSurfacePotentialThreat * weightTable.aadefense.enemyAir) 
+                        + (netAaDeficit * weightTable.aadefense.alliedAntiAirDeficit)
+                        + (effectiveIncome * weightTable.aadefense.incomeValueWeight * airThreatPresence)
+                        - (friendlyAa * weightTable.aadefense.friendlylandantiairthreat)
+                    )
+                else
+                    v.airToSurfaceRisk = 0
+                end
 
                 self.HighValueRaidTargets = totalHighValueRaidTargets
                 self.FrontlinePressureCount = totalFrontlinePressure
@@ -1621,6 +1643,7 @@ IntelManager = Class {
                             raidRadius = math.max(1, v.staticraidscore * 4),
                             airSurfaceRadius = math.max(1, (v.staticsurfaceairscore or 0) * 4),
                             airRiskRadius = math.max(1, (v.airRisk or 0) * 2),
+                            airSurfaceRisk = math.max(1, (v.airToSurfaceRisk or 0) * 2),
                             parentPos = nil
                         }
                         
@@ -1635,7 +1658,6 @@ IntelManager = Class {
                         end
                     end
                 end
-
             end
             coroutine.yield(20) 
         end
@@ -1665,6 +1687,9 @@ IntelManager = Class {
 
                     -- Solid Magenta for Air Risk Score
                     DrawCircle(data.pos, data.airRiskRadius, 'ffFF00FF')
+
+                     -- Solid Magenta for Air Risk Score
+                    DrawCircle(data.pos, data.airSurfaceRisk, 'FF69B4')
                     
                     -- Solid Yellow lines for BFS paths back to base
                     if data.parentPos then

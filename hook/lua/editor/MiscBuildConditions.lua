@@ -396,3 +396,29 @@ function IsCategoryNotRestricted(aiBrain, category)
     end
     return restricted
 end
+
+function LessThanEngineerTech(aiBrain, locationType, tech, number)
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    if not engineerManager then
+        return false
+    end
+
+    local engineerCount = engineerManager.EngineerTierCounts[tech]
+    if engineerCount < number then
+        return true
+    end
+    return false
+end
+
+function GreaterThanEngineerTech(aiBrain, locationType, tech, number)
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    if not engineerManager then
+        return false
+    end
+
+    local engineerCount = engineerManager.EngineerTierCounts[tech]
+    if engineerCount > number then
+        return true
+    end
+    return false
+end

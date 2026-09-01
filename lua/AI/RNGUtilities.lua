@@ -4222,6 +4222,18 @@ GenerateDefensiveSpokeTable  = function(aiBrain, baseName, range, basePosition, 
     end
     --LOG('We are now generating the spokes for zone '..tostring(zoneId))
 
+    spokes.Center = {
+        {
+            Position = basePosition,
+            Radius = 20,
+            Enabled = true,
+            AcuHoldPosition = false,
+            Shields = {}, DirectFire = {}, AntiAir = {},
+            IndirectFire = {}, TMD = {}, TML = {},
+            AntiSurfaceThreat = 0, AntiAirThreat = 0
+        }
+    }
+
     for spokeIdx = 1, numSpokes do
         local angle = (2 * math.pi / numSpokes) * spokeIdx
         spokes[spokeIdx] = {}
@@ -4969,12 +4981,14 @@ end
 
 AddDefenseUnitToSpoke = function(aiBrain, locationType, finishedUnit)
     if finishedUnit.Dead then return end
-    --LOG('Attempting to add defense unit to spoke')
 
     local unitPos = finishedUnit:GetPosition()
     local zoneId = aiBrain.BuilderManagers[locationType].ZoneID
-    local spokes = aiBrain.Zones.Land.zones[zoneId].defensespokes
-    if not spokes then return end
+    local spokes = aiBrain.Zones.Land.zones[zoneId] and aiBrain.Zones.Land.zones[zoneId].defensespokes
+    if not spokes then 
+        --LOG('No spoke for zone id '..tostring(zoneId))
+        return 
+    end
 
     local closestPoint = nil
     local closestDist = nil
@@ -4984,7 +4998,8 @@ AddDefenseUnitToSpoke = function(aiBrain, locationType, finishedUnit)
         for _, pt in spoke do
             if pt.Enabled then
                 local distSq = VDist3Sq(unitPos, pt.Position)
-                if (not closestDist or distSq < closestDist) and math.sqrt(distSq) <= pt.Radius then
+                local radSq = pt.Radius * pt.Radius
+                if (not closestDist or distSq < closestDist) and distSq <= radSq then
                     closestPoint = pt
                     closestDist = distSq
                 end
@@ -4992,50 +5007,69 @@ AddDefenseUnitToSpoke = function(aiBrain, locationType, finishedUnit)
         end
     end
 
-    if not closestPoint then return end
-    --LOG('Have closest point')
+    local centerPoint = nil
+    if spokes.Center and spokes.Center[1] and spokes.Center[1].Enabled then
+        centerPoint = spokes.Center[1]
+    end
+
+    -- Primary match -> Enabled Center point fallback
+    local targetPoint = closestPoint or centerPoint
+    if not targetPoint then 
+        --LOG('No target point for zone id '..tostring(zoneId))
+        --LOG('Center point '..tostring(repr(centerPoint)))
+        return 
+    end
 
     local id = finishedUnit.EntityId
     local bp = finishedUnit.Blueprint
     local catHash = bp.CategoriesHash
 
-    -- Store in appropriate table
-    if catHash.ANTIAIR and not closestPoint.AntiAir[id] then
-        closestPoint.AntiAir[id] = finishedUnit
-        closestPoint.AntiAirThreat = (closestPoint.AntiAirThreat or 0) + bp.Defense.AirThreatLevel
-    elseif catHash.DIRECTFIRE and not closestPoint.DirectFire[id] then
-        closestPoint.DirectFire[id] = finishedUnit
-        closestPoint.AntiSurfaceThreat = (closestPoint.AntiSurfaceThreat or 0) + bp.Defense.SurfaceThreatLevel
-        --LOG('Added '..tostring(bp.Defense.SurfaceThreatLevel)..' direct fire threat to point')
-    elseif catHash.INDIRECTFIRE and not closestPoint.IndirectFire[id] then
-        closestPoint.IndirectFire[id] = finishedUnit
-        closestPoint.AntiSurfaceThreat = (closestPoint.AntiSurfaceThreat or 0) + bp.Defense.SurfaceThreatLevel
-    elseif catHash.TACTICALMISSILEPLATFORM and not closestPoint.TML[id] then
-        closestPoint.TML[id] = finishedUnit
-    elseif catHash.ANTIMISSILE and not closestPoint.TMD[id] then
-        closestPoint.TMD[id] = finishedUnit
-    elseif catHash.SHIELD and not closestPoint.Shields[id] then
-        closestPoint.Shields[id] = finishedUnit
+    -- Fixed: Target targetPoint instead of closestPoint
+    if catHash.ANTIAIR and not targetPoint.AntiAir[id] then
+        targetPoint.AntiAir[id] = finishedUnit
+        targetPoint.AntiAirThreat = (targetPoint.AntiAirThreat or 0) + (bp.Defense.AirThreatLevel or 0)
+    elseif catHash.DIRECTFIRE and not targetPoint.DirectFire[id] then
+        targetPoint.DirectFire[id] = finishedUnit
+        targetPoint.AntiSurfaceThreat = (targetPoint.AntiSurfaceThreat or 0) + (bp.Defense.SurfaceThreatLevel or 0)
+    elseif catHash.INDIRECTFIRE and not targetPoint.IndirectFire[id] then
+        targetPoint.IndirectFire[id] = finishedUnit
+        targetPoint.AntiSurfaceThreat = (targetPoint.AntiSurfaceThreat or 0) + (bp.Defense.SurfaceThreatLevel or 0)
+    elseif catHash.TACTICALMISSILEPLATFORM and not targetPoint.TML[id] then
+        targetPoint.TML[id] = finishedUnit
+    elseif catHash.ANTIMISSILE and not targetPoint.TMD[id] then
+        targetPoint.TMD[id] = finishedUnit
+    elseif catHash.SHIELD and not targetPoint.Shields[id] then
+        targetPoint.Shields[id] = finishedUnit
     end
-    --LOG('Attempted to add unit '..tostring(finishedUnit.UnitId)..' current point antisurface threat is '..tostring(closestPoint.AntiSurfaceThreat))
 end
 
 RemoveDefenseUnitFromSpoke = function(aiBrain, locationType, killedUnit)
-    --LOG('Removing defense unit from spokt')
-
     local unitPos = killedUnit:GetPosition()
     local zoneId = aiBrain.BuilderManagers[locationType].ZoneID
-    local spokes = aiBrain.Zones.Land.zones[zoneId] and aiBrain.Zones.Land.zones[zoneId].defensespokes
-    if not spokes then return end
+    local zone = aiBrain.Zones.Land.zones[zoneId]
+    if not zone or not zone.defensespokes then return end
 
+    local spokes = zone.defensespokes
     local closestPoint = nil
     local closestDist = nil
+    local fallbackPoint = nil
+    local fallbackDist = nil
 
+    -- Loop over all points in all spokes
     for _, spoke in spokes do
         for _, pt in spoke do
             if pt.Enabled then
                 local distSq = VDist3Sq(unitPos, pt.Position)
-                if (not closestDist or distSq < closestDist) and math.sqrt(distSq) <= pt.Radius then
+                local radSq = pt.Radius * pt.Radius
+
+                -- Track absolute closest point regardless of radius
+                if not fallbackDist or distSq < fallbackDist then
+                    fallbackPoint = pt
+                    fallbackDist = distSq
+                end
+
+                -- Track closest point within valid radius limit
+                if distSq <= radSq and (not closestDist or distSq < closestDist) then
                     closestPoint = pt
                     closestDist = distSq
                 end
@@ -5043,30 +5077,36 @@ RemoveDefenseUnitFromSpoke = function(aiBrain, locationType, killedUnit)
         end
     end
 
-    if not closestPoint then return end
-    --LOG('Found closest point')
+    -- Check center spoke explicitly as a valid fallback
+    local centerPoint = nil
+    if spokes.Center and spokes.Center[1] and spokes.Center[1].Enabled then
+        centerPoint = spokes.Center[1]
+    end
+
+    -- Primary match -> Absolute closest enabled spoke fallback -> Enabled Center point
+    local targetPoint = closestPoint or fallbackPoint or centerPoint
+    if not targetPoint then return end
 
     local id = killedUnit.EntityId
     local bp = killedUnit.Blueprint
     local catHash = bp.CategoriesHash
 
-    if catHash.ANTIAIR and closestPoint.AntiAir[id] then
-        closestPoint.AntiAir[id] = nil
-        closestPoint.AntiAirThreat = math.max((closestPoint.AntiAirThreat or 0) - (bp.Defense.AirThreatLevel or 0), 0)
-    elseif catHash.DIRECTFIRE and closestPoint.DirectFire[id] then
-        closestPoint.DirectFire[id] = nil
-        closestPoint.AntiSurfaceThreat = math.max((closestPoint.AntiSurfaceThreat or 0) - (bp.Defense.SurfaceThreatLevel or 0), 0)
-    elseif catHash.INDIRECTFIRE and closestPoint.IndirectFire[id] then
-        closestPoint.IndirectFire[id] = nil
-        closestPoint.AntiSurfaceThreat = math.max((closestPoint.AntiSurfaceThreat or 0) - (bp.Defense.SurfaceThreatLevel or 0), 0)
-    elseif catHash.TACTICALMISSILEPLATFORM and closestPoint.TML[id] then
-        closestPoint.TML[id] = nil
-    elseif catHash.ANTIMISSILE and closestPoint.TMD[id] then
-        closestPoint.TMD[id] = nil
-    elseif catHash.SHIELD and closestPoint.Shields[id] then
-        closestPoint.Shields[id] = nil
+    if catHash.ANTIAIR and targetPoint.AntiAir[id] then
+        targetPoint.AntiAir[id] = nil
+        targetPoint.AntiAirThreat = math.max(0, (targetPoint.AntiAirThreat or 0) - (bp.Defense.AirThreatLevel or 0))
+    elseif catHash.DIRECTFIRE and targetPoint.DirectFire[id] then
+        targetPoint.DirectFire[id] = nil
+        targetPoint.AntiSurfaceThreat = math.max(0, (targetPoint.AntiSurfaceThreat or 0) - (bp.Defense.SurfaceThreatLevel or 0))
+    elseif catHash.INDIRECTFIRE and targetPoint.IndirectFire[id] then
+        targetPoint.IndirectFire[id] = nil
+        targetPoint.AntiSurfaceThreat = math.max(0, (targetPoint.AntiSurfaceThreat or 0) - (bp.Defense.SurfaceThreatLevel or 0))
+    elseif catHash.TACTICALMISSILEPLATFORM and targetPoint.TML[id] then
+        targetPoint.TML[id] = nil
+    elseif catHash.ANTIMISSILE and targetPoint.TMD[id] then
+        targetPoint.TMD[id] = nil
+    elseif catHash.SHIELD and targetPoint.Shields[id] then
+        targetPoint.Shields[id] = nil
     end
-    --LOG('Attempted to remove '..killedUnit.UnitId)
 end
 
 AIWarningChecks = function(aiBrain)
@@ -9640,15 +9680,32 @@ function GetZoneAirSurfaceViability(maxResourceValue, zone)
     return math.max(math.min(finalScore, 1.0), 0.0)
 end
 
-function GetZoneAirThreatValues(zone)
+function GetZoneAirThreatValues(zone, playerIndex, mapDiagonalSq, globalAirToSurface, globalAirTotal)
+
+    local myAllyData = zone.allystartdata and zone.allystartdata[playerIndex]
+    local allyDistSq = myAllyData and myAllyData.startdistance or mapDiagonalSq
+
+    local homeProximity
+    if allyDistSq then
+        homeProximity = math.max(0.0, 1.0 - (allyDistSq / mapDiagonalSq))
+    end
+
     local eAir = zone.enemyairthreat or 0
     local eAntiAir = zone.enemyantiairthreat or 0
 
+    local airSurfaceRatio = 0.0
+    local globalAirSurfaceRatio = 0.0
+    if globalAirToSurface and globalAirTotal > 0 then
+        globalAirSurfaceRatio = math.min(1.0, (globalAirToSurface or 0) / globalAirTotal)
+    end
+
     local localAirToAir = math.min(eAir, eAntiAir)
     local localSurfaceAA = math.max(0, eAntiAir - localAirToAir)
+    local localAirToSurface = eAir * (globalAirSurfaceRatio or 0.5)
 
     local adjacentAirToAir = 0
     local adjacentSurfaceAA = 0
+    local adjacentAirToSurface = 0
 
     if zone.edges then
         for _, edge in ipairs(zone.edges) do
@@ -9660,11 +9717,16 @@ function GetZoneAirThreatValues(zone)
 
                 local nAirToAir = math.min(nAir, nAntiAir)
                 local nSurfaceAA = math.max(0, nAntiAir - nAirToAir)
+                local nAirToSurface = nAir * (globalAirSurfaceRatio or 0.5)
 
                 -- Fighters: Minimal decay (14400.0 = 50% threat at 120 grid steps)
                 -- Enemy ASFs 1-2 zones away will respond immediately
                 if nAirToAir > 0 then
                     adjacentAirToAir = adjacentAirToAir + (nAirToAir / (1.0 + (distSq / 14400.0)))
+                end
+
+                if nAirToSurface > 0 then
+                    adjacentAirToSurface = adjacentAirToSurface + (nAirToSurface / (1.0 + (distSq / 14400.0)))
                 end
 
                 -- Ground AA: Steep decay (400.0 = 50% threat at 20 grid steps)
@@ -9675,10 +9737,16 @@ function GetZoneAirThreatValues(zone)
             end
         end
     end
-
+    local globalPreemptiveThreat = 0.0
+    if homeProximity and globalAirToSurface and globalAirToSurface > 0 and allyDistSq then
+        
+        -- 0.2 coefficient scales global air threat into local threat units
+        globalPreemptiveThreat = globalAirToSurface * homeProximity * 0.2
+    end
+    local totalAirToSurfaceThreat = localAirToSurface + adjacentAirToSurface + globalPreemptiveThreat
     local totalFighterThreat = localAirToAir + adjacentAirToAir
 
-    return localSurfaceAA, adjacentSurfaceAA, totalFighterThreat
+    return localSurfaceAA, adjacentSurfaceAA, totalFighterThreat, totalAirToSurfaceThreat
 end
 
 function FindAirTargetForTeamRNG(aiBrain, position, platoon, maxRange, platoonThreat, priorityList)
@@ -9869,7 +9937,7 @@ function GetZoneExposureValue(myStart, enemyStart, zonePos, mapDiagonalSq)
     local distToZoneSq = VDist2Sq(myStart[1], myStart[3], zonePos[1], zonePos[3])
     
     -- If the zone is significantly closer to us than the enemy base, it's not exposed
-    if distToZoneSq < distToEnemySq * 0.8 then
+    if distToZoneSq < distToEnemySq * 0.64 then
         return 0.0
     end
 

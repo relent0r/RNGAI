@@ -153,6 +153,39 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T1 Defence Engineer Pre-Emptive Air',
+        PlatoonTemplate = 'EngineerStateT1RNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'GreaterThanGameTimeRNG', { 240 } },
+            { MIBC, 'LessThanEngineerTech', { 'LocationType', 'TECH2', 1 } },
+            { TBC, 'ZoneAirToSurfaceRiskGreaterThanRNG', { 'LocationType', 4, 7}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
+                BuildClose = true,
+                EmergencyBuild = false,
+                NearDefensivePoints = true,
+                Type = 'AntiAir',
+                Tier = 1,
+                BuildStructures = {
+                    { Unit = 'T1AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH1 },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T2 Defence Engineer Restricted Breach Land',
         PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 950,
@@ -212,6 +245,38 @@ BuilderGroup {
                 NearDefensivePoints = true,
                 Type = 'AntiAir',
                 Tier = 1,
+                BuildStructures = {
+                    { Unit = 'T2AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH2 },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T2 Defence Engineer Pre-Emptive Air',
+        PlatoonTemplate = 'EngineerStateT23RNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'LessThanEngineerTech', { 'LocationType', 'TECH3', 1 } },
+            { TBC, 'ZoneAirToSurfaceRiskGreaterThanRNG', { 'LocationType', 10, 15}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
+                BuildClose = true,
+                EmergencyBuild = false,
+                NearDefensivePoints = true,
+                Type = 'AntiAir',
+                Tier = 2,
                 BuildStructures = {
                     { Unit = 'T2AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH2 },
                 },
@@ -345,6 +410,37 @@ BuilderGroup {
                 NearDefensivePoints = true,
                 Type = 'AntiAir',
                 Tier = 1,
+                BuildStructures = {
+                    { Unit = 'T3AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH3 },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Defence Engineer Pre-Emptive Air',
+        PlatoonTemplate = 'EngineerStateT3RNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { TBC, 'ZoneAirToSurfaceRiskGreaterThanRNG', { 'LocationType', 25, 33}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
+                BuildClose = true,
+                EmergencyBuild = false,
+                NearDefensivePoints = true,
+                Type = 'AntiAir',
+                Tier = 3,
                 BuildStructures = {
                     { Unit = 'T3AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH3 },
                 },
@@ -584,6 +680,38 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T1 Defence Engineer Pre-Emptive Air Expansion',
+        PlatoonTemplate = 'EngineerStateT1RNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'LessThanEngineerTech', { 'LocationType', 'TECH2', 1 } },
+            { TBC, 'ZoneAirToSurfaceRiskGreaterThanRNG', { 'LocationType', 4, 7}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
+                BuildClose = true,
+                EmergencyBuild = false,
+                NearDefensivePoints = false,
+                Type = 'AntiAir',
+                Tier = 1,
+                BuildStructures = {
+                    { Unit = 'T1AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH1 },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T2 Defence Engineer Single Historical',
         PlatoonTemplate = 'EngineerStateT23RNG',
         Priority = 950,
@@ -693,6 +821,38 @@ BuilderGroup {
         }
     },
     Builder {
+        BuilderName = 'RNGAI T2 Defence Engineer Pre-Emptive Air Expansion',
+        PlatoonTemplate = 'EngineerStateT23RNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { MIBC, 'LessThanEngineerTech', { 'LocationType', 'TECH3', 1 } },
+            { TBC, 'ZoneAirToSurfaceRiskGreaterThanRNG', { 'LocationType', 10, 15}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
+                BuildClose = true,
+                EmergencyBuild = false,
+                NearDefensivePoints = false,
+                Type = 'AntiAir',
+                Tier = 2,
+                BuildStructures = {
+                    { Unit = 'T2AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH2 },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
         BuilderName = 'RNGAI T3 Defence Engineer Restricted Breach Air Expansion',
         PlatoonTemplate = 'EngineerStateT3RNG',
         Priority = 951,
@@ -717,6 +877,37 @@ BuilderGroup {
                 maxRadius = 5,
                 BuildClose = false,
                 NearDefensivePoints = false,
+                BuildStructures = {
+                    { Unit = 'T3AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH3 },
+                },
+                LocationType = 'LocationType',
+            }
+        }
+    },
+    Builder {
+        BuilderName = 'RNGAI T3 Defence Engineer Pre-Emptive Air Expansion',
+        PlatoonTemplate = 'EngineerStateT3RNG',
+        Priority = 950,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { TBC, 'ZoneAirToSurfaceRiskGreaterThanRNG', { 'LocationType', 25, 33}},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
+            { UCBC, 'UnitCapCheckLess', { .8 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildStructure',
+            DesiresAssist = true,
+            NumAssistees = 5,
+            Construction = {
+                BaseTemplateFile = '/mods/rngai/lua/AI/AIBaseTemplates/RNGAIDefensiveTemplate.lua',
+                BaseTemplate = 'DefenseTemplate',
+                BuildClose = true,
+                EmergencyBuild = false,
+                NearDefensivePoints = false,
+                Type = 'AntiAir',
+                Tier = 3,
                 BuildStructures = {
                     { Unit = 'T3AADefense', Categories = categories.STRUCTURE * categories.ANTIAIR * categories.DEFENSE * categories.TECH3 },
                 },
