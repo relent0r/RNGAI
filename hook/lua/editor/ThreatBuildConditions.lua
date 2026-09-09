@@ -54,19 +54,32 @@ function EnemyThreatGreaterThanAI(aiBrain, threatType)
     return false
 end
 
-function ThreatCloseToBase(aiBrain)
-
+function ThreatCloseToBase(aiBrain, locationType, minNavalThreat)
     if aiBrain.EnemyIntel.ACUEnemyClose then
         return true
     end
-    local manager = aiBrain.BuilderManagers['MAIN']
-    if manager.FactoryManager.Location then
+
+    local loc = locationType or 'MAIN'
+    local manager = aiBrain.BuilderManagers[loc]
+    if manager and manager.FactoryManager and manager.FactoryManager.Location then
         if RUtils.DefensiveClusterCheck(aiBrain, manager.FactoryManager.Location) then
             return true
         end
     end
+
+    -- Check BasePerimeterMonitor for naval threat & units
+    local perimeterMonitor = aiBrain.BasePerimeterMonitor and aiBrain.BasePerimeterMonitor[loc]
+    if perimeterMonitor then
+        local reqNavalThreat = minNavalThreat or 0
+        if (perimeterMonitor.NavalUnits and perimeterMonitor.NavalUnits > 0) and 
+           (perimeterMonitor.NavalThreat and perimeterMonitor.NavalThreat > reqNavalThreat) then
+            return true
+        end
+    end
+
     return false
 end
+
 
 function EnemyThreatInT3ArtilleryRangeRNG(aiBrain, locationtype, ratio)
     -- This will look at all structure threat on the map and figure out what ratio exist within the radius of a T3 static artillery

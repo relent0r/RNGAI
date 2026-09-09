@@ -177,6 +177,10 @@ AIPlatoonAirRefuelBehavior = Class(AIPlatoonRNG) {
                             local plat = aiBrain:MakePlatoon('', 'none')
                             aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
                             import("/mods/rngai/lua/ai/statemachines/platoon-air-bomber.lua").AssignToUnitsMachine({ }, plat, {unit})
+                        elseif self.PreviousStateMachine == 'TorpedoBomber' then
+                            local plat = aiBrain:MakePlatoon('', 'none')
+                            aiBrain:AssignUnitsToPlatoon(plat, {unit}, 'Attack', 'None')
+                            import("/mods/rngai/lua/ai/statemachines/platoon-air-torpedo.lua").AssignToUnitsMachine({ }, plat, {unit})
                         end
                     end
                 end

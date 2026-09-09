@@ -1429,6 +1429,11 @@ IntelManager = Class {
             coroutine.yield(20)
         end
         local debugFocusZoneID = false
+        local zoneTypes = {
+                'Land',
+                'Naval',
+                'Air'
+            }
         --LOG(string.format("RNGAI VALIDATION: Main Base Zone ID is %s", tostring(mainBaseZoneID)))
     
         while aiBrain.Result ~= "defeat" do
@@ -1443,220 +1448,286 @@ IntelManager = Class {
             else
                 enemyStart = aiBrain.MapCenterPoint
             end
-            local zones = aiBrain.Zones.Land.zones
+            local zones
             local enemyIntel = aiBrain.EnemyIntel.EnemyThreatCurrent
             local myIntel = aiBrain.BrainIntel.SelfThreat
-            local currentFrontlines = self.CurrentFrontLineZones or {}
-            local totalHighValueRaidTargets = 0
-            local totalFrontlinePressure = 0
-            local totalContestedIncomeZones = 0
-    
-            -- 1. BFS PHASE: Path-Distance Mapping
-            -- This determines homeDistanceValue and reachability via edges
-            local homeDepths = {}
-            if mainBaseZoneID then
-                local queue = { { id = mainBaseZoneID, depth = 0 } }
-                homeDepths[mainBaseZoneID] = 0
-                local head = 1
-                while head <= table.getn(queue) do
-                    local current = queue[head]
-                    head = head + 1
-                    local z = zones[current.id]
-                    for _, edge in ipairs(z.edges or {}) do
-                        if not homeDepths[edge.zone.id] and current.depth < MaxBfsDepth then
-                            homeDepths[edge.zone.id] = current.depth + 1
-                            table.insert(queue, { id = edge.zone.id, depth = current.depth + 1 })
-                        end
-                    end
-                end
-            end
-       
-            -- 3. THE MAIN SCORING PASS (One loop for performance)
-            for id, v in zones do
-                -- A. Core Variable Setup (From your snippet)
-                local enemyStartClose = RUtils.IsEnemyStartClose(v)
-                local allyStartClose = RUtils.IsAllyStartClose(v)
-                local aggressionScale = self.Aggression or 1.0
-                
-                -- B. BFS-Based Distance Metrics
-                -- distanceValue (platoon) is REDUNDANT here.
-                -- homeDistanceValue is replaced by BFS path depth.
-                local homePathDist = (homeDepths[id] or MaxBfsDepth) / MaxBfsDepth
-                local enemyDistValue = (v.enemystartdata and v.enemystartdata[enemyArmyIndex]) and (v.enemystartdata[enemyArmyIndex].startdistance / mapDiagonalSq) or 1.0
-
-                local isFrontlineNode = currentFrontlines[id] and 1.0 or 0.0
-                local maxMapIncome = self.MapMaximumValues.MaximumResourceValue
-                if not maxMapIncome or maxMapIncome <= 0 then
-                    maxMapIncome = 1.0
-                end
-    
-                -- C. RUtils Calculations (Leveraging your snippet)
-                local controlValue = RUtils.GetAdaptiveStatusValue(v, self) * aggressionScale
-                local resourceValueControl = RUtils.GetZoneIncomeValue(v, 'control', enemyStartClose, allyStartClose) / maxMapIncome
-                local resourceValueRaid = RUtils.GetZoneIncomeValue(v, 'raid', enemyStartClose, allyStartClose) / maxMapIncome
-                local zoneHomeValue = RUtils.GetZoneHomeBiasValue(allyStartClose, enemyStartClose, v)
-                local encirclementValue = RUtils.GetZoneEncirclementValue(v) * aggressionScale
-                local adjacencyValue = RUtils.GetAdjacencyThreatBonus(self, v, statusValueTable, 'Surface') * aggressionScale
-                local contiguityValue = RUtils.GetZoneContiguityValue(self, v)
-                local zoneFlankRisk = RUtils.GetZoneFlankRiskValue(v)
-                local zoneFlankRaidBonus = RUtils.GetRaidFlankBonusValue(v, aiBrain, enemyArmyIndex, mapDiagonalSq) 
-                local aaEscortValue = RUtils.GetZoneAAEscortValue(v, statusValueTable)
-                local teamValueBonus = (v.teamvalue > 1) and (3 - v.teamvalue) or v.teamvalue
-                local airUtilityValue = RUtils.GetZoneAirSurfaceUtility(v, teamValueBonus)
-                local airSurfaceViabilityValue = RUtils.GetZoneAirSurfaceViability(self.MapMaximumValues.MaximumResourceValue, v)
-                local airExposureValue = RUtils.GetZoneExposureValue(myStart, enemyStart, v.pos, mapDiagonalSq)
-                local stagingPressureValue = RUtils.GetZoneStagingPressureValue(self, v)
-                local localSurfaceAA, adjacentSurfaceAA, totalFighterThreat, airSurfacePotentialThreat = RUtils.GetZoneAirThreatValues(v, myIndex, mapDiagonalSq, enemyIntel.AirSurface, enemyIntel.Air)
-
-                local enemyIncome = (v.zoneincome and v.zoneincome.enemyincome) or 0
-                if v.staticraidscore > 0.8 and enemyIncome > 0 then
-                    totalHighValueRaidTargets = totalHighValueRaidTargets + 1
-                end
-
-                -- Track active macro tactical pressure (Staging or contested stress)
-                if stagingPressureValue > 2.0 or (currentFrontlines[id] and adjacencyValue > 1.5) then
-                    totalFrontlinePressure = totalFrontlinePressure + 1
-                end
-
-                -- Track income nodes currently floating in the open or actively contested
-                if (v.status == 'Contested' or v.status == 'Unoccupied') and (v.resourcevalue or 0) > 0 then
-                    totalContestedIncomeZones = totalContestedIncomeZones + 1
-                end
-
-                -- D. CALCULATE STATIC SCORES
-                -- Note: We omit distanceValue, threatValue, and zonePressureValue (calculated by platoon)
-                v.staticcontrolscore = (
-                    ((1.0 - enemyDistValue) * weightTable.control.enemyDistanceWeight) +
-                    ((1.0 - homePathDist) * weightTable.control.homeDistanceWeight) +
-                    resourceValueControl * weightTable.control.incomeValueWeight + 
-                    controlValue * weightTable.control.zoneStatusWeight +
-                    contiguityValue * weightTable.control.contiguityWeight +
-                    zoneHomeValue * weightTable.control.zoneHomeWeight - 
-                    teamValueBonus * weightTable.control.teamValueWeight + 
-                    adjacencyValue * weightTable.control.adjacencyThreatWeight + 
-                    encirclementValue * weightTable.control.encirclementWeight +
-                    zoneFlankRisk * weightTable.control.zoneFlankRiskWeight +
-                    isFrontlineNode * weightTable.control.frontlineWeight +
-                    stagingPressureValue * weightTable.control.stagingPressureWeight
-                )
-    
-                -- D2. STATIC RAID SCORE
-                v.staticraidscore = (
-                    ((1.0 - enemyDistValue) * weightTable.raid.enemyDistanceWeight) +
-                    homePathDist * weightTable.raid.homeDistanceWeight +
-                    resourceValueRaid * weightTable.raid.incomeValueWeight + 
-                    controlValue * weightTable.raid.zoneStatusWeight +
-                    contiguityValue * weightTable.raid.contiguityWeight - 
-                    teamValueBonus * weightTable.raid.teamValueWeight +
-                    zoneFlankRaidBonus * weightTable.raid.zoneFlankWeight +
-                    isFrontlineNode * weightTable.raid.frontlineBypassWeight
-                )
-    
-                -- D3. STATIC AA DEFENSE SCORE
-                -- Note: Uses specific keys from your aadefense weightTable
-                local eAir = v.enemyairthreat or 0
-                local eAntiAir = v.enemyantiairthreat or 0
-
-                -- Apply the "Fighter/Scout Filter" logic to the static score
-                local aaUrgency = eAir
-                if eAir < 1 and eAntiAir > 0 then
-                    aaUrgency = 0 -- Don't value this zone for AA if it's just land-based AA
-                end
-                v.staticaascore = (
-                    (v.teamvalue or 0) * weightTable.aadefense.teamValue +
-                    (v.resourcevalue or 0) * weightTable.aadefense.massValue +
-                    (aaUrgency / 20 * weightTable.aadefense.enemyAir) +
-                    (aaEscortValue * weightTable.aadefense.frontlineWeight) +
-                    contiguityValue * weightTable.aadefense.contiguityWeight +
-                    adjacencyValue * weightTable.aadefense.adjacenyWeight
-                )
-                local globalAirScale = (myIntel.AirNow > enemyIntel.Air* 1.5) and 1.3 or 1.0
-
-                -- D4. STATIC AIR SURFACE SCORE (Tunable)
-                v.staticsurfaceairscore = (
-                    (resourceValueControl * weightTable.airsurface.incomeValueWeight) +
-                    (airSurfaceViabilityValue * weightTable.airsurface.viabilityWeight) +
-                    (airUtilityValue * weightTable.airsurface.utilityWeight) -
-                    (airExposureValue * weightTable.airsurface.exposurePenaltyWeight)
-                ) * globalAirScale
-
-                v.airRisk = (
-                  (localSurfaceAA * weightTable.airsurface.directSurfaceAaWeight) +
-                  (adjacentSurfaceAA * weightTable.airsurface.adjacentSurfaceAaWeight) +
-                  (totalFighterThreat * weightTable.airsurface.fighterRiskWeight)
-                )
-                local friendlyAa = (v.friendlydefenseantiairthreat or 0) + (v.friendlylandantiairthreat or 0)
-
-                local netAaDeficit = math.max(0.0, airSurfacePotentialThreat - friendlyAa)
-                local selfIncome = (v.zoneincome and v.zoneincome.selfincome) or 0
-                local allyIncome = (v.zoneincome and v.zoneincome.allyincome) or 0
-                local effectiveIncome = selfIncome + (allyIncome * 0.25)
-                local enemyIncome = (v.zoneincome and v.zoneincome.enemyincome) or 0
-                local airThreatPresence = (airSurfacePotentialThreat > 0) and 1.0 or 0.0
-                
-                local isEnemyZone = enemyIncome > 0 and effectiveIncome == 0
-                if not isEnemyZone then
-                    v.airToSurfaceRisk = math.max(0.0, 
-                        (airSurfacePotentialThreat * weightTable.aadefense.enemyAir) 
-                        + (netAaDeficit * weightTable.aadefense.alliedAntiAirDeficit)
-                        + (effectiveIncome * weightTable.aadefense.incomeValueWeight * airThreatPresence)
-                        - (friendlyAa * weightTable.aadefense.friendlylandantiairthreat)
-                    )
-                else
-                    v.airToSurfaceRisk = 0
-                end
-
-                self.HighValueRaidTargets = totalHighValueRaidTargets
-                self.FrontlinePressureCount = totalFrontlinePressure
-                self.ContestedIncomeCount = totalContestedIncomeZones
-
-               if debugFocusZoneID then
-                    WARN(string.format("RNGLOG AUDIT: --- TUNING DATA FOR ZONE %s ---", tostring(id)))
-                    WARN(string.format("  [CONTROL SCORE: %.3f]", v.staticcontrolscore))
-                    LOG(string.format("    > EnemyDist:    (1.0 - %.2f) * %.1f = %.2f", enemyDistValue, weightTable.control.enemyDistanceWeight, (1.0 - enemyDistValue) * weightTable.control.enemyDistanceWeight))
-                    LOG(string.format("    > HomeBfsDist:  (1.0 - %.2f) * %.1f = %.2f", homePathDist, weightTable.control.homeDistanceWeight, (1.0 - homePathDist) * weightTable.control.homeDistanceWeight))
-                    LOG(string.format("    > ZoneIncome:   %.2f * %.1f = %.2f", resourceValueControl, weightTable.control.incomeValueWeight, resourceValueControl * weightTable.control.incomeValueWeight))
-                    LOG(string.format("    > AdaptiveStat: %.2f * %.1f = %.2f", controlValue, weightTable.control.zoneStatusWeight, controlValue * weightTable.control.zoneStatusWeight))
-                    LOG(string.format("    > Contiguity:   %.2f * %.1f = %.2f", contiguityValue, weightTable.control.contiguityWeight, contiguityValue * weightTable.control.contiguityWeight))
-                    LOG(string.format("    > HomeBias:     %.2f * %.1f = %.2f", zoneHomeValue, weightTable.control.zoneHomeWeight, zoneHomeValue * weightTable.control.zoneHomeWeight))
-                    LOG(string.format("    > TeamBonus:    -%.2f * %.1f = -%.2f", teamValueBonus, weightTable.control.teamValueWeight, teamValueBonus * weightTable.control.teamValueWeight))
-                    LOG(string.format("    > AdjThreat:    %.2f * %.1f = %.2f", adjacencyValue, weightTable.control.adjacencyThreatWeight, adjacencyValue * weightTable.control.adjacencyThreatWeight))
-                    LOG(string.format("    > Encircle:     %.2f * %.1f = %.2f", encirclementValue, weightTable.control.encirclementWeight, encirclementValue * weightTable.control.encirclementWeight))
-                    LOG(string.format("    > FlankRisk:    -%.2f * %.1f = -%.2f", zoneFlankRisk, weightTable.control.zoneFlankRiskWeight, zoneFlankRisk * weightTable.control.zoneFlankRiskWeight))
-                    
-                    WARN(string.format("  [RAID SCORE: %.3f]", v.staticraidscore))
-                    LOG(string.format("    > EnemyDist:    (1.0 - %.2f) * %.1f = %.2f", enemyDistValue, weightTable.raid.enemyDistanceWeight, (1.0 - enemyDistValue) * weightTable.raid.enemyDistanceWeight))
-                    LOG(string.format("    > HomeBfsDist:  %.2f * %.1f = %.2f", homePathDist, weightTable.raid.homeDistanceWeight, homePathDist * weightTable.raid.homeDistanceWeight))
-                    LOG(string.format("    > ZoneIncome:   %.2f * %.1f = %.2f", resourceValueRaid, weightTable.raid.incomeValueWeight, resourceValueRaid * weightTable.raid.incomeValueWeight))
-                    LOG(string.format("    > AdaptiveStat: %.2f * %.1f = %.2f", controlValue, weightTable.raid.zoneStatusWeight, controlValue * weightTable.raid.zoneStatusWeight))
-                    LOG(string.format("    > Contiguity:   %.2f * %.1f = %.2f", contiguityValue, weightTable.raid.contiguityWeight, contiguityValue * weightTable.raid.contiguityWeight))
-                    LOG(string.format("    > TeamBonus:    -%.2f * %.1f = -%.2f", teamValueBonus, weightTable.raid.teamValueWeight, teamValueBonus * weightTable.raid.teamValueWeight))
-                    LOG(string.format("    > ZoneFlankBonus:    %.2f * %.1f = %.2f", zoneFlankRaidBonus, weightTable.raid.zoneFlankWeight, zoneFlankRaidBonus * weightTable.raid.zoneFlankWeight))
-                    -- =====================================
-                    -- LIVE VISUAL DEBUG ENGINE INJECTION
-                    -- =====================================
-                    self.VisualDebugData = self.VisualDebugData or {}
-                    if v.pos then
-                        self.VisualDebugData[id] = {
-                            pos = v.pos,
-                            controlRadius = math.max(1, v.staticcontrolscore * 4),
-                            raidRadius = math.max(1, v.staticraidscore * 4),
-                            airSurfaceRadius = math.max(1, (v.staticsurfaceairscore or 0) * 4),
-                            airRiskRadius = math.max(1, (v.airRisk or 0) * 2),
-                            airSurfaceRisk = math.max(1, (v.airToSurfaceRisk or 0) * 2),
-                            parentPos = nil
-                        }
-                        
-                        -- Trace structural paths for BFS without drawing yet
-                        if homeDepths[id] and homeDepths[id] > 0 then
-                            for _, edge in ipairs(v.edges or {}) do
-                                if homeDepths[edge.zone.id] and homeDepths[edge.zone.id] < homeDepths[id] then
-                                    self.VisualDebugData[id].parentPos = edge.zone.pos
-                                    break
+            for _, zoneType in ipairs(zoneTypes) do
+                if zoneType == 'Land' then
+                    zones = aiBrain.Zones.Land.zones
+                    local currentFrontlines = self.CurrentFrontLineZones or {}
+                    local totalHighValueRaidTargets = 0
+                    local totalFrontlinePressure = 0
+                    local totalContestedIncomeZones = 0
+            
+                    -- 1. BFS PHASE: Path-Distance Mapping
+                    -- This determines homeDistanceValue and reachability via edges
+                    local homeDepths = {}
+                    if mainBaseZoneID then
+                        local queue = { { id = mainBaseZoneID, depth = 0 } }
+                        homeDepths[mainBaseZoneID] = 0
+                        local head = 1
+                        while head <= table.getn(queue) do
+                            local current = queue[head]
+                            head = head + 1
+                            local z = zones[current.id]
+                            for _, edge in ipairs(z.edges or {}) do
+                                if not homeDepths[edge.zone.id] and current.depth < MaxBfsDepth then
+                                    homeDepths[edge.zone.id] = current.depth + 1
+                                    table.insert(queue, { id = edge.zone.id, depth = current.depth + 1 })
                                 end
                             end
                         end
                     end
+            
+                    -- 3. THE MAIN SCORING PASS (One loop for performance)
+                    for id, v in zones do
+                        -- A. Core Variable Setup (From your snippet)
+                        local enemyStartClose = RUtils.IsEnemyStartClose(v)
+                        local allyStartClose = RUtils.IsAllyStartClose(v)
+                        local aggressionScale = self.Aggression or 1.0
+                        
+                        -- B. BFS-Based Distance Metrics
+                        -- distanceValue (platoon) is REDUNDANT here.
+                        -- homeDistanceValue is replaced by BFS path depth.
+                        local homePathDist = (homeDepths[id] or MaxBfsDepth) / MaxBfsDepth
+                        local enemyDistValue = (v.enemystartdata and v.enemystartdata[enemyArmyIndex]) and (v.enemystartdata[enemyArmyIndex].startdistance / mapDiagonalSq) or 1.0
+
+                        local isFrontlineNode = currentFrontlines[id] and 1.0 or 0.0
+                        local maxMapIncome = self.MapMaximumValues.MaximumResourceValue
+                        if not maxMapIncome or maxMapIncome <= 0 then
+                            maxMapIncome = 1.0
+                        end
+            
+                        -- C. RUtils Calculations (Leveraging your snippet)
+                        local controlValue = RUtils.GetAdaptiveStatusValue(v, self) * aggressionScale
+                        local resourceValueControl = RUtils.GetZoneIncomeValue(v, 'control', enemyStartClose, allyStartClose) / maxMapIncome
+                        local resourceValueRaid = RUtils.GetZoneIncomeValue(v, 'raid', enemyStartClose, allyStartClose) / maxMapIncome
+                        local zoneHomeValue = RUtils.GetZoneHomeBiasValue(allyStartClose, enemyStartClose, v)
+                        local encirclementValue = RUtils.GetZoneEncirclementValue(v) * aggressionScale
+                        local adjacencyValue = RUtils.GetAdjacencyThreatBonus(self, v, statusValueTable, 'Surface') * aggressionScale
+                        local contiguityValue = RUtils.GetZoneContiguityValue(self, v)
+                        local zoneFlankRisk = RUtils.GetZoneFlankRiskValue(v)
+                        local zoneFlankRaidBonus = RUtils.GetRaidFlankBonusValue(v, aiBrain, enemyArmyIndex, mapDiagonalSq) 
+                        local aaEscortValue = RUtils.GetZoneAAEscortValue(v, statusValueTable)
+                        local teamValueBonus = (v.teamvalue > 1) and (3 - v.teamvalue) or v.teamvalue
+                        local airUtilityValue = RUtils.GetZoneAirSurfaceUtility(v, teamValueBonus)
+                        local airSurfaceViabilityValue = RUtils.GetZoneAirSurfaceViability(self.MapMaximumValues.MaximumResourceValue, v)
+                        local airExposureValue = RUtils.GetZoneExposureValue(myStart, enemyStart, v.pos, mapDiagonalSq)
+                        local stagingPressureValue = RUtils.GetZoneStagingPressureValue(self, v)
+                        local localSurfaceAA, adjacentSurfaceAA, totalFighterThreat, airSurfacePotentialThreat = RUtils.GetZoneAirThreatValues(v, myIndex, mapDiagonalSq, enemyIntel.AirSurface, enemyIntel.Air)
+
+                        local enemyIncome = (v.zoneincome and v.zoneincome.enemyincome) or 0
+                        if v.staticraidscore > 0.8 and enemyIncome > 0 then
+                            totalHighValueRaidTargets = totalHighValueRaidTargets + 1
+                        end
+
+                        -- Track active macro tactical pressure (Staging or contested stress)
+                        if stagingPressureValue > 2.0 or (currentFrontlines[id] and adjacencyValue > 1.5) then
+                            totalFrontlinePressure = totalFrontlinePressure + 1
+                        end
+
+                        -- Track income nodes currently floating in the open or actively contested
+                        if (v.status == 'Contested' or v.status == 'Unoccupied') and (v.resourcevalue or 0) > 0 then
+                            totalContestedIncomeZones = totalContestedIncomeZones + 1
+                        end
+
+                        -- D. CALCULATE STATIC SCORES
+                        -- Note: We omit distanceValue, threatValue, and zonePressureValue (calculated by platoon)
+                        v.staticcontrolscore = (
+                            ((1.0 - enemyDistValue) * weightTable.control.enemyDistanceWeight) +
+                            ((1.0 - homePathDist) * weightTable.control.homeDistanceWeight) +
+                            resourceValueControl * weightTable.control.incomeValueWeight + 
+                            controlValue * weightTable.control.zoneStatusWeight +
+                            contiguityValue * weightTable.control.contiguityWeight +
+                            zoneHomeValue * weightTable.control.zoneHomeWeight - 
+                            teamValueBonus * weightTable.control.teamValueWeight + 
+                            adjacencyValue * weightTable.control.adjacencyThreatWeight + 
+                            encirclementValue * weightTable.control.encirclementWeight +
+                            zoneFlankRisk * weightTable.control.zoneFlankRiskWeight +
+                            isFrontlineNode * weightTable.control.frontlineWeight +
+                            stagingPressureValue * weightTable.control.stagingPressureWeight
+                        )
+            
+                        -- D2. STATIC RAID SCORE
+                        v.staticraidscore = (
+                            ((1.0 - enemyDistValue) * weightTable.raid.enemyDistanceWeight) +
+                            homePathDist * weightTable.raid.homeDistanceWeight +
+                            resourceValueRaid * weightTable.raid.incomeValueWeight + 
+                            controlValue * weightTable.raid.zoneStatusWeight +
+                            contiguityValue * weightTable.raid.contiguityWeight - 
+                            teamValueBonus * weightTable.raid.teamValueWeight +
+                            zoneFlankRaidBonus * weightTable.raid.zoneFlankWeight +
+                            isFrontlineNode * weightTable.raid.frontlineBypassWeight
+                        )
+            
+                        -- D3. STATIC AA DEFENSE SCORE
+                        -- Note: Uses specific keys from your aadefense weightTable
+                        local eAir = v.enemyairthreat or 0
+                        local eAntiAir = v.enemyantiairthreat or 0
+
+                        -- Apply the "Fighter/Scout Filter" logic to the static score
+                        local aaUrgency = eAir
+                        if eAir < 1 and eAntiAir > 0 then
+                            aaUrgency = 0 -- Don't value this zone for AA if it's just land-based AA
+                        end
+                        v.staticaascore = (
+                            (v.teamvalue or 0) * weightTable.aadefense.teamValue +
+                            (v.resourcevalue or 0) * weightTable.aadefense.massValue +
+                            (aaUrgency / 20 * weightTable.aadefense.enemyAir) +
+                            (aaEscortValue * weightTable.aadefense.frontlineWeight) +
+                            contiguityValue * weightTable.aadefense.contiguityWeight +
+                            adjacencyValue * weightTable.aadefense.adjacenyWeight
+                        )
+                        local globalAirScale = (myIntel.AirNow > enemyIntel.Air* 1.5) and 1.3 or 1.0
+
+                        -- D4. STATIC AIR SURFACE SCORE (Tunable)
+                        v.staticsurfaceairscore = (
+                            (resourceValueControl * weightTable.airsurface.incomeValueWeight) +
+                            (airSurfaceViabilityValue * weightTable.airsurface.viabilityWeight) +
+                            (airUtilityValue * weightTable.airsurface.utilityWeight) -
+                            (airExposureValue * weightTable.airsurface.exposurePenaltyWeight)
+                        ) * globalAirScale
+
+                        v.airRisk = (
+                        (localSurfaceAA * weightTable.airsurface.directSurfaceAaWeight) +
+                        (adjacentSurfaceAA * weightTable.airsurface.adjacentSurfaceAaWeight) +
+                        (totalFighterThreat * weightTable.airsurface.fighterRiskWeight)
+                        )
+                        local friendlyAa = (v.friendlydefenseantiairthreat or 0) + (v.friendlylandantiairthreat or 0)
+
+                        local netAaDeficit = math.max(0.0, airSurfacePotentialThreat - friendlyAa)
+                        local selfIncome = (v.zoneincome and v.zoneincome.selfincome) or 0
+                        local allyIncome = (v.zoneincome and v.zoneincome.allyincome) or 0
+                        local effectiveIncome = selfIncome + (allyIncome * 0.25)
+                        local enemyIncome = (v.zoneincome and v.zoneincome.enemyincome) or 0
+                        local airThreatPresence = (airSurfacePotentialThreat > 0) and 1.0 or 0.0
+                        
+                        local isEnemyZone = enemyIncome > 0 and effectiveIncome == 0
+                        if not isEnemyZone then
+                            v.airToSurfaceRisk = math.max(0.0, 
+                                (airSurfacePotentialThreat * weightTable.aadefense.enemyAir) 
+                                + (netAaDeficit * weightTable.aadefense.alliedAntiAirDeficit)
+                                + (effectiveIncome * weightTable.aadefense.incomeValueWeight * airThreatPresence)
+                                - (friendlyAa * weightTable.aadefense.friendlylandantiairthreat)
+                            )
+                        else
+                            v.airToSurfaceRisk = 0
+                        end
+
+                        self.HighValueRaidTargets = totalHighValueRaidTargets
+                        self.FrontlinePressureCount = totalFrontlinePressure
+                        self.ContestedIncomeCount = totalContestedIncomeZones
+
+                    if debugFocusZoneID then
+                            WARN(string.format("RNGLOG AUDIT: --- TUNING DATA FOR ZONE %s ---", tostring(id)))
+                            WARN(string.format("  [CONTROL SCORE: %.3f]", v.staticcontrolscore))
+                            LOG(string.format("    > EnemyDist:    (1.0 - %.2f) * %.1f = %.2f", enemyDistValue, weightTable.control.enemyDistanceWeight, (1.0 - enemyDistValue) * weightTable.control.enemyDistanceWeight))
+                            LOG(string.format("    > HomeBfsDist:  (1.0 - %.2f) * %.1f = %.2f", homePathDist, weightTable.control.homeDistanceWeight, (1.0 - homePathDist) * weightTable.control.homeDistanceWeight))
+                            LOG(string.format("    > ZoneIncome:   %.2f * %.1f = %.2f", resourceValueControl, weightTable.control.incomeValueWeight, resourceValueControl * weightTable.control.incomeValueWeight))
+                            LOG(string.format("    > AdaptiveStat: %.2f * %.1f = %.2f", controlValue, weightTable.control.zoneStatusWeight, controlValue * weightTable.control.zoneStatusWeight))
+                            LOG(string.format("    > Contiguity:   %.2f * %.1f = %.2f", contiguityValue, weightTable.control.contiguityWeight, contiguityValue * weightTable.control.contiguityWeight))
+                            LOG(string.format("    > HomeBias:     %.2f * %.1f = %.2f", zoneHomeValue, weightTable.control.zoneHomeWeight, zoneHomeValue * weightTable.control.zoneHomeWeight))
+                            LOG(string.format("    > TeamBonus:    -%.2f * %.1f = -%.2f", teamValueBonus, weightTable.control.teamValueWeight, teamValueBonus * weightTable.control.teamValueWeight))
+                            LOG(string.format("    > AdjThreat:    %.2f * %.1f = %.2f", adjacencyValue, weightTable.control.adjacencyThreatWeight, adjacencyValue * weightTable.control.adjacencyThreatWeight))
+                            LOG(string.format("    > Encircle:     %.2f * %.1f = %.2f", encirclementValue, weightTable.control.encirclementWeight, encirclementValue * weightTable.control.encirclementWeight))
+                            LOG(string.format("    > FlankRisk:    -%.2f * %.1f = -%.2f", zoneFlankRisk, weightTable.control.zoneFlankRiskWeight, zoneFlankRisk * weightTable.control.zoneFlankRiskWeight))
+                            
+                            WARN(string.format("  [RAID SCORE: %.3f]", v.staticraidscore))
+                            LOG(string.format("    > EnemyDist:    (1.0 - %.2f) * %.1f = %.2f", enemyDistValue, weightTable.raid.enemyDistanceWeight, (1.0 - enemyDistValue) * weightTable.raid.enemyDistanceWeight))
+                            LOG(string.format("    > HomeBfsDist:  %.2f * %.1f = %.2f", homePathDist, weightTable.raid.homeDistanceWeight, homePathDist * weightTable.raid.homeDistanceWeight))
+                            LOG(string.format("    > ZoneIncome:   %.2f * %.1f = %.2f", resourceValueRaid, weightTable.raid.incomeValueWeight, resourceValueRaid * weightTable.raid.incomeValueWeight))
+                            LOG(string.format("    > AdaptiveStat: %.2f * %.1f = %.2f", controlValue, weightTable.raid.zoneStatusWeight, controlValue * weightTable.raid.zoneStatusWeight))
+                            LOG(string.format("    > Contiguity:   %.2f * %.1f = %.2f", contiguityValue, weightTable.raid.contiguityWeight, contiguityValue * weightTable.raid.contiguityWeight))
+                            LOG(string.format("    > TeamBonus:    -%.2f * %.1f = -%.2f", teamValueBonus, weightTable.raid.teamValueWeight, teamValueBonus * weightTable.raid.teamValueWeight))
+                            LOG(string.format("    > ZoneFlankBonus:    %.2f * %.1f = %.2f", zoneFlankRaidBonus, weightTable.raid.zoneFlankWeight, zoneFlankRaidBonus * weightTable.raid.zoneFlankWeight))
+                            -- =====================================
+                            -- LIVE VISUAL DEBUG ENGINE INJECTION
+                            -- =====================================
+                            self.VisualDebugData = self.VisualDebugData or {}
+                            if v.pos then
+                                self.VisualDebugData[id] = {
+                                    pos = v.pos,
+                                    controlRadius = math.max(1, v.staticcontrolscore * 4),
+                                    raidRadius = math.max(1, v.staticraidscore * 4),
+                                    airSurfaceRadius = math.max(1, (v.staticsurfaceairscore or 0) * 4),
+                                    airRiskRadius = math.max(1, (v.airRisk or 0) * 2),
+                                    airSurfaceRisk = math.max(1, (v.airToSurfaceRisk or 0) * 2),
+                                    parentPos = nil
+                                }
+                                
+                                -- Trace structural paths for BFS without drawing yet
+                                if homeDepths[id] and homeDepths[id] > 0 then
+                                    for _, edge in ipairs(v.edges or {}) do
+                                        if homeDepths[edge.zone.id] and homeDepths[edge.zone.id] < homeDepths[id] then
+                                            self.VisualDebugData[id].parentPos = edge.zone.pos
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                elseif zoneType == 'Air' then
+                    zones = aiBrain.Zones.Land.zones
+                    -- 1. BFS PHASE: Path-Distance Mapping
+                    -- This determines homeDistanceValue and reachability via edges
+                    local homeDepths = {}
+                    if mainBaseZoneID then
+                        local queue = { { id = mainBaseZoneID, depth = 0 } }
+                        homeDepths[mainBaseZoneID] = 0
+                        local head = 1
+                        while head <= table.getn(queue) do
+                            local current = queue[head]
+                            head = head + 1
+                            local z = zones[current.id]
+                            for _, edge in ipairs(z.edges or {}) do
+                                if not homeDepths[edge.zone.id] and current.depth < MaxBfsDepth then
+                                    homeDepths[edge.zone.id] = current.depth + 1
+                                    table.insert(queue, { id = edge.zone.id, depth = current.depth + 1 })
+                                end
+                            end
+                        end
+                    end
+                    for id, v in zones do
+                        local localSurfaceAA, adjacentSurfaceAA, totalFighterThreat, airSurfacePotentialThreat = RUtils.GetZoneAirThreatValues(v, myIndex, mapDiagonalSq, enemyIntel.AirSurface, enemyIntel.Air)
+                        local airRisk = (
+                            (localSurfaceAA * weightTable.airsurface.directSurfaceAaWeight) +
+                            (adjacentSurfaceAA * weightTable.airsurface.adjacentSurfaceAaWeight) +
+                            (totalFighterThreat * weightTable.airsurface.fighterRiskWeight)
+                        )
+
+                        v.airRisk = airRisk
+                        v.airFighterThreat = totalFighterThreat
+                        v.staticsurfaceairscore = (airSurfacePotentialThreat * weightTable.airsurface.incomeValueWeight) - airRisk
+                        v.airToSurfaceRisk = airSurfacePotentialThreat + airRisk
+                        --[[
+                            -- =====================================
+                            -- LIVE VISUAL DEBUG ENGINE INJECTION
+                            -- =====================================
+                            self.VisualDebugData = self.VisualDebugData or {}
+                            if v.pos then
+                                self.VisualDebugData[id] = {
+                                    pos = v.pos,
+                                    airFighterThreat = math.max(1, (v.airFighterThreat or 0) * 2),
+                                    airSurfaceRadius = math.max(1, (v.staticsurfaceairscore or 0) * 2),
+                                    airRiskRadius = math.max(1, (v.airRisk or 0) * 2),
+                                    airSurfaceRisk = math.max(1, (v.airToSurfaceRisk or 0) * 2),
+                                    parentPos = nil
+                                }
+                                
+                                -- Trace structural paths for BFS without drawing yet
+                                if homeDepths[id] and homeDepths[id] > 0 then
+                                    for _, edge in ipairs(v.edges or {}) do
+                                        if homeDepths[edge.zone.id] and homeDepths[edge.zone.id] < homeDepths[id] then
+                                            self.VisualDebugData[id].parentPos = edge.zone.pos
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                            ]]
+                    end
+
                 end
             end
             coroutine.yield(20) 
@@ -1676,22 +1747,38 @@ IntelManager = Class {
             -- Render every single tick for solid, non-flickering visuals
             for id, data in self.VisualDebugData do
                 if data.pos then
-                    -- Solid Blue for Control Score Intensity
-                    DrawCircle(data.pos, data.controlRadius, '0000FF')
+                    -- 0000FF: blue, control score intensity.
+                    if data.controlRadius then
+                        DrawCircle(data.pos, data.controlRadius, '0000FF')
+                    end
                     
-                    -- Solid Red for Raid Score Intensity
-                    DrawCircle(data.pos, data.raidRadius, 'ffFF0000')
+                    -- ffFF0000: opaque red, raid score intensity.
+                    if data.raidRadius then
+                        DrawCircle(data.pos, data.raidRadius, 'ffFF0000')
+                    end 
 
-                    -- Solid Green for Air Surface Score
+                    -- ff00FF00: opaque green, air-surface score intensity.
+                    if data.airSurfaceRadius then
+                        DrawCircle(data.pos, data.airSurfaceRadius, 'ff00FF00')
+                    end
                     DrawCircle(data.pos, data.airSurfaceRadius, 'ff00FF00')
 
-                    -- Solid Magenta for Air Risk Score
-                    DrawCircle(data.pos, data.airRiskRadius, 'ffFF00FF')
+                    -- ffFF00FF: opaque magenta, air risk.
+                    if data.airRiskRadius then
+                        DrawCircle(data.pos, data.airRiskRadius, 'ffFF00FF')
+                    end
 
-                     -- Solid Magenta for Air Risk Score
-                    DrawCircle(data.pos, data.airSurfaceRisk, 'FF69B4')
+                    -- FF69B4: pink, air-surface risk.
+                    if data.airSurfaceRisk then
+                        DrawCircle(data.pos, data.airSurfaceRisk, 'FF69B4')
+                    end
+
+                    -- ffFF0000: opaque red, fighter threat.
+                    if data.airFighterThreat then
+                        DrawCircle(data.pos, data.airFighterThreat, 'ffFF0000')
+                    end
                     
-                    -- Solid Yellow lines for BFS paths back to base
+                    -- ffFFFF00: opaque yellow, BFS paths back to base.
                     if data.parentPos then
                         DrawLinePop(data.pos, data.parentPos, 'ffFFFF00')
                     end
@@ -1699,15 +1786,15 @@ IntelManager = Class {
                     -- Render Active Return Choices (Decays after 5 seconds)
                     if data.selectionExpiry and data.selectionExpiry > currentTime then
                         if data.lastSelectionType == 'raid' then
-                            -- Vivid Orange/Red for active Raid Target
+                            -- ffFF4500: opaque orange-red, active raid target.
                             DrawCircle(data.pos, 6, 'ffFF4500') 
                             DrawCircle(data.pos, 8, 'ffFF4500')
                         elseif data.lastSelectionType == 'control' then
-                            -- Deep Cyan for active Control Target
+                            -- ff00FFFF: opaque cyan, active control target.
                             DrawCircle(data.pos, 6, 'ff00FFFF')
                             DrawCircle(data.pos, 8, 'ff00FFFF')
                         else
-                            -- Magenta for any other types (aadefense, airsurface)
+                            -- ffFF00FF: opaque magenta, other active target types.
                             DrawCircle(data.pos, 6, 'ffFF00FF')
                             DrawCircle(data.pos, 8, 'ffFF00FF')
                         end
@@ -1717,6 +1804,7 @@ IntelManager = Class {
             for id, data in self.CurrentFrontLineZones do
                 if aiBrain.Zones.Land.zones[id] then
                     local renderPos = aiBrain.Zones.Land.zones[id].pos
+                    -- FFFFFF: white, current frontline zone.
                     DrawCircle(renderPos, 10, 'FFFFFF')
                 end
             end
@@ -1726,7 +1814,12 @@ IntelManager = Class {
 
     GetBestZoneForPlatoon = function(self, platoon, zonetype, origZoneID)
         local aiBrain = self.Brain
-        local zones = aiBrain.Zones.Land.zones
+        local movementLayer = platoon.MovementLayer or 'Land'
+        if movementLayer == 'Water' then
+            movementLayer = 'Naval'
+        end
+        local zoneGroup = aiBrain.Zones[movementLayer] or aiBrain.Zones.Land
+        local zones = zoneGroup.zones
         local platPos = platoon:GetPlatoonPosition()
         local weights = self.ZoneWeightTable[string.lower(zonetype or 'control')]
         local playableArea = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetPlayableAreaRNG()
@@ -1763,6 +1856,10 @@ IntelManager = Class {
                              (zonetype == 'aadefense') and v.staticaascore or 
                              (zonetype == 'airsurface') and v.staticsurfaceairscore or 
                              v.staticcontrolscore
+            if not baseScore then
+                --WARN(string.format("RNGAI WARNING: Zone %s has no static score for type %s. Skipping.", tostring(id), tostring(zonetype)))
+                return nil, nil
+            end
 
             -- 3. Dynamic Distance
             local distSq = VDist2Sq(platPos[1], platPos[3], v.pos[1], v.pos[3])

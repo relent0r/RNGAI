@@ -1734,9 +1734,6 @@ CaptureDoneRNG = function(unit, params)
 end
 
 BuildAIDoneRNG = function(unit, params)
-    if unit.AIPlatoonReference then
-        unit.AIPlatoonReference:LogDebug(string.format('BuildAIDoneRNG called for unit %s', unit.EntityId))
-    end
     if unit.Active or unit.Dead then 
         return 
     end

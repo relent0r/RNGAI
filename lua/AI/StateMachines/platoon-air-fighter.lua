@@ -136,40 +136,59 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                     --LOG('Current Platoon Threat '..tostring(self.CurrentPlatoonThreatAntiAir)..' Ally Threat '..tostring((aiBrain.BrainIntel.SelfThreat.AntiAirNow + aiBrain.BrainIntel.SelfThreat.AllyAntiAirThreat))..' Enemy Threat '..tostring(aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir))
                 -- Params aiBrain, position, platoon, squad, maxRange, atkPri, avoidbases, platoonThreat, index, ignoreCivilian, ignoreNotCompleted
                     if self.CurrentPlatoonThreatAntiAir > 0 then
-                        --LOG('Current platoon threat for fighters is '..tostring(self.CurrentPlatoonThreatAntiAir))
                         target = RUtils.FindAirTargetForTeamRNG(aiBrain, platPos, self, self.MaxRadius, self.CurrentPlatoonThreatAntiAir, self.AttackPriorities)
                         if target and not target.Dead then
-                            local im = aiBrain.IntelManager
                             local targetPos = target:GetPosition()
-                            local gridX, gridZ = im:GetIntelGrid(targetPos)
-                            local historicalThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
-                            if historicalThreat > self.CurrentEnemyThreatAntiAir then
-                                local emergencyDefensePos = aiBrain.BrainIntel.StartPos
-                                local distanceWeight = 0.5      -- how much distance reduces risk
-                                local histWeight     = 1.0      -- historical threat multiplier
-                                local inferredWeight = 1.0      -- inferred enemy threat multiplier
-                                local supportWeight  = -0.5     -- friendly AA reduces risk
-                                local dx = platPos[1] - targetPos[1]
-                                local dz = platPos[3] - targetPos[3]
-                                local distSq = dx*dx + dz*dz
-                                local distFactor = distSq / (self.MaxRadius*self.MaxRadius)
-                                local threatScore = histWeight * historicalThreat
-                                                    + inferredWeight * aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
-                                                    + distanceWeight * distFactor
-                                local maxAllowableThreat = self.CurrentPlatoonThreatAntiAir * 1.3  -- tune this
-                                --LOG('Threat score is '..tostring(threatScore)..' max threat allowed is '..tostring(maxAllowableThreat))
-                                if threatScore > maxAllowableThreat then
-                                    --LOG('Aborting target')
-                                    -- abort target acquisition
-                                    local hx = emergencyDefensePos[1] - targetPos[1]
-                                    local hz = emergencyDefensePos[3] - targetPos[3]
-                                    local homeDistSq = hx*hx + hz*hz
-                                    -- abort target acquisition
-                                    if homeDistSq > 6400 then
-                                        target = nil
+                            if targetPos then
+                                local distFromHomeSq = VDist3Sq(targetPos, self.Home)
+                                local operatingAreaSq = self.BaseDMZArea * self.BaseDMZArea
+                                if distFromHomeSq > operatingAreaSq then
+                                    if aiBrain.Zones and aiBrain.Zones.Land then
+                                        local zoneId = MAP:GetZoneID(targetPos, aiBrain.Zones.Land.index)
+                                        local targetZone = aiBrain.Zones.Land.zones[zoneId]
+                                        if targetZone then
+                                            local riskModifier = RUtils.AirRiskValidation(aiBrain, self, targetZone)
+                                            --LOG('FIGHTER_DECISION: Target: '..tostring(target.UnitId)..' RiskModifier: '..tostring(riskModifier))
+                                            if riskModifier < 0.3 then
+                                                target = nil
+                                            end
+                                        else
+                                            local im = aiBrain.IntelManager
+                                            local targetPos = target:GetPosition()
+                                            local gridX, gridZ = im:GetIntelGrid(targetPos)
+                                            local historicalThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
+                                            --LOG('FIGHTER_DECISION: Target: '..tostring(target.UnitId)..' HistoricalThreat: '..tostring(historicalThreat))
+                                            if historicalThreat > self.CurrentEnemyThreatAntiAir then
+                                                local emergencyDefensePos = aiBrain.BrainIntel.StartPos
+                                                local distanceWeight = 0.5      -- how much distance reduces risk
+                                                local histWeight     = 1.0      -- historical threat multiplier
+                                                local inferredWeight = 1.0      -- inferred enemy threat multiplier
+                                                local supportWeight  = -0.5     -- friendly AA reduces risk
+                                                local dx = platPos[1] - targetPos[1]
+                                                local dz = platPos[3] - targetPos[3]
+                                                local distSq = dx*dx + dz*dz
+                                                local distFactor = distSq / (self.MaxRadius*self.MaxRadius)
+                                                local threatScore = histWeight * historicalThreat
+                                                                    + inferredWeight * aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
+                                                                    + distanceWeight * distFactor
+                                                local maxAllowableThreat = self.CurrentPlatoonThreatAntiAir * 1.3  -- tune this
+                                                --LOG('Threat score is '..tostring(threatScore)..' max threat allowed is '..tostring(maxAllowableThreat))
+                                                if threatScore > maxAllowableThreat then
+                                                    --LOG('Aborting target')
+                                                    -- abort target acquisition
+                                                    local hx = emergencyDefensePos[1] - targetPos[1]
+                                                    local hz = emergencyDefensePos[3] - targetPos[3]
+                                                    local homeDistSq = hx*hx + hz*hz
+                                                    -- abort target acquisition
+                                                    if homeDistSq > 6400 then
+                                                        target = nil
+                                                    end
+                                                end
+                                                --LOG(string.format('FIGHTER_DECISION: Target: %s, Score: %.1f, MaxAllowed: %.1f, PlatoonThreat: %.1f', tostring(target.UnitId), threatScore, maxAllowableThreat, self.CurrentPlatoonThreatAntiAir))
+                                            end
+                                        end
                                     end
                                 end
-                                --LOG(string.format('FIGHTER_DECISION: Target: %s, Score: %.1f, MaxAllowed: %.1f, PlatoonThreat: %.1f', tostring(target.UnitId), threatScore, maxAllowableThreat, self.CurrentPlatoonThreatAntiAir))
                             end
                         end
                     end

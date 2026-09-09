@@ -4324,25 +4324,20 @@ function VisualizeSpokes(aiBrain, spokes, basePosition)
 end
 
 GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType)
-    --LOG('Get Defensive spoke point triggered for type '..tostring(pointType))
     local defensivePoint = false
     local dangerRadiusCheck = 20
     local basePosition = aiBrain.BuilderManagers[baseLocation].Position
     local baseZoneId = aiBrain.BuilderManagers[baseLocation].ZoneID
+    local defensiveSpokes = nil
 
     if pointType == 'Land' then
-        local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
+        defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
         local recentAngle = aiBrain.BasePerimeterMonitor[baseLocation].RecentLandAngle
-        if not recentAngle then 
-            --LOG('No recent land angle for position')
-            return false 
-        end
+        if not recentAngle then return false end
 
         local closestSpokeIndex = nil
         local smallestAngleDiff = nil
-        --LOG('Recent land angle is '..tostring(recentAngle))
 
-        -- Find the spoke whose direction most closely matches the recent enemy angle
         for spokeIndex, spokePoints in ipairs(defensiveSpokes) do
             local firstPoint = nil
             for _, pt in ipairs(spokePoints) do
@@ -4363,68 +4358,53 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
             end
         end
 
-        if not closestSpokeIndex then 
-            --LOG('No closestSpokeIndex')
-            return false 
-        end
+        if closestSpokeIndex then
+            local spokePoints = defensiveSpokes[closestSpokeIndex]
+            local spokeCount = table.getn(spokePoints)
 
-        local spokePoints = defensiveSpokes[closestSpokeIndex]
-        local spokeCount = table.getn(spokePoints)
-
-        -- Determine starting index based on pointTier
-        local startIndex, endIndex, step
-        if pointTier == 2 then
-            -- Tier 2 = outermost-first (for aggressive/outer defenses)
-            startIndex = spokeCount
-            endIndex = 1
-            step = -1
-        elseif pointTier == 1 then
-            -- Tier 1 or default = innermost-first (for fallback defenses)
-            startIndex = 2
-            endIndex = 1
-            step = -1
-        else
-            -- fallback innermost-first (for fallback defenses)
-            startIndex = 1
-            endIndex = spokeCount
-            step = 1
-        end
-
-        -- Search along the spoke, either inward or outward
-        for i = startIndex, endIndex, step do
-            local pt = spokePoints[i]
-            if not pt.Enabled then continue end
-            -- If this is the last point in the loop, accept it even if unsafe
-            if i == endIndex then
-                defensivePoint = pt.Position
-            end
-        
-            local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
-            if enemyUnits == 0 then
-                defensivePoint = pt.Position
-                break
+            local startIndex, endIndex, step
+            if pointTier == 2 then
+                startIndex = spokeCount
+                endIndex = 1
+                step = -1
+            elseif pointTier == 1 then
+                startIndex = 2
+                endIndex = 1
+                step = -1
             else
-                --LOG('Too many enemy units for spoke point')
+                startIndex = 1
+                endIndex = spokeCount
+                step = 1
+            end
+
+            for i = startIndex, endIndex, step do
+                local pt = spokePoints[i]
+                if not pt.Enabled then continue end
+
+                local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
+                if enemyUnits == 0 then
+                    defensivePoint = pt.Position
+                    break
+                end
             end
         end
+
     elseif pointType == 'AirSnipe' then
         if aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseLocation] and aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseLocation].PositionKey then
             local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseLocation].PositionKey
             local zoneId = aiBrain.BuilderManagers[baseLocation].ZoneID
             if zoneId then
                 local zone = aiBrain.Zones.Land.zones[zoneId]
-                if zone and positionKey then
-                    local aaCovered
-                    local aaCount = 0
-                    if zone.defensespokes then
-                        local layerTable = zone.defensespokes[positionKey.Spoke][positionKey.Layer]
-                        if layerTable then
-                            for k , v in layerTable.AntiAir do
-                                if v and not v.Dead then
-                                    aaCount = aaCount + 1
-                                    if aaCount < 5 then
-                                        return zone.defensespokes[positionKey.Spoke][positionKey.Layer].Position
-                                    end
+                if zone and positionKey and zone.defensespokes then
+                    defensiveSpokes = zone.defensespokes
+                    local layerTable = defensiveSpokes[positionKey.Spoke][positionKey.Layer]
+                    if layerTable then
+                        local aaCount = 0
+                        for k, v in layerTable.AntiAir do
+                            if v and not v.Dead then
+                                aaCount = aaCount + 1
+                                if aaCount < 5 then
+                                    return layerTable.Position
                                 end
                             end
                         end
@@ -4432,18 +4412,13 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                 end
             end
         else
-            local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
+            defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
             local recentAngle = aiBrain.BasePerimeterMonitor[baseLocation].RecentAirAngle
-            if not recentAngle then 
-                --LOG('No recent land angle for position')
-                return false 
-            end
-    
+            if not recentAngle then return false end
+
             local closestSpokeIndex = nil
             local smallestAngleDiff = nil
-            --LOG('Recent Air angle is '..tostring(recentAngle))
-    
-            -- Find the spoke whose direction most closely matches the recent enemy angle
+
             for spokeIndex, spokePoints in ipairs(defensiveSpokes) do
                 local firstPoint = nil
                 for _, pt in ipairs(spokePoints) do
@@ -4453,72 +4428,52 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                     end
                 end
                 if not firstPoint then continue end
-    
+
                 local spokeAngle = GetAngleToPosition(basePosition, firstPoint.Position)
                 local angleDiff = math.abs(recentAngle - spokeAngle)
                 if angleDiff > 180 then angleDiff = 360 - angleDiff end
-    
+
                 if not smallestAngleDiff or angleDiff < smallestAngleDiff then
                     smallestAngleDiff = angleDiff
                     closestSpokeIndex = spokeIndex
                 end
             end
-    
-            if not closestSpokeIndex then 
-                --LOG('No closestSpokeIndex')
-                return false 
-            end
-    
-            local spokePoints = defensiveSpokes[closestSpokeIndex]
-            local spokeCount = table.getn(spokePoints)
-    
-            -- Determine starting index based on pointTier
-            local startIndex, endIndex, step
-            if pointTier == 2 then
-                -- Tier 2 = outermost-first (for aggressive/outer defenses)
-                startIndex = spokeCount
-                endIndex = 1
-                step = -1
-            elseif pointTier == 1 then
-                -- Tier 1 or default = innermost-first (for fallback defenses)
-                startIndex = 2
-                endIndex = 1
-                step = -1
-            else
-                -- fallback innermost-first (for fallback defenses)
-                startIndex = 1
-                endIndex = spokeCount
-                step = 1
-            end
-    
-            -- Search along the spoke, either inward or outward
-            for i = startIndex, endIndex, step do
-                local pt = spokePoints[i]
-                if not pt.Enabled then continue end
-                -- If this is the last point in the loop, accept it even if unsafe
-                if i == endIndex then
-                    defensivePoint = pt.Position
-                end
-            
-                local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
-                if enemyUnits == 0 then
-                    defensivePoint = pt.Position
-                    break
+
+            if closestSpokeIndex then
+                local spokePoints = defensiveSpokes[closestSpokeIndex]
+                local spokeCount = table.getn(spokePoints)
+
+                local startIndex, endIndex, step
+                if pointTier == 2 then
+                    startIndex = spokeCount
+                    endIndex = 1
+                    step = -1
+                elseif pointTier == 1 then
+                    startIndex = 2
+                    endIndex = 1
+                    step = -1
                 else
-                    --LOG('Too many enemy units for spoke point')
+                    startIndex = 1
+                    endIndex = spokeCount
+                    step = 1
+                end
+
+                for i = startIndex, endIndex, step do
+                    local pt = spokePoints[i]
+                    if not pt.Enabled then continue end
+
+                    local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
+                    if enemyUnits == 0 then
+                        defensivePoint = pt.Position
+                        break
+                    end
                 end
             end
         end
+
     elseif pointType == 'MobileAntiAir' then
-        local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
-        local snipeActive = aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat
-        local targetSpoke = nil
-        local targetLayer = 2 -- Layer 2 is the "sweet spot" for mobile units
-        
-        -- If a snipe is happening, we prioritize spokes near the ACU or the RecentAirAngle
-        local searchAngle = aiBrain.BasePerimeterMonitor[baseLocation].RecentAirAngle or 0
-        
-        -- To avoid stacking, we look for the spoke with the LOWEST current mobile AA count
+        defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
+        local targetLayer = 2
         local lowestUnitCount = 999
         local bestSpokeIndex = nil
 
@@ -4526,10 +4481,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
             local pt = spokePoints[targetLayer]
             if not pt or not pt.Enabled then continue end
 
-            -- Initialize the counter if it doesn't exist
             local numMobileAACount = GetNumUnitsAroundPoint(aiBrain, categories.ANTIAIR, pt.Position, 20, 'Ally')
-            
-            -- Distribution Logic: Find the spoke with the least mobile units
             if numMobileAACount < lowestUnitCount then
                 lowestUnitCount = numMobileAACount
                 bestSpokeIndex = spokeIndex
@@ -4537,23 +4489,17 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
         end
 
         if bestSpokeIndex then
-            local pt = defensiveSpokes[bestSpokeIndex][targetLayer]
-            -- Pre-emptive return
-            defensivePoint = pt.Position
+            defensivePoint = defensiveSpokes[bestSpokeIndex][targetLayer].Position
         end
+
     elseif pointType == 'AntiAir' then
-        local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
+        defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
         local recentAngle = aiBrain.BasePerimeterMonitor[baseLocation].RecentAirAngle
-        if not recentAngle then 
-            --LOG('No recent land angle for position')
-            return false 
-        end
+        if not recentAngle then return false end
 
         local closestSpokeIndex = nil
         local smallestAngleDiff = nil
-        --LOG('Recent Air angle is '..tostring(recentAngle))
 
-        -- Find the spoke whose direction most closely matches the recent enemy angle
         for spokeIndex, spokePoints in ipairs(defensiveSpokes) do
             local firstPoint = nil
             for _, pt in ipairs(spokePoints) do
@@ -4574,64 +4520,45 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
             end
         end
 
-        if not closestSpokeIndex then 
-            --LOG('No closestSpokeIndex')
-            return false 
-        end
+        if closestSpokeIndex then
+            local spokePoints = defensiveSpokes[closestSpokeIndex]
+            local spokeCount = table.getn(spokePoints)
 
-        local spokePoints = defensiveSpokes[closestSpokeIndex]
-        local spokeCount = table.getn(spokePoints)
-
-        -- Determine starting index based on pointTier
-        local startIndex, endIndex, step
-        if pointTier == 2 then
-            -- Tier 2 = outermost-first (for aggressive/outer defenses)
-            startIndex = spokeCount
-            endIndex = 1
-            step = -1
-        elseif pointTier == 1 then
-            -- Tier 1 or default = innermost-first (for fallback defenses)
-            startIndex = 2
-            endIndex = 1
-            step = -1
-        else
-            -- fallback innermost-first (for fallback defenses)
-            startIndex = 1
-            endIndex = spokeCount
-            step = 1
-        end
-
-        -- Search along the spoke, either inward or outward
-        for i = startIndex, endIndex, step do
-            local pt = spokePoints[i]
-            if not pt.Enabled then continue end
-            -- If this is the last point in the loop, accept it even if unsafe
-            if i == endIndex then
-                defensivePoint = pt.Position
-            end
-        
-            local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
-            if enemyUnits == 0 then
-                defensivePoint = pt.Position
-                break
+            local startIndex, endIndex, step
+            if pointTier == 2 then
+                startIndex = spokeCount
+                endIndex = 1
+                step = -1
+            elseif pointTier == 1 then
+                startIndex = 2
+                endIndex = 1
+                step = -1
             else
-                --LOG('Too many enemy units for spoke point')
+                startIndex = 1
+                endIndex = spokeCount
+                step = 1
+            end
+
+            for i = startIndex, endIndex, step do
+                local pt = spokePoints[i]
+                if not pt.Enabled then continue end
+
+                local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
+                if enemyUnits == 0 then
+                    defensivePoint = pt.Position
+                    break
+                end
             end
         end
+
     elseif pointType == 'Naval' then
-        --LOG('Zone id for base is '..tostring(baseZoneId))
-        local defensiveSpokes = aiBrain.Zones.Naval.zones[baseZoneId].defensespokes
+        defensiveSpokes = aiBrain.Zones.Naval.zones[baseZoneId].defensespokes
         local recentAngle = aiBrain.BasePerimeterMonitor[baseLocation].RecentNavalAngle
-        if not recentAngle then 
-            --LOG('No recent naval angle for position')
-            return false 
-        end
+        if not recentAngle then return false end
 
         local closestSpokeIndex = nil
         local smallestAngleDiff = nil
-        --LOG('Recent Naval angle is '..tostring(recentAngle))
 
-        -- Find the spoke whose direction most closely matches the recent enemy angle
         for spokeIndex, spokePoints in ipairs(defensiveSpokes) do
             local firstPoint = nil
             for _, pt in ipairs(spokePoints) do
@@ -4652,111 +4579,88 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
             end
         end
 
-        if not closestSpokeIndex then 
-            --LOG('No closestSpokeIndex')
-            return false 
-        end
+        if closestSpokeIndex then
+            local spokePoints = defensiveSpokes[closestSpokeIndex]
+            local spokeCount = table.getn(spokePoints)
 
-        local spokePoints = defensiveSpokes[closestSpokeIndex]
-        local spokeCount = table.getn(spokePoints)
-
-        -- Determine starting index based on pointTier
-        local startIndex, endIndex, step
-        if pointTier == 2 then
-            -- Tier 2 = outermost-first (for aggressive/outer defenses)
-            startIndex = spokeCount
-            endIndex = 1
-            step = -1
-        elseif pointTier == 1 then
-            -- Tier 1 or default = innermost-first (for fallback defenses)
-            startIndex = 2
-            endIndex = 1
-            step = -1
-        else
-            -- fallback innermost-first (for fallback defenses)
-            startIndex = 1
-            endIndex = spokeCount
-            step = 1
-        end
-
-        -- Search along the spoke, either inward or outward
-        for i = startIndex, endIndex, step do
-            local pt = spokePoints[i]
-            if not pt.Enabled then continue end
-            -- If this is the last point in the loop, accept it even if unsafe
-            if i == endIndex then
-                defensivePoint = pt.Position
-            end
-        
-            local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
-            if enemyUnits == 0 then
-                defensivePoint = pt.Position
-                break
+            local startIndex, endIndex, step
+            if pointTier == 2 then
+                startIndex = spokeCount
+                endIndex = 1
+                step = -1
+            elseif pointTier == 1 then
+                startIndex = 2
+                endIndex = 1
+                step = -1
             else
-                --LOG('Too many enemy units for spoke point')
+                startIndex = 1
+                endIndex = spokeCount
+                step = 1
+            end
+
+            for i = startIndex, endIndex, step do
+                local pt = spokePoints[i]
+                if not pt.Enabled then continue end
+
+                local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
+                if enemyUnits == 0 then
+                    defensivePoint = pt.Position
+                    break
+                end
             end
         end
+
     elseif pointType == 'Silo' then
-        local defensiveSpokes
         local baseZone = aiBrain.BuilderManagers[baseLocation].ZoneID
         if aiBrain.BuilderManagers[baseLocation].Layer == 'Water' then
             defensiveSpokes = aiBrain.Zones.Naval.zones[baseZoneId].defensespokes
         else
             defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
         end
+
         if baseZone and aiBrain.Zones.Land.zones[baseZone].enemySiloAngle then
             local recentAngle = aiBrain.Zones.Land.zones[baseZone].enemySiloAngle
-            if not recentAngle then return false end
+            if recentAngle then
+                local closestSpokeIndex = GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, recentAngle)
+                if closestSpokeIndex then
+                    local spokePoints = defensiveSpokes[closestSpokeIndex]
+                    local spokeCount = table.getn(spokePoints)
 
-            local closestSpokeIndex = GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, recentAngle)
+                    local startIndex, endIndex, step
+                    if pointTier == 2 then
+                        startIndex = spokeCount
+                        endIndex = 1
+                        step = -1
+                    elseif pointTier == 1 then
+                        startIndex = 2
+                        endIndex = 1
+                        step = -1
+                    else
+                        startIndex = 1
+                        endIndex = spokeCount
+                        step = 1
+                    end
 
-            if not closestSpokeIndex then return false end
+                    for i = startIndex, endIndex, step do
+                        local pt = spokePoints[i]
+                        if not pt.Enabled then continue end
 
-            local spokePoints = defensiveSpokes[closestSpokeIndex]
-            local spokeCount = table.getn(spokePoints)
-
-            -- Determine starting index based on pointTier
-            local startIndex, endIndex, step
-            if pointTier == 2 then
-                -- Tier 2 = outermost-first (for aggressive/outer defenses)
-                startIndex = spokeCount
-                endIndex = 1
-                step = -1
-            elseif pointTier == 1 then
-                -- Tier 1 or default = innermost-first (for fallback defenses)
-                startIndex = 2
-                endIndex = 1
-                step = -1
-            else
-                -- fallback innermost-first (for fallback defenses)
-                startIndex = 1
-                endIndex = spokeCount
-                step = 1
-            end
-
-            -- Search along the spoke, either inward or outward
-            for i = startIndex, endIndex, step do
-                local pt = spokePoints[i]
-                if not pt.Enabled then continue end
-                if i == endIndex then
-                    defensivePoint = pt.Position
-                end
-            
-                local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
-                if enemyUnits == 0 then
-                    defensivePoint = pt.Position
-                    break
-                else
-                    --LOG('Too many enemy units for spoke point')
+                        local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
+                        if enemyUnits == 0 then
+                            defensivePoint = pt.Position
+                            break
+                        end
+                    end
                 end
             end
         end
+
     elseif pointType == 'TML' then
         local baseZone = aiBrain.BuilderManagers[baseLocation].ZoneID
-        local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
-        if baseZone and aiBrain.Zones.Land.zones[baseZone].RecentTMLAngle then
+        defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
+        if baseZone then
             local recentAngle = aiBrain.Zones.Land.zones[baseZone].RecentTMLAngle
-            if not recentAngle then 
+            if not recentAngle then
                 local bestTargetDistance
                 local bestTargetPoint
                 for k, v in aiBrain.EnemyIntel.EnemyStartLocations do
@@ -4773,55 +4677,44 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
             end
 
             local closestSpokeIndex = GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, recentAngle)
+            if closestSpokeIndex then
+                local spokePoints = defensiveSpokes[closestSpokeIndex]
+                local spokeCount = table.getn(spokePoints)
 
-            if not closestSpokeIndex then return false end
-
-            local spokePoints = defensiveSpokes[closestSpokeIndex]
-            local spokeCount = table.getn(spokePoints)
-
-            -- Determine starting index based on pointTier
-            local startIndex, endIndex, step
-            if pointTier == 2 then
-                -- Tier 2 = outermost-first (for aggressive/outer defenses)
-                startIndex = spokeCount
-                endIndex = 1
-                step = -1
-            elseif pointTier == 1 then
-                -- Tier 1 or default = innermost-first (for fallback defenses)
-                startIndex = 2
-                endIndex = 1
-                step = -1
-            else
-                -- fallback innermost-first (for fallback defenses)
-                startIndex = 1
-                endIndex = spokeCount
-                step = 1
-            end
-
-            -- Search along the spoke, either inward or outward
-            for i = startIndex, endIndex, step do
-                local pt = spokePoints[i]
-                if not pt.Enabled then continue end
-                if i == endIndex then
-                    defensivePoint = pt.Position
-                end
-                local isTMDPresent = GetSpokePointStructureType(spokePoints[i], 'TMD')
-                if isTMDPresent then
-                    --LOG('Already TMD at this spoke point')
-                    continue
-                end
-                local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
-                if enemyUnits == 0 then
-                    defensivePoint = pt.Position
-                    break
+                local startIndex, endIndex, step
+                if pointTier == 2 then
+                    startIndex = spokeCount
+                    endIndex = 1
+                    step = -1
+                elseif pointTier == 1 then
+                    startIndex = 2
+                    endIndex = 1
+                    step = -1
                 else
-                    --LOG('Too many enemy units for spoke point')
+                    startIndex = 1
+                    endIndex = spokeCount
+                    step = 1
+                end
+
+                for i = startIndex, endIndex, step do
+                    local pt = spokePoints[i]
+                    if not pt.Enabled then continue end
+
+                    local isTMDPresent = GetSpokePointStructureType(spokePoints[i], 'TMD')
+                    if isTMDPresent then continue end
+
+                    local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
+                    if enemyUnits == 0 then
+                        defensivePoint = pt.Position
+                        break
+                    end
                 end
             end
         end
+
     elseif pointType == 'STRUCTURE' then
         local baseZone = aiBrain.BuilderManagers[baseLocation].ZoneID
-        local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
+        defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
         if baseZone then
             local bestTargetDistance
             local bestTargetPoint
@@ -4835,66 +4728,54 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
             if not bestTargetPoint then
                 bestTargetPoint = aiBrain.MapCenterPoint
             end
-            recentAngle = GetAngleToPosition(basePosition, bestTargetPoint)
+            local recentAngle = GetAngleToPosition(basePosition, bestTargetPoint)
             local closestSpokeIndex = GetClosestSpokeIndexFromAngle(basePosition, defensiveSpokes, recentAngle)
 
-            if not closestSpokeIndex then return false end
+            if closestSpokeIndex then
+                local spokePoints = defensiveSpokes[closestSpokeIndex]
+                local spokeCount = table.getn(spokePoints)
 
-            local spokePoints = defensiveSpokes[closestSpokeIndex]
-            local spokeCount = table.getn(spokePoints)
-
-            -- Determine starting index based on pointTier
-            local startIndex, endIndex, step
-            if pointTier == 2 then
-                -- Tier 2 = outermost-first (for aggressive/outer defenses)
-                startIndex = spokeCount
-                endIndex = 1
-                step = -1
-            elseif pointTier == 1 then
-                -- Tier 1 or default = innermost-first (for fallback defenses)
-                startIndex = 2
-                endIndex = 1
-                step = -1
-            else
-                -- fallback innermost-first (for fallback defenses)
-                startIndex = 1
-                endIndex = spokeCount
-                step = 1
-            end
-
-            -- Search along the spoke, either inward or outward
-            for i = startIndex, endIndex, step do
-                local pt = spokePoints[i]
-                if not pt.Enabled then continue end
-                if i == endIndex then
-                    defensivePoint = pt.Position
-                end
-                local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
-                if enemyUnits == 0 then
-                    defensivePoint = pt.Position
-                    break
+                local startIndex, endIndex, step
+                if pointTier == 2 then
+                    startIndex = spokeCount
+                    endIndex = 1
+                    step = -1
+                elseif pointTier == 1 then
+                    startIndex = 2
+                    endIndex = 1
+                    step = -1
                 else
-                    --LOG('Too many enemy units for spoke point')
+                    startIndex = 1
+                    endIndex = spokeCount
+                    step = 1
+                end
+
+                for i = startIndex, endIndex, step do
+                    local pt = spokePoints[i]
+                    if not pt.Enabled then continue end
+
+                    local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
+                    if enemyUnits == 0 then
+                        defensivePoint = pt.Position
+                        break
+                    end
                 end
             end
         end
+
     elseif pointType == 'SHIELD' then
         local baseZone = aiBrain.BuilderManagers[baseLocation].ZoneID
-        local defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
+        defensiveSpokes = aiBrain.Zones.Land.zones[baseZoneId].defensespokes
         if baseZone then
             local acuShieldRequired = false
             if pointTier == 2 and aiBrain.IntelManager.StrategyFlags.EnemyAirSnipeThreat then
-                --LOG('Enemy Air Snipe Threat')
                 local positionKey = aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseLocation].PositionKey
-                --LOG('Position key returned '..tostring(repr(positionKey)))
                 if positionKey then
                     local spokePoint = defensiveSpokes[positionKey.Spoke][positionKey.Layer]
                     local isShieldPresent = GetSpokePointStructureType(spokePoint, 'Shields')
-                    --LOG('Is shield present '..tostring(isShieldPresent))
                     if not isShieldPresent then
                         acuShieldRequired = true
                         defensivePoint = aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseLocation].Position
-                        --LOG('Defensive point being returned is '..tostring(repr(defensivePoint)))
                     end
                 end
             end
@@ -4907,7 +4788,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                                 unitCount = unitCount + 1
                             end
                         end
-        
+
                         if unitCount > 1 then
                             local shieldPresent = false
                             for _, shield in point.Shields do
@@ -4916,29 +4797,25 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                                     break
                                 end
                             end
-        
+
                             if not shieldPresent then
                                 defensivePoint = point.Position
                                 break
                             end
                         end
                     end
-                    if defensivePoint then
-                        break
-                    end
+                    if defensivePoint then break end
                 end
             end
         end
     end
 
-    if defensivePoint then
-        --aiBrain:ForkThread(DrawCircleAtPosition, defensivePoint)
-        --LOG('Requestion for type '..tostring(pointType)..' defensiveSpokePoint returned '..tostring(repr(defensivePoint)))
-        return defensivePoint
+    -- Complete Fallback: Return center position if no valid spoke point was found
+    if not defensivePoint and defensiveSpokes and defensiveSpokes.Center and defensiveSpokes.Center[1] and defensiveSpokes.Center[1].Enabled then
+        return defensiveSpokes.Center[1].Position
     end
-    --LOG('Requestion for type '..tostring(pointType)..' defensiveSpokePoint returned false')
 
-    return false
+    return defensivePoint
 end
 
 function GetSpokePointStructureType(spokePoint, structureType)
@@ -5693,11 +5570,18 @@ end
 
 GetHoldingPosition = function(aiBrain, platoon, threatType, maxRadius)
     local bestHoldingPos = false
-    local mainManagers = aiBrain.BuilderManagers['MAIN']
-    if not mainManagers then return false end
+    local homePos = platoon.Home
+    if not homePos then
+        local mainManagers = aiBrain.BuilderManagers['MAIN']
+        if mainManagers then
+            homePos = mainManagers.Position
+        else
+            homePos = aiBrain.BrainIntel.StartPos
+        end
+    end
+    if not homePos then return false end
     
-    local mainPos = mainManagers.Position
-    local threatLocations = aiBrain:GetThreatsAroundPosition(mainPos, 16, true, threatType)
+    local threatLocations = aiBrain:GetThreatsAroundPosition(homePos, 16, true, threatType)
     local operatingAreaSq = aiBrain.OperatingAreas['BaseDMZArea'] * aiBrain.OperatingAreas['BaseDMZArea']
     
     local bestThreatPos = false
@@ -5707,12 +5591,22 @@ GetHoldingPosition = function(aiBrain, platoon, threatType, maxRadius)
     if not RNGTableEmpty(threatLocations) then
         for _, v in threatLocations do
             local threatPos = {v[1], 0, v[2]}
-            local distToMainSq = VDist3Sq(mainPos, threatPos)
+            local distToHomeSq = VDist3Sq(homePos, threatPos)
             -- Focus on threats outside the immediate base but within response range
-            if distToMainSq > 625 and v[3] > highestThreatVal then
+            if distToHomeSq > 625 and v[3] > highestThreatVal then
                 highestThreatVal = v[3]
                 bestThreatPos = threatPos
             end
+        end
+    end
+
+    -- Fallback: If no active threat location near base, establish default threat vector towards enemy start pos
+    if not bestThreatPos then
+        if aiBrain.EnemyIntel.EnemyStartPos then
+            bestThreatPos = aiBrain.EnemyIntel.EnemyStartPos
+        elseif aiBrain.BrainIntel and aiBrain.BrainIntel.StartPos then
+            local startPos = aiBrain.BrainIntel.StartPos
+            bestThreatPos = { (startPos[1] + 256) / 2, 0, (startPos[3] + 256) / 2 }
         end
     end
 
@@ -5722,27 +5616,26 @@ GetHoldingPosition = function(aiBrain, platoon, threatType, maxRadius)
     local airZones = aiBrain.Zones.Air.zones
     local maxRadiusSq = maxRadius * maxRadius
     local bestScore = -1
-    local distBaseToThreatSq = VDist3Sq(mainPos, bestThreatPos)
+    local distBaseToThreatSq = VDist3Sq(homePos, bestThreatPos)
+
+    local platThreat = platoon.CurrentPlatoonThreatAntiAir or 10
 
     for i = 1, table.getn(airZones) do
         local zone = airZones[i]
         local zonePos = zone.pos
-        local distZoneToMainSq = VDist3Sq(mainPos, zonePos)
+        local distZoneToHomeSq = VDist3Sq(homePos, zonePos)
 
         -- Constraint: Zone must be within the Operating Area and Platoon's Max Radius
-        if distZoneToMainSq < operatingAreaSq and distZoneToMainSq < maxRadiusSq then
+        if distZoneToHomeSq < operatingAreaSq and distZoneToHomeSq < maxRadiusSq then
             
             -- Safety Audit: Is the zone crawling with enemy AA?
-            -- We ignore zones where enemy AA threat is significant.
             local enemyAA = zone.enemyantiairthreat or 0
-            if enemyAA < 5 then
+            if enemyAA < math.max(5, platThreat * 0.4) then
                 local distZoneToThreatSq = VDist3Sq(zonePos, bestThreatPos)
                 
                 -- Scoring Heuristic:
-                -- + Bonus for being closer to the threat than the main base (Forward Leaning)
+                -- + Bonus for being closer to the threat than home base (Forward Leaning)
                 -- + Bonus for friendly static AA (Safety/Baiting)
-                -- - Penalty for being too far from the main base (Over-extending)
-                
                 local forwardLeaningScore = distBaseToThreatSq - distZoneToThreatSq
                 local staticSupportScore = (zone.friendlylandantiairthreat or 0) * 10
                 
@@ -5756,9 +5649,9 @@ GetHoldingPosition = function(aiBrain, platoon, threatType, maxRadius)
         end
     end
 
-    -- Fallback: If no ideal zone is found, stay at Main Base
+    -- Fallback: If no ideal zone is found, stay at Home Position
     if not bestHoldingPos then
-        bestHoldingPos = mainPos
+        bestHoldingPos = homePos
     end
 
     if aiBrain.RNGDEBUG then
@@ -5977,8 +5870,22 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                         elseif airOnly then
                             if unitCats.AIR then
                                 if unitDist > operatingArea * operatingArea then
-                                    local currentThreat = aiBrain:GetThreatAtPosition( unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir' )
-                                    if currentThreat < 30 then
+                                    local riskModifier = 1.0
+                                    if aiBrain.Zones and aiBrain.Zones.Land then
+                                        local zoneId = MAP:GetZoneID(unitPos, aiBrain.Zones.Land.index)
+                                        local targetZone = aiBrain.Zones.Land.zones[zoneId]
+                                        if targetZone then
+                                            riskModifier = AirRiskValidation(aiBrain, platoon, targetZone)
+                                            --LOG('HighPriority Target targetZone found, air risk modier is ' .. tostring(riskModifier))
+                                        else
+                                            local currentThreat = aiBrain:GetThreatAtPosition( unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir' )
+                                            --LOG('HighPriority Target no targetZone found, air threat is ' .. tostring(currentThreat))
+                                            if currentThreat < 30 then
+                                                riskModifier = 0.25
+                                            end
+                                        end
+                                    end
+                                    if riskModifier >= 0.25 then
                                         closestTarget = v.object
                                     end
                                 else
@@ -6055,14 +5962,31 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                                 end
                             elseif airOnly then
                                 if unitCats.AIR and (v.type == 'bomber' or v.type == 'gunship') then
-                                    if v.priority * priorityModifier >= 250 then
-                                        tempPoint = (v.priority * priorityModifier + (v.danger or 0))/RNGMAX(targetDistance,30*30)
-                                        if tempPoint > highestPriority then
+                                    local priorityModifier = 1
+                                    local targetDistance = VDist3Sq(v.Position, homeLocation)
+                                    local riskModifier = 1.0
+                                    if aiBrain.Zones and aiBrain.Zones.Land then
+                                        local zoneId = MAP:GetZoneID(v.Position, aiBrain.Zones.Land.index)
+                                        local targetZone = aiBrain.Zones.Land.zones[zoneId]
+                                       if targetZone then
+                                            riskModifier = AirRiskValidation(aiBrain, platoon, targetZone)
+                                            --LOG('HighPriority Target targetZone found, air risk modier is ' .. tostring(riskModifier))
+                                        else
+                                            local currentThreat = aiBrain:GetThreatAtPosition( unitPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir' )
+                                            --LOG('HighPriority Target no targetZone found, air threat is ' .. tostring(currentThreat))
+                                            if currentThreat < 30 then
+                                                riskModifier = 0.25
+                                            end
+                                        end
+                                    end
+                                    if riskModifier >= 0.25 or targetDistance <= operatingArea * operatingArea then
+                                        local tempPoint = ((v.priority * priorityModifier * riskModifier) + (v.danger or 0)) / RNGMAX(targetDistance, 900)
+                                        if tempPoint > highestPriority and tempPoint > 0.05 then
                                             highestPriority = tempPoint
                                             closestTarget = v.unit
                                         end
                                     end
-                                end
+                                end      
                             elseif platoon.PlatoonName == 'GunshipBehavior' then
                                 --local debugZone
                                 local isPureFighter = unitCats.AIR and unitCats.ANTIAIR and not unitCats.GROUNDATTACK

@@ -160,6 +160,8 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                     end
+                    target = nil
+                    self.BuilderData = {}
                 end
             end
             if not target then
@@ -175,17 +177,21 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                     local tx = platPos[1] - targetPosition[1]
                     local tz = platPos[3] - targetPosition[3]
                     local targetDistance = tx * tx + tz * tz
+                    local rawThreat = aiBrain:GetThreatAtPosition(targetPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+                    
                     if targetDistance < 22500 then
-                        ----self:LogDebug(string.format('Bomber AttackTarget on ACU Snipe'))
-                        --LOG('Torpedo Bomber using  high priority target')
-                        self:ChangeState(self.AttackTarget)
-                        return
+                        local canEngage = self.CurrentPlatoonThreatAntiNavy > math.min(rawThreat, 24)
+                        if canEngage then
+                            ----self:LogDebug(string.format('Bomber AttackTarget on ACU Snipe'))
+                            --LOG('Torpedo Bomber using  high priority target at close range, raw threat was '..tostring(rawThreat)..' current platoon threat is '..tostring(self.CurrentPlatoonThreatAntiNavy))
+                            self:ChangeState(self.AttackTarget)
+                            return
+                        end
                     else
                         local im = aiBrain.IntelManager
                         local gridX, gridZ = im:GetIntelGrid(targetPosition)
                         local historicalThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
-                        local threat = aiBrain:GetThreatAtPosition(targetPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
-                        local maxThreat = math.max(historicalThreat, threat)
+                        local maxThreat = math.max(historicalThreat, rawThreat)
                         --LOG('Torpedo bomber high priority target found, historical antiair threat at grid position is '..tostring(maxThreat)..' current platoon threat is '..tostring(self.CurrentPlatoonThreatAntiNavy))
                         --self:LogDebug(string.format('Torpedo bomber historical threat at high priority position '..tostring(historicalThreat)))
                         if self.CurrentPlatoonThreatAntiNavy > math.min(maxThreat, 60) or target.Blueprint.CategoriesHash.EXPERIMENTAL and self.CurrentPlatoonThreatAntiNavy > 65 then
@@ -199,14 +205,15 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                             local hz = self.Home[3] - targetPosition[3]
                             local targetDistanceToHome = hx * hx + hz * hz
                             if targetDistanceToHome < (enemyWeaponRange * enemyWeaponRange) * 1.2 and self.CurrentPlatoonThreatAntiNavy > 35 then
+                                --LOG('Torpedo Bomber using  high priority target outside close rage, raw threat was '..tostring(rawThreat)..' current platoon threat is '..tostring(self.CurrentPlatoonThreatAntiNavy))
                                 self:ChangeState(self.AttackTarget)
                                 return
                             end
-                            target = nil
-                            self.BuilderData = {}
                             --LOG('We are not going to attack him because hes too strong')
                         end
                     end
+                    target = nil
+                    self.BuilderData = {}
                 end
             end
             if not target then
@@ -214,42 +221,44 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                 target = RUtils.AIFindBrainTargetInRangeRNG(aiBrain, platPos, self, 'Attack', self.MaxTargetSearchRadius, self.TargetSearchCategories, true, self.CurrentPlatoonThreatAntiNavy, nil, nil, nil, true)
                 if target and not target.Dead then
                     --LOG('Bomber point pos '..repr(point.Position)..' with a priority of '..point.priority)
-                        if not self.retreat then
-                            self.BuilderData = {
-                                AttackTarget = target,
-                                Position = target:GetPosition()
-                            }
-                            --LOG('Bomber navigating to target')
-                            --LOG('Retreating to platoon')
-                            local targetPosition = self.BuilderData.Position
-                            local tx = platPos[1] - targetPosition[1]
-                            local tz = platPos[3] - targetPosition[3]
-                            local targetDistance = tx * tx + tz * tz
-                            if targetDistance < 22500 then
+                    if not self.retreat then
+                        self.BuilderData = {
+                            AttackTarget = target,
+                            Position = target:GetPosition()
+                        }
+                        --LOG('Bomber navigating to target')
+                        --LOG('Retreating to platoon')
+                        local targetPosition = self.BuilderData.Position
+                        local tx = platPos[1] - targetPosition[1]
+                        local tz = platPos[3] - targetPosition[3]
+                        local targetDistance = tx * tx + tz * tz
+                        local rawThreat = aiBrain:GetThreatAtPosition(targetPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+                        if targetDistance < 22500 then
+                            local canEngage = self.CurrentPlatoonThreatAntiNavy > math.min(rawThreat, 24)
+                            if canEngage then
                                 ----self:LogDebug(string.format('Torp Bomber AttackTarget'))
-                                --LOG('Torpedo Bomber using AIFindBrainTargetInRangeRNG unit ')
+                                --LOG('Torpedo Bomber using AIFindBrainTargetInRangeRNG close range unit '..tostring(rawThreat)..' current platoon threat is '..tostring(self.CurrentPlatoonThreatAntiNavy))
                                 self:ChangeState(self.AttackTarget)
                                 return
-                            else
-                                ----self:LogDebug(string.format('Torp Bomber navigating to target'))
-                                local im = aiBrain.IntelManager
-                                local gridX, gridZ = im:GetIntelGrid(targetPosition)
-                                local historicalThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
-                                local threat = aiBrain:GetThreatAtPosition(targetPosition, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
-                                local maxThreat = math.max(historicalThreat, threat)
-                                --LOG('Torpedo bomber target found, historical antiair threat at grid position is '..tostring(maxThreat)..' current platoon threat is '..tostring(self.CurrentPlatoonThreatAntiNavy))
-                                --self:LogDebug(string.format('Torpedo bomber historical threat at target position '..tostring(maxThreat)))
-                                if self.CurrentPlatoonThreatAntiNavy > math.min(maxThreat, 60) then
-                                    --LOG('Attacking high priority unit because')
-                                    self:ChangeState(self.Navigating)
-                                    return
-                                else
-                                    target = nil
-                                    self.BuilderData = {}
-                                end
+                            end
+                        else
+                            ----self:LogDebug(string.format('Torp Bomber navigating to target'))
+                            local im = aiBrain.IntelManager
+                            local gridX, gridZ = im:GetIntelGrid(targetPosition)
+                            local historicalThreat = im:GetHistoricalThreatInRings(gridX, gridZ, 'AntiAir', aiBrain.BrainIntel.IMAPConfig.Rings)
+                            local maxThreat = math.max(historicalThreat, rawThreat)
+                            --LOG('Torpedo bomber target found, historical antiair threat at grid position is '..tostring(maxThreat)..' current platoon threat is '..tostring(self.CurrentPlatoonThreatAntiNavy))
+                            --self:LogDebug(string.format('Torpedo bomber historical threat at target position '..tostring(maxThreat)))
+                            if self.CurrentPlatoonThreatAntiNavy > math.min(maxThreat, 60) then
+                                --LOG('Attacking high priority unit because')
+                                self:ChangeState(self.Navigating)
+                                return
                             end
                         end
                     end
+                end
+                target = nil
+                self.BuilderData = {}
             end
             if not target and VDist3Sq(platPos, self.Home) > 900 then
                 self.BuilderData = {

@@ -2,6 +2,7 @@ local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
 local IntelManager = import('/mods/RNGAI/lua/IntelManagement/IntelManager.lua')
 local RNGAIGLOBALS = import("/mods/RNGAI/lua/AI/RNGAIGlobals.lua")
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local NavUtils = import('/lua/sim/NavUtils.lua')
 local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 
 local WeakValueTable = { __mode = 'v' }
@@ -243,6 +244,121 @@ function OnBombReleased(weapon, projectile)
                 weaponUnit['rngdata'].BombLastReleased = GetGameTimeSeconds()
                 weaponUnit.PlatoonHandle:ChangeState(weaponUnit.PlatoonHandle.ReleasedBomb)
             end
+        end
+    end
+end
+
+function OnWeaponFired(weapon, firingUnit)
+    if not RNGAIGLOBALS.RNGAIPresent or not weapon then
+        return
+    end
+
+    local attacker = firingUnit or weapon.unit
+    if not attacker or attacker.Dead or not attacker.GetAIBrain then
+        return
+    end
+
+    local weaponBlueprint = weapon.Blueprint or weapon.bp
+    if not weaponBlueprint and weapon.GetBlueprint then
+        weaponBlueprint = weapon:GetBlueprint()
+    end
+    if not weaponBlueprint then
+        return
+    end
+
+    local weaponCategory = weaponBlueprint.WeaponCategory
+    if weaponBlueprint.MuzzleVelocity == nil or weaponBlueprint.MuzzleVelocity <= 0 then
+        return
+    end
+    if weaponCategory ~= 'Direct Fire'
+        and weaponCategory ~= 'Direct Fire Naval'
+        and weaponCategory ~= 'Direct Fire Experimental'
+        and weaponCategory ~= 'Artillery'
+        and weaponCategory ~= 'Missile'
+        and weaponCategory ~= 'Indirect Fire'
+        and weaponBlueprint.RangeCategory ~= 'UWRC_IndirectFire'
+        and weaponBlueprint.RangeCategory ~= 'UWRC_DirectFire' then
+        return
+    end
+
+    local target
+    if weapon.GetCurrentTarget then
+        target = weapon:GetCurrentTarget()
+    end
+    if not target or target.Dead or not target.GetPosition or not target.GetAIBrain then
+        return
+    end
+
+    local targetCategories = target.Blueprint.CategoriesHash
+    if not targetCategories.MOBILE or targetCategories.AIR or targetCategories.STRUCTURE then
+        return
+    end
+
+    local targetData = target['rngdata']
+    if not targetData or not target.AIPlatoonReference then
+        return
+    end
+
+    local now = GetGameTimeSeconds()
+    local previousRequest = targetData.DodgeRequest
+    if previousRequest and previousRequest.Expires > now then
+        return
+    end
+
+    local targetBrain = target:GetAIBrain()
+    if not targetBrain or not targetBrain.RNG then
+        return
+    end
+
+    local attackerBrain = weapon.Brain or attacker:GetAIBrain()
+    if attackerBrain == targetBrain then
+        return
+    end
+
+    local targetPosition = target:GetPosition()
+    local impactPosition = targetPosition
+    if weapon.GetCurrentTargetPos then
+        impactPosition = weapon:GetCurrentTargetPos() or targetPosition
+    end
+
+    local damage = weaponBlueprint.Damage or 0
+    local targetHealth = target:GetHealth()
+    if damage <= 0 or targetHealth <= 0 or (damage < 300 and damage / targetHealth < 0.01) then
+        return
+    end
+
+    local damageRadius = weaponBlueprint.DamageRadius or 0
+    local muzzleVelocity = weaponBlueprint.MuzzleVelocity or 0
+    local attackerPosition = attacker:GetPosition()
+    local deltaX = attackerPosition[1] - impactPosition[1]
+    local deltaY = attackerPosition[2] - impactPosition[2]
+    local deltaZ = attackerPosition[3] - impactPosition[3]
+    local distanceSquared = deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ
+    if distanceSquared > (muzzleVelocity * 3) * (muzzleVelocity * 3)
+        or distanceSquared < (muzzleVelocity * 0.15) * (muzzleVelocity * 0.15) then
+        return
+    end
+
+    local timeUntilImpact = math.sqrt(distanceSquared) / muzzleVelocity
+
+    local dodgeRadius = math.max(4, math.min(10, damageRadius + 4))
+    local dodgeDuration = math.max(0.35, math.min(1.2, timeUntilImpact + 0.35))
+
+    local unitPosition = target:GetPosition()
+    local dodgePosition = RUtils.AvoidLocation(impactPosition, unitPosition, dodgeRadius)
+    local movementLayer = target:GetCurrentLayer()
+
+    if dodgePosition and movementLayer and NavUtils.CanPathTo(movementLayer, unitPosition, dodgePosition) then
+        targetData.DodgeRequest = {
+            Position = dodgePosition,
+            Expires = now + dodgeDuration,
+            Damage = damage,
+            Source = attacker,
+        }
+
+        local navigator = target.GetNavigator and target:GetNavigator()
+        if navigator then
+            navigator:SetGoal(dodgePosition)
         end
     end
 end

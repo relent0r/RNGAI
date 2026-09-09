@@ -111,8 +111,9 @@ local BomberResponse = function(self, aiBrain, builderManager, builderData)
         --RNGLOG('Bomber Response for land phase < 2 and enemy air threat low')
         return 890
     end
-    if aiBrain.BasePerimeterMonitor[builderManager.LocationType].LandUnits > 0 and aiBrain.BasePerimeterMonitor[builderManager.LocationType].AirUnits < 3 and aiBrain.BasePerimeterMonitor[builderManager.LocationType].AirThreat < 30 then
-        --RNGLOG('Bomber Response for Perimeter Monitor is true')
+    local perimeterMonitor = aiBrain.BasePerimeterMonitor[builderManager.LocationType]
+    if perimeterMonitor and perimeterMonitor.SurfaceLandUnits > 0 and perimeterMonitor.AirUnits < 3 and perimeterMonitor.AirThreat < 30 then
+        --LOG('Bomber Response for Perimeter Monitor is true')
         return 920
     end
     if aiBrain.BrainIntel.SuicideModeActive then
@@ -577,7 +578,7 @@ BuilderGroup {
         Priority = 890,
         BuilderConditions = {
             { MIBC, 'TransportPressureLevelRNG', {3} },
-            { MIBC, 'TransportNeedsT2RNG', { 2 } },
+            { MIBC, 'TransportNeedsT2RNG', { 3 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 1.0 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },
@@ -697,7 +698,7 @@ BuilderGroup {
         Priority = 890,
         BuilderConditions = {
             { MIBC, 'TransportPressureLevelRNG', {3} },
-            { MIBC, 'TransportNeedsT2RNG', { 2 } },
+            { MIBC, 'TransportNeedsT2RNG', { 3 } },
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.85, 1.0 }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.TRANSPORTFOCUS * categories.TECH2 - categories.GROUNDATTACK } },
             { UCBC, 'HaveLessThanUnitsInCategoryBeingBuiltRNG', { 1, categories.TRANSPORTFOCUS - categories.GROUNDATTACK } },

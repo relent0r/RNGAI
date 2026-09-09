@@ -139,14 +139,10 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                 local radarRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(eng, self:GetPlatoonPosition(), 45, 'RADAR')
                 if radarRequestPos then
                     import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = { PreAllocatedTask = true, Task = 'RadarBuild', Position = radarRequestPos, LocationType = self.LocationType} }, self, self:GetPlatoonUnits())
+                    return
                 end
             end
             if builderData and builderData.StateWanted == 'GetReclaimTable' then
-                self:LogDebug(string.format('We are switching to ReclaimTable state and we already had it set'))
-                self:ChangeState(self.GetReclaimTable)
-                return
-            end
-                if builderData and builderData.StateWanted == 'GetReclaimTable' then
                 self:LogDebug(string.format('We are switching to ReclaimTable state and we already had it set'))
                 self:ChangeState(self.GetReclaimTable)
                 return
@@ -1333,6 +1329,19 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
     CompleteBuild = State {
 
         StateName = 'CompleteBuild',
+
+        --- Check for reclaim or assist or expansion specific things based on distance from base.
+        ---@param self AIPlatoonEngineerBehavior
+        Main = function(self)
+            coroutine.yield(10)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
+
+    PerformBuildTask = State {
+
+        StateName = 'PerformBuildTask',
 
         --- Check for reclaim or assist or expansion specific things based on distance from base.
         ---@param self AIPlatoonEngineerBehavior

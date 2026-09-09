@@ -40,17 +40,6 @@ BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T1 Ratio',
     BuildersType = 'FactoryBuilder',
     Builder {
-        BuilderName = 'RNGAI T1 Air Scout Demand',
-        PlatoonTemplate = 'T1AirScout',
-        Priority = 750, -- After second engie group
-        BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T1', 'scout'} },
-            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', false, true}},
-            { UCBC, 'UnitCapCheckLess', { .85 } },
-        },
-        BuilderType = 'Air',
-    },
-    Builder {
         BuilderName = 'RNGAI T1 Air Interceptor',
         PlatoonTemplate = 'T1AirFighter',
         Priority = 750,
@@ -168,20 +157,6 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Air Builder T3 Ratio',
     BuildersType = 'FactoryBuilder',
-    Builder {
-        BuilderName = 'RNGAI T3 Scout Demand',
-        PlatoonTemplate = 'T3AirScout',
-        Priority = 755,
-        BuilderConditions = {
-            { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T3', 'scout'} },
-            { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading', false, true}},
-            { UCBC, 'UnitCapCheckLess', { .85 } },
-        },
-        BuilderType = 'Air',
-        BuilderData = {
-            TechLevel = 3
-        },
-    },
     Builder {
         BuilderName = 'RNGAI T3 ASF',
         PlatoonTemplate = 'T3AirFighter',

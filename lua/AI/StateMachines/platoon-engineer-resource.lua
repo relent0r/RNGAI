@@ -1010,6 +1010,19 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             return
         end,
     },
+
+    PerformBuildTask = State {
+
+        StateName = 'PerformBuildTask',
+
+        --- Check for reclaim or assist or expansion specific things based on distance from base.
+        ---@param self AIPlatoonEngineerBehavior
+        Main = function(self)
+            coroutine.yield(10)
+            self:ChangeState(self.DecideWhatToDo)
+            return
+        end,
+    },
 }
 
 ---@param data { Behavior: 'AIBehavior' }

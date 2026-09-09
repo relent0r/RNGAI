@@ -3703,6 +3703,7 @@ AIBrain = Class(RNGAIBrainClass) {
         while true do
             for k, v in self.BuilderManagers do
                 local landUnits = 0
+                local surfaceLandUnits = 0
                 local airUnits = 0
                 local antiSurfaceAir = 0
                 local navalUnits = 0
@@ -3727,37 +3728,41 @@ AIBrain = Class(RNGAIBrainClass) {
                 else
                     perimeterMonitorRadius = baseRestrictedArea
                 end
-                if v.FactoryManager.LocationActive and self.BuilderManagers[k].FactoryManager and not RNGTableEmpty(self.BuilderManagers[k].FactoryManager.FactoryList) then
+                if v.FactoryManager and v.FactoryManager.LocationActive and not RNGTableEmpty(v.FactoryManager.FactoryList) then
                     if not self.BasePerimeterMonitor[k] then
                         self.BasePerimeterMonitor[k] = {}
                         self.BasePerimeterMonitor[k].HighestLandThreat = 0
                     end
-                    local enemyUnits = self:GetUnitsAroundPoint(categories.ALLUNITS - categories.SCOUT - categories.INSIGNIFICANTUNIT, self.BuilderManagers[k].FactoryManager.Location, perimeterMonitorRadius , 'Enemy')
+                    local enemyUnits = self:GetUnitsAroundPoint(categories.ALLUNITS - categories.SCOUT - categories.INSIGNIFICANTUNIT, v.FactoryManager.Location, perimeterMonitorRadius , 'Enemy')
                     for _, unit in enemyUnits do
                         if unit and not unit.Dead then
                             unitBp = unit.Blueprint
                             unitCat = unitBp.CategoriesHash
                             if unitCat.MOBILE then
-                                if unitCat.LAND or unitCat.AMPHIBIOUS or unitCat.COMMAND then
+                                if unitCat.LAND or unitCat.AMPHIBIOUS or unitCat.HOVER or unitCat.COMMAND then
+                                    local amphibiousInWater = unitCat.AMPHIBIOUS and not unitCat.HOVER and RUtils.PositionInWater(unit:GetPosition())
                                     landUnits = landUnits + 1
+                                    if not amphibiousInWater then
+                                        surfaceLandUnits = surfaceLandUnits + 1
+                                    end
                                     if unitCat.COMMAND then
                                         landThreat = landThreat + unit:EnhancementThreatReturn()
                                     else
-                                        landThreat = landThreat + unit.Blueprint.Defense.SurfaceThreatLevel
+                                        landThreat = landThreat + unitBp.Defense.SurfaceThreatLevel
                                     end
                                     if unitBp.Weapon[1].WeaponCategory == 'Direct Fire' then
                                         if not unitWeaponMaxRange or unitBp.Weapon[1].MaxRadius > unitWeaponMaxRange then
                                             unitWeaponMaxRange = unitBp.Weapon[1].MaxRadius
                                         end
                                     end
-                                    if unit.Blueprint.Defense.AirThreatLevel then
-                                        airThreat = airThreat + unit.Blueprint.Defense.AirThreatLevel
+                                    if unitBp.Defense.AirThreatLevel then
+                                        airThreat = airThreat + unitBp.Defense.AirThreatLevel
                                     end
                                     if landUnits == 1 then
                                         local unitPos = unit:GetPosition()
-                                        enemyLandAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
-                                        local ex = self.BuilderManagers[k].Position[1] - unitPos[1]
-                                        local ez = self.BuilderManagers[k].Position[3] - unitPos[3]
+                                        enemyLandAngle = RUtils.GetAngleToPosition(v.Position, unitPos)
+                                        local ex = v.Position[1] - unitPos[1]
+                                        local ez = v.Position[3] - unitPos[3]
                                         local posDistance = ex * ex + ez * ez
                                         enemyLandDistance = posDistance
                                     end
@@ -3765,39 +3770,39 @@ AIBrain = Class(RNGAIBrainClass) {
                                 end
                                 if unitCat.MOBILE and unitCat.AIR and (unitCat.GROUNDATTACK or unitCat.BOMBER) then
                                     antiSurfaceAir = antiSurfaceAir + 1
-                                    airThreat = airThreat + unit.Blueprint.Defense.AirThreatLevel
+                                    airThreat = airThreat + unitBp.Defense.AirThreatLevel
                                     if antiSurfaceAir == 1 then
                                         local unitPos = unit:GetPosition()
-                                        enemySurfaceAirAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
+                                        enemySurfaceAirAngle = RUtils.GetAngleToPosition(v.Position, unitPos)
                                     end
                                     continue
                                 end
                                 if unitCat.AIR then
                                     airUnits = airUnits + 1
-                                    airThreat = airThreat + unit.Blueprint.Defense.AirThreatLevel
+                                    airThreat = airThreat + unitBp.Defense.AirThreatLevel
                                     if airUnits == 1 then
                                         local unitPos = unit:GetPosition()
-                                        enemyAirAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
+                                        enemyAirAngle = RUtils.GetAngleToPosition(v.Position, unitPos)
                                     end
                                     if unitCat.ANTIAIR then
                                         antiAirUnits = antiAirUnits + 1
-                                        antiAirThreat = antiAirThreat + unit.Blueprint.Defense.AirThreatLevel
+                                        antiAirThreat = antiAirThreat + unitBp.Defense.AirThreatLevel
                                     end
                                     continue
                                 end
                                 if unitCat.NAVAL then
                                     navalUnits = navalUnits + 1
-                                    navalThreat = navalThreat + unit.Blueprint.Defense.SurfaceThreatLevel + unit.Blueprint.Defense.AirThreatLevel + unit.Blueprint.Defense.SubThreatLevel
+                                    navalThreat = navalThreat + unitBp.Defense.SurfaceThreatLevel + unitBp.Defense.AirThreatLevel + unitBp.Defense.SubThreatLevel
                                     if navalUnits == 1 then
                                         local unitPos = unit:GetPosition()
-                                        enemyNavalAngle = RUtils.GetAngleToPosition(self.BuilderManagers[k].Position, unitPos)
+                                        enemyNavalAngle = RUtils.GetAngleToPosition(v.Position, unitPos)
                                     end
                                     continue
                                 end
                             elseif unitCat.STRUCTURE then
                                 if unitCat.DIRECTFIRE and unitCat.DEFENSE then
                                     structureUnits = structureUnits + 1
-                                    structureThreat = structureThreat + unit.Blueprint.Defense.SurfaceThreatLevel
+                                    structureThreat = structureThreat + unitBp.Defense.SurfaceThreatLevel
                                 end
                             end
                         end
@@ -3811,6 +3816,7 @@ AIBrain = Class(RNGAIBrainClass) {
                         end
                     end
                     self.BasePerimeterMonitor[k].LandUnits = landUnits
+                    self.BasePerimeterMonitor[k].SurfaceLandUnits = surfaceLandUnits
                     if enemyLandAngle then
                         self.BasePerimeterMonitor[k].RecentLandAngle = enemyLandAngle
                         self.BasePerimeterMonitor[k].RecentLandDistance = enemyLandDistance

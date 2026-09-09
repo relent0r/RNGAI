@@ -109,7 +109,7 @@ AIPlatoonGunshipBehavior = Class(AIPlatoonRNG) {
                 --LOG(string.format('Gunship Total platoon health decayed: '..tostring(platoonHealth / 45)))
                 --LOG(string.format('Gunship Total enemy health multiplier: '..tostring(totalEnemyAntiAirHealth * 1.3)))
                 --LOG(string.format('Gunship Total enemy threat: '..tostring(totalEnemyAntiAirThreat)))
-                if totalEnemyAntiAirHealth * 1.3 < platoonHealth and totalEnemyAntiAirThreat < (platoonHealth / 45) then
+                if totalEnemyAntiAirThreat < (self.CurrentPlatoonThreatAntiSurface * 0.65) and totalEnemyAntiAirHealth < platoonHealth then
                     --LOG('Gunship ignoring threat and attacking new target')
                     if newTarget then
                         self.BuilderData = {

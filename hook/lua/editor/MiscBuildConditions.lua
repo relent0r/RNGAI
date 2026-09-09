@@ -246,15 +246,18 @@ function TransportNeedsT2RNG(aiBrain, minSlots)
 
     -- 1. Hard Tech Constraint: T2 or T3 units waiting
     if (transportPressure.MissingMedium or 0) > 0 or (transportPressure.MissingLarge or 0) > 0 then
+        --LOG('TransportNeedsT2RNG: T2/T3 units waiting, returning true')
         return true
     end
 
     -- 2. Payload Volume Constraint: Single dense drop or total combat volume
     if (transportPressure.MaxSingleRequestSlots or 0) >= slotThreshold then
+        --LOG('TransportNeedsT2RNG: Single request exceeds threshold, returning true')
         return true
     end
 
     if (transportPressure.CombatDropSlots or 0) >= slotThreshold then
+        --LOG('TransportNeedsT2RNG: Total combat drop slots exceeds threshold, returning true')
         return true
     end
 

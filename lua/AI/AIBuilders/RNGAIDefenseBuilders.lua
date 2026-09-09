@@ -327,7 +327,7 @@ BuilderGroup {
         InstanceCount = 1,
         BuilderType = 'Any',
         BuilderConditions = {
-            { TBC, 'ThreatCloseToBase', {}},
+            { TBC, 'ThreatCloseToBase', {'LocationType', 18}},
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.7, 0.9 }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 4, categories.TECH2 * categories.ARTILLERY}},
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -1115,7 +1115,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2TMLStructureRNG',
         Priority = 1,
         InstanceCount = 1000,
-        FormRadius = 100,
+        FormRadius = 80,
         BuilderConditions = {
             -- Have we the eco to build it ?
             -- When do we want to build this ?

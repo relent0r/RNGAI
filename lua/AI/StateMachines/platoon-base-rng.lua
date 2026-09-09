@@ -24,6 +24,42 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
         self.Trash:Destroy()
     end,
 
+        ---@param self AIPlatoon
+    ---@param name AIPlatoonState
+    ---@param state? table
+    ChangeState = function(self, name, state)
+        self:LogDebug(string.format('Changing state to: %s', tostring(name.StateName)))
+        if not name.StateName or not self[name.StateName] then
+            WARN(string.format('AIPlatoon: Invalid state transition attempted on platoon %s. Target state: %s', tostring(self.BuilderName or 'Unknown'), tostring(name and name.StateName or name)))
+            LOG(reprsl(debug.traceback()))
+            return
+        end
+
+        WaitTicks(1)
+
+        if not IsDestroyed(self) then
+            self.State = state
+            ChangeState(self, name)
+        end
+    end,
+
+    ---@param self AIPlatoon
+    ---@param name AIPlatoonState
+    ---@param state? table
+    ChangeStateExt = function(self, name, state)
+        self:LogDebug(string.format('Changing state to: %s', tostring(name.StateName)))
+        if not name.StateName or not self[name.StateName] then
+            WARN(string.format('AIPlatoon: Invalid state transition attempted on platoon %s. Target state: %s', tostring(self.BuilderName or 'Unknown'), tostring(name and name.StateName or name)))
+            LOG(reprsl(debug.traceback()))
+            return
+        end
+
+        if not IsDestroyed(self) then
+            self.State = state
+            ChangeState(self, name)
+        end
+    end,
+
     RegisterPlatoon = function(self, aiBrain)
         if self.PlatoonData and self.PlatoonData.StateMachine then
             local stateMachine = self.PlatoonData.StateMachine
