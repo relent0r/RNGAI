@@ -956,6 +956,79 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI Land Factory Reclaim Expansion',
+    BuildersType = 'EngineerBuilder',
+
+    -- Reclaims T1 land factories at rear / expansion bases when frontline bases take over mass demand.
+    -- Protected by Hysteresis Deadband in ZoneBasedFactoryToMassSupported (currentRatio > 1.30 * productionRatio).
+    Builder {
+        BuilderName = 'RNGAI Engineer Reclaim T1 Land Expansion',
+        PlatoonTemplate = 'EngineerStateT123RNG',
+        Priority = 1040,
+        InstanceCount = 1,
+        BuilderConditions = {
+            -- Only reclaim T1 if base has at least 1 higher-tech factory or frontline base has active factories
+            { UCBC, 'FactoryTechMixCheckRNG', { 'LocationType', 'Land', 1, 0, 0, true } },
+            -- ZoneBasedFactoryToMassSupported returns '>' (true) ONLY when rear base is >30% over budget
+            { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Land', false,false, false } },
+        },
+        BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'ReclaimStructure',
+            JobType = 'ReclaimStructure',
+            LocationType = 'LocationType',
+            ReclaimMax = 1,
+            Reclaim = { categories.STRUCTURE * categories.TECH1 * categories.LAND * categories.FACTORY },
+        },
+        BuilderType = 'Any',
+    },
+
+    -- Reclaims T2 support land factories at rear / expansion bases if mass is severely over budget.
+    Builder {
+        BuilderName = 'RNGAI Engineer Reclaim T2 Land Expansion',
+        PlatoonTemplate = 'EngineerStateT123RNG',
+        Priority = 1030,
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'FactoryTechMixCheckRNG', { 'LocationType', 'Land', 2, 0, 0, true } },
+            { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Land', false,false, false } },
+        },
+        BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'ReclaimStructure',
+            JobType = 'ReclaimStructure',
+            LocationType = 'LocationType',
+            ReclaimMax = 1,
+            Reclaim = { categories.STRUCTURE * categories.TECH2 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY },
+        },
+        BuilderType = 'Any',
+    },
+
+    Builder {
+        BuilderName = 'RNGAI Engineer Reclaim T3 Land Expansion',
+        PlatoonTemplate = 'EngineerStateT123RNG',
+        Priority = 1030,
+        InstanceCount = 1,
+        BuilderConditions = {
+                { UCBC, 'FactoryTechMixCheckRNG', { 'LocationType', 'Land', 3, 3, false, true } },
+                { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '>', 'Land', false,false, false } },
+            },
+        BuilderData = {
+            StateMachine = 'PreAllocatedTask',
+            PreAllocatedTask = true,
+            Task = 'ReclaimStructure',
+            JobType = 'ReclaimStructure',
+            LocationType = 'LocationType',
+            ReclaimMax = 1,
+            Reclaim = {categories.STRUCTURE * categories.TECH3 * categories.LAND * categories.FACTORY * categories.SUPPORTFACTORY},
+        },
+        BuilderType = 'Any',
+    },
+}
+
+BuilderGroup {
     BuilderGroupName = 'RNGAI Air Factory Reclaim',
     BuildersType = 'EngineerBuilder',
     Builder {

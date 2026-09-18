@@ -616,6 +616,9 @@ StructureManager = Class {
                         local landFactoryBuildRate = 0
                         local airFactoryBuildRate = 0
                         local navalFactoryBuildRate = 0
+                        local landFactoryApproxSpend = 0
+                        local airFactoryApproxSpend = 0
+                        local navalFactoryApproxSpend = 0
                         local localT1LandUpgradingCount = 0
                         local localT1AirUpgradingCount = 0
                         local localT1NavalUpgradingCount = 0
@@ -635,6 +638,7 @@ StructureManager = Class {
                                         end
                                         FactoryData.TotalT1LAND = FactoryData.TotalT1LAND + 1
                                         FactoryData.T1LANDApproxConsumption = FactoryData.T1LANDApproxConsumption + massToFactoryValues.T1LandValue
+                                        landFactoryApproxSpend = landFactoryApproxSpend + massToFactoryValues.T1LandValue
                                         if unit.Label then
                                             if not labelMassDrain[unit.Label] then
                                                 labelMassDrain[unit.Label] = {
@@ -660,6 +664,7 @@ StructureManager = Class {
                                         end
                                         FactoryData.TotalT2LAND = FactoryData.TotalT2LAND + 1
                                         FactoryData.T2LANDApproxConsumption = FactoryData.T2LANDApproxConsumption + massToFactoryValues.T2LandValue
+                                        landFactoryApproxSpend = landFactoryApproxSpend + massToFactoryValues.T2LandValue
                                         if unit.Label then
                                             if not labelMassDrain[unit.Label] then
                                                 labelMassDrain[unit.Label] = {
@@ -681,6 +686,7 @@ StructureManager = Class {
                                         landFactoryBuildRate = landFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         FactoryData.TotalT3LAND = FactoryData.TotalT3LAND + 1
                                         FactoryData.T3LANDApproxConsumption = FactoryData.T3LANDApproxConsumption + massToFactoryValues.T3LandValue
+                                        landFactoryApproxSpend = landFactoryApproxSpend + massToFactoryValues.T3LandValue
                                         if unit.Label then
                                             if not labelMassDrain[unit.Label] then
                                                 labelMassDrain[unit.Label] = {
@@ -703,6 +709,7 @@ StructureManager = Class {
                                         end
                                         FactoryData.TotalT1AIR = FactoryData.TotalT1AIR + 1
                                         FactoryData.T1AIRApproxConsumption = FactoryData.T1AIRApproxConsumption + massToFactoryValues.T1AirValue
+                                        airFactoryApproxSpend = airFactoryApproxSpend + massToFactoryValues.T1AirValue
                                         if unit.Label then
                                             if not labelMassDrain[unit.Label] then
                                                 labelMassDrain[unit.Label] = {
@@ -728,6 +735,7 @@ StructureManager = Class {
                                         end
                                         FactoryData.TotalT2AIR = FactoryData.TotalT2AIR + 1
                                         FactoryData.T2AIRApproxConsumption = FactoryData.T2AIRApproxConsumption + massToFactoryValues.T2AirValue
+                                        airFactoryApproxSpend = airFactoryApproxSpend + massToFactoryValues.T2AirValue
                                         if unit.Label then
                                             if not labelMassDrain[unit.Label] then
                                                 labelMassDrain[unit.Label] = {
@@ -749,6 +757,7 @@ StructureManager = Class {
                                         airFactoryBuildRate = airFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         FactoryData.TotalT3AIR = FactoryData.TotalT3AIR + 1
                                         FactoryData.T3AIRApproxConsumption = FactoryData.T3AIRApproxConsumption + massToFactoryValues.T3AirValue
+                                        airFactoryApproxSpend = airFactoryApproxSpend + massToFactoryValues.T3AirValue
                                         if unit.Label then
                                             if not labelMassDrain[unit.Label] then
                                                 labelMassDrain[unit.Label] = {
@@ -770,6 +779,7 @@ StructureManager = Class {
                                         end
                                         FactoryData.TotalT1NAVAL = FactoryData.TotalT1NAVAL + 1
                                         FactoryData.T1NAVALApproxConsumption = FactoryData.T1NAVALApproxConsumption + massToFactoryValues.T1NavalValue
+                                        navalFactoryApproxSpend = navalFactoryApproxSpend + massToFactoryValues.T1NavalValue
                                         if unit.Label then
                                             if not labelMassDrain[unit.Label] then
                                                 labelMassDrain[unit.Label] = {
@@ -795,6 +805,7 @@ StructureManager = Class {
                                         end
                                         FactoryData.TotalT2NAVAL = FactoryData.TotalT2NAVAL + 1
                                         FactoryData.T2NAVALApproxConsumption = FactoryData.T2NAVALApproxConsumption + massToFactoryValues.T2NavalValue
+                                        navalFactoryApproxSpend = navalFactoryApproxSpend + massToFactoryValues.T1NavalValue
                                         if unit.Label then
                                             if not labelMassDrain[unit.Label] then
                                                 labelMassDrain[unit.Label] = {
@@ -816,6 +827,7 @@ StructureManager = Class {
                                         navalFactoryBuildRate = navalFactoryBuildRate + ((unit.Blueprint.Economy.BuildRate or 0) * buildMultiplier)
                                         FactoryData.TotalT3NAVAL = FactoryData.TotalT3NAVAL + 1
                                         FactoryData.T3NAVALApproxConsumption = FactoryData.T3NAVALApproxConsumption + massToFactoryValues.T3NavalValue
+                                        navalFactoryApproxSpend = navalFactoryApproxSpend + massToFactoryValues.T3NavalValue
                                         if unit.Label then
                                             if not labelMassDrain[unit.Label] then
                                                 labelMassDrain[unit.Label] = {
@@ -833,6 +845,9 @@ StructureManager = Class {
                         manager.FactoryManager.LandBuildRate = landFactoryBuildRate
                         manager.FactoryManager.AirBuildRate = airFactoryBuildRate
                         manager.FactoryManager.NavalBuildRate = navalFactoryBuildRate
+                        manager.FactoryManager.LandApproxSpend = landFactoryApproxSpend
+                        manager.FactoryManager.AirApproxSpend = airFactoryApproxSpend
+                        manager.FactoryManager.NavalApproxSpend = navalFactoryApproxSpend
                         manager.FactoryManager.T1LANDUpgradingCount = localT1LandUpgradingCount
                         manager.FactoryManager.T2LANDUpgradingCount = localT2LandUpgradingCount
                         manager.FactoryManager.T1AIRUpgradingCount = localT1AirUpgradingCount

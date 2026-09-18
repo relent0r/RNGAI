@@ -140,17 +140,13 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local label = NavUtils.GetLabel('Land', self.Pos)
                 aiBrain:PlatoonReinforcementRequestRNG(self, 'AntiAir', closestBase, label)
             end
-            --self:LogDebug(string.format('DecideWhatToDo threat data enemy surface '..tostring(threat.enemySurface)))
-            --self:LogDebug(string.format('DecideWhatToDo threat data ally surface '..tostring(threat.allySurface)))
-            --self:LogDebug(string.format('DecideWhatToDo threat data ally multiplier surface '..tostring(threat.allySurface*threatMultiplier)))
-            --self:LogDebug(string.format('DecideWhatToDo enemy range '..tostring(threat.enemyrange)))
-            --self:LogDebug(string.format('DecideWhatToDo friendly range '..tostring(threat.allyrange)))
             if threat.allySurface and threat.enemySurface and threat.allySurface*threatMultiplier < (threat.enemyStructure + threat.enemySurface) and threat.allySurface < 450 or self.Raid and threat.allyrange < threat.enemyrange then
                 if threat.enemyStructure > 0 and threat.allyrange > threat.enemyrange and threat.allySurface*2 > (threat.enemySurface - threat.enemyStructure) then
                     rangedAttack = true
                 elseif threat.allyrange > threat.enemyrange and threat.allySurface*3 > threat.enemySurface then
                     --LOG('Select ranged skirmish attack for platoon')
                     rangedSkirmishAttack = true
+                    self:LogDebug(string.format('DecideWhatToDo ranged attack set to true'))
                 else
                     self:LogDebug(string.format('DecideWhatToDo high threat retreating threat is '..threat.enemySurface))
                     self.retreat=true
@@ -207,7 +203,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 local ax = self.Pos[1] - targetPos[1]
                 local az = self.Pos[3] - targetPos[3]
                 if ax * ax + az * az < self.EnemyRadiusSq then
-                    --self:LogDebug(string.format('DecideWhatToDo previous target combatloop'))
+                    self:LogDebug(string.format('DecideWhatToDo previous target combatloop'))
                     self.targetcandidates = {self.BuilderData.AttackTarget}
                     self:ChangeState(self.CombatLoop)
                     return
@@ -252,15 +248,23 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     end
                 end
             end
+            self:LogDebug(string.format('DecideWhatToDo threat data enemy surface '..tostring(threat.enemySurface)))
+            self:LogDebug(string.format('DecideWhatToDo threat data ally surface '..tostring(threat.allySurface)))
+            self:LogDebug(string.format('DecideWhatToDo threat data ally multiplier surface '..tostring(threat.allySurface*threatMultiplier)))
+            self:LogDebug(string.format('DecideWhatToDo enemy range '..tostring(threat.enemyrange)))
+            self:LogDebug(string.format('DecideWhatToDo friendly range '..tostring(threat.allyrange)))
             local target
             if StateUtils.SimpleTarget(self,aiBrain) then
                 if rangedAttack then
+                    self:LogDebug(string.format('Ranged Attack Combat Loop'))
                     self:ChangeState(self.RangedCombatLoop)
                     return
                 elseif rangedSkirmishAttack then
+                    self:LogDebug(string.format('Skirmish Combat Loop'))
                     self:ChangeState(self.RangedCombatLoop)
                     return
                 else
+                    self:LogDebug(string.format('Standard combat loop'))
                     self:ChangeState(self.CombatLoop)
                     return
                 end
@@ -283,7 +287,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     local ax = self.Pos[1] - targetPos[1]
                     local az = self.Pos[3] - targetPos[3]
                     if ax * ax + az * az < self.EnemyRadiusSq then
-                        --self:LogDebug(string.format('DecideWhatToDo high priority target close combatloop'))
+                        self:LogDebug(string.format('DecideWhatToDo high priority target close combatloop'))
                         self.targetcandidates = {target}
                         self:ChangeState(self.CombatLoop)
                         return

@@ -225,15 +225,18 @@ FactoryBuilderManager = Class(BuilderManager) {
             table.insert(self.FactoryList, unit)
             unit.DesiresAssist = true
             local unitCats = unit.Blueprint.CategoriesHash
+            local bType
             if EntityCategoryContains(categories.LAND, unit) then
-                self:SetupNewFactory(unit, 'Land')
+                bType = 'Land'
             elseif EntityCategoryContains(categories.AIR, unit) then
-                self:SetupNewFactory(unit, 'Air')
+                bType = 'Air'
             elseif EntityCategoryContains(categories.NAVAL, unit) then
-                self:SetupNewFactory(unit, 'Sea')
+                bType = 'Sea'
             else
-                self:SetupNewFactory(unit, 'Gate')
+                bType = 'Gate'
             end
+
+            self:SetupNewFactory(unit, bType)
             --if self.Brain.BuilderManagers[self.LocationType].ZoneID then
             --    unit:SetCustomName(string.format("Zone: %s", tostring(self.Brain.BuilderManagers[self.LocationType].ZoneID)))
             --end
@@ -286,31 +289,36 @@ FactoryBuilderManager = Class(BuilderManager) {
     SetupFactoryCallbacks = function(self,factories,bType)
         for k,v in factories do
             if not v.BuilderManagerData then
-                v.BuilderManagerData = { FactoryBuildManager = self, BuilderType = bType, }
+                v.BuilderManagerData = v.BuilderManagerData or {}
+                v.BuilderManagerData.FactoryBuildManager = self
+                v.BuilderManagerData.BuilderType = bType
+                if not v.BuilderManagerData.CallbacksSetup then
+                    v.BuilderManagerData.CallbacksSetup = true
 
-                local factoryDestroyed = function(v)
-                                            -- Call function on builder manager; let it handle death of factory
-                                            self:FactoryDestroyed(v)
-                                        end
-                import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(factoryDestroyed, v)
+                    local factoryDestroyed = function(v)
+                                                -- Call function on builder manager; let it handle death of factory
+                                                self:FactoryDestroyed(v)
+                                            end
+                    import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(factoryDestroyed, v)
 
-                local factoryNewlyCaptured = function(unit, captor)
-                                            local aiBrain = captor:GetAIBrain()
-                                            --LOG('*AI DEBUG: FACTORY: I was Captured by '..aiBrain.Nickname..'!')
-                                            if aiBrain.BuilderManagers then
-                                                local facManager = aiBrain.BuilderManagers[captor.BuilderManagerData.LocationType].FactoryManager
-                                                if facManager then
-                                                    facManager:AddFactory(unit)
+                    local factoryNewlyCaptured = function(unit, captor)
+                                                local aiBrain = captor:GetAIBrain()
+                                                --LOG('*AI DEBUG: FACTORY: I was Captured by '..aiBrain.Nickname..'!')
+                                                if aiBrain.BuilderManagers then
+                                                    local facManager = aiBrain.BuilderManagers[captor.BuilderManagerData.LocationType].FactoryManager
+                                                    if facManager then
+                                                        facManager:AddFactory(unit)
+                                                    end
                                                 end
                                             end
-                                        end
-                import("/lua/scenariotriggers.lua").CreateUnitCapturedTrigger(nil, factoryNewlyCaptured, v)
+                    import("/lua/scenariotriggers.lua").CreateUnitCapturedTrigger(nil, factoryNewlyCaptured, v)
 
-                local factoryWorkFinish = function(v, finishedUnit)
-                                            -- Call function on builder manager; let it handle the finish of work
-                                            self:FactoryFinishBuilding(v, finishedUnit)
-                                        end
-                import("/lua/scenariotriggers.lua").CreateUnitBuiltTrigger(factoryWorkFinish, v, categories.ALLUNITS)
+                    local factoryWorkFinish = function(v, finishedUnit)
+                                                -- Call function on builder manager; let it handle the finish of work
+                                                self:FactoryFinishBuilding(v, finishedUnit)
+                                            end
+                    import("/lua/scenariotriggers.lua").CreateUnitBuiltTrigger(factoryWorkFinish, v, categories.ALLUNITS)
+                end
             end
             self:ForkThread(self.DelayBuildOrder, v, bType, 0.1)
         end

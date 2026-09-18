@@ -24,6 +24,50 @@ CrossP = function(vec1,vec2,n)--cross product
     return {x,y,z}
 end
 
+GetPlatoonCohesionRNG = function(platoon, targetPos, radiusSq, minRatio)
+    minRatio = minRatio or 0.70
+    if not platoon or not targetPos or not targetPos[1] then
+        return false, 0, 0, 0, 0
+    end
+    local units = GetPlatoonUnits(platoon)
+    if not units then
+        return false, 0, 0, 0, 0
+    end
+    local numUnits = RNGGETN(units)
+    if numUnits == 0 then
+        return false, 0, 0, 0, 0
+    end
+    local totalUnits = 0
+    local unitsInRange = 0
+    local maxDistSq = 0
+    local tx = targetPos[1]
+    local tz = targetPos[3]
+    for i = 1, numUnits do
+        local u = units[i]
+        if u and not u.Dead then
+            totalUnits = totalUnits + 1
+            local upos = u:GetPosition()
+            if upos then
+                local rx = upos[1] - tx
+                local rz = upos[3] - tz
+                local dSq = rx * rx + rz * rz
+                if dSq <= radiusSq then
+                    unitsInRange = unitsInRange + 1
+                end
+                if dSq > maxDistSq then
+                    maxDistSq = dSq
+                end
+            end
+        end
+    end
+    if totalUnits == 0 then
+        return false, 0, 0, 0, 0
+    end
+    local ratio = unitsInRange / totalUnits
+    return (ratio >= minRatio), unitsInRange, totalUnits, maxDistSq, ratio
+end
+
+
 GetClosestBaseManager = function(aiBrain, position, naval)
     local closestBase
     local closestBaseDistance
@@ -762,6 +806,82 @@ SetUnitCategoryRanges = function(unit)
         --LOG('CategoryIndirectFireRange : '..tostring(unit['rngdata'].CategoryIndirectFireRange))
         return true
     end
+end
+
+GetUnitWeaponRisk = function(unit, targetLayer)
+    if not unit or unit.Dead then
+        return 0, 0, 0, 0
+    end
+    targetLayer = targetLayer or 'Land'
+    if not unit['rngdata'] then
+        unit['rngdata'] = {}
+    end
+    local unitData = unit['rngdata']
+    if unitData.WeaponRiskSet then
+        return unitData.SurfaceDPS or 0, unitData.MaxWeaponRange or 0, unitData.DirectFireDPS or 0, unitData.IndirectFireDPS or 0
+    end
+
+    local bp = unit.Blueprint
+    local totalSurfaceDPS = 0
+    local directFireDPS = 0
+    local indirectFireDPS = 0
+    local maxRange = 0
+
+    if bp and bp.Weapon then
+        for _, weapon in bp.Weapon do
+            if weapon.MaxRadius and not weapon.DummyWeapon and not weapon.ManualFire then
+                local wCat = weapon.WeaponCategory or ''
+                local wLabel = weapon.Label or ''
+                if wCat == 'Death' or string.find(wLabel, 'Death') or string.find(wLabel, 'death') then
+                    continue
+                end
+
+                if not weapon.EnabledByEnhancement or (weapon.EnabledByEnhancement and unit.HasEnhancement and unit:HasEnhancement(weapon.EnabledByEnhancement)) then
+                    local canTargetSurface = false
+                    if weapon.FireTargetLayerCapsTable then
+                        local caps = weapon.FireTargetLayerCapsTable
+                        for _, capStr in caps do
+                            if capStr and type(capStr) == 'string' and capStr ~= 'None' and capStr ~= '' then
+                                if string.find(capStr, 'Land') or string.find(capStr, 'Water') or string.find(capStr, 'Seabed') then
+                                    canTargetSurface = true
+                                    break
+                                end
+                            end
+                        end
+                    end
+
+                    if canTargetSurface and wCat ~= 'Anti Air' and wCat ~= 'Anti Navy' and wCat ~= 'Teleport' then
+                        local damage = weapon.Damage or 0
+                        local mSalvo = weapon.MuzzleSalvoSize or 1
+                        local rSalvo = weapon.RackSalvoSize or 1
+                        local rof = weapon.RateOfFire or 1
+                        local dps = damage * mSalvo * rSalvo * rof
+
+                        totalSurfaceDPS = totalSurfaceDPS + dps
+                        if wCat == 'Direct Fire' or wCat == 'Direct Fire Experimental' or wCat == 'Direct Fire Naval' then
+                            directFireDPS = directFireDPS + dps
+                        elseif wCat == 'Indirect Fire' or wCat == 'Artillery' or wCat == 'Missile' or wCat == 'Bomb' then
+                            indirectFireDPS = indirectFireDPS + dps
+                        end
+
+                        if weapon.MaxRadius > maxRange then
+                            maxRange = weapon.MaxRadius
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    unitData.SurfaceDPS = totalSurfaceDPS
+    unitData.DirectFireDPS = directFireDPS
+    unitData.IndirectFireDPS = indirectFireDPS
+    if maxRange > 0 then
+        unitData.MaxWeaponRange = maxRange
+    end
+    unitData.WeaponRiskSet = true
+
+    return totalSurfaceDPS, maxRange, directFireDPS, indirectFireDPS
 end
 
 GetNearExtractorRNG = function(aiBrain, platoon, platoonPosition, enemyPosition, unitCat, threatCheck, alliance)

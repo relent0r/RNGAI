@@ -38,6 +38,9 @@ BaseBuilderTemplate {
 
                 -- Land Factory Builders --
                 'RNGAI Factory Builder Land Expansion',
+                
+                -- Expansion Reclaim builders
+                'RNGAI Land Factory Reclaim Expansion',
                
                 -- Defence Builders --
                 'RNGAI Base Defenses Expansion',

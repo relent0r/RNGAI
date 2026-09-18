@@ -789,7 +789,7 @@ function CDRThreatAssessmentRNG(cdr)
                 allyThreat = 0.8, -- higher means more confidence
                 friendlyUnitThreatInner = 1.2, -- higher means more confidence
                 friendlyUnitThreatOuter = 0.9, -- higher means more confidence
-                healthBoost = 1.3, -- higher means more confidence
+                healthBoost = 1.4, -- higher means more confidence
                 shieldBoost = 1.1, -- higher means more confidence
                 enemyThreat = 0.7, -- higher means less confidence
                 globalThreat = 1.1,
@@ -799,8 +799,8 @@ function CDRThreatAssessmentRNG(cdr)
                 localEnemyThreatRatio = 0.85, -- higher means less confidence
                 phasePenalty = 0.7, -- higher means less confidence
                 overchargeBoost = 1.25, -- higher means more confidence
-                distanceHomeBonus = 0.8,    -- Increase to be braver at home
-                distanceEnemyPenalty = 0.6, -- Increase to be more scared far from home
+                distanceHomeBonus = 0.9,    -- Increase to be braver at home
+                distanceEnemyPenalty = 0.7, -- Increase to be more scared far from home
                 distanceMidPoint = 0.5,     -- Increase to make the mid point closer to the enemy
                 distanceSteepness = 8, -- increase to make the transition more sudden
             }
@@ -1030,7 +1030,7 @@ function CDRCallPlatoon(cdr, surfaceThreatRequired, antiAirThreatRequired)
                                 added = true
                             end
                             -- 2. Grab Surface threat if we still need it
-                            if unitThreat.SurfaceThreatLevel > 0 and surfaceThreatValue < surfaceThreatRequired then
+                            if unitThreat.SurfaceThreatLevel > 0 and surfaceThreatValue < surfaceThreatRequired and not cats.SILO then
                                 surfaceThreatValue = surfaceThreatValue + unitThreat.SurfaceThreatLevel
                                 added = true
                             end
@@ -1230,6 +1230,40 @@ function SetAcuSnipeMode(unit, type)
         local wep = unit:GetWeapon(i)
         wep:SetWeaponPriorities(targetPriorities)
     end
+end
+
+CalculateEnhancementBuildWeaponRisk = function(aiBrain, cdr, remainingTime)
+    if not remainingTime or remainingTime <= 0 or not cdr or cdr.Dead then
+        return 0, 0
+    end
+    local cdrPos = cdr.Position or cdr:GetPosition()
+    if not cdrPos then
+        return 0, 0
+    end
+
+    local totalEnemyDPS = 0
+    local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.LAND + categories.AIR + categories.STRUCTURE) - categories.WALL - categories.INSIGNIFICANTUNIT, cdrPos, 60, 'Enemy')
+    if enemyUnits then
+        for _, enemy in enemyUnits do
+            if enemy and not enemy.Dead then
+                local surfaceDPS, maxRange = StateUtils.GetUnitWeaponRisk(enemy)
+                if surfaceDPS > 0 and maxRange > 0 then
+                    local ePos = enemy:GetPosition()
+                    local rx = cdrPos[1] - ePos[1]
+                    local rz = cdrPos[3] - ePos[3]
+                    local distSq = rx * rx + rz * rz
+                    -- Effective threat range is the unit's max weapon radius plus a small 8-unit movement buffer
+                    local effectiveRange = maxRange + 8
+                    if distSq <= (effectiveRange * effectiveRange) then
+                        totalEnemyDPS = totalEnemyDPS + surfaceDPS
+                    end
+                end
+            end
+        end
+    end
+
+    local expectedDamage = totalEnemyDPS * remainingTime
+    return totalEnemyDPS, expectedDamage
 end
 
 EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)

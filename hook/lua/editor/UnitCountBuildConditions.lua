@@ -1183,7 +1183,7 @@ end
 
 
 
-function FactoryTechMixCheckRNG(aiBrain, locationType, layer, targetTier, minReclaim, minMix)
+function FactoryTechMixCheckRNG(aiBrain, locationType, layer, targetTier, minReclaim, minMix, expansion)
     local layerConfig = {
         Land  = { MixFilter = categories.SUPPORTFACTORY, CheckLocalHQ = true },
         Air   = { MixFilter = categories.FACTORY,        CheckLocalHQ = true },
@@ -1219,9 +1219,15 @@ function FactoryTechMixCheckRNG(aiBrain, locationType, layer, targetTier, minRec
     local reclaimCount = factoryManager:GetNumCategoryFactories(catReclaim)
     if reclaimCount <= minReclaim then return false end
 
-    if cfg.CheckLocalHQ then
-        local hqCount = factoryManager:GetNumCategoryFactories(catHQ)
-        if hqCount <= 0 then return false end
+    if cfg.CheckLocalHQ and not expansion then
+        if not expansion then
+            local hqCount = factoryManager:GetNumCategoryFactories(catHQ)
+            if hqCount <= 0 then return false end
+        else
+            if aiBrain:GetCurrentUnitsWithCategory(catHQ) < 1 then
+                return false
+            end
+        end
     end
 
     if targetTier == 1 and aiBrain.LowResourceMapProfile then

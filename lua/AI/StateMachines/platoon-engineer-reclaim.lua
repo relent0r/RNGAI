@@ -124,7 +124,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                             self:ChangeState(self.CaptureUnit)
                             return
                         else
-                            self:ChangeState(self.NavigateToTaskLocation)
+                            self:ChangeState(self.NavigateToLocation)
                             return
                         end
                     end

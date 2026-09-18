@@ -3281,54 +3281,60 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                                     eta = seconds + ((tick - lastTick) / 10) * ((1-progress)/(progress-lastProgress))
                                 end
                             end
-                            
-                            if cdr.Upgrading then
-                                --LOG('cdr.Upgrading is set to true')
-                                --LOG('cdr.HealthPercent '..tostring(cdr.HealthPercent))
-                                --LOG('eta '..tostring(eta))
-                                --LOG('cdr.CurrentEnemyThreat '..tostring(cdr.CurrentEnemyThreat))
-                                --LOG('cdr.DistanceToHome '..tostring(cdr.DistanceToHome))
-                                --LOG('cdr.CurrentFriendlyThreat '..tostring(cdr.CurrentFriendlyThreat))
-                                --LOG('cdr.Confidence '..tostring(cdr.Confidence))
+
+                            local remainingTime = 0
+                            if eta and eta > seconds then
+                                remainingTime = eta - seconds
                             end
-                            local maxNetThreatForUpgrade = 225
+
+                            local totalEnemyDPS, expectedDamage = ACUFunc.CalculateEnhancementBuildWeaponRisk(brain, cdr, remainingTime)
+
+                            local maxHealth = (cdr.Blueprint.Defense.MaxHealth or 10000) + (cdr.MaxShieldHealth or 0)
+                            local effectiveHealth = (cdr.Health or 0) + (cdr.ShieldHealth or 0)
+                            local projectedRemainingHealth = effectiveHealth - expectedDamage
+                            local projectedHealthRatio = projectedRemainingHealth / maxHealth
+
+                            local maxNetThreatForUpgrade = 25
                             local netEnemyThreat = math.max(0, cdr.CurrentEnemyThreat - cdr.CurrentFriendlyThreat)
+                            local netInnerThreat = math.max(0, cdr.CurrentEnemyInnerCircle - cdr.CurrentFriendlyInnerCircle)
                             
                             local isNearHomeButSafeToUpgrade = false
                             if priorityGunUpgradeRequired and progress > 0.8 and cdr.DistanceToHome < 700 and netEnemyThreat < maxNetThreatForUpgrade then
                                 isNearHomeButSafeToUpgrade = true
                             end
-                            if (cdr.HealthPercent < 0.40 and eta > 30 and cdr.CurrentEnemyThreat > 10 and cdr.DistanceToHome > 625) or (cdr.CurrentEnemyThreat > 30 and eta > 625 and cdr.CurrentFriendlyThreat < 15 ) then
-                                if not isNearHomeButSafeToUpgrade then
-                                    IssueStop({cdr})
-                                    IssueClearCommands({cdr})
-                                    cdr.Upgrading = false
-                                    self.BuilderData = {}
-                                    self:LogDebug(string.format('Cancel upgrade and emergency retreat, enemy threat was '..tostring(cdr.CurrentEnemyThreat)..' distance to home was '..tostring(cdr.DistanceToHome)..' eta was '..tostring(eta)..' confidence was '..tostring(cdr.Confidence)))
-                                    self:ChangeState(self.Retreating)
-                                    return
-                                end
+
+                            --LOG(string.format("[EnhancementBuild Audit] HP:%.2f | RemTime:%.1fs | Prog:%.2f | Threat(Net:%.1f, InnerNet:%.1f) | DPS:%.1f | ExpDmg:%.1f | ProjHPRatio:%.2f | Conf:%.2f | HomeSafe:%s", cdr.HealthPercent, remainingTime, progress or 0, netEnemyThreat, netInnerThreat, totalEnemyDPS, expectedDamage, projectedHealthRatio, cdr.Confidence or 0, tostring(isNearHomeButSafeToUpgrade)))
+
+                            -- Gate 1: Dynamic Weapon Risk & Expected HP Loss (Lethal / Critical Damage)
+                            if remainingTime > 3 and projectedHealthRatio < 0.35 then
+                                --LOG(string.format("[EnhancementBuild ABORT - Gate 1 WeaponRisk] ProjHPRatio: %.2f < 0.35 | ExpDmg: %.1f | EffHP: %.1f | DPS: %.1f | RemTime: %.1fs", projectedHealthRatio, expectedDamage, effectiveHealth, totalEnemyDPS, remainingTime))
+                                IssueStop({cdr})
+                                IssueClearCommands({cdr})
+                                cdr.Upgrading = false
+                                self.BuilderData = {}
+                                self:LogDebug(string.format('Cancel upgrade due to projected lethal damage. Projected HP ratio: %.2f (ExpDmg: %.1f, EffHP: %.1f, DPS: %.1f over %.1fs remaining)', projectedHealthRatio, expectedDamage, effectiveHealth, totalEnemyDPS, remainingTime))
+                                self:ChangeState(self.Retreating)
+                                return
                             end
-                            if ((cdr.CurrentEnemyThreat > 60 and cdr.Confidence < 2.5) or (cdr.CurrentEnemyThreat > 140 and cdr.Confidence < 3.8)) and math.max(0, cdr.CurrentEnemyThreat - cdr.CurrentFriendlyThreat) > 45 and eta > 450 then
-                                --LOG('ACU Should be aborting now')
-                                if not isNearHomeButSafeToUpgrade then
-                                    IssueStop({cdr})
-                                    IssueClearCommands({cdr})
-                                    cdr.Upgrading = false
-                                    self.BuilderData = {}
-                                    self:LogDebug(string.format('Cancel upgrade and emergency retreat, enemy threat was '..tostring(cdr.CurrentEnemyThreat)..' distance to home was '..tostring(cdr.DistanceToHome)..' eta was '..tostring(eta)..' confidence was '..tostring(cdr.Confidence)))
-                                    self:ChangeState(self.Retreating)
-                                    return
-                                end
+
+                            -- Gate 2: Dynamic Tactical Threat & Confidence Gate
+                            local isUnsafeTacticalPosition = false
+                            if netInnerThreat > 35 and netEnemyThreat > 25 then
+                                isUnsafeTacticalPosition = true
+                            elseif netEnemyThreat > 35 and cdr.Confidence < 2.2 then
+                                isUnsafeTacticalPosition = true
+                            elseif cdr.HealthPercent < 0.40 and netEnemyThreat > 15 and cdr.DistanceToHome > 900 then
+                                isUnsafeTacticalPosition = true
                             end
-                            if cdr.CurrentEnemyInnerCircle > 100 and cdr.CurrentEnemyThreat > (math.max(cdr.CurrentFriendlyInnerCircle, cdr.ThreatLimit) * 1.4) and math.max(0, cdr.CurrentEnemyInnerCircle - cdr.CurrentFriendlyInnerCircle) > 45 and eta > 350 then
-                                --LOG('ACU Should be aborting now')
+
+                            if remainingTime > 3 and isUnsafeTacticalPosition then
                                 if not isNearHomeButSafeToUpgrade then
+                                    --LOG(string.format("[EnhancementBuild ABORT - Gate 2 TacticalRisk] NetThreat: %.1f | InnerNet: %.1f | Conf: %.2f | HP: %.2f | RemTime: %.1fs", netEnemyThreat, netInnerThreat, cdr.Confidence or 0, cdr.HealthPercent, remainingTime))
                                     IssueStop({cdr})
                                     IssueClearCommands({cdr})
                                     cdr.Upgrading = false
                                     self.BuilderData = {}
-                                    self:LogDebug(string.format('Cancel upgrade and emergency retreat, enemy threat was '..tostring(cdr.CurrentEnemyThreat)..' distance to home was '..tostring(cdr.DistanceToHome)..' eta was '..tostring(eta)..' confidence was '..tostring(cdr.Confidence)))
+                                    self:LogDebug(string.format('Cancel upgrade due to unsafe tactical position. NetThreat: %.1f, InnerThreat: %.1f, Conf: %.2f, HP: %.2f', netEnemyThreat, netInnerThreat, cdr.Confidence, cdr.HealthPercent))
                                     self:ChangeState(self.Retreating)
                                     return
                                 end

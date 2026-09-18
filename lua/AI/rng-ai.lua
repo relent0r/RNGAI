@@ -6698,6 +6698,19 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
         end
+        for _, builderManager in self.BuilderManagers do
+            local fmgr = builderManager.FactoryManager
+            if fmgr then
+                fmgr.FactorySpend = {
+                    Land = 0,
+                    Air = 0,
+                    Naval = 0,
+                    LandUpgrading = 0,
+                    AirUpgrading = 0,
+                    NavalUpgrading = 0,
+                }
+            end
+        end
         local unitCat
         local currentLandFactoryCount = 0
         local currentUpgradingLandFactories = 0
@@ -6812,10 +6825,20 @@ AIBrain = Class(RNGAIBrainClass) {
                         if unit:IsUnitState('Upgrading') then
                             unitUpgrading = true
                         end
+                        local builderManagerData = unit.BuilderManagerData
+                        local factoryManager = builderManagerData and builderManagerData.FactoryBuildManager
+
                         if unitCat.LAND then
                             facspend.Land=facspend.Land+spendm
+                            if factoryManager then
+                                factoryManager.FactorySpend.Land = factoryManager.FactorySpend.Land + spendm
+                            end
                             if unitUpgrading then
                                 facspend.LandUpgrading=facspend.LandUpgrading+spendm
+                                if factoryManager then
+                                    factoryManager.FactorySpend.LandUpgrading = factoryManager.FactorySpend.LandUpgrading + spendm
+                                end
+    
                             end
                             if unitCat.TECH1 then
                                 factories.Land.T1=factories.Land.T1+1
@@ -6826,8 +6849,14 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         elseif unitCat.AIR then
                             facspend.Air=facspend.Air+spendm
+                            if factoryManager then
+                                factoryManager.FactorySpend.Air = factoryManager.FactorySpend.Air + spendm
+                            end
                             if unitUpgrading then
                                 facspend.AirUpgrading=facspend.AirUpgrading+spendm
+                                if factoryManager then
+                                    factoryManager.FactorySpend.AirUpgrading = factoryManager.FactorySpend.AirUpgrading + spendm
+                                end
                             end
                             if unitCat.TECH1 then
                                 factories.Air.T1=factories.Air.T1+1
@@ -6838,8 +6867,14 @@ AIBrain = Class(RNGAIBrainClass) {
                             end
                         elseif unitCat.NAVAL then
                             facspend.Naval=facspend.Naval+spendm
+                            if factoryManager then
+                                factoryManager.FactorySpend.Naval = factoryManager.FactorySpend.Naval + spendm
+                            end
                             if unitUpgrading then
                                 facspend.NavalUpgrading=facspend.NavalUpgrading+spendm
+                                if factoryManager then
+                                    factoryManager.FactorySpend.NavalUpgrading = factoryManager.FactorySpend.NavalUpgrading + spendm
+                                end
                             end
                             if unitCat.TECH1 then
                                 factories.Naval.T1=factories.Naval.T1+1

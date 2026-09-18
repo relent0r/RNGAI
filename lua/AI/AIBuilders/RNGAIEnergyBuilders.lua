@@ -299,7 +299,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'GreaterThanGameTimeRNG', { 360 } },
             { EBC, 'LessThanEnergyTrendOverTimeRNG', { 28.0 } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 0.1 }},
             { EBC, 'CanAffordLuxuryProject',{} },
             { UCBC, 'HaveLessThanUnitsWithCategory', { 1, categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3) - categories.HYDROCARBON }}, -- Don't build after 1 T2 Pgens Exist
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -486,7 +486,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerStateT123RNG',
         Priority = 750,
         BuilderConditions = {
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 1.1 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.05, 1.1 }},
             { EBC, 'CanAffordLuxuryProject',{} },
             { UCBC, 'RequireEnergyStorage', { }},
             { UCBC, 'UnitCapCheckLess', { .85 } },

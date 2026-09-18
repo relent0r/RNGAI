@@ -181,7 +181,7 @@ end
 
 function GreaterThanEconTrendCombinedRNG(aiBrain, MassTrend, EnergyTrend)
     -- Using combined eco values values from the EconomyOverTimeRNG thread.
-    --RNGLOG('Mass Wanted :'..MassEfficiency..'Actual :'..MassEfficiencyOverTime..'Energy Wanted :'..EnergyEfficiency..'Actual :'..EnergyEfficiencyOverTime)
+    --LOG('Mass Trend Wanted :'..MassTrend..'Actual :'..tostring(aiBrain.EconomyOverTimeCurrent.MassTrendOverTime)..'Energy Wanted :'..EnergyTrend..'Actual :'..tostring(aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime))
     if (aiBrain.EconomyOverTimeCurrent.MassTrendOverTime >= MassTrend and aiBrain.EconomyOverTimeCurrent.EnergyTrendOverTime >= EnergyTrend) then
         if GetEconomyTrend(aiBrain, 'MASS') >= MassTrend and GetEconomyTrend(aiBrain, 'ENERGY') >= EnergyTrend then
             return true
@@ -350,22 +350,25 @@ function HighValueGateRNG(aiBrain)
     return true
 end
 
-function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, layer, requireBuilt, storageBuild)
+function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, layer, requireBuilt, storageBuild, debug)
     -- Use '<' to add factories (we are under-producing)
     -- Use '>' to remove factories (we are over-producing)
     local manager = aiBrain.BuilderManagers[locationType]
-    if not manager.FactoryManager then
-        WARN('*AI WARNING: No Factory Manager at location - ' .. locationType)
+    if not manager or not manager.FactoryManager then
+        WARN('*AI WARNING: No Factory Manager at location - ' .. tostring(locationType))
         return false
     end
+
     local ecoMultiplier = 1.0
     if aiBrain.CheatEnabled then 
         ecoMultiplier = aiBrain.EcoManager.EcoMultiplier
     end
+
     local spendableStorage = 0
     if storageBuild then
         spendableStorage = math.max(0, aiBrain:GetEconomyStored('MASS') - 250)
     end
+
     local baseLocation = manager.Position or aiBrain.BrainIntel.StartPos
     local pathableZones = manager.PathableZones
     local expansionSize = math.min((aiBrain.MapDimension / 2), 160)
@@ -373,24 +376,27 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
     local resourceCount = 0
     local massSpendTotal = 0
     local zoneBasedIncome = 0
+
+    -- 1. Calculate local zone resources & income
     if manager.ZoneID then
-        -- Check Land zones first, fallback to Water if managing a naval base
-        local homeZone = aiBrain.Zones.Land.zones[manager.ZoneID] or aiBrain.Zones.Water.zones[manager.ZoneID]
+        local homeZone = (aiBrain.Zones and aiBrain.Zones.Land and aiBrain.Zones.Land.zones and aiBrain.Zones.Land.zones[manager.ZoneID])
+                      or (aiBrain.Zones and aiBrain.Zones.Water and aiBrain.Zones.Water.zones and aiBrain.Zones.Water.zones[manager.ZoneID])
         if homeZone and homeZone.resourcevalue then
             resourceCount = resourceCount + homeZone.resourcevalue
         end
     end
+
     if pathableZones and not table.empty(pathableZones.Zones) then
         for _, z in pathableZones.Zones do
             if z.ZoneID then
                 local zone = aiBrain.Zones.Land.zones[z.ZoneID]
-                if zone.resourcevalue > 0 and not zone.BuilderManager.FactoryManager.LocationActive then
+                if zone and zone.resourcevalue > 0 and not zone.BuilderManager.FactoryManager.LocationActive then
                     local dx = baseLocation[1] - zone.pos[1]
                     local dz = baseLocation[3] - zone.pos[3]
-                    local posDist = dx * dx + dz * dz
-                    if posDist < (expansionSize * expansionSize) and zone.bestarmy == index then
-                        if z.zoneincome.selfincome then
-                            zoneBasedIncome = zoneBasedIncome + z.zoneincome.selfincome
+                    local posDistSq = dx * dx + dz * dz
+                    if posDistSq < (expansionSize * expansionSize) and zone.bestarmy == index then
+                        if zone.zoneincome and zone.zoneincome.selfincome then
+                            zoneBasedIncome = zoneBasedIncome + zone.zoneincome.selfincome
                         end
                         if zone.resourcevalue then
                             resourceCount = resourceCount + zone.resourcevalue
@@ -402,8 +408,10 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
     end
 
     if manager.FactoryManager.LocationActive then
-        local massToFactoryValues = aiBrain.BuilderManagers[locationType].BaseSettings.MassToFactoryValues
+        local massToFactoryValues = manager.BaseSettings.MassToFactoryValues or {}
         local factoryDrain = {}
+
+        -- 2. Compute local factory mass drain for the target layer
         if layer == 'Land' then
             local t1LandFactories = 0
             local t2LandFactories = 0
@@ -411,8 +419,9 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
             factoryDrain.t1LandDrain = (massToFactoryValues.T1LandValue or 8) * ecoMultiplier
             factoryDrain.t2LandDrain = (massToFactoryValues.T2LandValue or 20) * ecoMultiplier
             factoryDrain.t3LandDrain = (massToFactoryValues.T3LandValue or 30) * ecoMultiplier
+
             for _, v in manager.FactoryManager.FactoryList do
-                if v.Blueprint.CategoriesHash.LAND then
+                if v and not v.Dead and v.Blueprint and v.Blueprint.CategoriesHash.LAND then
                     if requireBuilt and v:GetFractionComplete() ~= 1 then
                         continue
                     end
@@ -425,7 +434,10 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
                     end
                 end
             end
-            massSpendTotal = (t1LandFactories * factoryDrain.t1LandDrain) + (t2LandFactories * factoryDrain.t2LandDrain) + (t3LandFactories * factoryDrain.t3LandDrain)
+            massSpendTotal = (t1LandFactories * factoryDrain.t1LandDrain) 
+                           + (t2LandFactories * factoryDrain.t2LandDrain) 
+                           + (t3LandFactories * factoryDrain.t3LandDrain)
+
         elseif layer == 'Air' then
             local t1AirFactories = 0
             local t2AirFactories = 0
@@ -433,8 +445,9 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
             factoryDrain.t1AirDrain = (massToFactoryValues.T1AirValue or 8) * ecoMultiplier
             factoryDrain.t2AirDrain = (massToFactoryValues.T2AirValue or 20) * ecoMultiplier
             factoryDrain.t3AirDrain = (massToFactoryValues.T3AirValue or 30) * ecoMultiplier
+
             for _, v in manager.FactoryManager.FactoryList do
-                if v.Blueprint.CategoriesHash.AIR then
+                if v and not v.Dead and v.Blueprint and v.Blueprint.CategoriesHash.AIR then
                     if requireBuilt and v:GetFractionComplete() ~= 1 then
                         continue
                     end
@@ -447,7 +460,10 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
                     end
                 end
             end
-            massSpendTotal = (t1AirFactories * factoryDrain.t1AirDrain) + (t2AirFactories * factoryDrain.t2AirDrain) + (t3AirFactories * factoryDrain.t3AirDrain)
+            massSpendTotal = (t1AirFactories * factoryDrain.t1AirDrain) 
+                           + (t2AirFactories * factoryDrain.t2AirDrain) 
+                           + (t3AirFactories * factoryDrain.t3AirDrain)
+
         elseif layer == 'Naval' then
             local t1NavalFactories = 0
             local t2NavalFactories = 0
@@ -455,13 +471,14 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
             factoryDrain.t1NavalDrain = (massToFactoryValues.T1NavalValue or 8) * ecoMultiplier
             factoryDrain.t2NavalDrain = (massToFactoryValues.T2NavalValue or 20) * ecoMultiplier
             factoryDrain.t3NavalDrain = (massToFactoryValues.T3NavalValue or 30) * ecoMultiplier
+
             for k, m in aiBrain.BuilderManagers do
                 if m.Layer == 'Water' and m.FactoryManager and m.FactoryManager.LocationActive then
                     for _, v in m.FactoryManager.FactoryList do
-                        if requireBuilt and v:GetFractionComplete() ~= 1 then
-                            continue
-                        end
-                        if v.Blueprint.CategoriesHash.NAVAL then
+                        if v and not v.Dead and v.Blueprint and v.Blueprint.CategoriesHash.NAVAL then
+                            if requireBuilt and v:GetFractionComplete() ~= 1 then
+                                continue
+                            end
                             if v.Blueprint.CategoriesHash.TECH1 then
                                 t1NavalFactories = t1NavalFactories + 1
                             elseif v.Blueprint.CategoriesHash.TECH2 then
@@ -473,21 +490,100 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
                     end
                 end
             end
-            massSpendTotal = (t1NavalFactories * factoryDrain.t1NavalDrain) + (t2NavalFactories * factoryDrain.t2NavalDrain) + (t3NavalFactories * factoryDrain.t3NavalDrain)
+            massSpendTotal = (t1NavalFactories * factoryDrain.t1NavalDrain) 
+                           + (t2NavalFactories * factoryDrain.t2NavalDrain) 
+                           + (t3NavalFactories * factoryDrain.t3NavalDrain)
         end
 
+        -- 3. Determine Frontline Status of Target Base
+        local intelManager = aiBrain.IntelManager
+        local isFrontline = false
+        if intelManager and intelManager.CurrentFrontLineZones and manager.ZoneID then
+            if intelManager.CurrentFrontLineZones[manager.ZoneID] then
+                isFrontline = true
+            end
+        end
+        if not isFrontline and manager.FactoryManager and (manager.FactoryManager.SecurityDepth or 99) <= 1 then
+            isFrontline = true
+        end
 
-        local mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 + aiBrain.cmanager.categoryspend.mex.T2 + aiBrain.cmanager.categoryspend.mex.T3) or 0
+        -- 4. Calculate Frontline Mass Commitment specifically FOR THE REQUESTED LAYER across active frontline bases
+        local totalFrontlineLayerDrain = 0
+        local currentBaseFrontlineLayerDrain = 0
+
+        for locType, bManager in aiBrain.BuilderManagers do
+            if bManager.FactoryManager and bManager.FactoryManager.LocationActive then
+                local bZoneID = bManager.ZoneID
+                local bIsFrontline = false
+                if intelManager and intelManager.CurrentFrontLineZones and bZoneID and intelManager.CurrentFrontLineZones[bZoneID] then
+                    bIsFrontline = true
+                elseif (bManager.FactoryManager.SecurityDepth or 99) <= 1 then
+                    bIsFrontline = true
+                end
+
+                if bIsFrontline then
+                    local bSettings = bManager.BaseSettings.MassToFactoryValues or {}
+                    local bDrain = 0
+
+                    if layer == 'Land' then
+                        bDrain = bManager.FactoryManager.LandApproxSpend or 0
+                    elseif layer == 'Air' then
+                        bDrain = bManager.FactoryManager.AirApproxSpend or 0
+                    elseif layer == 'Naval' then
+                        bDrain = bManager.FactoryManager.NavalApproxSpend or 0
+                    end
+
+                    totalFrontlineLayerDrain = totalFrontlineLayerDrain + bDrain
+                    if locType == locationType then
+                        currentBaseFrontlineLayerDrain = bDrain
+                    end
+                end
+            end
+        end
+        if debug then
+            LOG('*AI DEBUG: ZoneBasedFactoryToMassSupported - Base Location: ' .. locationType .. ', Layer: ' .. layer .. ', Is Frontline: ' .. tostring(isFrontline))
+            LOG('*AI DEBUG: ZoneBasedFactoryToMassSupported - Total Frontline Layer Drain: ' .. totalFrontlineLayerDrain .. ', Current Base Frontline Layer Drain: ' .. currentBaseFrontlineLayerDrain)
+        end
+
+        -- 5. Compute Available Mass Resources with Borrowing & Deduction Rules
+        local mexSpend = 0
+        if aiBrain.cmanager and aiBrain.cmanager.categoryspend and aiBrain.cmanager.categoryspend.mex then
+            mexSpend = (aiBrain.cmanager.categoryspend.mex.T1 or 0)
+                     + (aiBrain.cmanager.categoryspend.mex.T2 or 0)
+                     + (aiBrain.cmanager.categoryspend.mex.T3 or 0)
+        end
+
+        local totalIncome = (aiBrain.cmanager and aiBrain.cmanager.income and aiBrain.cmanager.income.r and aiBrain.cmanager.income.r.m) or 0
+        local globalNetIncome = math.max(totalIncome - (mexSpend * 0.5), 0)
+
         local rawIncome
-        if locationType == 'MAIN' then
-            rawIncome = ( aiBrain.cmanager.income.r.m - mexSpend * 0.5) or 0
-        elseif manager.Layer == 'Water' then
-            rawIncome = ( aiBrain.cmanager.income.r.m - (mexSpend * 0.5)) or 0
+        if layer == 'Naval' or manager.Layer == 'Water' then
+            -- Naval bases use global net income
+            rawIncome = globalNetIncome
+        elseif layer == 'Air' then
+            -- Air production is centralized (MAIN base focus); evaluated using global net income
+            rawIncome = globalNetIncome
+        elseif isFrontline then
+            -- FRONTLINE LAND BASE: Borrows available global mass not claimed by other frontline land bases
+            local otherFrontlineDrain = math.max(totalFrontlineLayerDrain - currentBaseFrontlineLayerDrain, 0)
+            local unallocatedGlobalMass = math.max(globalNetIncome - otherFrontlineDrain, 0)
+            local borrowedGlobalShare = unallocatedGlobalMass * 0.75
+            rawIncome = math.max(zoneBasedIncome + borrowedGlobalShare, globalNetIncome * 0.5)
+            if debug then
+                LOG('*AI DEBUG: ZoneBasedFactoryToMassSupported - Frontline Base: ' .. locationType .. ', Zone-Based Income: ' .. zoneBasedIncome .. ', Borrowed Global Share: ' .. borrowedGlobalShare .. ', Raw Income: ' .. rawIncome)
+            end
         else
-            rawIncome = zoneBasedIncome
+            -- REAR LAND BASE (MAIN or Rear Expansion): Deducts frontline land mass commitment from global net income
+            local netAvailableForRear = math.max(globalNetIncome - totalFrontlineLayerDrain, 0)
+            rawIncome = math.max(netAvailableForRear, zoneBasedIncome)
+            if debug then
+              LOG('Rear base, location: ' .. locationType .. ', zoneBasedIncome: ' .. zoneBasedIncome .. ', netAvailableForRear: ' .. netAvailableForRear .. ', rawIncome: ' .. rawIncome)
+            end
         end
-         
+
         local availableResources = math.max(resourceCount * 2, rawIncome, spendableStorage)
+
+        -- Handle low resource map scaling
         if aiBrain.LowResourceMapProfile then
             local factoryCategory
             if layer == 'Land' then
@@ -498,41 +594,48 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
                 factoryCategory = categories.NAVAL
             end
             local highTechCount = manager.FactoryManager:GetNumCategoryFactories(factoryCategory * (categories.TECH2 + categories.TECH3))
-            -- Only throttle if we have transitioned to higher tech.
-            -- This preserves normal T1 scaling early game, but applies tight economic
-            -- discipline the moment high-drain T2/T3 structures exist.
             if highTechCount > 0 then
                 availableResources = math.max(rawIncome, 0)
                 if availableResources <= 0 then availableResources = 2 end
             end
         end
-        local productionRatio 
-        if aiBrain.ProductionRatios[layer] == 0 then
-            productionRatio = aiBrain.DefaultProductionRatios[layer] 
-        elseif aiBrain.BrainIntel.HighestPhase > 2 then
-            productionRatio = aiBrain.ProductionRatios[layer]
-        else
-            productionRatio = aiBrain.ProductionIntent[layer]
+
+        -- 6. Evaluate Production Ratio with Hysteresis (Anti-Thrashing Buffer)
+        --local productionRatio
+        --if aiBrain.ProductionRatios and aiBrain.ProductionRatios[layer] == 0 then
+        --    productionRatio = aiBrain.DefaultProductionRatios[layer] 
+        --elseif aiBrain.BrainIntel and aiBrain.BrainIntel.HighestPhase > 2 then
+        --    productionRatio = aiBrain.ProductionRatios[layer]
+        --else
+        --    productionRatio = aiBrain.ProductionIntent and aiBrain.ProductionIntent[layer] or 0.3
+        --end
+        local baseRatioKey = 'Base' .. layer .. 'Ratio'
+        local localBaseRatio = manager.FactoryManager and manager.FactoryManager[baseRatioKey]
+        local productionRatio = (localBaseRatio and localBaseRatio > 0) and localBaseRatio or (aiBrain.ProductionRatios and aiBrain.ProductionRatios[layer] or 0.3)
+
+        local currentRatio = massSpendTotal / math.max(availableResources, 0.1)
+
+        -- --- HYSTERESIS DEADBAND ---
+        -- Prevents build/reclaim flip-flopping due to transient eco fluctuations.
+        local targetRatio = productionRatio
+        if compareType == '>' or compareType == '>=' then
+            -- Reclaim requires being 20% OVER budget (e.g. 1.20x ratio)
+            targetRatio = productionRatio * 1.20
+        elseif compareType == '<' or compareType == '<=' then
+            -- Building requires being 10% UNDER budget (e.g. 0.90x ratio)
+            targetRatio = productionRatio * 0.90
         end
-        --LOG('Production rato is '..tostring(productionRatio))
-        local currentRatio = massSpendTotal / availableResources
-        --LOG('currentRatio '..tostring(currentRatio)..' productionRatio '..tostring(productionRatio)..' compareType '..tostring(compareType))
-        local globalTrend = aiBrain.EconomyOverTimeCurrent.MassTrendOverTime or 0
-        --------
-        local actualTrend = aiBrain:GetEconomyTrend('MASS')
-        local zonePotential = resourceCount * 2
-        local isMaskingDeficit = (actualTrend < 0 and zonePotential > rawIncome)
-        --[[
-        LOG(string.format('ZONE_LOGIC_AUDIT: Loc: %s | ZonePot: %.2f | RawInc: %.2f | ActualTrend: %.2f | Masking: %s', tostring(locationType), zonePotential, rawIncome, actualTrend, tostring(isMaskingDeficit)))
-        local willReturnTrue = (massSpendTotal / availableResources) < productionRatio
-        if isMaskingDeficit and willReturnTrue then
-            LOG(string.format('ECON_TRAP_TRIGGERED: Stalling at %.2f but logic says "Build More" due to ZonePot!', actualTrend))
+        --local bFmgr = manager.FactoryManager
+        --local baseTarget = (layer == 'Land' and bFmgr.BaseLandRatio) or (layer == 'Air' and bFmgr.BaseAirRatio) or (layer == 'Naval' and bFmgr.BaseNavalRatio) or 0
+        --LOG(string.format("RNGLOG_RATIO_MISMATCH | Loc: %s | Layer: %s | LocalCurrent: %.3f | GlobalTarget: %.3f | CalculatedBaseTarget: %.3f | AvailRes: %.1f", tostring(locationType), tostring(layer), currentRatio, targetRatio, baseTarget, availableResources))
+        if debug then
+            LOG('Reclaim based builder for expansions')
+            LOG('currentRatio: ' .. currentRatio .. ', targetRatio: ' .. targetRatio .. ', compareType: ' .. compareType)
         end
-        ----------
-        LOG(string.format("RNGLOG_T3_STALL_AUDIT | Loc: %s | Intent: %.2f | CurrRatio: %.2f | AvailRes: %.2f | GlobalTrend: %.2f", tostring(locationType), productionRatio, currentRatio, availableResources, globalTrend))
-        ]]
-        return CompareBody(currentRatio, productionRatio, compareType)
+
+        return CompareBody(currentRatio, targetRatio, compareType)
     end
+
     return false
 end
 
@@ -551,7 +654,11 @@ function LessThanEconIncomeOverTimeRNG(aiBrain, massIncome, energyIncome)
 end
 
 function FactorySpendRatioRNG(aiBrain, LocationType, uType, upgradeType, noStorageCheck, demandBuilder)
-    local fmgr = aiBrain.BuilderManagers[LocationType].FactoryManager
+    local manager = aiBrain.BuilderManagers[LocationType]
+    if not manager or not manager.FactoryManager then
+        return false
+    end
+    local fmgr = manager.FactoryManager
     
     -- 1. Budget Gate (Command Economy for Land, Global for others)
     local productionRatio = fmgr["Base"..uType.."Ratio"] or aiBrain.ProductionRatios[uType] or 0
@@ -561,12 +668,12 @@ function FactorySpendRatioRNG(aiBrain, LocationType, uType, upgradeType, noStora
     end
 
     local cman = aiBrain.cmanager
-    local factorySpend
-    if upgradeType then
-        factorySpend = cman.categoryspend.fact[uType] - cman.categoryspend.fact[upgradeType]
-    else
-        factorySpend = cman.categoryspend.fact[uType]
+    local factorySpend = (fmgr.FactorySpend and fmgr.FactorySpend[uType]) or 0
+
+    if upgradeType and fmgr.FactorySpend then
+        factorySpend = factorySpend - (fmgr.FactorySpend[upgradeType] or 0)
     end
+    --LOG('Factory Spend for Location Type '..tostring(LocationType)..' uType '..tostring(uType)..' is '..tostring(factorySpend)..' production ratio is '..tostring(productionRatio))
     local availableIncome = math.max(cman.income.r.m, 0.1)
     local currentRatio = factorySpend / math.max(availableIncome, 0.1)
     local mStored = GetEconomyStored(aiBrain, 'MASS')
@@ -575,7 +682,6 @@ function FactorySpendRatioRNG(aiBrain, LocationType, uType, upgradeType, noStora
 
     -- If we are over our allocated budget, stop here
     if currentRatio >= productionRatio and not isSpamLandException then
-        --LOG('Ratio is false, our current mass stored is '..tostring(GetEconomyStored(aiBrain, 'MASS')..' enemy stored is '..tostring(GetEconomyStored(aiBrain, 'ENERGY'))))
         return false 
     end
 
@@ -586,26 +692,28 @@ function FactorySpendRatioRNG(aiBrain, LocationType, uType, upgradeType, noStora
 
     if uType == 'Land' then
         -- Spam players ignore storage constraints for land units
-        if aiBrain.BrainIntel.PlayerRole.SpamPlayer then 
+        if aiBrain.BrainIntel.PlayerRole.SpamPlayer then
+            --LOG('SpamPlayer true')
             return true 
         end
         
         -- Stricter requirements if the AI is being choked/contained
         if aiBrain.EnemyIntel.ChokeFlag then
             if GetEconomyStoredRatio(aiBrain, 'MASS') >= 0.10 and GetEconomyStoredRatio(aiBrain, 'ENERGY') >= 0.95 then
+                --LOG('CheckFlag is true')
                 return true
             end
         end
         
         -- Standard Land Floor
         if mStored >= 5 and eStored >= 100 then
+            --LOG('Standard Land Floor true')
             return true
         end
     elseif uType == 'Air' then
         -- High energy buffer for Air to prevent T3/Exp Air from stalling the grid
         if mStored >= 5 and eStored >= 1000 then
             return true
-
         end
     else
         -- Naval/Other
