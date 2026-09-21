@@ -1236,34 +1236,81 @@ CalculateEnhancementBuildWeaponRisk = function(aiBrain, cdr, remainingTime)
     if not remainingTime or remainingTime <= 0 or not cdr or cdr.Dead then
         return 0, 0
     end
+    
     local cdrPos = cdr.Position or cdr:GetPosition()
     if not cdrPos then
         return 0, 0
     end
 
-    local totalEnemyDPS = 0
+    -- ACU Combat Profile (Default T1 ACU gun stats if not specified)
+    local acuDps, acuRange = StateUtils.GetUnitWeaponRisk(cdr)
+    local acuRangeSq = acuRange * acuRange
+
+    local activeDpsKillable = 0
+    local activeDpsUnkillable = 0
+    local totalKillableHp = 0
+
     local enemyUnits = GetUnitsAroundPoint(aiBrain, (categories.LAND + categories.AIR + categories.STRUCTURE) - categories.WALL - categories.INSIGNIFICANTUNIT, cdrPos, 60, 'Enemy')
-    if enemyUnits then
+    
+    if enemyUnits and table.getn(enemyUnits) > 0 then
         for _, enemy in enemyUnits do
             if enemy and not enemy.Dead then
-                local surfaceDPS, maxRange = StateUtils.GetUnitWeaponRisk(enemy)
-                if surfaceDPS > 0 and maxRange > 0 then
+                local surfaceDps, maxRange = StateUtils.GetUnitWeaponRisk(enemy)
+                if surfaceDps > 0 and maxRange > 0 then
                     local ePos = enemy:GetPosition()
                     local rx = cdrPos[1] - ePos[1]
                     local rz = cdrPos[3] - ePos[3]
                     local distSq = rx * rx + rz * rz
-                    -- Effective threat range is the unit's max weapon radius plus a small 8-unit movement buffer
-                    local effectiveRange = maxRange + 8
-                    if distSq <= (effectiveRange * effectiveRange) then
-                        totalEnemyDPS = totalEnemyDPS + surfaceDPS
+                    
+                    local effectiveEnemyRange = maxRange + 4
+                    local enemyRangeSq = effectiveEnemyRange * effectiveEnemyRange
+
+                    -- Check if enemy is currently in firing range of the ACU
+                    if distSq <= enemyRangeSq then
+                        -- Check if ACU can hit back (within ACU gun range)
+                        if distSq <= acuRangeSq then
+                            activeDpsKillable = activeDpsKillable + surfaceDps
+                            local enemyHp = enemy:GetHealth() or 200
+                            totalKillableHp = totalKillableHp + enemyHp
+                        else
+                            -- Enemy out-ranges ACU (e.g., MMLs/Artillery); ACU cannot kill it while upgrading
+                            activeDpsUnkillable = activeDpsUnkillable + surfaceDps
+                        end
                     end
                 end
             end
         end
     end
 
-    local expectedDamage = totalEnemyDPS * remainingTime
-    return totalEnemyDPS, expectedDamage
+    local totalRawDps = activeDpsKillable + activeDpsUnkillable
+    if totalRawDps == 0 then
+        return 0, 0
+    end
+
+    -- Friendly Suppression Mitigation
+    local netEnemyThreat = math.max(1, cdr.CurrentEnemyThreat or 1)
+    local friendlyThreat = cdr.CurrentFriendlyThreat or 0
+    local suppressionRatio = math.max(0.1, math.min(1.0, netEnemyThreat / (netEnemyThreat + friendlyThreat)))
+
+    -- 1. Unkillable Units Damage (Full duration DPS)
+    local expectedDamageUnkillable = (activeDpsUnkillable * suppressionRatio) * remainingTime
+
+    -- 2. Killable Units Damage (Decaying DPS based on ACU Time-To-Kill)
+    local expectedDamageKillable = 0
+    if activeDpsKillable > 0 then
+        -- Estimate time for ACU to destroy all killable targets (accounting for ~75% efficiency/overkill)
+        local timeToClear = (totalKillableHp / math.max(1, acuDps)) * 1.33
+        local activeCombatTime = math.min(remainingTime, timeToClear)
+        
+        -- Linear attrition decay: Average DPS over timeToClear is 50% of initial DPS
+        local effectiveKillableDps = (activeDpsKillable * suppressionRatio)
+        expectedDamageKillable = effectiveKillableDps * (activeCombatTime * 0.5)
+
+        -- If combat time exceeded timeToClear, enemies are dead for the rest of remainingTime (0 extra damage)
+    end
+
+    local expectedDamage = expectedDamageUnkillable + expectedDamageKillable
+    return totalRawDps, expectedDamage
 end
 
 EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)

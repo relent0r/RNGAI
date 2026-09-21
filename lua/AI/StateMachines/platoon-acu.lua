@@ -3304,6 +3304,9 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                             end
 
                             --LOG(string.format("[EnhancementBuild Audit] HP:%.2f | RemTime:%.1fs | Prog:%.2f | Threat(Net:%.1f, InnerNet:%.1f) | DPS:%.1f | ExpDmg:%.1f | ProjHPRatio:%.2f | Conf:%.2f | HomeSafe:%s", cdr.HealthPercent, remainingTime, progress or 0, netEnemyThreat, netInnerThreat, totalEnemyDPS, expectedDamage, projectedHealthRatio, cdr.Confidence or 0, tostring(isNearHomeButSafeToUpgrade)))
+                            --local rawEtaRatio = (progress > (lastProgress or 0)) and ((1 - progress) / (progress - lastProgress)) or -1
+                            --LOG(string.format("[ETA_Audit] Tick:%d | Prog:%.4f | LastProg:%.4f | EtaRatio:%.2f | RemTime:%.2fs", tick, progress, lastProgress or 0, rawEtaRatio, remainingTime))
+                            --LOG(string.format("[Risk_Audit] DPS:%.2f | RemTime:%.2fs | ExpDmg:%.2f | EffHP:%.2f | ProjRatio:%.4f", totalEnemyDPS, remainingTime, expectedDamage, effectiveHealth, projectedHealthRatio))
 
                             -- Gate 1: Dynamic Weapon Risk & Expected HP Loss (Lethal / Critical Damage)
                             if remainingTime > 3 and projectedHealthRatio < 0.35 then

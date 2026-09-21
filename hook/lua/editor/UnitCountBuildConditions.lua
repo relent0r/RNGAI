@@ -1219,7 +1219,7 @@ function FactoryTechMixCheckRNG(aiBrain, locationType, layer, targetTier, minRec
     local reclaimCount = factoryManager:GetNumCategoryFactories(catReclaim)
     if reclaimCount <= minReclaim then return false end
 
-    if cfg.CheckLocalHQ and not expansion then
+    if cfg.CheckLocalHQ then
         if not expansion then
             local hqCount = factoryManager:GetNumCategoryFactories(catHQ)
             if hqCount <= 0 then return false end
