@@ -519,20 +519,15 @@ function lerpy(vec1, vec2, distance)
 end
 
 function LerpyRotate(vec1, vec2, distance)
-    -- Courtesy of chp2001
-    -- note the distance param is {distance, weapon range}
-    -- vec1 is friendly unit, vec2 is enemy unit
-    -- Had to add more documentation cause I suck at maths
-    -- distance[1] is the degrees from vec2 e.g 90 is right, -90 is left
-    -- distance[2] is the distance from vec2
-    -- So for say acu support, vec1 is the enemy position, vec2 is the acu position, distance[1] is degrees right or left.
-    -- then distance[2] is how far from the acu they will stand
-    -- Actually thats still not right, I dont fully understand what distance[1] does, yea I know just learn vectors
-    local distanceFrac = distance[2] / distance[1]
-    local z = vec2[3] + distanceFrac * (vec2[1] - vec1[1])
-    local y = vec2[2] - distanceFrac * (vec2[2] - vec1[2])
-    local x = vec2[1] - distanceFrac * (vec2[3] - vec1[3])
-    return {x,y,z}
+    local dx, dz = vec1[1] - vec2[1], vec1[3] - vec2[3]
+    local len = math.sqrt(dx * dx + dz * dz)
+    if len == 0 then return {vec2[1], vec2[2], vec2[3]} end
+    local rad = (distance[1] or 90) * (math.pi / 180)
+    local cosA, sinA = math.cos(rad), math.sin(rad)
+    local rx = (dx / len) * cosA - (dz / len) * sinA
+    local rz = (dx / len) * sinA + (dz / len) * cosA
+    local dist = distance[2] or 15
+    return {vec2[1] + rx * dist, vec2[2], vec2[3] + rz * dist}
 end
 
 -- This is softles, I was curious to see what it looked like compared to lerpy. Used in scouts avoiding enemy tanks.
@@ -10027,15 +10022,30 @@ end
 function AirRiskValidation(aiBrain, platoon, targetZone, debug)
     local groundAAThreat, airToAirThreat = GetZoneAirThreatValues(targetZone)
 
-    if groundAAThreat <= 0 and airToAirThreat <= 0 then return 1.0 end
-
-    local antiSurfaceThreat = platoon.CurrentPlatoonThreatAntiSurface or 0
-    local antiAirThreat = platoon.CurrentPlatoonThreatAntiAir or 0
-
     -- Global air dominance multiplier
     local globalFriendlyAir = aiBrain.BrainIntel.SelfThreat['AntiAirNow'] or 0
     local globalEnemyAir = aiBrain.BrainIntel.EnemyThreatCurrent['AntiAir'] or 1.0
     local airControlMod = math.min(3.0, math.max(0.5, globalFriendlyAir / math.max(1.0, globalEnemyAir)))
+
+    if groundAAThreat <= 0 and airToAirThreat <= 0 then
+        local enemyStarts = targetZone.enemystartdata
+        if enemyStarts then
+            for _, eData in enemyStarts do
+                if eData.startdistance and eData.startdistance < 625 then
+                    local intel = targetZone.intelassignment
+                    if not (intel and intel.RadarCoverage) then
+                        -- Dynamically scale risk with air dominance: air-superior AI will pursue unscouted base opportunities
+                        return math.min(1.0, math.max(0.2, 0.35 * airControlMod))
+                    end
+                    break
+                end
+            end
+        end
+        return 1.0
+    end
+
+    local antiSurfaceThreat = platoon.CurrentPlatoonThreatAntiSurface or 0
+    local antiAirThreat = platoon.CurrentPlatoonThreatAntiAir or 0
 
     -------------------------------------------------------------------------
     -- AXIS 1: Air-to-Air Threat (Only enemy ASFs vs. platoon AA)

@@ -446,17 +446,21 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
             factoryDrain.t2AirDrain = (massToFactoryValues.T2AirValue or 20) * ecoMultiplier
             factoryDrain.t3AirDrain = (massToFactoryValues.T3AirValue or 30) * ecoMultiplier
 
-            for _, v in manager.FactoryManager.FactoryList do
-                if v and not v.Dead and v.Blueprint and v.Blueprint.CategoriesHash.AIR then
-                    if requireBuilt and v:GetFractionComplete() ~= 1 then
-                        continue
-                    end
-                    if v.Blueprint.CategoriesHash.TECH1 then
-                        t1AirFactories = t1AirFactories + 1
-                    elseif v.Blueprint.CategoriesHash.TECH2 then
-                        t2AirFactories = t2AirFactories + 1
-                    elseif v.Blueprint.CategoriesHash.TECH3 then
-                        t3AirFactories = t3AirFactories + 1
+            for k, m in aiBrain.BuilderManagers do
+                if m.FactoryManager and m.FactoryManager.LocationActive then
+                    for _, v in m.FactoryManager.FactoryList do
+                        if v and not v.Dead and v.Blueprint and v.Blueprint.CategoriesHash.AIR then
+                            if requireBuilt and v:GetFractionComplete() ~= 1 then
+                                continue
+                            end
+                            if v.Blueprint.CategoriesHash.TECH1 then
+                                t1AirFactories = t1AirFactories + 1
+                            elseif v.Blueprint.CategoriesHash.TECH2 then
+                                t2AirFactories = t2AirFactories + 1
+                            elseif v.Blueprint.CategoriesHash.TECH3 then
+                                t3AirFactories = t3AirFactories + 1
+                            end
+                        end
                     end
                 end
             end
@@ -611,7 +615,12 @@ function ZoneBasedFactoryToMassSupported(aiBrain, locationType, compareType, lay
         --end
         local baseRatioKey = 'Base' .. layer .. 'Ratio'
         local localBaseRatio = manager.FactoryManager and manager.FactoryManager[baseRatioKey]
-        local productionRatio = (localBaseRatio and localBaseRatio > 0) and localBaseRatio or (aiBrain.ProductionRatios and aiBrain.ProductionRatios[layer] or 0.3)
+        local productionRatio
+        if layer == 'Air' and aiBrain.ProductionIntent and aiBrain.ProductionIntent.Air and aiBrain.ProductionIntent.Air > 0 then
+            productionRatio = aiBrain.ProductionIntent.Air
+        else
+            productionRatio = (localBaseRatio and localBaseRatio > 0) and localBaseRatio or (aiBrain.ProductionRatios and aiBrain.ProductionRatios[layer] or 0.3)
+        end
 
         local currentRatio = massSpendTotal / math.max(availableResources, 0.1)
 

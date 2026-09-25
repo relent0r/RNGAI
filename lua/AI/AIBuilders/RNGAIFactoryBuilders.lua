@@ -28,20 +28,6 @@ local LandThreat = function(self, aiBrain)
     end
 end
 
-local AirDefenseScramble = function(self, aiBrain, builderManager, builderData)
-    local myAirThreat = aiBrain.BrainIntel.SelfThreat.AntiAirNow
-    local enemyAirThreat = aiBrain.EnemyIntel.EnemyThreatCurrent.AntiAir
-    local enemyCount = 1
-    if aiBrain.EnemyIntel.EnemyCount > 0 then
-        enemyCount = aiBrain.EnemyIntel.EnemyCount
-    end
-    if myAirThreat * 1.3 < (enemyAirThreat / enemyCount) then
-        return 1015
-    else
-        return 0
-    end
-end
-
 local ActiveExpansion = function(self, aiBrain, builderManager)
     --RNGLOG('LocationType is '..builderManager.LocationType)
     if aiBrain.BrainIntel.ActiveExpansion == builderManager.LocationType then
@@ -357,37 +343,6 @@ BuilderGroup {
         BuilderData = {
             JobType = 'BuildStructure',
             StateMachine = 'EngineerBuilder',
-            Construction = {
-                LocationType = 'LocationType',
-                AdjacencyPriority = {categories.ENERGYPRODUCTION},
-                BuildClose = false,
-                BuildStructures = {
-                    { Unit = 'T1AirFactory', Categories = categories.FACTORY * categories.AIR * categories.TECH1 },
-                },
-            }
-        }
-    },
-    Builder {
-        BuilderName = 'RNG Factory Builder Air T1 Main Response',
-        PlatoonTemplate = 'EngineerStateT123RNG',
-        Priority = 0,
-        PriorityFunction = AirDefenseScramble,
-        DelayEqualBuildPlattons = {'Factories', 3},
-        BuilderConditions = {
-            { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
-            { UCBC, 'PlayerRoleCheck', {'LocationType', 1, categories.FACTORY * categories.AIR, {'SPAM'} }},
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.0 }},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR }},
-            { UCBC, 'MinimumFactoryCheckRNG', { 'LocationType', 'Air'}},
-            { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.AIR * (categories.TECH2 + categories.TECH3) }},
-            { EBC, 'ZoneBasedFactoryToMassSupported', { 'LocationType', '<', 'Air' } },
-            { UCBC, 'IsEngineerNotBuilding', { categories.STRUCTURE * categories.AIR * categories.FACTORY }},
-            { UCBC, 'UnitCapCheckLess', { .95 } },
-         },
-        BuilderType = 'Any',
-        BuilderData = {
-            StateMachine = 'EngineerBuilder',
-            JobType = 'BuildStructure',
             Construction = {
                 LocationType = 'LocationType',
                 AdjacencyPriority = {categories.ENERGYPRODUCTION},

@@ -623,6 +623,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             local az = self.Pos[3] - acuUnit.Position[3]
             local acuDistance = ax * ax + az * az
             if acuUnit.Active and acuDistance > 1600 then
+                --LOG('ACU Active and acuDistance greater than 1600')
                 --self:LogDebug(string.format('ACU Support ACU is active and further than 1600 units'))
                 self.MoveToPosition = StateUtils.GetSupportPosition(aiBrain, self)
                 if not self.MoveToPosition then
@@ -636,7 +637,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                         IssueMove({unit},self.MoveToPosition)
                     end
                 end
-                --RNGLOG('Support moving to position')
+                --LOG('Support moving to position '..tostring(repr(self.MoveToPosition)))
                 coroutine.yield(40)
                 --RNGLOG('Support waiting after move command')
                 ax = self.Pos[1] - acuUnit.Position[1]
@@ -651,6 +652,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
             end
             local target
             if not target or target.Dead then
+                --LOG('No target, looking for one around acu')
                 local targetTable, acuUnit = RUtils.AIFindBrainTargetInACURangeRNG(aiBrain, acuUnit.Position, self, 'Attack', 80, self.atkPri, self.CurrentPlatoonThreat, true)
                 if targetTable.Attack.Unit then
                     target = targetTable.Attack.Unit
@@ -660,16 +662,18 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                 if acuUnit then
                     target = acuUnit
                 end
-                table.insert(self.targetcandidates, target)
+                if target then
+                    table.insert(self.targetcandidates, target)
+                end
             end
             -- Big chunk of micro code for stuff.
             if target and not IsDestroyed(target) then
-                --RNGLOG('Have a target from the ACU')
+                --LOG('Have a target from the ACU')
                 local targetPosition = target:GetPosition()
                 local targetRange = RUtils.GetTargetRange(target) or 30
                 targetRange = targetRange * targetRange + 5
                 local targetDistance = VDist2Sq(targetPosition[1], targetPosition[3], acuUnit.Position[1], acuUnit.Position[3])
-                --RNGLOG('Target distance is '..VDist2Sq(targetPosition[1], targetPosition[3], aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3]))
+                --LOG('Target distance is '..VDist2Sq(targetPosition[1], targetPosition[3], acuUnit.Position[1], acuUnit.Position[3]))
                 if targetDistance < math.max(targetRange, 1225) and targetRange <= 2500 then
                     if not NavUtils.CanPathTo(self.MovementLayer, self.Pos, targetPosition) then 
                         --self:LogDebug(string.format('Request to vent platoon as we cant path to them'))
@@ -691,10 +695,10 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     end
                     --RNGLOG('Do micro stuff')
                     while PlatoonExists(aiBrain, self) do
-                        --RNGLOG('Start platoonexist loop')
+                        --LOG('Start platoonexist loop')
                         coroutine.yield(1)
                         self.CurrentPlatoonThreat = self:CalculatePlatoonThreatAroundPosition('Surface', categories.MOBILE * categories.LAND, self.Pos, 25)
-                        --RNGLOG('Current ACU Support platoon threat is '..self.CurrentPlatoonThreat)
+                        --LOG('Current ACU Support platoon threat is '..self.CurrentPlatoonThreat)
                         self.MoveToPosition = targetPosition
                         local attackSquad = self:GetSquadUnits('Attack')
                         local artillerySquad = self:GetSquadUnits('Artillery')
@@ -704,7 +708,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                         local retreatTimeout = 0
                         local holdBack = false
                         if target and not IsDestroyed(target) then
-                            --RNGLOG('ACU Support has target and will attack')
+                            --LOG('ACU Support has target and will attack')
                             if target and target.Blueprint.CategoriesHash.COMMAND then
                                 local possibleTarget, _, index = RUtils.CheckACUSnipe(aiBrain, 'Land')
                                 if possibleTarget and target:GetAIBrain():GetArmyIndex() == index then
@@ -716,8 +720,8 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                             end
                             targetPosition = target:GetPosition()
                             local enemyUnitThreat = StateUtils.GetThreatAroundTarget(self, aiBrain, targetPosition)
-                            --RNGLOG('EnemyUnitThreat '..enemyUnitThreat)
-                            --RNGLOG('CurrentPlatoonThreat '..self.CurrentPlatoonThreat)
+                            --LOG('EnemyUnitThreat '..enemyUnitThreat)
+                            --LOG('CurrentPlatoonThreat '..self.CurrentPlatoonThreat)
                             if enemyUnitThreat > self.CurrentPlatoonThreat then
                                 holdBack = true
                             end
@@ -732,7 +736,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                 break
                             end
                             local microCap = 50
-                            --RNGLOG('Performing attack squad micro')
+                            --LOG('Performing attack squad micro')
                             if attackSquad then
                                 for _, unit in attackSquad do
                                     microCap = microCap - 1
@@ -793,13 +797,14 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                         else
-                            --RNGLOG('No longer target or target.Dead')
+                            --LOG('No longer target or target.Dead')
                             if acuFocus then
                                 for _,unit in GetPlatoonUnits(self) do
                                     RUtils.SetAcuSnipeMode(unit)
                                 end
                             end
                             self.MoveToPosition = GetSupportPosition(aiBrain)
+                            --LOG('MoveToPosition is '..tostring(repr(self.MoveToPosition)))
                             
                             if self.MoveToPosition then
                                 if VDist3Sq(self.Pos,self.MoveToPosition) > 25 then
@@ -826,7 +831,7 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                 else
-                    --RNGLOG('Target is too far from acu')
+                    --LOG('Target is too far from acu')
                     local attackSquad = self:GetSquadUnits('Attack')
                     local artillerySquad = self:GetSquadUnits('Artillery')
                     self.MoveToPosition = GetSupportPosition(aiBrain)
@@ -876,6 +881,20 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 --RNGLOG('Target kite has completed')
+            else
+                --LOG('No Target Found')
+                self.MoveToPosition = StateUtils.GetSupportPosition(aiBrain, self)
+                if not self.MoveToPosition then
+                    self.MoveToPosition = RUtils.AvoidLocation(acuUnit.Position, self.Pos, 15)
+                end
+                for _, unit in platUnits do
+                    if unit and not IsDestroyed(unit) then
+                        --RNGLOG('Distance to support position is '..VDist3Sq(self.MoveToPosition, unit:GetPosition()))
+                        --RNGLOG('Unit is too far and not moving, clearning and moving')
+                        IssueClearCommands({unit})
+                        IssueMove({unit},self.MoveToPosition)
+                    end
+                end
             end
             coroutine.yield(30)
             self:ChangeState(self.DecideWhatToDo)

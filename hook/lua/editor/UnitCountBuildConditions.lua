@@ -1224,7 +1224,7 @@ function FactoryTechMixCheckRNG(aiBrain, locationType, layer, targetTier, minRec
             local hqCount = factoryManager:GetNumCategoryFactories(catHQ)
             if hqCount <= 0 then return false end
         else
-            if aiBrain:GetCurrentUnitsWithCategory(catHQ) < 1 then
+            if aiBrain:GetCurrentUnits(catHQ) < 1 then
                 return false
             end
         end

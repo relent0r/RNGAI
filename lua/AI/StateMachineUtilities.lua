@@ -2446,15 +2446,15 @@ end
 
 function GetSupportPosition(aiBrain, platoon)
     local function DrawCirclePoints(points, radius, center)
-        local extractorPoints = {}
+        local circlePoints = {}
         local slice = 2 * math.pi / points
         for i=1, points do
             local angle = slice * i
             local newX = center[1] + radius * math.cos(angle)
             local newY = center[3] + radius * math.sin(angle)
-            table.insert(extractorPoints, { newX, 0 , newY})
+            table.insert(circlePoints, { newX, 0 , newY})
         end
-        return extractorPoints
+        return circlePoints
     end
     local movetoPoint = false
     if aiBrain:GetCurrentEnemy() then
@@ -2491,6 +2491,7 @@ function GetSupportPosition(aiBrain, platoon)
         end
     end
     if movetoPoint then
+        --LOG(string.format('[GetSupportPositionKnife] ACU Pos: %s | MoveToPos: %s | DistFromACU: %.2f', repr(aiBrain.CDRUnit.Position), repr(movetoPoint), math.sqrt(VDist2Sq(aiBrain.CDRUnit.Position[1], aiBrain.CDRUnit.Position[3], movetoPoint[1], movetoPoint[3]))))
         return movetoPoint
     end
     return false
