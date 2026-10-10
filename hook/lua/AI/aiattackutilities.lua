@@ -232,8 +232,8 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     -- These are the values that are used to weight the two types of "threats"
     -- primary by default is weighed most heavily, while a secondary threat is
     -- weighed less heavily
-    local PrimaryThreatWeight = 15
-    local SecondaryThreatWeight = 0.5
+    local PrimaryThreatWeight = 20
+    local SecondaryThreatWeight = 0.3
 
     -- After being sorted by those two types of threats, the places to attack are then
     -- sorted by distance.  So you don't have to worry about specifying that units go
@@ -254,17 +254,17 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
     -- in a given category; the weight is the multiplicative factor used to increase
     -- the desirability for the distance category
 
-    local VeryNearThreatWeight = 20000
-    local VeryNearThreatRadius = 125
+    local VeryNearThreatWeight = 30000
+    local VeryNearThreatRadius = 140
 
-    local NearThreatWeight = 3000
-    local NearThreatRadius = 250
+    local NearThreatWeight = 6000
+    local NearThreatRadius = 275
 
-    local MidThreatWeight = 750
-    local MidThreatRadius = 350
+    local MidThreatWeight = 1000
+    local MidThreatRadius = 400
 
     local FarThreatWeight = 100
-    local FarThreatRadius = 500
+    local FarThreatRadius = 600
 
     -- anything that's farther than the FarThreatRadius is considered VeryFar
     local VeryFarThreatWeight = 1
@@ -284,7 +284,7 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
 
     -- If the combined threat of both primary and secondary threat types
     -- is less than this level, then just outright ignore it as a threat
-    local IgnoreThreatLessThan = 5
+    local IgnoreThreatLessThan = 4
     -- if the platoon is stronger than this threat level, then ignore weaker targets if the platoon is stronger
     -- by the given ratio
     local IgnoreWeakerTargetsIfStrongerThan = 20
@@ -476,19 +476,14 @@ function GetBestNavalTargetRNG(aiBrain, platoon, bSkipPathability)
             -- farther away is less threatening, so divide
             if effectiveDist <= VeryNearThreatRadius then
                 threat[3] = threat[3] + VeryNearThreatWeight / threatDistNorm
-                distThreat = VeryNearThreatWeight / threatDistNorm
             elseif effectiveDist <= NearThreatRadius then
-                threat[3] = threat[3] + MidThreatWeight / threatDistNorm
-                distThreat = MidThreatWeight / threatDistNorm
+                threat[3] = threat[3] + NearThreatWeight / threatDistNorm -- FIXED: Was MidThreatWeight
             elseif effectiveDist <= MidThreatRadius then
-                threat[3] = threat[3] + NearThreatWeight / threatDistNorm
-                distThreat = NearThreatWeight / threatDistNorm
+                threat[3] = threat[3] + MidThreatWeight / threatDistNorm  -- FIXED: Was NearThreatWeight
             elseif effectiveDist <= FarThreatRadius then
                 threat[3] = threat[3] + FarThreatWeight / threatDistNorm
-                distThreat = FarThreatWeight / threatDistNorm
             else
                 threat[3] = threat[3] + VeryFarThreatWeight / threatDistNorm
-                distThreat = VeryFarThreatWeight / threatDistNorm
             end
             --LOG('threat[3] '..tostring(threat[3]))
             --LOG('dstThreat '..tostring(distThreat))

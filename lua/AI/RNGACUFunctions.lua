@@ -1232,12 +1232,12 @@ function SetAcuSnipeMode(unit, type)
     end
 end
 
-CalculateEnhancementBuildWeaponRisk = function(aiBrain, cdr, remainingTime)
+CalculateEnhancementBuildWeaponRisk = function(aiBrain, cdr, remainingTime, overridePos)
     if not remainingTime or remainingTime <= 0 or not cdr or cdr.Dead then
         return 0, 0
     end
     
-    local cdrPos = cdr.Position or cdr:GetPosition()
+    local cdrPos = overridePos or cdr.Position or cdr:GetPosition()
     if not cdrPos then
         return 0, 0
     end
@@ -1311,6 +1311,47 @@ CalculateEnhancementBuildWeaponRisk = function(aiBrain, cdr, remainingTime)
 
     local expectedDamage = expectedDamageUnkillable + expectedDamageKillable
     return totalRawDps, expectedDamage
+end
+
+IsEnhancementBuildSafe = function(aiBrain, cdr, remainingTime, overridePos)
+    remainingTime = remainingTime or 90
+    local totalEnemyDPS, expectedDamage = CalculateEnhancementBuildWeaponRisk(aiBrain, cdr, remainingTime, overridePos)
+
+    local maxHealth = (cdr.Blueprint.Defense.MaxHealth or 10000) + (cdr.MaxShieldHealth or 0)
+    local effectiveHealth = (cdr.Health or 0) + (cdr.ShieldHealth or 0)
+    local projectedRemainingHealth = effectiveHealth - expectedDamage
+    local projectedHealthRatio = projectedRemainingHealth / maxHealth
+
+    -- Gate 1: Dynamic Weapon Risk & Expected HP Loss (Lethal / Critical Damage)
+    if remainingTime > 3 and projectedHealthRatio < 0.35 then
+        return false
+    end
+
+    -- Gate 2: Dynamic Tactical Threat & Confidence Gate
+    local netEnemyThreat = math.max(0, (cdr.CurrentEnemyThreat or 0) - (cdr.CurrentFriendlyThreat or 0))
+    local netInnerThreat = math.max(0, (cdr.CurrentEnemyInnerCircle or 0) - (cdr.CurrentFriendlyInnerCircle or 0))
+
+    if overridePos then
+        local posThreat = GetThreatAtPosition(aiBrain, overridePos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') or 0
+        if posThreat > (cdr.ThreatLimit or 25) * 1.5 then
+            return false
+        end
+    end
+
+    local isUnsafeTacticalPosition = false
+    if netInnerThreat > 35 and netEnemyThreat > 25 then
+        isUnsafeTacticalPosition = true
+    elseif netEnemyThreat > 35 and (cdr.Confidence or 3) < 2.2 then
+        isUnsafeTacticalPosition = true
+    elseif (cdr.HealthPercent or 1.0) < 0.40 and netEnemyThreat > 15 and (cdr.DistanceToHome or 0) > 900 then
+        isUnsafeTacticalPosition = true
+    end
+
+    if remainingTime > 3 and isUnsafeTacticalPosition then
+        return false
+    end
+
+    return true
 end
 
 EnhancementEcoCheckRNG = function(aiBrain,cdr,enhancement, enhancementName)

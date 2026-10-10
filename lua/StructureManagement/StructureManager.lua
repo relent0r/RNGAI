@@ -1141,6 +1141,12 @@ StructureManager = Class {
         local aiBrain = self.Brain
         local teamReference = aiBrain.TeamReference
 
+        local landRatio = aiBrain.ProductionRatios and aiBrain.ProductionRatios.Land or 0
+        local airRatio = aiBrain.ProductionRatios and aiBrain.ProductionRatios.Air or 0
+        local navalRatio = aiBrain.ProductionRatios and aiBrain.ProductionRatios.Naval or 0
+        local ecoBudget = aiBrain.EconomyUpgradeSpend or 0
+        --LOG(string.format('UPGRADE_STRATEGY_AUDIT | LandRatio: %.2f | AirRatio: %.2f | NavalRatio: %.2f | EcoUpgradeBudget: %.2f | AirPhase: %.1f', landRatio, airRatio, navalRatio, ecoBudget, aiBrain.EnemyIntel.AirPhase or 0))
+
         -- HQ Upgrades
         local mexSpend = aiBrain.EcoManager.TotalMexSpend or 0
         local actualMexIncome = aiBrain.cmanager.income.r.m - mexSpend

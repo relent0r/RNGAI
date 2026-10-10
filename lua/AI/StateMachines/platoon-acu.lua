@@ -443,9 +443,11 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                 local enhancementLocation, locationDistance, enhancementZone
                 local movementCutOff = 225
                 if self.BuilderData.ZoneRetreat and VDist3Sq(cdr.Position, self.BuilderData.Position) <= self.BuilderData.CutOff and cdr.CurrentEnemyThreat < 30 then
-                    self:LogDebug(string.format('ACU close to position for enhancement and threat is '..cdr.CurrentEnemyThreat))
-                    self:ChangeState(self.EnhancementBuild)
-                    return
+                    if ACUFunc.IsEnhancementBuildSafe(brain, cdr, 90) then
+                        self:LogDebug(string.format('ACU close to position for enhancement and threat is '..cdr.CurrentEnemyThreat))
+                        self:ChangeState(self.EnhancementBuild)
+                        return
+                    end
                 end
                 if priorityUpgradeRequired then
                     enhancementLocation, enhancementZone, locationDistance, movementCutOff = ACUFunc.GetACUSafeZone(brain, cdr, false)
@@ -458,12 +460,16 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         inRange = true
                     end
                 end
-                if inRange and not highThreat and (priorityUpgradeRequired or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
-                    self:LogDebug(string.format('We are in range and will perform enhancement'))
-                    self:ChangeState(self.EnhancementBuild)
-                    return
-                elseif not highThreat and (priorityUpgradeRequired or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)) then
-                    if enhancementLocation then
+                local canUpgradeEco = priorityUpgradeRequired or (GetEconomyStoredRatio(brain, 'MASS') > 0.05 and GetEconomyStoredRatio(brain, 'ENERGY') > 0.95)
+                if inRange and not highThreat and canUpgradeEco then
+                    if ACUFunc.IsEnhancementBuildSafe(brain, cdr, 90) then
+                        self:LogDebug(string.format('We are in range and will perform enhancement'))
+                        self:ChangeState(self.EnhancementBuild)
+                        return
+                    end
+                end
+                if not highThreat and canUpgradeEco then
+                    if enhancementLocation and ACUFunc.IsEnhancementBuildSafe(brain, cdr, 90, enhancementLocation) then
                         self.BuilderData = {
                             Position = enhancementLocation,
                             CutOff = movementCutOff,
@@ -1974,35 +1980,53 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         end
                         coroutine.yield(2)
                         local pauseTimeOut = 0
-                        local failureCount = 0
+                        local pauseTimedOut = false
                         local hasPgen = brain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.ENERGYPRODUCTION, engPos, 60, 'Ally') > 1
                         local hasFactory = brain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, engPos, 60, 'Ally') > 0
-                        while not eng.Dead and eng:IsUnitState('Building') or 0 < RNGGETN(eng:GetCommandQueue()) do
-                            --[[
-                            local structure = eng.UnitBeingBuilt
+                        local otherEngineers = brain:GetListOfUnits(categories.ENGINEER - categories.COMMAND - categories.INSIGNIFICANTUNIT, false)
+                        local isEmergencyOrSolo = RNGTableEmpty(otherEngineers) or (brain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.ENERGYPRODUCTION), engPos, 80, 'Ally') == 0)
 
-                            if structure and not structure.Dead then
-                                local structureCat = structure.Blueprint.CategoriesHash
-                                local isEssential = (structureCat.ENERGYPRODUCTION and not hasPgen) or (structureCat.FACTORY and not hasFactory) or structureCat.MASSEXTRACTION
-                                if not isEssential and structure:GetFractionComplete() < 0.85 then
-                                    if failureCount < 10 and GetEconomyStored(brain, 'MASS') < 12 and GetEconomyTrend(brain, 'MASS') <= 0 then
-                                        failureCount = failureCount + 1
-                                        if failureCount >= 10 then
-                                            IssueClearCommands({eng})
+                        while not eng.Dead and (eng:IsUnitState('Building') or 0 < RNGGETN(eng:GetCommandQueue())) do
+                            if not isEmergencyOrSolo then
+                                local structure = eng.UnitBeingBuilt
+                                if structure and not structure.Dead then
+                                    local structureCat = structure.Blueprint.CategoriesHash
+                                    local isEssential = (structureCat.ENERGYPRODUCTION and not hasPgen) or (structureCat.FACTORY and not hasFactory) or structureCat.MASSEXTRACTION
+                                    if not isEssential and structure:GetFractionComplete() < 0.85 then
+                                        local massStored = brain:GetEconomyStored('MASS')
+                                        local massTrend = brain:GetEconomyTrend('MASS')
+                                        if not pauseTimedOut and massStored < 2 and massTrend <= 0 then
+                                            pauseTimeOut = pauseTimeOut + 1
+                                            if pauseTimeOut >= 12 then
+                                                pauseTimedOut = true
+                                                if eng:IsPaused() then
+                                                    eng:SetPaused(false)
+                                                end
+                                            elseif not eng:IsPaused() then
+                                                eng:SetPaused(true)
+                                            end
+                                        elseif eng:IsPaused() then
                                             eng:SetPaused(false)
-                                            break
-                                        end
-                                        if not eng:IsPaused() then
-                                            eng:SetPaused( true )
-                                            coroutine.yield(7)
+                                            if massStored >= 2 or massTrend > 0 then
+                                                pauseTimeOut = 0
+                                            end
                                         end
                                     elseif eng:IsPaused() then
-                                        eng:SetPaused( false )
+                                        eng:SetPaused(false)
                                     end
                                 end
+                                if eng.CurrentEnemyThreat > 30 then
+                                    IssueClearCommands({eng})
+                                    coroutine.yield(2)
+                                    break
+                                end
+                            elseif eng:IsPaused() then
+                                eng:SetPaused(false)
                             end
-                            ]]
                             coroutine.yield(5)
+                        end
+                        if not eng.Dead and eng:IsPaused() then
+                            eng:SetPaused(false)
                         end
                     end
                 elseif self.BuilderData.Construction.Extractor then

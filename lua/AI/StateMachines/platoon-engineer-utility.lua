@@ -883,25 +883,18 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 if aiBrain.ZoneExpansionTransportRequested then
                     aiBrain.ZoneExpansionTransportRequested = nil
                 end
-                reference, refName, refZone = RUtils.AIFindZoneExpansionPointRNG(aiBrain, cons.LocationType, (cons.LocationRadius or 256), nil, nil, 'Land')
+                local requiredLabel = cons.LabelOverride
+                local searchPosition = requiredLabel and eng:GetPosition() or nil
+                reference, refName, refZone = RUtils.AIFindZoneExpansionPointRNG(aiBrain, cons.LocationType, (cons.LocationRadius or 256), searchPosition, nil, 'Land', requiredLabel)
                 if not reference or not refName then
+                    --LOG('No Expansion point found for '..tostring(self.BuilderName)..' with location type '..tostring(cons.LocationType)..' and radius '..tostring(cons.LocationRadius))
                     self:ExitStateMachine()
                     return
                 end
                 if reference and refZone and refName then
                     aiBrain.Zones.Land.zones[refZone].lastexpansionattempt = GetGameTimeSeconds()
                     aiBrain.Zones.Land.zones[refZone].engineerplatoonallocated = self
-                    --[[if aiBrain.Zones.Land.zones[refZone].resourcevalue > 3 then
-                        local StructureManagerRNG = import('/mods/RNGAI/lua/StructureManagement/StructureManager.lua')
-                        local smInstance = StructureManagerRNG.GetStructureManager(aiBrain)
-                        if eng.Blueprint.CategoriesHash.TECH2 and smInstance.Factories.LAND[2].HQCount > 0 then
-                            table.insert(cons.BuildStructures, 'T2SupportLandFactory')
-                        elseif eng.Blueprint.CategoriesHash.TECH3 and smInstance.Factories.LAND[3].HQCount > 0 then
-                            table.insert(cons.BuildStructures, 'T3SupportLandFactory')
-                        else
-                            table.insert(cons.BuildStructures, 'T1LandFactory')
-                        end
-                    end]]
+                    --LOG('Engineer '..tostring(self.BuilderName)..' is building expansion base at '..tostring(repr(reference))..' for zone '..tostring(refZone)..' with location type '..tostring(cons.LocationType)..' and radius '..tostring(cons.LocationRadius))
                     AIBuildStructures.AINewExpansionBaseRNG(aiBrain, refName, reference, eng, cons)
                     self.ZoneExpansionSet = true
                     relative = false

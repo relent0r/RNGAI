@@ -63,7 +63,6 @@ function EnemyAirSnipeDefenceRequired(aiBrain, locationType)
                                 if v and not v.Dead then
                                     aaCount = aaCount + 1
                                     if aaCount > 1 then
-                                        --LOG('EnemyAirSnipeDefenceChecked and not required')
                                         aaCovered = true
                                         break
                                     end
@@ -72,7 +71,6 @@ function EnemyAirSnipeDefenceRequired(aiBrain, locationType)
                         end
                     end
                     if not aaCovered then
-                        --LOG('EnemyAirSnipeDefenceRequired current count'..tostring(aaCount))
                         return true
                     end
                 end
@@ -1383,6 +1381,111 @@ function EngineerAssistManagerNeedsEngineers(aiBrain, locationType, tier, minPoo
     end
     return false
 end
+
+function EngineerAssistManagerNavalNeedsEngineers(aiBrain, locationType, tier, minPool, minHigherTier)
+    local builderManager = aiBrain.BuilderManagers[locationType]
+    if not builderManager then
+        return false
+    end
+
+    local engineerManager = builderManager.EngineerManager
+    if not engineerManager then
+        return false
+    end
+
+    local fmgr = builderManager.FactoryManager
+    if not fmgr or not fmgr.LocationActive then
+        return false
+    end
+    --LOG('Managers are present for location '..locationType..' - checking naval assist manager requirements')
+
+    local globalNavalIntent = (aiBrain.ProductionIntent and aiBrain.ProductionIntent.Naval) or 0
+    if globalNavalIntent <= 0 then
+        return false
+    end
+
+    local totalNavalBuildRate = 0
+    for _, bm in pairs(aiBrain.BuilderManagers) do
+        local bFmgr = bm.FactoryManager
+        if bFmgr and bFmgr.LocationActive then
+            totalNavalBuildRate = totalNavalBuildRate + (bFmgr.NavalBuildRate or 0)
+        end
+    end
+    --LOG('Total Naval Build Rate across all bases is '..tostring(totalNavalBuildRate))
+
+    local baseNavalBuildRate = fmgr.NavalBuildRate or 0
+    if totalNavalBuildRate <= 0 or baseNavalBuildRate <= 0 then
+        return false
+    end
+    local totalMassIncome = aiBrain:GetEconomyIncome('MASS') * 10
+
+    local baseNavalShare = baseNavalBuildRate / totalNavalBuildRate
+    local baseMassIntent = totalMassIncome * globalNavalIntent * baseNavalShare
+    local nativeMassCapacity = baseNavalBuildRate * 0.5
+    local massGap = math.max(0, baseMassIntent - nativeMassCapacity)
+    local requiredAssistBP = massGap / 0.5
+    --local requiredAssistBP = 15 -- for testing
+
+    if requiredAssistBP <= 0 then
+        return false
+    end
+
+    
+    local platoonName = 'AssistManagerNavalStateMachine_'..locationType
+    local navalAssistManager = aiBrain:GetPlatoonUniquelyNamed(platoonName)
+    if not navalAssistManager then
+        --LOG('*AI DEBUG: Naval Assist Manager not found for location '..locationType..' - creating new one')
+        return true
+    end
+
+    -- Current build power state from the assist manager (passed via self or queried)
+    local currentTechBP = navalAssistManager.TotalTechBuildRate or { [1]=0, [2]=0, [3]=0 }
+    local currentTotalBP = navalAssistManager.TotalBuildRate or 0
+
+    if currentTotalBP >= requiredAssistBP then
+        return false
+    end
+
+    local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool')
+    if not poolPlatoon then
+        return false
+    end
+
+    if tier == 1 then
+        local highTierPower = (currentTechBP[2] or 0) + (currentTechBP[3] or 0)
+        if highTierPower >= (requiredAssistBP * 0.6) then
+            return false
+        end
+
+        local numUnits = poolPlatoon:GetNumCategoryUnits(categories.ENGINEER * categories.MOBILE * (categories.TECH2 + categories.TECH3), engineerManager.Location, engineerManager.Radius)
+        if numUnits > minHigherTier then
+            return false
+        end
+        return true
+
+    elseif tier == 2 then
+        local t3Power = currentTechBP[3] or 0
+        if t3Power >= (requiredAssistBP * 0.8) then
+            return false
+        end
+
+        local numUnits = poolPlatoon:GetNumCategoryUnits(categories.ENGINEER * categories.MOBILE * categories.TECH2, engineerManager.Location, engineerManager.Radius)
+        if numUnits < minPool then
+            return false
+        end
+        return true
+
+    elseif tier == 3 then
+        local numUnits = poolPlatoon:GetNumCategoryUnits(categories.ENGINEER * categories.MOBILE * categories.TECH3, engineerManager.Location, engineerManager.Radius)
+        if numUnits < minPool then
+            return false
+        end
+        return true
+    end
+
+    return false
+end
+
 
 function ArmyManagerBuild(aiBrain, uType, tier, unit)
     --LOG('aiBrain.amanager.current[tier][unit] :'..tostring(aiBrain.amanager.Current[uType][tier][unit])..' unit type is '..tostring(unit))

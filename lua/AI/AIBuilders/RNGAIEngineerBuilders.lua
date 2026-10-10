@@ -1158,7 +1158,7 @@ BuilderGroup {
 }
 
 BuilderGroup {
-    BuilderGroupName = 'RNGAI Naval Assist',
+    BuilderGroupName = 'RNGAI Naval Assist - old',
     BuildersType = 'EngineerBuilder',
     Builder {
         BuilderName = 'RNGAI Engineer Assist Factory Naval',
@@ -1189,6 +1189,62 @@ BuilderGroup {
     },
 
 }
+
+BuilderGroup {
+    BuilderGroupName = 'RNGAI Naval Assist',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI Assist Manager Naval T1',
+        PlatoonTemplate = 'EngineerAssistManagerT1RNG',
+        Priority = 999,
+        DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'EngineerAssistManagerNavalNeedsEngineers', { 'LocationType', 1, 0, 2 } },
+            { UCBC, 'GreaterThanGameTimeSecondsRNG', { 180 } },
+        },
+        BuilderData = {
+            JobType = 'Assist',
+            StateMachine = 'AssistManagerNavalEngineer',
+            LocationType = 'LocationType'
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI Assist Manager Naval T2',
+        PlatoonTemplate = 'EngineerAssistManagerT2RNG',
+        Priority = 999,
+        DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'EngineerAssistManagerNavalNeedsEngineers', { 'LocationType', 2, 2, 0 } },
+        },
+        BuilderData = {
+            JobType = 'Assist',
+            StateMachine = 'AssistManagerNavalEngineer',
+            LocationType = 'LocationType'
+        },
+        BuilderType = 'Any',
+    },
+    Builder {
+        BuilderName = 'RNGAI Assist Manager Naval T3',
+        PlatoonTemplate = 'EngineerAssistManagerT3RNG',
+        Priority = 999,
+        DelayEqualBuildPlattons = {'EngineerAssistExp', 1},
+        InstanceCount = 1,
+        BuilderConditions = {
+            { UCBC, 'EngineerAssistManagerNavalNeedsEngineers', { 'LocationType', 3, 2, 0 } },
+        },
+        BuilderData = {
+            JobType = 'Assist',
+            StateMachine = 'AssistManagerNavalEngineer',
+            LocationType = 'LocationType'
+        },
+        BuilderType = 'Any',
+    },
+
+}
+
 BuilderGroup {
     BuilderGroupName = 'RNGAI T1 Reclaim Builders',
     BuildersType = 'EngineerBuilder',

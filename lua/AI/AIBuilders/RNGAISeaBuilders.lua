@@ -95,17 +95,6 @@ BuilderGroup {
         },
     },
     Builder {
-        BuilderName = 'RNGAI Sea Frigate Initial',
-        PlatoonTemplate = 'T1SeaFrigate',
-        Priority = 500,
-        BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH1 * categories.FRIGATE } },
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.8 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.0, 0.10 } },
-        },
-        BuilderType = 'Sea',
-    },
-    Builder {
         BuilderName = 'RNGAI Sea Sub Initial',
         PlatoonTemplate = 'T1SeaSub',
         Priority = 0,
@@ -136,18 +125,6 @@ BuilderGroup {
 BuilderGroup {
     BuilderGroupName = 'RNGAI Sea Builders T23',                               
     BuildersType = 'FactoryBuilder',
-    Builder { 
-        BuilderName = 'RNGAI Destroyer Initial',
-        PlatoonTemplate = 'T2SeaDestroyer',
-        Priority = 500,
-        BuilderConditions = {
-            { UCBC, 'HaveLessThanUnitsWithCategory', { 3, categories.MOBILE * categories.NAVAL * categories.TECH2 * categories.DESTROYER } }, -- Build engies until we have 3 of them.
-            { EBC, 'GreaterThanEconEfficiencyRNG', { 0.9, 1.0 }},
-            { EBC, 'GreaterThanEconStorageRatioRNG', { 0.06, 0.50 } },             -- Ratio from 0 to 1. (1=100%)
-            { UCBC, 'UnitCapCheckLess', { 0.8 } },
-        },
-        BuilderType = 'Sea',
-    },
     Builder {
         BuilderName = 'RNGAI T2 Destroyer',
         PlatoonTemplate = 'T2SeaDestroyer',
@@ -207,6 +184,7 @@ BuilderGroup {
             TechLevel = 2
         },
     },
+    --[[
     Builder { 
         BuilderName = 'RNGAI ShieldBoat Initial',
         PlatoonTemplate = 'T2ShieldBoat',
@@ -231,6 +209,7 @@ BuilderGroup {
         },
         BuilderType = 'Sea',
     },
+    ]]
     Builder {
         BuilderName = 'RNGAI Factory Sub Enemy Threat T2',
         PlatoonTemplate = 'T2SubKiller',

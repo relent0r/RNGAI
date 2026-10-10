@@ -487,6 +487,17 @@ Platoon = Class(RNGAIPlatoonClass) {
             local platoonUnits = self:GetPlatoonUnits()
             aiBrain:AssignUnitsToPlatoon(assistManagerPlatoonAvailable, platoonUnits, 'attack', 'None')
             import("/mods/rngai/lua/ai/statemachines/platoon-engineer-assist-manager.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, assistManagerPlatoonAvailable, platoonUnits)
+        elseif machineType == 'AssistManagerNavalEngineer' then
+            local aiBrain = self:GetBrain()
+            local platoonName = 'AssistManagerNavalStateMachine_'..self.PlatoonData.LocationType
+            local assistManagerPlatoonAvailable = aiBrain:GetPlatoonUniquelyNamed(platoonName)
+            if not assistManagerPlatoonAvailable then
+                assistManagerPlatoonAvailable = aiBrain:MakePlatoon(platoonName, '')
+                assistManagerPlatoonAvailable:UniquelyNamePlatoon(platoonName)
+            end
+            local platoonUnits = self:GetPlatoonUnits()
+            aiBrain:AssignUnitsToPlatoon(assistManagerPlatoonAvailable, platoonUnits, 'attack', 'None')
+            import("/mods/rngai/lua/ai/statemachines/platoon-engineer-naval-assist-manager.lua").AssignToUnitsMachine({ PlatoonData = self.PlatoonData }, assistManagerPlatoonAvailable, platoonUnits)
         elseif machineType == 'ACUSupport' then
             local aiBrain = self:GetBrain()
             local platoonName = 'ACUSupportPlatoon'

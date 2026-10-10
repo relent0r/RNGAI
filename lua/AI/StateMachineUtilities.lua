@@ -3558,3 +3558,43 @@ function GetThreatCentroidRNG(brain, searchPos, searchRadius, searchCategory)
 
     return nil
 end
+
+function HasActiveLandBaseOnLabel(aiBrain, label)
+    for baseName, manager in aiBrain.BuilderManagers do
+        local hasEngineers = manager.EngineerManager and manager.EngineerManager:GetNumCategoryUnits('Engineers', categories.ALLUNITS) > 0
+        local hasFactories = manager.FactoryManager and manager.FactoryManager.LocationActive
+        if baseName ~= 'FLOATING' and manager.Layer ~= 'Water' and (baseName == 'MAIN' or manager.BaseType and (hasEngineers or hasFactories)) then
+            local baseLabel = manager.Label or NavUtils.GetLabel('Land', manager.Position)
+            if baseLabel == label then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function HasExpansionCandidate(aiBrain, label)
+    local intelManager = aiBrain.IntelManager
+    local currentTime = GetGameTimeSeconds()
+    local hasTransport = aiBrain:GetCurrentUnits(categories.TRANSPORTFOCUS + (categories.STRUCTURE * categories.FACTORY * categories.AIR)) > 0
+    local candidateLists = { intelManager.ZoneExpansions.Pathable }
+    if hasTransport then
+        table.insert(candidateLists, intelManager.ZoneExpansions.NonPathable)
+    end
+
+    for _, candidateList in candidateLists do
+        for _, candidate in candidateList do
+            if candidate.Label == label then
+                local zone = aiBrain.Zones.Land.zones[candidate.ZoneID]
+                local lastAttempt = zone and zone.lastexpansionattempt or 0
+                if zone and not zone.BuilderManager.FactoryManager.LocationActive
+                and (not zone.engineerplatoonallocated or IsDestroyed(zone.engineerplatoonallocated))
+                and (lastAttempt == 0 or currentTime >= lastAttempt + 30)
+                and aiBrain:GetThreatAtPosition(zone.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end

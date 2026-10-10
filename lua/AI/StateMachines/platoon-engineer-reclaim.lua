@@ -101,6 +101,41 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
             local eng = self.eng
             local engPos = eng:GetPosition()
             local builderData = self.BuilderData
+            if eng['rngdata'] and eng['rngdata'].RemoteExtractorBuilt then
+                self:LogDebug(string.format('RemoteExtractorBuilt is true, validating usage'))
+                eng['rngdata'].RemoteExtractorBuilt = nil
+                local label = NavUtils.GetLabel('Land', eng:GetPosition())
+                --LOG('Label for floating expansion is '..tostring(label))
+                if label and label > 0 and not StateUtils.HasActiveLandBaseOnLabel(aiBrain, label) and StateUtils.HasExpansionCandidate(aiBrain,label) then
+                    local locationPlatoon = aiBrain:MakePlatoon('ExpansionPlatoon', 'StateMachineAIRNG')
+                    aiBrain:AssignUnitsToPlatoon(locationPlatoon, {eng}, 'support', 'none')
+                    eng.PlatoonHandle = locationPlatoon
+                    locationPlatoon.PlanName = 'StateMachineAIRNG'
+                    local platoonData = {
+                        StateMachine = 'EngineerBuilder',
+                        JobType = 'Expansion',
+                        TransportWait = 5,
+                        Construction = {
+                            BuildClose = false,
+                            BaseTemplate = 'ExpansionBaseTemplates',
+                            ExpansionBase = true,
+                            ZoneExpansion = true,
+                            NearMarkerType = 'Zone Expansion',
+                            ExpansionRadius = 90, -- Defines the radius of the builder managers to avoid them intruding on another base if the expansion marker is too close
+                            LocationRadius = 2048, -- 40km map max radius here which means it wont expand far on 80km maps
+                            LocationType = self.LocationType,
+                            BuildStructures = {                    
+                                { Unit = 'T1LandFactory', Categories = categories.FACTORY * categories.LAND * categories.TECH1 },
+                            },
+                            LabelOverride = label,
+                        },
+                        NeedGuard = true,
+                    }
+                    --LOG('Executing AssignToUnitsMachine for floating expansion with label '..tostring(label))
+                    import("/mods/rngai/lua/ai/statemachines/platoon-engineer-utility.lua").AssignToUnitsMachine({ PlatoonData = platoonData }, locationPlatoon, locationPlatoon:GetPlatoonUnits())
+                    return
+                end
+            end
             if self.PlatoonData.CheckCivUnits then
                 self:LogDebug(string.format('We are checking for civilian unit capture'))
                 local captureUnit = RUtils.CheckForCivilianUnitCapture(aiBrain, eng, self.MovementLayer)

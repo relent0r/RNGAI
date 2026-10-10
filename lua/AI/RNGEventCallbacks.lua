@@ -373,7 +373,7 @@ end
 function OnKilled(self, instigator, type, overkillRatio)
 
     local sourceUnit
-    if instigator then
+    if instigator and not instigator.Dead then
         if IsUnit(instigator) then
             sourceUnit = instigator
         elseif IsProjectile(instigator) or IsCollisionBeam(instigator) then

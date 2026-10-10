@@ -357,8 +357,27 @@ EngineerManager = Class(BuilderManager) {
                 RUtils.UpdateShieldsProtectingUnit(aiBrain, finishedUnit)
             elseif EntityCategoryContains(categories.MASSEXTRACTION * categories.STRUCTURE, finishedUnit) then
                 local unitZone
+                local mexPos = finishedUnit:GetPosition()
+                local isRemoteMex = true
+                for baseName, bManager in aiBrain.BuilderManagers do
+                    if bManager.Layer ~= 'Water' then
+                        local basePos = bManager.Position
+                        local rad = 160
+                        if VDist3Sq(mexPos, basePos) <= (rad * rad) then
+                            isRemoteMex = false
+                            break
+                        end
+                    end
+                end
+                if isRemoteMex then
+                    --LOG('Remote Mex Built')
+                    --LOG('Engineer that performed the build was '..tostring(unit.PlatoonHandle.BuilderName))
+                    if not unit['rngdata'] then
+                        unit['rngdata'] = {}
+                    end
+                    unit['rngdata'].RemoteExtractorBuilt = true
+                end
                 if not unitZone and aiBrain.ZonesInitialized then
-                    local mexPos = finishedUnit:GetPosition()
                     if RUtils.PositionOnWater(mexPos[1], mexPos[3]) then
                         unitZone = 'water'
                     else

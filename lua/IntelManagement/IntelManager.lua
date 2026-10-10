@@ -482,6 +482,51 @@ IntelManager = Class {
                 }
             },
         }
+        self.EngineerNavalAssistPriorityTables = {
+            ['NavalAntiSub'] = {
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH3, type = 'AssistFactory', debug = 'Naval Factory assist'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH2, type = 'AssistFactory', debug = 'Naval Factory assist'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH1, type = 'AssistFactory', debug = 'Naval Factory assist'},
+            },
+            ['NavalAntiNaval'] = {
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH3, type = 'AssistFactory', debug = 'Naval Factory assist'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH2, type = 'AssistFactory', debug = 'Naval Factory assist'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH1, type = 'AssistFactory', debug = 'Naval Factory assist'},
+            },
+            ['NavalAntiStructure'] = {
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH3, type = 'AssistFactory', debug = 'Naval Factory assist'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH2, type = 'AssistFactory', debug = 'Naval Factory assist'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH1, type = 'AssistFactory', debug = 'Naval Factory assist'},
+            },
+            ['NavalAntiAir'] = {
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH3, type = 'AssistFactory', debug = 'Naval Factory assist'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH2, type = 'AssistFactory', debug = 'Naval Factory assist'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH1, type = 'AssistFactory', debug = 'Naval Factory assist'},
+            },
+            ['NavalExperimental'] = {
+                {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'Mass mobile experimental'},
+            },
+            ['NavalUpgrade'] = {
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH3, type = 'Upgrade', debug = 'Naval Factory Build'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH2, type = 'Upgrade', debug = 'Naval Factory Build'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH1, type = 'Upgrade', debug = 'Naval Factory Build'},
+            },
+            ['NavalDefense'] = {
+                {cat = categories.STRUCTURE * categories.DEFENSE, type = 'Completion', debug = 'defense complete'},
+            },
+            ['General'] = {
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH3, type = 'Completion', debug = 'Naval Factory Build'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH2, type = 'Completion', debug = 'Naval Factory Build'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH1, type = 'Completion', debug = 'Naval Factory Build'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH3, type = 'AssistFactory', debug = 'Naval Factory assist'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH2, type = 'AssistFactory', debug = 'Naval Factory assist'},
+                {cat = categories.STRUCTURE * categories.NAVAL * categories.FACTORY * categories.TECH1, type = 'AssistFactory', debug = 'Naval Factory assist'},
+                {cat = categories.STRUCTURE * categories.FACTORY, type = 'Upgrade', debug = 'Mass factory upgrade'}, 
+                {cat = categories.STRUCTURE * categories.DEFENSE, type = 'Completion', debug = 'defense complete'}, 
+                {cat = categories.MOBILE * categories.EXPERIMENTAL, type = 'Completion', debug = 'Mass mobile experimental'},
+
+            }
+        }
         self.ProductionZones = {}
     end,
 
@@ -683,9 +728,8 @@ IntelManager = Class {
         local armyIndex = aiBrain:GetArmyIndex()
         local weightageValues = {
             teamValue = 0.4,
-            massValue = 0.6,
+            massValue = 0.7,
             distanceValue = 0.5,
-            graphValue = 0.2,
             enemyLand = 0.1,
             enemyAir = 0.1,
             bestArmy = 0.05,
@@ -695,8 +739,10 @@ IntelManager = Class {
             enemyStartDistance = 0.2
         }
         local maxTeamValue = 2
-        local maxResourceValue = self.MapMaximumValues.MaximumResourceValue
-        local maxGraphValue = self.MapMaximumValues.MaximumGraphValue
+        local maxResourceValue = self.MapMaximumValues.MaximumResourceValue or 0
+        if maxResourceValue < 1 then maxResourceValue = 1 end
+        local maxGraphValue = self.MapMaximumValues.MaximumGraphValue or 0
+        if maxGraphValue < 1 then maxGraphValue = 1 end
         local maxEnemyLandThreat = 25
         local maxEnemyAirThreat = 25
         local maxFriendlyLandThreat = 25
@@ -727,14 +773,32 @@ IntelManager = Class {
             local zonePriorityList = {}
             local gameTime = GetGameTimeSeconds()
             local labelBaseValues = {}
+            local labelBaseCounts = {}
             local labelResourceValue = {}
             local zoneTypes = {
                 'Land',
                 'Naval',
             }
+
+            local managers = aiBrain.BuilderManagers
+            if managers then
+                for _, manager in managers do
+                    if manager.FactoryManager and manager.FactoryManager.LocationActive then
+                        local label = manager.Label
+                        if label then
+                            if not labelBaseCounts[label] then
+                                labelBaseCounts[label] = 0
+                            end
+                            labelBaseCounts[label] = labelBaseCounts[label] + 1
+                        end
+                    end
+                end
+            end
+            
             for _, zoneType in zoneTypes do
                 for k, v in aiBrain.Zones[zoneType].zones do
                     if v.BuilderManager.BaseType and v.BuilderManager.BaseType == 'MAIN' and v.BuilderManager.FactoryManager.LocationActive then
+                        --LOG('Main Base label is '..tostring(v.label)..' for player '..tostring(aiBrain.Nickname))
                         continue
                     end
                     if v.label and v.pos[1] > playableArea[1] and v.pos[1] < playableArea[3] and v.pos[3] > playableArea[2] and v.pos[3] < playableArea[4] then
@@ -776,24 +840,33 @@ IntelManager = Class {
                                     table.insert(labelResourceValue[v.label], {ZoneID = v.id, ResourceValue = v.resourcevalue, StartPositionClose = v.startpositionclose, DistanceToBase = mainBaseDistance, ZoneType = zoneType})
                                     if not edgeSkip then
                                         if (not v.BuilderManager.FactoryManager.LocationActive or v.BuilderManagerDisabled) and (not v.engineerplatoonallocated or IsDestroyed(v.engineerplatoonallocated)) and (v.lastexpansionattempt == 0 or gameTime >= v.lastexpansionattempt + 30 ) then
-                                            local normalizedDistanceValue = mainBaseDistance / maxDistance
+                                            local normalizedDistanceValue = math.sqrt(mainBaseDistance) / math.sqrt(maxDistance)
                                             local normalizedTeamValue = v.teamvalue / maxTeamValue
                                             local normalizedResourceValue = v.resourcevalue / maxResourceValue
-                                            local normalizedMarkersInGraphValue = markersInGraph / maxGraphValue
+                                            local graphMassMultiplier = 1.0 + (markersInGraph / maxGraphValue)
+                                            local contextualResourceValue = normalizedResourceValue * graphMassMultiplier
                                             local normalizedEnemyLandThreatValue = v.enemylandthreat / maxEnemyLandThreat
                                             local normalizedEnemyAirThreatValue = v.enemyantiairthreat / maxEnemyAirThreat
                                             local normalizedFriendLandThreatValue = v.friendlyantisurfacethreat / maxFriendlyLandThreat
                                             local normalizedFriendAirThreatValue = v.friendlylandantiairthreat / maxFriendlyAirThreat
+                                            local basesOnLabel = labelBaseCounts[v.label] or 0
+                                            local saturationFactor = 1 / (1 + basesOnLabel)
+                                            --LOG('Saturation Factor for zone  '..tostring(v.id)..' is '..tostring(saturationFactor)..' with '..tostring(basesOnLabel)..' bases on label '..tostring(v.label))
+
+                                            local frontierBonus = 0
+                                            if basesOnLabel == 0 and v.enemylandthreat < 5 then
+                                                frontierBonus = 0.25 -- Direct score boost to incentivize first landing on a neutral label
+                                            end
                                             local priorityScore = (
                                                 normalizedTeamValue * weightageValues['teamValue'] +
-                                                normalizedResourceValue * weightageValues['massValue'] -
-                                                normalizedDistanceValue * weightageValues['distanceValue'] +
-                                                normalizedMarkersInGraphValue * weightageValues['graphValue'] -
+                                                contextualResourceValue * weightageValues['massValue'] -
+                                                normalizedDistanceValue * weightageValues['distanceValue'] -
                                                 normalizedEnemyLandThreatValue * weightageValues['enemyLand'] -
                                                 normalizedEnemyAirThreatValue * weightageValues['enemyAir'] +
                                                 normalizedFriendLandThreatValue * weightageValues['friendlyantisurfacethreat'] -
-                                                normalizedFriendAirThreatValue * weightageValues['friendlylandantiairthreat']
-                                            )
+                                                normalizedFriendAirThreatValue * weightageValues['friendlylandantiairthreat'] +
+                                                frontierBonus
+                                            ) * saturationFactor
                                             if zoneType == 'Naval' then
                                                 local navalMultiplier = 1.0
 
@@ -826,6 +899,7 @@ IntelManager = Class {
 
                                                 priorityScore = priorityScore * navalMultiplier
                                             end
+                                            --LOG("GraphEval: Zone=" .. repr(v.id) .. " Label=" .. repr(v.label) .. " Markers=" .. repr(markersInGraph) .. " DistPen=" .. repr(normalizedDistanceValue * weightageValues.distanceValue) .. " Prio=" .. repr(priorityScore))
                                             table.insert(zonePriorityList, {ZoneID = v.id, Position = v.pos, Priority = priorityScore, Label = v.label, ResourceValue = v.resourcevalue, TeamValue = v.teamvalue, BestArmy = v.bestarmy, DistanceToBase = mainBaseDistance, ZoneType = zoneType, AmphibLabel = v.amphiblabel })
                                         end
                                     end
@@ -954,22 +1028,12 @@ IntelManager = Class {
                 end
             end
             --LOG('Number of filtered zones we can expand to '..table.getn(filteredLandUnPathableList))
-            if not table.empty(filteredLandPathableList) then
-                table.sort(filteredLandPathableList, function(a, b) return a.Priority > b.Priority end)
-                self.ZoneExpansions.Pathable = filteredLandPathableList
-                --aiBrain:ForkThread(self.DrawInfection, filteredLandPathableList[1].Position)
-            end
-            if not table.empty(filteredLandUnPathableList) then
-                table.sort(filteredLandUnPathableList, function(a, b) return a.Priority > b.Priority end)
-                self.ZoneExpansions.NonPathable = filteredLandUnPathableList
-                --aiBrain:ForkThread(self.DrawInfection, filteredLandPathableList[1].Position)
-            end
-            if not table.empty(filteredNavalList) then
-                table.sort(filteredNavalList, function(a, b) return a.Priority > b.Priority end)
-                self.ZoneExpansions.Naval = filteredNavalList
-                --LOG('ZoneExpansionsNaval '..tostring(aiBrain.Nicknacm)..' is '..tostring(repr(filteredNavalList)))
-                --aiBrain:ForkThread(self.DrawInfection, filteredNavalList[1].Position)
-            end
+            table.sort(filteredLandPathableList, function(a, b) return a.Priority > b.Priority end)
+            self.ZoneExpansions.Pathable = filteredLandPathableList
+            table.sort(filteredLandUnPathableList, function(a, b) return a.Priority > b.Priority end)
+            self.ZoneExpansions.NonPathable = filteredLandUnPathableList
+            table.sort(filteredNavalList, function(a, b) return a.Priority > b.Priority end)
+            self.ZoneExpansions.Naval = filteredNavalList
             coroutine.yield(50)
         end
     end,

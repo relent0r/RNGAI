@@ -7766,6 +7766,8 @@ AIBrain = Class(RNGAIBrainClass) {
             local landGap  = (enemyThreat.Land or 0)    - ((myThreat.LandNow or 0)    + (myThreat.AllyLandThreat or 0))
             local airGap   = (enemyThreat.AntiAir or 0) - ((myThreat.AntiAirNow or 0) + (myThreat.AllyAntiAirThreat or 0))
             local navalGap = (enemyThreat.Naval or 0)   - ((myThreat.NavalNow or 0)   + (myThreat.AllyNavalThreat or 0))
+            --LOG('Air Gap '..tostring(airGap)..' Land Gap '..tostring(landGap)..' Naval Gap '..tostring(navalGap))
+            --LOG('Enemy Air Threat '..tostring(enemyThreat.AntiAir or 0)..' my Air Threat '..tostring(myThreat.AntiAirNow or 0)..' Ally Air Threat '..tostring(myThreat.AllyAntiAirThreat or 0))
 
             local projectedLandRisk  = clamp(safeDiv(landGap * landProjection * cfg.landGapWeight, math.max(1, enemyThreat.Land or 0), 0), 0, 1)
             local projectedNavalRisk = clamp(safeDiv(navalGap * navalProjection * cfg.navalGapWeight, math.max(1, enemyThreat.Naval or 0), 0), 0, 1)
@@ -7948,6 +7950,7 @@ AIBrain = Class(RNGAIBrainClass) {
                 Air = newAir,
                 Naval = newNaval
             }
+            local unmetNavalGap = 0
 
             ----------------------------------------------------------------------
             -- 6) THROUGHPUT CLAMPING (SAFE MODE ONLY)
@@ -7968,9 +7971,9 @@ AIBrain = Class(RNGAIBrainClass) {
                     newAir = caps.Air
                 end
                 if newNaval > caps.Naval then
-                    excessAllocation = excessAllocation + (newNaval - caps.Naval)
+                    unmetNavalGap = newNaval - caps.Naval
                     newNaval = caps.Naval
-                end
+                end   
                 
             end
 
@@ -8005,6 +8008,12 @@ AIBrain = Class(RNGAIBrainClass) {
                 economyUpgradeSpend = clamp(economyUpgradeSpend + (excessAllocation * cfg.excessEcoFactor), ecoFloor, maxEcoSpend)
                 engineerAssistRatio = clamp(engineerAssistRatio + (excessAllocation * cfg.excessAssistFactor), assistFloor, maxAssistSpend)
             end
+
+            local navalAssistRatio = 0
+            if unmetNavalGap > 0 then
+                navalAssistRatio = math.min(unmetNavalGap * (cfg.excessAssistFactor or 0.6), maxAssistSpend or 1.0)
+            end
+            --LOG('Naval Assist Ratio for player '..self.Nickname..' is '..tostring(navalAssistRatio)..' (Unmet Naval Gap: '..tostring(unmetNavalGap)..')')
 
             --LOG(string.format("RNGLOG_DOM_CLAMP | ProdAlloc: %.2f | TotNeed: %.2f | DesL/A/N: %.2f/%.2f/%.2f | NewL/A/N: %.2f/%.2f/%.2f", productionAllocation, totalUnitNeeds, desiredLand, desiredAir, desiredNaval, newLand, newAir, newNaval))
             --LOG(string.format("RNGLOG_ASSIST_CONFLICT | ExcessAlloc: %.2f | Leftover: %.2f | EcoSpend: %.2f | AssistRatio: %.2f", excessAllocation, leftover, economyUpgradeSpend, engineerAssistRatio))
@@ -8070,9 +8079,11 @@ AIBrain = Class(RNGAIBrainClass) {
                     fmgr.BaseLandRatio  = (totalLandNeed > 0)  and (((fmgr.LandBuildRate or 0) * mod) / totalLandNeed) * newLand or 0
                     fmgr.BaseAirRatio   = (totalAirNeed > 0)   and (((fmgr.AirBuildRate or 0) * mod) / totalAirNeed) * newAir or 0
                     fmgr.BaseNavalRatio = (totalNavalNeed > 0) and (((fmgr.NavalBuildRate or 0) * mod) / totalNavalNeed) * newNaval or 0
+                    fmgr.BaseNavalAssistRatio = (totalNavalNeed > 0) and (((fmgr.NavalBuildRate or 0) * mod) / totalNavalNeed) * navalAssistRatio or 0
+
                     --LOG('Setting Base Ratios for '..tostring(fmgr.LocationType)..' | Land: '..tostring(fmgr.BaseLandRatio)..' | Air: '..tostring(fmgr.BaseAirRatio)..' | Naval: '..tostring(fmgr.BaseNavalRatio))
                 else
-                    fmgr.BaseLandRatio, fmgr.BaseAirRatio, fmgr.BaseNavalRatio = 0, 0, 0
+                    fmgr.BaseLandRatio, fmgr.BaseAirRatio, fmgr.BaseNavalRatio, fmgr.BaseNavalAssistRatio = 0, 0, 0, 0
                 end
             end
             

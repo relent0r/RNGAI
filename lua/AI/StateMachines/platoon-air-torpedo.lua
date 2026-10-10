@@ -604,7 +604,9 @@ AIPlatoonTorpedoBehavior = Class(AIPlatoonRNG) {
                 end
             end
             if self.BuilderData.Retreat then
-                while not IsDestroyed(self) and VDist3Sq(self:GetPlatoonPosition(), self.Home) > 100 do
+                local retreatcount = 0
+                while not IsDestroyed(self) and VDist3Sq(self:GetPlatoonPosition(), self.Home) > 400 do
+                    retreatcount = retreatcount + 1
                     coroutine.yield(25)
                 end
             end

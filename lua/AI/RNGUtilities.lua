@@ -3339,14 +3339,14 @@ PlatoonReclaimQueryRNGRNG = function(aiBrain,platoon)
     end
 end
 
-AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, avoidZones, zoneType)
+AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, avoidZones, zoneType, requiredLabel)
     local im = IntelManagerRNG.GetIntelManager(aiBrain)
-    local pos = aiBrain.BuilderManagers[locationType].EngineerManager.Location or position
+    local pos = (requiredLabel and position) or aiBrain.BuilderManagers[locationType].EngineerManager.Location or position
     local zoneSet = aiBrain.Zones[zoneType].zones
     local currentTime = GetGameTimeSeconds()
     local retPos, retName, refZone
     local transportPosible = aiBrain:GetCurrentUnits(categories.TRANSPORTFOCUS + (categories.STRUCTURE * categories.FACTORY * categories.AIR)) > 0
-    local preferredLabel = (position and zoneType == 'Land') and NavUtils.GetLabel('Land', position) or false
+    local preferredLabel = requiredLabel or ((position and zoneType == 'Land') and NavUtils.GetLabel('Land', position) or false)
     radius = radius * radius
 
     if not pos then
@@ -3361,6 +3361,49 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
         
         local bestOnLabelEntry = nil
         local bestOnLabelUtility = -1
+        local bestOnLabelDistanceSq
+        local lowValueResourceThreshold = 3
+        local nearbyExpansionDistanceSq = 160 * 160
+
+        local function IsCandidateZoneAvailable(zone)
+            if preferredLabel and zone.label ~= preferredLabel then
+                return false
+            end
+            if zone.BuilderManager.FactoryManager.LocationActive then
+                return false
+            end
+            if zone.engineerplatoonallocated and not IsDestroyed(zone.engineerplatoonallocated) then
+                return false
+            end
+
+            local lastAttempt = zone.lastexpansionattempt or 0
+            if lastAttempt ~= 0 and currentTime < lastAttempt + 30 then
+                return false
+            end
+            if requiredLabel and aiBrain:GetThreatAtPosition(zone.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') >= 5 then
+                return false
+            end
+
+            if (zone.resourcevalue or 0) < lowValueResourceThreshold then
+                for _, edge in zone.edges or {} do
+                    local neighbor = edge.zone
+                    if neighbor and neighbor.label == zone.label
+                    and (neighbor.resourcevalue or 0) < lowValueResourceThreshold then
+                        local dx = zone.pos[1] - neighbor.pos[1]
+                        local dz = zone.pos[3] - neighbor.pos[3]
+                        local nearby = dx * dx + dz * dz <= nearbyExpansionDistanceSq
+                        local manager = neighbor.BuilderManager
+                        local hasActiveBase = manager and manager.FactoryManager and manager.FactoryManager.LocationActive
+                        local hasReservedExpansion = neighbor.engineerplatoonallocated and not IsDestroyed(neighbor.engineerplatoonallocated)
+                        if nearby and (hasActiveBase or hasReservedExpansion) then
+                            return false
+                        end
+                    end
+                end
+            end
+
+            return true
+        end
 
         local function CheckList(expansionList, isPathable)
             if table.empty(expansionList) then return end
@@ -3369,14 +3412,12 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
                 if avoidZones and avoidZones[v.ZoneID] then
                     skipPos = true
                 end
-                if not skipPos and v and VDist3Sq(pos, v.Position) < radius then
+                if not skipPos and v and (requiredLabel or VDist3Sq(pos, v.Position) < radius) then
                     local zData = zoneSet[v.ZoneID]
-                    if not zData.BuilderManager.FactoryManager.LocationActive
-                    and (not zData.engineerplatoonallocated or IsDestroyed(zData.engineerplatoonallocated))
-                    and (currentTime >= zData.lastexpansionattempt + 30 or zData.lastexpansionattempt == 0) then
+                    if zData and IsCandidateZoneAvailable(zData) then
                         
                         -- Calculate utility
-                        local utilityScore = (v.Priority or 0) * (zData.teamvalue or 1.0)
+                        local utilityScore = (v.Priority or 0)
                         if not isPathable and currentTime < 480 then
                             utilityScore = utilityScore + 150 
                         end
@@ -3387,13 +3428,22 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
                         end
 
                         if preferredLabel and zData.label == preferredLabel then
-                            if utilityScore > bestOnLabelUtility then
+                            if requiredLabel then
+                                local distanceSq = VDist2Sq(pos[1], pos[3], v.Position[1], v.Position[3])
+                                if not bestOnLabelDistanceSq or distanceSq < bestOnLabelDistanceSq then
+                                    bestOnLabelDistanceSq = distanceSq
+                                    bestOnLabelEntry = { Expansion = v, zData = zData }
+                                end
+                            elseif utilityScore > bestOnLabelUtility then
                                 bestOnLabelUtility = utilityScore
                                 bestOnLabelEntry = { Expansion = v, zData = zData }
                             end
                         end
+                        --LOG('ExpEval: Zone='..repr(v.ZoneID)..' DistSq='..repr(VDist3Sq(pos, v.Position))..' RadSq='..repr(radius)..' Prio='..repr(v.Priority)..' Util='..repr(utilityScore))
+                        --LOG('ExpWinner: GlobBest='..repr(bestGlobalUtility)..' LabelBest='..repr(bestOnLabelUtility)..' PrefLabel='..repr(preferredLabel))
                     end
                 end
+
             end
         end
 
@@ -3402,7 +3452,12 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
             CheckList(im.ZoneExpansions.NonPathable, false)
         end
 
-        local winner = bestOnLabelEntry or bestGlobalEntry
+        local winner
+        if requiredLabel then
+            winner = bestOnLabelEntry
+        else
+            winner = bestOnLabelEntry or bestGlobalEntry
+        end
         if winner then
             retPos = winner.zData.pos
             retName = 'LAND_ZONE_'..winner.Expansion.ZoneID
@@ -4267,6 +4322,7 @@ GenerateDefensiveSpokeTable  = function(aiBrain, baseName, range, basePosition, 
     end
 
     if acuHoldPoint then
+        --LOG('acuHoldPoint found, assigning to BrainIntel.ACUDefensivePositionKeyTable for base '..tostring(baseName)..' spoke '..tostring(acuHoldPoint.Spoke)..' layer '..tostring(acuHoldPoint.Layer))
         local pointData = spokes[acuHoldPoint.Spoke][acuHoldPoint.Layer]
         pointData.AcuHoldPosition = true
         aiBrain.BrainIntel.ACUDefensivePositionKeyTable[baseName] = {
@@ -4398,10 +4454,11 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                         for k, v in layerTable.AntiAir do
                             if v and not v.Dead then
                                 aaCount = aaCount + 1
-                                if aaCount < 5 then
-                                    return layerTable.Position
-                                end
+                                
                             end
+                        end
+                        if aaCount < 5 then
+                            return layerTable.Position
                         end
                     end
                 end
@@ -5863,7 +5920,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                                 closestTarget = v.object
                             end
                         elseif airOnly then
-                            if unitCats.AIR then
+                            if unitCats.AIR and not unitCats.STRUCTURE then
                                 if unitDist > operatingArea * operatingArea then
                                     local riskModifier = 1.0
                                     if aiBrain.Zones and aiBrain.Zones.Land then
@@ -5956,7 +6013,7 @@ CheckHighPriorityTarget = function(aiBrain, im, platoon, avoid, naval, ignoreAcu
                                     end
                                 end
                             elseif airOnly then
-                                if unitCats.AIR and (v.type == 'bomber' or v.type == 'gunship') then
+                                if unitCats.AIR and not unitCats.STRUCTURE and (v.type == 'bomber' or v.type == 'gunship') then
                                     local priorityModifier = 1
                                     local targetDistance = VDist3Sq(v.Position, homeLocation)
                                     local riskModifier = 1.0
@@ -9736,7 +9793,7 @@ function FindAirTargetForTeamRNG(aiBrain, position, platoon, maxRange, platoonTh
     for _, searchPos in searchNodes do
         for _, range in RangeList do
             -- Efficient local scan at the node
-            local enemies = aiBrain:GetUnitsAroundPoint(categories.AIR - categories.INSIGNIFICANTUNIT, searchPos, range, 'Enemy')
+            local enemies = aiBrain:GetUnitsAroundPoint(categories.AIR - categories.INSIGNIFICANTUNIT - categories.STRUCTURE, searchPos, range, 'Enemy')
             for _, category in priorityList do
                 local bestPriority
                 for _, unit in enemies do
@@ -10020,21 +10077,21 @@ function GetCellDanger(aiBrain, cell)
 end
 
 function AirRiskValidation(aiBrain, platoon, targetZone, debug)
-    local groundAAThreat, airToAirThreat = GetZoneAirThreatValues(targetZone)
+    local localSurfaceAA, adjacentSurfaceAA, totalFighterThreat, totalAirToSurfaceThreat = GetZoneAirThreatValues(targetZone)
+    local totalGroundAA = localSurfaceAA + adjacentSurfaceAA
 
     -- Global air dominance multiplier
     local globalFriendlyAir = aiBrain.BrainIntel.SelfThreat['AntiAirNow'] or 0
     local globalEnemyAir = aiBrain.BrainIntel.EnemyThreatCurrent['AntiAir'] or 1.0
     local airControlMod = math.min(3.0, math.max(0.5, globalFriendlyAir / math.max(1.0, globalEnemyAir)))
 
-    if groundAAThreat <= 0 and airToAirThreat <= 0 then
+    if totalGroundAA <= 0 and totalFighterThreat <= 0 then
         local enemyStarts = targetZone.enemystartdata
         if enemyStarts then
             for _, eData in enemyStarts do
                 if eData.startdistance and eData.startdistance < 625 then
                     local intel = targetZone.intelassignment
                     if not (intel and intel.RadarCoverage) then
-                        -- Dynamically scale risk with air dominance: air-superior AI will pursue unscouted base opportunities
                         return math.min(1.0, math.max(0.2, 0.35 * airControlMod))
                     end
                     break
@@ -10048,31 +10105,33 @@ function AirRiskValidation(aiBrain, platoon, targetZone, debug)
     local antiAirThreat = platoon.CurrentPlatoonThreatAntiAir or 0
 
     -------------------------------------------------------------------------
-    -- AXIS 1: Air-to-Air Threat (Only enemy ASFs vs. platoon AA)
+    -- AXIS 1: Air-to-Air Threat (Enemy ASFs / Fighters vs. Platoon AA)
     -------------------------------------------------------------------------
     local airToAirRiskMod = 1.0
-    if airToAirThreat > 0 then
+    if totalFighterThreat > 0 then
         local airCapacity = math.max(1.0, antiAirThreat * airControlMod)
-        local airRatio = airToAirThreat / airCapacity
+        local airRatio = totalFighterThreat / airCapacity
         if airRatio > 0.5 then
             airToAirRiskMod = 1.0 / (1.0 + (airRatio - 0.5) ^ 2)
         end
     end
 
     -------------------------------------------------------------------------
-    -- AXIS 2: Ground AA Threat (Only SAMs/Flak vs. gunship surface DPS)
+    -- AXIS 2: Ground AA Threat (SAMs / Flak vs. Platoon)
     -------------------------------------------------------------------------
     local groundAARiskMod = 1.0
-    if groundAAThreat > 0 then
+    if totalGroundAA > 0 then
         if antiSurfaceThreat > 0 then
-            -- Gunships: Ground AA vs ability to kill SAMs
-            local groundRatio = groundAAThreat / math.max(5.0, antiSurfaceThreat * 1.0)
+            -- Gunships/Bombers: Ground AA vs AntiSurface ability
+            local groundRatio = totalGroundAA / math.max(5.0, antiSurfaceThreat * 1.0)
             if groundRatio > 1.0 then
                 groundAARiskMod = 1.0 / (groundRatio ^ 2)
             end
         else
-            -- Pure Fighters: Ignore light/medium ground AA when chasing aircraft
-            local groundRatio = groundAAThreat / 150.0
+            -- Pure Fighters: Ground AA tolerance scales with Platoon AA strength
+            -- Instead of hardcoded 150.0, scale tolerance with platoon size & global air control
+            local fighterGroundTolerance = math.max(100.0, antiAirThreat * 2.0 * airControlMod)
+            local groundRatio = totalGroundAA / fighterGroundTolerance
             if groundRatio > 1.0 then
                 groundAARiskMod = 1.0 / groundRatio
             end
