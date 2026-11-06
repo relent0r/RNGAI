@@ -192,6 +192,18 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
                     antiAirGunshipPlatoon = true
                 end
             end
+            if unitCats.SUBMERSIBLE then
+                local primaryWeapon = unitBp.Weapon[1]
+                local subWeapon = false
+                if primaryWeapon.RangeCategory == 'UWRC_AntiNavy' and not primaryWeapon.DummyWeapon then
+                    subWeapon = true
+                end
+                if not subWeapon then
+                    if unit:TestCommandCaps('RULEUCC_Dive') and unit:GetCurrentLayer() == 'Sub' then
+                        IssueDive({unit})
+                    end
+                end        
+            end
             if (unit['rngdata'].CategoryDirectFireRange and not self['rngdata'].MaxDirectFireRange or self['rngdata'].MaxDirectFireRange and self['rngdata'].MaxDirectFireRange < unit['rngdata'].CategoryDirectFireRange) and not unitCats.SCOUT then
                 self['rngdata'].MaxDirectFireRange = unit['rngdata'].MaxWeaponRange
             end

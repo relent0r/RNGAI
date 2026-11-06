@@ -12,6 +12,7 @@ local AIBuildUnits = import("/lua/ai/aibuildunits.lua")
 
 local FactoryManager = import("/mods/RNGAI/lua/ai/BuilderFramework/factorybuildermanager.lua")
 local PlatoonFormManager = import("/mods/RNGAI/lua/AI/BuilderFramework/platoonformmanager.lua")
+local PlatoonNavalManager = import("/mods/RNGAI/lua/AI/BuilderFramework/navalplatoonmanager.lua")
 local BrainConditionsMonitor = import("/lua/sim/brainconditionsmonitor.lua")
 local EngineerManager = import("/mods/RNGAI/lua/AI/BuilderFramework/engineermanager.lua")
 
@@ -2453,20 +2454,38 @@ AIBrain = Class(RNGAIBrainClass) {
         if RUtils.PositionInWater(position) then
 			baseLayer = 'Water'
         end
-        self.BuilderManagers[baseName] = {
-            FactoryManager = FactoryManager.CreateFactoryBuilderManager(self, baseName, position, radius, useCenter),
-            PlatoonFormManager = PlatoonFormManager.CreatePlatoonFormManager(self, baseName, position, radius, useCenter),
-            EngineerManager = EngineerManager.CreateEngineerManager(self, baseName, position, radius),
-            PathableZones = {},
-            BuilderHandles = {},
-            ReclaimData = {},
-            Position = position,
-            Location = position, -- backwards compatibility for now
-            Layer = baseLayer,
-            Label = false,
-            AmphibLabel = false,
-            BaseType = RUtils.GetBaseType(baseName, baseLayer) or 'MAIN',
-        }
+        if baseLayer == 'Water' then
+            self.BuilderManagers[baseName] = {
+                FactoryManager = FactoryManager.CreateFactoryBuilderManager(self, baseName, position, radius, useCenter),
+                PlatoonFormManager = PlatoonNavalManager.CreateNavalPlatoonManager(self, baseName, position, radius, useCenter),
+                EngineerManager = EngineerManager.CreateEngineerManager(self, baseName, position, radius),
+                PathableZones = {},
+                BuilderHandles = {},
+                ReclaimData = {},
+                Position = position,
+                Location = position, -- backwards compatibility for now
+                Layer = baseLayer,
+                Label = false,
+                AmphibLabel = false,
+                BaseType = RUtils.GetBaseType(baseName, baseLayer) or 'MAIN',
+            }
+        else
+            self.BuilderManagers[baseName] = {
+                FactoryManager = FactoryManager.CreateFactoryBuilderManager(self, baseName, position, radius, useCenter),
+                PlatoonFormManager = PlatoonFormManager.CreatePlatoonFormManager(self, baseName, position, radius, useCenter),
+                EngineerManager = EngineerManager.CreateEngineerManager(self, baseName, position, radius),
+                PathableZones = {},
+                BuilderHandles = {},
+                ReclaimData = {},
+                Position = position,
+                Location = position, -- backwards compatibility for now
+                Layer = baseLayer,
+                Label = false,
+                AmphibLabel = false,
+                BaseType = RUtils.GetBaseType(baseName, baseLayer) or 'MAIN',
+            }
+        end
+
         self.NumBases = self.NumBases + 1
         self:ForkThread(self.SetPathableZonesForBase, position, baseName)
         self:ForkThread(self.GetLabels, position, baseName, baseLayer)
@@ -7649,7 +7668,7 @@ AIBrain = Class(RNGAIBrainClass) {
                     Default     = { Land = 1.0, Air = 1.0, Naval = 1.0 },
                     Land        = { Land = 1.5, Air = 0.8, Naval = 0.7 },
                     Air         = { Land = 0.7, Air = 1.5, Naval = 0.8 },
-                    Naval       = { Land = 0.7, Air = 0.8, Naval = 1.5 },
+                    Naval       = { Land = 0.6, Air = 0.8, Naval = 1.6 },
                     ChokePoint  = { Land = 0.3, Air = 1.0, Naval = 1.0 },
                 }
             }
@@ -7901,6 +7920,8 @@ AIBrain = Class(RNGAIBrainClass) {
             local navalTotalThreat = math.max(1, (enemyThreat.Naval or 0)   + (myThreat.NavalNow or 0)   + (myThreat.AllyNavalThreat or 0))
 
             local desiredLand, desiredAir, desiredNaval = 0, 0, 0
+            local navalRoleExcluded = brainIntel.PlayerRole.AirPlayer or brainIntel.PlayerRole.SpamPlayer
+            local navalZoneShift, navalGapShift = 0, 0
 
             if hasLandProduction then
                 local normalized = defaultLand * productionAllocation
@@ -7926,7 +7947,20 @@ AIBrain = Class(RNGAIBrainClass) {
 
             if hasNavalProduction then
                 local normalized = defaultNaval * productionAllocation
-                local shift = (navalGap > 0) and (navalGap / navalTotalThreat) or 0
+                -- NAVAL_ECO_SIGNAL: Boost naval intent for accessible contested water/coastal needs, excluding Air and Spam roles.
+                if not navalRoleExcluded then
+                    local contestedZonePressure = clamp((im.NavalContestedCount or 0) / 3, 0, 1)
+                    local bombardmentPressure = clamp((im.NavalBombardmentCount or 0) / 3, 0, 1)
+                    local contestedIncomePressure = clamp((im.NavalContestedIncome or 0) / 5, 0, 1)
+                    local coastalDefensePressure = clamp((im.NavalCoastalThreatCount or 0) / 2, 0, 1)
+                    navalZoneShift = (contestedZonePressure * 0.25
+                        + bombardmentPressure * 0.35
+                        + contestedIncomePressure * 0.20
+                        + coastalDefensePressure * 0.20) * 0.35
+                end
+
+                navalGapShift = (navalGap > 0) and (navalGap / navalTotalThreat) or 0
+                local shift = navalGapShift + navalZoneShift
                 desiredNaval = math.max(minAllocation, math.min(normalized + (shift * maxShiftNavalRatio * currentBias.Naval * navalBiasMultiplier), maxShiftNavalRatio))
 
                 if ((myThreat.NavalNow or 0) + (myThreat.AllyNavalThreat or 0)) > ((enemyThreat.Naval or 0) * threatFactorThreshold) and projectedNavalRisk < cfg.dominanceRiskThreshold then
@@ -7950,7 +7984,43 @@ AIBrain = Class(RNGAIBrainClass) {
                 Air = newAir,
                 Naval = newNaval
             }
-            local unmetNavalGap = 0
+
+            local hqOrder = {'Land', 'Air', 'Naval'}
+            if brainIntel.PlayerRole.NavalPlayer then
+                hqOrder = {'Naval', 'Land', 'Air'}
+            elseif brainIntel.PlayerRole.AirPlayer then
+                hqOrder = {'Air', 'Land', 'Naval'}
+            end
+            local hqPriority = {}
+            for index, domain in ipairs(hqOrder) do
+                hqPriority[domain] = index
+            end
+            table.sort(hqOrder, function(firstDomain, secondDomain)
+                local firstIntent = self.ProductionIntent[firstDomain]
+                local secondIntent = self.ProductionIntent[secondDomain]
+                if firstIntent == secondIntent then
+                    return hqPriority[firstDomain] < hqPriority[secondDomain]
+                end
+                return firstIntent > secondIntent
+            end)
+
+            self.FactoryUpgradeOrders = self.FactoryUpgradeOrders or {}
+            self.FactoryUpgradeOrders.HQ = {
+                string.lower(hqOrder[1]),
+                string.lower(hqOrder[2]),
+                string.lower(hqOrder[3]),
+            }
+            if economicDebugEnabled then
+                LOG(string.format("RNGLOG_FACTORY_HQ_ORDER | Player: %s | First: %s | Order: %s/%s/%s | Intent L/A/N: %.3f/%.3f/%.3f",
+                    tostring(self.Nickname),
+                    hqOrder[1],
+                    hqOrder[1],
+                    hqOrder[2],
+                    hqOrder[3],
+                    self.ProductionIntent.Land,
+                    self.ProductionIntent.Air,
+                    self.ProductionIntent.Naval))
+            end
 
             ----------------------------------------------------------------------
             -- 6) THROUGHPUT CLAMPING (SAFE MODE ONLY)
@@ -7971,7 +8041,6 @@ AIBrain = Class(RNGAIBrainClass) {
                     newAir = caps.Air
                 end
                 if newNaval > caps.Naval then
-                    unmetNavalGap = newNaval - caps.Naval
                     newNaval = caps.Naval
                 end   
                 
@@ -7981,6 +8050,21 @@ AIBrain = Class(RNGAIBrainClass) {
                 local currentCap = (self.EcoManager and self.EcoManager.ApproxLandFactoryMassConsumption or 0) / math.max(1, totalIncome)
                 local phantomLand = math.max(0, (newLand or 0) - currentCap)
                 LOG(string.format("RNGLOG_SQUEEZE_AUDIT | Pressure: %.2f | LandIntent: %.2f | LandCap: %.2f | PhantomWaste: %.2f | AssistRatio: %.2f", combinedPressure, (newLand or 0), currentCap, phantomLand, engineerAssistRatio))
+                if hasNavalProduction then
+                    -- NAVAL_ECO_SIGNAL_LOG: One allocator-cycle summary for live-game verification of pond metrics and their effect.
+                    LOG(string.format("NAVAL_ECO_SIGNAL | Player: %s | Contested: %.0f | Bombard: %.0f | CoastalThreat: %.0f | ContestedIncome: %.1f | ZoneShift: %.3f | ThreatShift: %.3f | RoleExcluded: %s | Desired: %.3f | StoredIntent: %.3f | FinalRatio: %.3f",
+                        tostring(self.Nickname),
+                        im.NavalContestedCount or 0,
+                        im.NavalBombardmentCount or 0,
+                        im.NavalCoastalThreatCount or 0,
+                        im.NavalContestedIncome or 0,
+                        navalZoneShift,
+                        navalGapShift,
+                        tostring(navalRoleExcluded),
+                        desiredNaval,
+                        self.ProductionIntent.Naval,
+                        newNaval))
+                end
             end
 
             ----------------------------------------------------------------------
@@ -8008,12 +8092,6 @@ AIBrain = Class(RNGAIBrainClass) {
                 economyUpgradeSpend = clamp(economyUpgradeSpend + (excessAllocation * cfg.excessEcoFactor), ecoFloor, maxEcoSpend)
                 engineerAssistRatio = clamp(engineerAssistRatio + (excessAllocation * cfg.excessAssistFactor), assistFloor, maxAssistSpend)
             end
-
-            local navalAssistRatio = 0
-            if unmetNavalGap > 0 then
-                navalAssistRatio = math.min(unmetNavalGap * (cfg.excessAssistFactor or 0.6), maxAssistSpend or 1.0)
-            end
-            --LOG('Naval Assist Ratio for player '..self.Nickname..' is '..tostring(navalAssistRatio)..' (Unmet Naval Gap: '..tostring(unmetNavalGap)..')')
 
             --LOG(string.format("RNGLOG_DOM_CLAMP | ProdAlloc: %.2f | TotNeed: %.2f | DesL/A/N: %.2f/%.2f/%.2f | NewL/A/N: %.2f/%.2f/%.2f", productionAllocation, totalUnitNeeds, desiredLand, desiredAir, desiredNaval, newLand, newAir, newNaval))
             --LOG(string.format("RNGLOG_ASSIST_CONFLICT | ExcessAlloc: %.2f | Leftover: %.2f | EcoSpend: %.2f | AssistRatio: %.2f", excessAllocation, leftover, economyUpgradeSpend, engineerAssistRatio))
@@ -8079,11 +8157,10 @@ AIBrain = Class(RNGAIBrainClass) {
                     fmgr.BaseLandRatio  = (totalLandNeed > 0)  and (((fmgr.LandBuildRate or 0) * mod) / totalLandNeed) * newLand or 0
                     fmgr.BaseAirRatio   = (totalAirNeed > 0)   and (((fmgr.AirBuildRate or 0) * mod) / totalAirNeed) * newAir or 0
                     fmgr.BaseNavalRatio = (totalNavalNeed > 0) and (((fmgr.NavalBuildRate or 0) * mod) / totalNavalNeed) * newNaval or 0
-                    fmgr.BaseNavalAssistRatio = (totalNavalNeed > 0) and (((fmgr.NavalBuildRate or 0) * mod) / totalNavalNeed) * navalAssistRatio or 0
 
                     --LOG('Setting Base Ratios for '..tostring(fmgr.LocationType)..' | Land: '..tostring(fmgr.BaseLandRatio)..' | Air: '..tostring(fmgr.BaseAirRatio)..' | Naval: '..tostring(fmgr.BaseNavalRatio))
                 else
-                    fmgr.BaseLandRatio, fmgr.BaseAirRatio, fmgr.BaseNavalRatio, fmgr.BaseNavalAssistRatio = 0, 0, 0, 0
+                    fmgr.BaseLandRatio, fmgr.BaseAirRatio, fmgr.BaseNavalRatio = 0, 0, 0
                 end
             end
             

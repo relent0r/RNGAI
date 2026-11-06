@@ -1112,16 +1112,11 @@ AIPlatoonACUSupportBehavior = Class(AIPlatoonRNG) {
 
                     -- Check attachment status
                     local allAttached = true
-                    local anyUnitInDanger = false
                     
                     for _, unit in units do
                         if not unit.Dead then
                             if not unit:IsUnitState('Attached') then
                                 allAttached = false
-                            end
-                            -- OPTIONAL: If units are being shot while waiting, maybe cancel?
-                            if unit:GetHealthPercent() < 0.8 then
-                                anyUnitInDanger = true
                             end
                         end
                     end

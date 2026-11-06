@@ -1981,10 +1981,10 @@ AIPlatoonACUBehavior = Class(AIPlatoonRNG) {
                         coroutine.yield(2)
                         local pauseTimeOut = 0
                         local pauseTimedOut = false
-                        local hasPgen = brain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.ENERGYPRODUCTION, engPos, 60, 'Ally') > 1
-                        local hasFactory = brain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, engPos, 60, 'Ally') > 0
+                        local hasPgen = GetNumUnitsAroundPoint(brain, categories.STRUCTURE * categories.ENERGYPRODUCTION, engPos, 60, 'Ally') > 1
+                        local hasFactory = GetNumUnitsAroundPoint(brain, categories.STRUCTURE * categories.FACTORY, engPos, 60, 'Ally') > 0
                         local otherEngineers = brain:GetListOfUnits(categories.ENGINEER - categories.COMMAND - categories.INSIGNIFICANTUNIT, false)
-                        local isEmergencyOrSolo = RNGTableEmpty(otherEngineers) or (brain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.ENERGYPRODUCTION), engPos, 80, 'Ally') == 0)
+                        local isEmergencyOrSolo = RNGTableEmpty(otherEngineers) or (GetNumUnitsAroundPoint(brain, categories.STRUCTURE * (categories.FACTORY + categories.ENERGYPRODUCTION), engPos, 80, 'Ally') == 0)
 
                         while not eng.Dead and (eng:IsUnitState('Building') or 0 < RNGGETN(eng:GetCommandQueue())) do
                             if not isEmergencyOrSolo then

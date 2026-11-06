@@ -1,5 +1,6 @@
 local AIPlatoonRNG = import("/mods/rngai/lua/ai/statemachines/platoon-base-rng.lua").AIPlatoonRNG
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
+local NavUtils = import('/lua/sim/NavUtils.lua')
 
 local RNGINSERT = table.insert
 local RNGGETN = table.getn
@@ -326,8 +327,10 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                                         local remainingTime = (econBuildTime * (1 - workProgress)) / currentBuildPower
                                         local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
                                         if (not low or dist < low) and remainingTime > 4 then
-                                            low = dist
-                                            bestUnit = unit
+                                            if NavUtils.CanPathTo('Amphibious', managerPosition, unitPos) then
+                                                low = dist
+                                                bestUnit = unit
+                                            end
                                         end
                                     end
                                 end
@@ -353,8 +356,10 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                                         local remainingTime = (econBuildTime * (1 - workProgress)) / currentBuildPower
                                         local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
                                         if (not low or dist < low) and remainingTime > 4 then
-                                            low = dist
-                                            bestUnit = unit
+                                            if NavUtils.CanPathTo('Amphibious', managerPosition, unitPos) then
+                                                low = dist
+                                                bestUnit = unit
+                                            end
                                         end
                                     end
                                 end
@@ -406,8 +411,10 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                                             weight = weight - (linearDistFactor * 2500)
                                             --LOG('Unit weight is '..tostring(weight)..' current bestWeight is '..tostring(bestWeight))
                                             if not bestWeight or weight > bestWeight then
-                                                bestWeight = weight
-                                                bestUnit = unit
+                                                if NavUtils.CanPathTo('Amphibious', managerPosition, unitPos) then
+                                                    bestWeight = weight
+                                                    bestUnit = unit
+                                                end
                                             end
                                         end
                                     end
@@ -467,8 +474,10 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                                                 weight = weight - (linearDistFactor * 2500)
                                                 --LOG('Unit weight is '..tostring(weight)..' current bestWeight is '..tostring(bestWeight))
                                                 if not bestWeight or weight > bestWeight then
-                                                    bestWeight = weight
-                                                    bestUnit = unit
+                                                    if NavUtils.CanPathTo('Amphibious', managerPosition, unitPos) then
+                                                        bestWeight = weight
+                                                        bestUnit = unit
+                                                    end
                                                 end
                                             end
                                         end

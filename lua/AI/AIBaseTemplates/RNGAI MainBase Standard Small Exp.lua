@@ -81,7 +81,6 @@ BaseBuilderTemplate {
         --'RNGAI Perimeter Defenses Small',
         'RNGAI T2 Defense FormBuilders',
         'RNGAI Shield Builder',
-        'RNGAI Shields Upgrader',
         'RNGAI SMD Builders',
 
         -- SACU Builders --

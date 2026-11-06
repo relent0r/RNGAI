@@ -167,8 +167,7 @@ RNGLandResourceSet = Class(ZoneSet){
                         allyincome = 0,
                         enemyincome = 0
                     },
-                    reclaimmass=0,
-                    reclaimenergy=0,  
+                    navaldata = {},
                     defensespokes = false,
                     status = 'Unoccupied',
                 }
@@ -288,8 +287,6 @@ RNGLandResourceSet = Class(ZoneSet){
                     allyincome = 0,
                     enemyincome = 0
                 }, 
-                reclaimmass=0,
-                reclaimenergy=0,  
                 defensespokes = false,
                 status = 'Unoccupied',
             })

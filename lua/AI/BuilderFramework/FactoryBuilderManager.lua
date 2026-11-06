@@ -260,6 +260,10 @@ FactoryBuilderManager = Class(BuilderManager) {
                 end
                 unit.Label = label
             end
+            if not unit.rngdata then
+                unit.rngdata = {}
+                unit['rngdata'].initialbuildcomplete = false
+            end
         end
     end,
 
@@ -544,6 +548,9 @@ FactoryBuilderManager = Class(BuilderManager) {
     ---@param finishedUnit Unit
     FactoryFinishBuilding = function(self,factory,finishedUnit)
         --RNGLOG('RNG FactorFinishedbuilding')
+        if not factory['rngdata'].initialbuildcomplete then
+            factory['rngdata'].initialbuildcomplete = true
+        end
         if EntityCategoryContains(categories.ENGINEER, finishedUnit) then
             local unitCats = finishedUnit.Blueprint.CategoriesHash
             if unitCats.SUBCOMMANDER then
@@ -613,6 +620,10 @@ FactoryBuilderManager = Class(BuilderManager) {
                 unitStats['MissileShip'].Built.Mass = unitStats['MissileShip'].Built.Mass + unitValue
             elseif unitCat.NUKESUB then
                 unitStats['NukeSub'].Built.Mass = unitStats['NukeSub'].Built.Mass + unitValue
+            end
+            if self.Brain.BuilderManagers[self.LocationType].PlatoonFormManager then
+                local navalFormerManager = self.Brain.BuilderManagers[self.LocationType].PlatoonFormManager
+                navalFormerManager:OnNavalUnitCreated(finishedUnit)
             end
         end
         self:AssignBuildOrder(factory, factory.BuilderManagerData.BuilderType)

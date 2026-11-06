@@ -7,6 +7,7 @@ local GetCurrentUnits = moho.aibrain_methods.GetCurrentUnits
 local IsAnyEngineerBuilding = moho.aibrain_methods.IsAnyEngineerBuilding
 local GetEconomyStoredRatio = moho.aibrain_methods.GetEconomyStoredRatio
 local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
+local GetListOfUnits = moho.aibrain_methods.GetListOfUnits
 local RNGGETN = table.getn
 local RNGTableEmpty = table.empty
 local RNGINSERT = table.insert
@@ -130,17 +131,13 @@ end
 -- # parameter 4: expr   alliance       = false         doc = "docs for param3"
 -- #
 -- ##############################################################################################################
-function HaveUnitsWithCategoryAndAllianceRNG(aiBrain, greater, numReq, category, alliance)
-
-    local numUnits = aiBrain:GetNumUnitsAroundPoint( category, Vector(0,0,0), 100000, alliance )
-    if numUnits > numReq and greater then
-        --RNGLOG('HaveUnitsWithCategory greater and true')
-        return true
-    elseif numUnits < numReq and not greater then
-        --RNGLOG('HaveUnitsWithCategory not greater and true')
-        return true
+function EnemyHasWalls(aiBrain)
+    local im = aiBrain.IntelManager
+    if im then
+        if im.EnemyWallCount and im.EnemyWallCount > 0 then
+            return true
+        end
     end
-    --RNGLOG('HaveUnitsWithCategory Cat is false')
     return false
 end
 
@@ -364,7 +361,7 @@ function HaveGreaterThanUnitsWithCategory(aiBrain, numReq, category, idleReq)
     if not idleReq then
         numUnits = aiBrain:GetCurrentUnits(testCat)
     else
-        numUnits = RNGGETN(aiBrain:GetListOfUnits(testCat, true))
+        numUnits = RNGGETN(GetListOfUnits(aiBrain, testCat, true))
     end
     if numUnits > numReq then
         --RNGLOG('Greater than units with category returned true')
@@ -386,7 +383,7 @@ function HaveLessThanUnitsInCategoryBeingBuiltRNG(aiBrain, numunits1, category1,
     if type(category1) == 'string' then
         category1 = ParseEntityCategory(category1)
     end
-    local unitsBuilding = aiBrain:GetListOfUnits(categories.CONSTRUCTION, false)
+    local unitsBuilding = GetListOfUnits(aiBrain, categories.CONSTRUCTION, false)
     local cat1NumBuilding = 0
     local cat2NumBuilding = 0
     for unitNum, unit in unitsBuilding do
@@ -438,7 +435,7 @@ end
 
 function HaveUnitsInCategoryBeingUpgradedRNG(aiBrain, numunits, category, compareType)
     -- get all units matching 'category'
-    local unitsBuilding = aiBrain:GetListOfUnits(category, false)
+    local unitsBuilding = GetListOfUnits(aiBrain, category, false)
     local numBuilding = 0
     -- own armyIndex
     local armyIndex = aiBrain:GetArmyIndex()
@@ -467,7 +464,7 @@ function HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, ca
         radius = aiBrain.OperatingAreas[radius]
         --LOG('radius is string, radius is '..radius)
     end
-    local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, aiBrain.BuilderManagers[locationType].Position, radius , 'Enemy')
+    local numEnemyUnits = GetNumUnitsAroundPoint(aiBrain, categoryEnemy, aiBrain.BuilderManagers[locationType].Position, radius , 'Enemy')
     --RNGLOG(aiBrain:GetArmyIndex()..' CompareBody {World} radius:['..radius..'] '..repr(DEBUG)..' ['..numEnemyUnits..'] '..compareType..' ['..unitCount..'] return '..repr(CompareBody(numEnemyUnits, unitCount, compareType)))
     return CompareBody(numEnemyUnits, unitCount, compareType)
 end
@@ -837,7 +834,7 @@ function EnemyThreatGreaterThanPointAtRestrictedRNG(aiBrain, locationType, point
     return false
 end
 
-function EnemyUnitsLessAtRestrictedRNG(aiBrain, locationType, number, type)
+function EnemyUnitsLessAtRestrictedRNGOld(aiBrain, locationType, number, type)
     if aiBrain.BasePerimeterMonitor[locationType] then
         if type == 'LAND' then
             if aiBrain.BasePerimeterMonitor[locationType].LandUnits < number then
@@ -874,6 +871,38 @@ function EnemyUnitsLessAtRestrictedRNG(aiBrain, locationType, number, type)
     return false
 end
 
+local typeMapping = {
+    LAND = 'LandUnits',
+    AIR = 'AirUnits',
+    ANTIAIR = 'AntiAirUnits',
+    ANTISURFACEAIR = 'AntiSurfaceAirUnits',
+    NAVAL = 'NavalUnits',
+}
+
+function EnemyUnitsLessAtRestrictedRNG(aiBrain, locationType, number, unitTypes)
+    if not aiBrain.BasePerimeterMonitor[locationType] then
+        return false
+    end
+
+    local monitor = aiBrain.BasePerimeterMonitor[locationType]
+    local numTypes = table.getn(unitTypes)
+    for i = 1, numTypes do
+        local unitType = unitTypes[i]
+        if unitType == 'LANDNAVAL' then
+            if monitor.NavalUnits < number or monitor.LandUnits < number then
+                return true
+            end
+        else
+            local field = typeMapping[unitType]
+            if field and monitor[field] < number then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
 --            { UCBC, 'EnemyUnitsLessAtLocationRadiusRNG', {  BasePanicZone, 'LocationType', 1, categories.MOBILE * categories.LAND }}, -- radius, LocationType, unitCount, categoryEnemy
 function EnemyUnitsLessAtLocationRadiusRNG(aiBrain, radius, locationType, unitCount, categoryEnemy)
     return HaveEnemyUnitAtLocationRNG(aiBrain, radius, locationType, unitCount, categoryEnemy, '<')
@@ -901,8 +930,8 @@ function HaveUnitRatioAtLocationRNG(aiBrain, locType, ratio, categoryNeed, compa
     if not baseposition then
         return false
     end
-    local numNeedUnits = aiBrain:GetNumUnitsAroundPoint(categoryNeed, baseposition, radius , 'Ally')
-    local numHaveUnits = aiBrain:GetNumUnitsAroundPoint(categoryHave, baseposition, radius , 'Ally')
+    local numNeedUnits = GetNumUnitsAroundPoint(aiBrain, categoryNeed, baseposition, radius , 'Ally')
+    local numHaveUnits = GetNumUnitsAroundPoint(aiBrain, categoryHave, baseposition, radius , 'Ally')
     --RNGLOG(aiBrain:GetArmyIndex()..' CompareBody {'..locType..'} ( '..numNeedUnits..' '..compareType..' '..numHaveUnits..' ) -- ['..ratio..'] -- '..categoryNeed..' '..compareType..' '..categoryHave..' return '..repr(CompareBody(numNeedUnits / numHaveUnits, ratio, compareType)))
     return CompareBody(numNeedUnits / numHaveUnits, ratio, compareType)
 end
@@ -949,8 +978,8 @@ function NavalBaseWithLeastUnitsRNG(aiBrain, radius, locationType, unitCategory)
         for index, marker in navalMarkers do
             if marker.Name == baseLocation then
                 local pos = aiBrain.BuilderManagers[baseLocation].EngineerManager.Location
-                local numUnits = aiBrain:GetNumUnitsAroundPoint(unitCategory, pos, radius , 'Ally')
-                local numFactory = aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY * categories.NAVAL, pos, radius , 'Ally')
+                local numUnits = GetNumUnitsAroundPoint(aiBrain, unitCategory, pos, radius , 'Ally')
+                local numFactory = GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.FACTORY * categories.NAVAL, pos, radius , 'Ally')
                 if numFactory < 1 then continue end
                 if not lownum or lownum > numUnits then
                     lowloc = baseLocation
@@ -992,8 +1021,8 @@ function HaveUnitRatioVersusEnemyRNG(aiBrain, ratio, locType, radius, categoryOw
     if not baseposition then
         return false
     end
-    local numNeedUnits = aiBrain:GetNumUnitsAroundPoint(categoryOwn, baseposition, radius , 'Ally')
-    local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ , 'Enemy')
+    local numNeedUnits = GetNumUnitsAroundPoint(aiBrain, categoryOwn, baseposition, radius , 'Ally')
+    local numEnemyUnits = GetNumUnitsAroundPoint(aiBrain, categoryEnemy, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ , 'Enemy')
     return CompareBody(numNeedUnits / numEnemyUnits, ratio, compareType)
 end
 
@@ -1003,14 +1032,14 @@ function HaveSMDRatioVersusEnemySMLRNG(aiBrain, ratio, locType)
     if not baseposition then
         return false
     end
-    local numNeedUnits = aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, baseposition, radius , 'Ally')
+    local numNeedUnits = GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3, baseposition, radius , 'Ally')
     local numEnemyUnits = aiBrain.emanager.Nuke.T3
     numEnemyUnits = numEnemyUnits + (aiBrain.emanager.Nuke.T4 * 3)
     return CompareBody(numNeedUnits / numEnemyUnits, ratio, '<=')
 end
 
 function GetEnemyUnitsRNG(aiBrain, unitCount, categoryEnemy, compareType)
-    local numEnemyUnits = aiBrain:GetNumUnitsAroundPoint(categoryEnemy, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ , 'Enemy')
+    local numEnemyUnits = GetNumUnitsAroundPoint(aiBrain, categoryEnemy, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ , 'Enemy')
     --RNGLOG(aiBrain:GetArmyIndex()..' CompareBody {World} '..categoryEnemy..' ['..numEnemyUnits..'] '..compareType..' ['..unitCount..'] return '..repr(CompareBody(numEnemyUnits, unitCount, compareType)))
     return CompareBody(numEnemyUnits, unitCount, compareType)
 end
@@ -1255,7 +1284,7 @@ function ForcePathLimitRNG(aiBrain, locationType, unitCategory, pathType, unitCo
         end
         if factoryManager.LocationActive then
             local numUnits = factoryManager:GetNumCategoryFactories(testCat) or 0
-            local unitsBuilding = aiBrain:GetListOfUnits(categories.CONSTRUCTION, false)
+            local unitsBuilding = GetListOfUnits(aiBrain, categories.CONSTRUCTION, false)
             for unitNum, unit in unitsBuilding do
                 if not unit:BeenDestroyed() and unit:IsUnitState('Building') then
                     local buildingUnit = unit.UnitBeingBuilt
@@ -2099,7 +2128,7 @@ function RequireTMDCheckRNG(aiBrain, locationType)
         local locationMobileSiloUnits = aiBrain.Zones.Land.zones[baseZone].enemySilos
         if locationType ~= 'FLOATING' and locationMobileSiloUnits  > 0 then
             local basePos = aiBrain.BuilderManagers[locationType].Position
-            local numUnits = aiBrain:GetNumUnitsAroundPoint( categories.ANTIMISSILE * categories.TECH2, basePos, 65, 'Ally' )
+            local numUnits = GetNumUnitsAroundPoint(aiBrain, categories.ANTIMISSILE * categories.TECH2, basePos, 65, 'Ally')
             if math.ceil(math.max(locationMobileSiloUnits / 2.5, 4)) > numUnits then
                 return true
             end
@@ -2453,7 +2482,7 @@ end
 function LocationDefenseCheck(aiBrain, locationType, count, defensiveCategory, perimeterType)
 
     if aiBrain.BasePerimeterMonitor[locationType][perimeterType] and aiBrain.BasePerimeterMonitor[locationType][perimeterType] > 0 then
-        local numUnits = aiBrain:GetNumUnitsAroundPoint( defensiveCategory, aiBrain.BuilderManagers[locationType].Position, 60, 'Ally' )
+        local numUnits = GetNumUnitsAroundPoint(aiBrain, defensiveCategory, aiBrain.BuilderManagers[locationType].Position, 60, 'Ally')
         if numUnits < count then
             return false
         end
@@ -2579,6 +2608,49 @@ function MinimumFactoryCheckRNG(aiBrain, locationType, structureType)
         end
     end
     return true
+end
+
+---@param aiBrain AIBrain
+---@param locationType string
+---@param unitCount number
+---@param unitCategory EntityCategory
+---@param compareType string
+---@return boolean
+function FactoryManagerPoolUnitComparisonAtLocation(aiBrain, locationType, unitCount, unitCategory, compareType)
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    local testCat = unitCategory
+    if type(unitCategory) == 'string' then
+        testCat = ParseEntityCategory(unitCategory)
+    end
+    if not engineerManager then
+        WARN('*AI WARNING: FactoryManagerPoolUnitComparisonAtLocation - Invalid location - ' .. locationType)
+        return false
+    end
+    local poolPlatoon = aiBrain:GetPlatoonUniquelyNamed('ArmyPool_'..tostring(locationType))
+    if poolPlatoon then   
+        local unitList = poolPlatoon:GetPlatoonUnits()
+        local numUnits = poolPlatoon:PlatoonCategoryCount(testCat)
+        return CompareBody(numUnits, unitCount, compareType)
+    end
+    return false
+end
+
+---@param aiBrain AIBrain
+---@param locationType string
+---@param unitCount number
+---@param unitCategory EntityCategory
+---@return boolean
+function FactoryManagerPoolLessAtLocation(aiBrain, locationType, unitCount, unitCategory)
+    return FactoryManagerPoolUnitComparisonAtLocation(aiBrain, locationType, unitCount, unitCategory, '<')
+end
+
+---@param aiBrain AIBrain
+---@param locationType string
+---@param unitCount number
+---@param unitCategory EntityCategory
+---@return boolean
+function FactoryManagerPoolGreaterAtLocation(aiBrain, locationType, unitCount, unitCategory)
+    return FactoryManagerPoolUnitComparisonAtLocation(aiBrain, locationType, unitCount, unitCategory, '>')
 end
 
 --[[

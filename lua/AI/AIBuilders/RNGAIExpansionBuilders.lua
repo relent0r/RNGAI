@@ -178,6 +178,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'IsCategoryNotRestricted', {'NAVAL'}},
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
+            { MIBC, 'DisableOnRole', { {'SpamPlayer'}, 2 }},
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
             { UCBC, 'NavalZoneAvailableRNG', { 'LocationType', 250 } },
@@ -260,6 +261,7 @@ BuilderGroup {
         BuilderConditions = {
             { MIBC, 'IsCategoryNotRestricted', {'NAVAL'}},
             { MIBC, 'DisableOnStrategy', { {'T3AirRush'} }},
+            { MIBC, 'DisableOnRole', { {'SpamPlayer'}, 2 }},
             { UCBC, 'NavalBaseCheck', { } }, -- related to ScenarioInfo.Options.LandExpansionsAllowed
             { UCBC, 'LessThanFactoryCountRNG', { 1, categories.STRUCTURE * categories.FACTORY * categories.NAVAL } },
             { UCBC, 'NavalZoneAvailableRNG', { 'LocationType', 250 } },

@@ -770,7 +770,7 @@ BuilderGroup {
         BuilderConditions = {
             { UCBC, 'PlatoonTemplateExist', { 'RNGAI Zone Control' } },
             { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.LAND * categories.DIRECTFIRE } },
-            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, {'LAND'} }},
          },
     },]]
     Builder {

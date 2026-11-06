@@ -31,7 +31,7 @@ BuilderGroup {
         Priority = 895,
         BuilderConditions = {
             { UCBC, 'UnitBuildDemand', {'LocationType', 'Air', 'T1', 'scout'} },
-            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'ANTIAIR' }},
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, {'ANTIAIR'} }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 1, categories.FACTORY * categories.AIR * categories.TECH3 }},
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Air', 'AirUpgrading'}},
             { UCBC, 'GreaterThanArmyThreat', { 'AntiAirNow', 20}},

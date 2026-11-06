@@ -3598,3 +3598,199 @@ function HasExpansionCandidate(aiBrain, label)
     end
     return false
 end
+
+--- Collects and prioritises shield placement candidates from a base's EngineerManager.
+--- Includes both completed structures and structures currently under construction.
+--- Priority is value-based: Experimental > Strategic/AntiNuke > T3 Energy > T2 Energy
+---   > T3 Factory > T2 Factory. Within the same priority tier candidates are sorted by
+--- fewest existing shields, then by distance from the engineer.
+---
+--- Each entry in the returned table is a live unit object compatible with
+--- RUtils.GetShieldPosition (responds to :GetPosition(), .Blueprint, .Dead, ['rngdata']).
+---
+---@param aiBrain AIBrain
+---@param eng Unit          The engineer that will place the shield
+---@param locationType string
+---@param shieldMax number  Max shields allowed per unit before it is excluded (default 4)
+---@return table            Ordered array of unit objects; may be empty
+function GetShieldCandidatesFromBase(aiBrain, eng, locationType, shieldMax)
+    shieldMax = shieldMax or 4
+    local engineerManager = aiBrain.BuilderManagers[locationType].EngineerManager
+    if not engineerManager then
+        --LOG('GetShieldCandidatesFromBase: no EngineerManager for location '..tostring(locationType))
+        return {}
+    end
+
+    local engPos = eng:GetPosition()
+
+    -- Priority weights by category and existing shield count.
+    local function getPriorityWeight(unit, isBeingBuilt, shields)
+        local cats = unit.Blueprint.CategoriesHash
+        local baseWeight
+        if cats.EXPERIMENTAL then
+            baseWeight = 500
+        elseif cats.STRATEGIC or (cats.ANTIMISSILE and cats.DEFENSE and cats.TECH3) then
+            baseWeight = 400
+        elseif cats.ENERGYPRODUCTION and cats.TECH3 then
+            baseWeight = 300
+        elseif cats.ENERGYPRODUCTION and cats.TECH2 then
+            baseWeight = 200
+        elseif cats.FACTORY and cats.TECH3 then
+            baseWeight = 150
+        elseif cats.FACTORY and cats.TECH2 then
+            baseWeight = 100
+        else
+            baseWeight = 50
+        end
+
+        local shieldPenalty = 100
+        local weight = baseWeight - ((shields or 0) * shieldPenalty)
+        
+        if isBeingBuilt then
+            weight = weight - 50
+        end
+        return weight
+    end
+
+    -- Helper: count alive shields already protecting a unit.
+    local function liveShieldCount(unit)
+        if not unit['rngdata'] or not unit['rngdata'].ShieldsInRange then
+            return 0
+        end
+        local count = 0
+        for _, s in unit['rngdata'].ShieldsInRange do
+            if not s.Dead then
+                count = count + 1
+            end
+        end
+        return count
+    end
+
+    -- Helper: unit qualifies for shield candidacy. Returns isValid, shieldCount.
+    local function isCandidate(unit)
+        if unit.Dead then
+            --LOG('GetShieldCandidatesFromBase: skip '..tostring(unit.UnitId)..' ['..tostring(unit.EntityId)..'] - Dead')
+            return false, 0
+        end
+        if not unit['rngdata'] then unit['rngdata'] = {} end
+        -- Skip if permanently marked as no space available.
+        if unit['rngdata'].NoShieldSpace and unit['rngdata'].NoShieldSpace > 0 then
+            --LOG('GetShieldCandidatesFromBase: skip '..tostring(unit.UnitId)..' ['..tostring(unit.EntityId)..'] - NoShieldSpace='..tostring(unit['rngdata'].NoShieldSpace))
+            return false, 0
+        end
+        local cats = unit.Blueprint.CategoriesHash
+        if not (cats.TECH2 or cats.TECH3 or cats.EXPERIMENTAL) then
+            --LOG('GetShieldCandidatesFromBase: skip '..tostring(unit.UnitId)..' ['..tostring(unit.EntityId)..'] - not T2/T3/EXPERIMENTAL')
+            return false, 0
+        end
+        local sc = liveShieldCount(unit)
+        if sc >= shieldMax then
+            --LOG('GetShieldCandidatesFromBase: skip '..tostring(unit.UnitId)..' ['..tostring(unit.EntityId)..'] - fully shielded ('..tostring(sc)..'/'..tostring(shieldMax)..')')
+            return false, sc
+        end
+        return true, sc
+    end
+
+    local candidates = {}
+
+    -- Collect candidates from ConsumptionUnits (completed structures).
+    local consumptionGroups = {
+        'EnergyProduction',
+        'Strategic',
+        'Experimental',
+        'AntiNuke',
+    }
+    for _, groupName in consumptionGroups do
+        local group = engineerManager.ConsumptionUnits[groupName]
+        if group and not table.empty(group) then
+            for _, v in group.UnitsList do
+                local isValid, shieldCount = isCandidate(v)
+                if isValid then
+                    local dist = VDist3Sq(engPos, v:GetPosition())
+                    local priority = getPriorityWeight(v, false, shieldCount)
+                    --LOG('GetShieldCandidatesFromBase: candidate ('..groupName..') '..tostring(v.UnitId)..' ['..tostring(v.EntityId)..'] priority='..tostring(priority)..' shields='..tostring(shieldCount)..' distSq='..tostring(math.floor(dist)))
+                    RNGINSERT(candidates, {
+                        Unit     = v,
+                        Priority = priority,
+                        Shields  = shieldCount,
+                        Dist     = dist,
+                    })
+                end
+            end
+        end
+    end
+
+    -- Collect candidates from FactoryManager (completed factories).
+    local factoryManager = aiBrain.BuilderManagers[locationType].FactoryManager
+    if factoryManager and factoryManager.LocationActive then
+        for _, v in factoryManager.FactoryList do
+            local isValid, shieldCount = isCandidate(v)
+            if isValid then
+                local dist = VDist3Sq(engPos, v:GetPosition())
+                local priority = getPriorityWeight(v, false, shieldCount)
+                --LOG('GetShieldCandidatesFromBase: candidate (Factory) '..tostring(v.UnitId)..' ['..tostring(v.EntityId)..'] priority='..tostring(priority)..' shields='..tostring(shieldCount)..' distSq='..tostring(math.floor(dist)))
+                RNGINSERT(candidates, {
+                    Unit     = v,
+                    Priority = priority,
+                    Shields  = shieldCount,
+                    Dist     = dist,
+                })
+            end
+        end
+    end
+
+    -- Collect candidates from StructuresBeingBuilt (under construction).
+    if engineerManager.StructuresBeingBuilt then
+        for _, techBucket in engineerManager.StructuresBeingBuilt do
+            for _, entry in techBucket do
+                local v = entry.Unit
+                if v then
+                    local isValid, shieldCount = isCandidate(v)
+                    if isValid then
+                        local cats = v.Blueprint.CategoriesHash
+                        if cats.ENERGYPRODUCTION or cats.STRATEGIC or cats.EXPERIMENTAL
+                                or (cats.ANTIMISSILE and cats.DEFENSE) or cats.FACTORY then
+                            local dist = VDist3Sq(engPos, v:GetPosition())
+                            local priority = getPriorityWeight(v, true, shieldCount)
+                            --LOG('GetShieldCandidatesFromBase: candidate (BeingBuilt '..tostring(math.floor(v:GetFractionComplete()*100))..'%) '..tostring(v.UnitId)..' ['..tostring(v.EntityId)..'] priority='..tostring(priority)..' shields='..tostring(shieldCount)..' distSq='..tostring(math.floor(dist)))
+                            RNGINSERT(candidates, {
+                                Unit     = v,
+                                Priority = priority,
+                                Shields  = shieldCount,
+                                Dist     = dist,
+                            })
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if table.empty(candidates) then
+        --LOG('GetShieldCandidatesFromBase: no candidates found for location '..tostring(locationType))
+        return {}
+    end
+    --LOG('GetShieldCandidatesFromBase: '..tostring(RNGGETN(candidates))..' candidate(s) collected for location '..tostring(locationType))
+
+    -- Sort: highest priority first; within same priority closest first.
+    table.sort(candidates, function(a, b)
+        if a.Priority ~= b.Priority then
+            return a.Priority > b.Priority
+        end
+        return a.Dist < b.Dist
+    end)
+
+    -- Log the top-3 ranked candidates so the sort outcome is verifiable.
+    local logLimit = math.min(3, RNGGETN(candidates))
+    for i = 1, logLimit do
+        local entry = candidates[i]
+        --LOG('GetShieldCandidatesFromBase: rank #'..tostring(i)..' -> '..tostring(entry.Unit.UnitId)..' ['..tostring(entry.Unit.EntityId)..'] priority='..tostring(entry.Priority)..' shields='..tostring(entry.Shields)..' distSq='..tostring(math.floor(entry.Dist)))
+    end
+
+    -- Return plain unit array for GetShieldPosition compatibility.
+    local unitList = {}
+    for _, entry in candidates do
+        RNGINSERT(unitList, entry.Unit)
+    end
+    return unitList
+end

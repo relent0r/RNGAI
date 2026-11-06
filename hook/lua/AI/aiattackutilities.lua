@@ -557,7 +557,7 @@ function CheckNavalPathingRNG(aiBrain, platoon, location, maxRange, selectedWeap
             if success then
                 --I hate having to do this check, but the influence map doesn't have enough resolution and without it the boats
                 --will just get stuck on the shore. The code hits this case about once every 5-10 seconds on a large map with 4 naval AIs
-                local numUnits = aiBrain:GetNumUnitsAroundPoint(categories.NAVAL + categories.STRUCTURE, bestGoalPos, maxRange, 'Enemy')
+                local numUnits = GetNumUnitsAroundPoint(aiBrain, categories.NAVAL + categories.STRUCTURE, bestGoalPos, maxRange, 'Enemy')
                 if numUnits > 0 then
                     break
                 else

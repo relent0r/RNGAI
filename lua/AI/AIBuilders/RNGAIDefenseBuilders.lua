@@ -547,7 +547,7 @@ BuilderGroup {
         PlatoonTemplate = 'EngineerReclaimWallsT1RNG',
         Priority = 400,
         BuilderConditions = {
-            { UCBC, 'HaveUnitsWithCategoryAndAllianceRNG', { true, 10, categories.WALL, 'Enemy'}},
+            { UCBC, 'EnemyHasWalls', { }},
         },
         BuilderType = 'Any',
         BuilderData = {

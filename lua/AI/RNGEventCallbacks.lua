@@ -109,11 +109,20 @@ function OnCreate(unit)
                                 local smdPosition = unit:GetPosition()
                                 ForkThread(aiBrain.IntelManager.FlushExistingStructureRequest, aiBrain.IntelManager, smdPosition, 120, 'SMD')
                             end
+                        elseif unitCats.NAVAL then
+                            AddUnitToManager(aiBrain, unit)
                         end
                     end
                 end
             end
         end
+    end
+end
+
+function AddUnitToManager(aiBrain, unit)
+    if unit and not unit.Dead and aiBrain.MakePlatoon then
+        local returnPlatoon = aiBrain:MakePlatoon('', 'ReturnToBaseAIRNG')
+        aiBrain:AssignUnitsToPlatoon(returnPlatoon, {unit}, 'Attack', 'None')
     end
 end
 
@@ -373,7 +382,7 @@ end
 function OnKilled(self, instigator, type, overkillRatio)
 
     local sourceUnit
-    if instigator and not instigator.Dead then
+    if instigator and not IsDestroyed(instigator) then
         if IsUnit(instigator) then
             sourceUnit = instigator
         elseif IsProjectile(instigator) or IsCollisionBeam(instigator) then
@@ -398,7 +407,7 @@ function OnKilledUnit(self, unitKilled, massKilled)
 
     local sourceUnit
     --LOG('OnKilledUnit Fired for '..self.UnitId..' unit killed was '..tostring(unitKilled.UnitId))
-    if self then
+    if self and not IsDestroyed(self) then
         if IsUnit(self) then
             sourceUnit = self
         elseif IsProjectile(self) or IsCollisionBeam(self) then
@@ -550,55 +559,66 @@ function OnTransfered(transferedUnits, toArmy, captured, originBrain)
                     local armyStartX, armyStartZ = originBrain:GetArmyStartPos()
                     local numFactories = brain:GetNumUnitsAroundPoint(categories.FACTORY, {armyStartX, GetSurfaceHeight(armyStartX, armyStartZ), armyStartZ}, 80, 'Ally')
                     if numFactories > 0 then
-                        local distanceToBase
+                        local isNavalFactory = v.Blueprint.CategoriesHash.NAVAL
+                        local factoryType = isNavalFactory and 'naval' or 'land/air'
                         local closestBase
                         local closestBaseDistance
                         for c, b in brain.BuilderManagers do
-                            if c ~= 'FLOATING' then
-                                distanceToBase = VDist3Sq(b.Position, v:GetPosition())
+                            if c ~= 'FLOATING' and (not isNavalFactory or b.Layer == 'Water') then
+                                local distanceToBase = VDist3Sq(b.Position, v:GetPosition())
                                 if not closestBase or distanceToBase < closestBaseDistance then
                                     closestBase = c
                                     closestBaseDistance = distanceToBase
                                 end
                             end
                         end
-                        if closestBase and closestBaseDistance > 14400 then
-                            local refZone = brain.IntelManager:GetClosestZone(brain, false, { armyStartX, GetSurfaceHeight(armyStartX, armyStartZ), armyStartZ }, false, false, false)
-                            local zone = brain.Zones.Land.zones[refZone]
+                        if (closestBase and closestBaseDistance > 14400) or (isNavalFactory and not closestBase) then
+                            local zoneSet = isNavalFactory and brain.Zones.Naval or brain.Zones.Land
+                            local refZone
+                            local expansionType = 'Zone Expansion'
+                            if isNavalFactory then
+                                refZone = MAP:GetZoneID(v:GetPosition(), zoneSet.index)
+                                expansionType = 'Naval Area'
+                            else
+                                refZone = brain.IntelManager:GetClosestZone(brain, false, { armyStartX, GetSurfaceHeight(armyStartX, armyStartZ), armyStartZ }, false, false, false)
+                            end
+                            local zone = refZone and zoneSet.zones[refZone]
                             if zone then
-                                local refName = 'LAND_ZONE_'..zone.id
-                                local reference = zone.pos
-                                brain:AddBuilderManagers(reference, 120, refName, true)
-                                local baseValues = {}
-                                local highPri = false
-                                for templateName, baseData in BaseBuilderTemplates do
-                                    local baseValue = baseData.ExpansionFunction(brain, reference, 'Zone Expansion')
-                                    table.insert(baseValues, { Base = templateName, Value = baseValue })
-                                    --SPEW('*AI DEBUG: AINewExpansionBase(): Scann next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
-                                    if not highPri or baseValue > highPri then
-                                        --SPEW('*AI DEBUG: AINewExpansionBase(): Possible next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
-                                        highPri = baseValue
+                                local refName = (isNavalFactory and 'NAVAL_ZONE_' or 'LAND_ZONE_')..zone.id
+                                if not isNavalFactory or (not zone.BuilderManager and not brain.BuilderManagers[refName]) then
+                                    local reference = zone.pos
+                                    brain:AddBuilderManagers(reference, 120, refName, true)
+                                    local baseValues = {}
+                                    local highPri = false
+                                    for templateName, baseData in BaseBuilderTemplates do
+                                        local baseValue = baseData.ExpansionFunction(brain, reference, expansionType)
+                                        table.insert(baseValues, { Base = templateName, Value = baseValue })
+                                        --SPEW('*AI DEBUG: AINewExpansionBase(): Scann next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
+                                        if not highPri or baseValue > highPri then
+                                            --SPEW('*AI DEBUG: AINewExpansionBase(): Possible next Base. baseValue= ' .. repr(baseValue) .. ' ('..repr(templateName)..')')
+                                            highPri = baseValue
+                                        end
                                     end
-                                end
-                                -- Random to get any picks of same value
-                                local validNames = {}
-                                for _,v in baseValues do
-                                    if v.Value == highPri then
-                                        table.insert(validNames, v.Base)
+                                    -- Random to get any picks of same value
+                                    local validNames = {}
+                                    for _,v in baseValues do
+                                        if v.Value == highPri then
+                                            table.insert(validNames, v.Base)
+                                        end
                                     end
+                                    --SPEW('*AI DEBUG: AINewExpansionBase(): validNames for Expansions ' .. repr(validNames))
+                                    local pick = validNames[ Random(1, table.getn(validNames)) ]
+                                    import('/mods/RNGAI/lua/ai/aiaddbuildertable.lua').AddGlobalBaseTemplate(brain, refName, pick)
+                                    zone.lastexpansionattempt = GetGameTimeSeconds()
+                                    zone.engineerplatoonallocated = nil
+                                    if brain.BuilderManagers[refName].FactoryManager then
+                                        brain.BuilderManagers[refName].FactoryManager.LocationActive = true
+                                    end
+                                    if brain.BuilderManagers[refName].EngineerManager then
+                                        brain.BuilderManagers[refName].EngineerManager.Active = true
+                                    end
+                                    coroutine.yield(5)
                                 end
-                                --SPEW('*AI DEBUG: AINewExpansionBase(): validNames for Expansions ' .. repr(validNames))
-                                local pick = validNames[ Random(1, table.getn(validNames)) ]
-                                import('/mods/RNGAI/lua/ai/aiaddbuildertable.lua').AddGlobalBaseTemplate(brain, refName, pick)
-                                brain.Zones.Land.zones[refZone].lastexpansionattempt = GetGameTimeSeconds()
-                                brain.Zones.Land.zones[refZone].engineerplatoonallocated = nil
-                                if brain.BuilderManagers[refName].FactoryManager then
-                                    brain.BuilderManagers[refName].FactoryManager.LocationActive = true
-                                end
-                                if brain.BuilderManagers[refName].EngineerManager then
-                                    brain.BuilderManagers[refName].EngineerManager.Active = true
-                                end
-                                coroutine.yield(5)
                             end
                         end
                     end
@@ -624,9 +644,12 @@ function OnTransfered(transferedUnits, toArmy, captured, originBrain)
                     local distanceToBase
                     local closestBase
                     local closestBaseDistance
+                    local isNavalFactory = v.Blueprint.CategoriesHash.NAVAL
+                    local factoryType = isNavalFactory and 'naval' or 'land/air'
                     for c, b in brain.BuilderManagers do
-                        if c ~= 'FLOATING' and b.FactoryManager and b.FactoryManager.LocationActive then
+                        if c ~= 'FLOATING' and b.FactoryManager and b.FactoryManager.LocationActive and (not isNavalFactory or b.Layer == 'Water') then
                             distanceToBase = VDist3Sq(b.Position, v:GetPosition())
+                            --LOG('RNGAI OnTransfered: '..factoryType..' factory '..tostring(v.UnitId)..' assignment candidate '..tostring(c)..' layer='..tostring(b.Layer)..' distanceSq='..tostring(distanceToBase))
                             --LOG('Distance to factory manager '..c..' '..math.sqrt(distanceToBase))
                             if distanceToBase < 14400 and (not closestBase or distanceToBase < closestBaseDistance) then
                                 closestBase = c

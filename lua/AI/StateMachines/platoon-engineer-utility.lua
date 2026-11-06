@@ -1056,8 +1056,6 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
                 RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
             elseif cons.UseBaseTable then
-                --LOG('Engineer trying to use base table for shield building')
-                --LOG('Location type is '..tostring(self.LocationType))
                 local shieldCats
                 if eng.Blueprint.CategoriesHash.TECH2 then
                     shieldCats = categories.STRUCTURE * categories.SHIELD * categories.TECH2
@@ -1066,234 +1064,15 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 end
                 local blueprints = StateUtils.GetBuildableUnitId(aiBrain, eng, shieldCats)
                 local whatToBuild = blueprints[1]
-                local engineerManager = aiBrain.BuilderManagers[self.LocationType].EngineerManager
-                local structureTable = {}
-                if engineerManager then
-                    --LOG('Engineer Manager exists, checking for EnergyProduction units')
-                    if engineerManager.ConsumptionUnits.EnergyProduction and not table.empty(engineerManager.ConsumptionUnits.EnergyProduction) then
-                        for _, v in engineerManager.ConsumptionUnits.EnergyProduction.UnitsList do
-                            if v and not v.Dead then
-                                if not v['rngdata'] then
-                                    v['rngdata'] = {}
-                                end
-                                if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace > 0 then
-                                    --LOG('There is no shield space')
-                                    local count = 0
-                                    for _, s in v['rngdata'].ShieldsInRange do
-                                        if not s.Dead then
-                                            count = count + 1
-                                        end
-                                    end
-                                    --LOG('ShieldCount in range of unit '..tostring(count))
-                                    continue
-                                end
-                                local unitCats = v.Blueprint.CategoriesHash
-                                if unitCats.TECH2 or unitCats.TECH3 then
-                                    if not v['rngdata'].ShieldsInRange then
-                                        v['rngdata'].ShieldsInRange = {}
-                                    end
-                                    local shieldCount = 0
-                                    for _, s in v['rngdata'].ShieldsInRange do
-                                        if not s.Dead then
-                                            shieldCount = shieldCount + 1
-                                        end
-                                    end
-                                    --LOG('Shield count is '..tostring(shieldCount))
-                                    if shieldCount < 4 then
-                                        --LOG('Found energy production unit that is not shielded')
-                                        table.insert(structureTable, v)
-                                    else
-                                        --LOG('Already 4 shields protecting unit ')
-                                    end
-                                end
-                            end
-                        end
-                    end
-                    if engineerManager.ConsumptionUnits.Strategic and not table.empty(engineerManager.ConsumptionUnits.Strategic) then
-                        for _, v in engineerManager.ConsumptionUnits.Strategic.UnitsList do
-                            if v and not v.Dead then
-                                if not v['rngdata'] then
-                                    v['rngdata'] = {}
-                                end
-                                if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace > 0 then
-                                    --LOG('There is no shield space')
-                                    local count = 0
-                                    for _, s in v['rngdata'].ShieldsInRange do
-                                        if not s.Dead then
-                                            count = count + 1
-                                        end
-                                    end
-                                    --LOG('ShieldCount in range of unit '..tostring(count))
-                                    continue
-                                end
-                                local unitCats = v.Blueprint.CategoriesHash
-                                if unitCats.TECH2 or unitCats.TECH3 then
-                                    if not v['rngdata'].ShieldsInRange then
-                                        v['rngdata'].ShieldsInRange = {}
-                                    end
-                                    local shieldCount = 0
-                                    for _, s in v['rngdata'].ShieldsInRange do
-                                        if not s.Dead then
-                                            shieldCount = shieldCount + 1
-                                        end
-                                    end
-                                    --LOG('Shield count is '..tostring(shieldCount))
-                                    if shieldCount < 4 then
-                                        --LOG('Found strategic unit that is not shielded')
-                                        table.insert(structureTable, v)
-                                    else
-                                        --LOG('Already 4 shields protecting unit ')
-                                    end
-                                end
-                            end
-                        end
-                    end
-                    if engineerManager.ConsumptionUnits.Experimental and not table.empty(engineerManager.ConsumptionUnits.Experimental) then
-                        for _, v in engineerManager.ConsumptionUnits.Experimental.UnitsList do
-                            if v and not v.Dead then
-                                if not v['rngdata'] then
-                                    v['rngdata'] = {}
-                                end
-                                if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace > 0 then
-                                    --LOG('There is no shield space')
-                                    local count = 0
-                                    for _, s in v['rngdata'].ShieldsInRange do
-                                        if not s.Dead then
-                                            count = count + 1
-                                        end
-                                    end
-                                    --LOG('ShieldCount in range of unit '..tostring(count))
-                                    continue
-                                end
-                                local unitCats = v.Blueprint.CategoriesHash
-                                if unitCats.EXPERIMENTAL then
-                                    if not v['rngdata'].ShieldsInRange then
-                                        v['rngdata'].ShieldsInRange = {}
-                                    end
-                                    local shieldCount = 0
-                                    for _, s in v['rngdata'].ShieldsInRange do
-                                        if not s.Dead then
-                                            shieldCount = shieldCount + 1
-                                        end
-                                    end
-                                    --LOG('Shield count is '..tostring(shieldCount))
-                                    if shieldCount < 4 then
-                                        --LOG('Found strategic unit that is not shielded')
-                                        table.insert(structureTable, v)
-                                    else
-                                        --LOG('Already 4 shields protecting unit ')
-                                    end
-                                end
-                            end
-                        end
-                    end
-                    if engineerManager.ConsumptionUnits.AntiNuke and not table.empty(engineerManager.ConsumptionUnits.AntiNuke) then
-                        for _, v in engineerManager.ConsumptionUnits.AntiNuke.UnitsList do
-                            if v and not v.Dead then
-                                if not v['rngdata'] then
-                                    v['rngdata'] = {}
-                                end
-                                if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace > 0 then
-                                    --LOG('There is no shield space')
-                                    local count = 0
-                                    for _, s in v['rngdata'].ShieldsInRange do
-                                        if not s.Dead then
-                                            count = count + 1
-                                        end
-                                    end
-                                    --LOG('ShieldCount in range of unit '..tostring(count))
-                                    continue
-                                end
-                                local unitCats = v.Blueprint.CategoriesHash
-                                if unitCats.TECH2 or unitCats.TECH3 then
-                                    if not v['rngdata'].ShieldsInRange then
-                                        v['rngdata'].ShieldsInRange = {}
-                                    end
-                                    local shieldCount = 0
-                                    for _, s in v['rngdata'].ShieldsInRange do
-                                        if not s.Dead then
-                                            shieldCount = shieldCount + 1
-                                        end
-                                    end
-                                    --LOG('Shield count is '..tostring(shieldCount))
-                                    if shieldCount < 4 then
-                                        --LOG('Found antinuke unit that is not shielded')
-                                        table.insert(structureTable, v)
-                                    else
-                                        --LOG('Already 4 shields protecting unit ')
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-                local factoryManager = aiBrain.BuilderManagers[self.LocationType].FactoryManager
-                if factoryManager and factoryManager.LocationActive then
-                    for _, v in factoryManager.FactoryList do
-                        if v and not v.Dead then
-                            if not v['rngdata'] then
-                                v['rngdata'] = {}
-                            end
-                            if v['rngdata'].NoShieldSpace and v['rngdata'].NoShieldSpace > 0 then
-                                --LOG('There is no shield space')
-                                local count = 0
-                                for _, s in v['rngdata'].ShieldsInRange do
-                                    if not s.Dead then
-                                        count = count + 1
-                                    end
-                                end
-                                --LOG('ShieldCount in range of unit '..tostring(count))
-                                continue
-                            end
-                            local unitCats = v.Blueprint.CategoriesHash
-                            if unitCats.TECH2 or unitCats.TECH3 then
-                                if not v['rngdata'].ShieldsInRange then
-                                    v['rngdata'].ShieldsInRange = {}
-                                end
-                                local shieldCount = 0
-                                for _, s in v['rngdata'].ShieldsInRange do
-                                    if not s.Dead then
-                                        shieldCount = shieldCount + 1
-                                    end
-                                end
-                                --LOG('Shield count is '..tostring(shieldCount))
-                                if shieldCount < 4 then
-                                    --LOG('Found energy production unit that is not shielded')
-                                    table.insert(structureTable, v)
-                                else
-                                    --LOG('Already 4 shields protecting unit ')
-                                end
-                            end
-                        end
-                    end
-                end
+                local structureTable = StateUtils.GetShieldCandidatesFromBase(aiBrain, eng, self.LocationType)
                 if not table.empty(structureTable) then
-                    --LOG('structureTable is not empty')
-                    local engPos = eng:GetPosition()
-                    table.sort(structureTable, function(a, b)
-                        local shieldsA = (a['rngdata'] and a['rngdata'].ShieldsInRange) and table.getn(a['rngdata'].ShieldsInRange) or 0
-                        local shieldsB = (b['rngdata'] and b['rngdata'].ShieldsInRange) and table.getn(b['rngdata'].ShieldsInRange) or 0
-                    
-                        -- Get the position of the engineer
-                        
-                        -- Calculate the distance from the engineer to each structure's position
-                        local distA = VDist3Sq(engPos, a:GetPosition())
-                        local distB = VDist3Sq(engPos, b:GetPosition())
-                    
-                        -- Sort primarily by the number of shields in range, then by the distance to the structure
-                        if shieldsA == shieldsB then
-                            return distA < distB
-                        else
-                            return shieldsA < shieldsB
-                        end
-                    end)
                     reference = RUtils.GetShieldPosition(aiBrain, eng, self.LocationType, whatToBuild, structureTable)
-                    --LOG('Shield location reference is '..tostring(repr(reference)))
+                    LOG('UseBaseTable: GetShieldPosition returned '..tostring(reference and repr(reference) or 'nil')..' for builder '..tostring(self.BuilderName))
                     buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
                     RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
                 else
+                    LOG('UseBaseTable: no candidates from GetShieldCandidatesFromBase for '..tostring(self.BuilderName)..' at '..tostring(self.LocationType))
                     coroutine.yield(30)
-                    --LOG('structureTable is empty')
                 end
             elseif cons.CounterDefense then
                 local basePosition = aiBrain.BuilderManagers[self.LocationType].Position
@@ -2080,6 +1859,9 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         --- Check for reclaim or assist or expansion specific things based on distance from base.
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
+            if IsDestroyed(self) then
+                return
+            end
             local eng = self.eng
             local aiBrain = self:GetBrain()
             if self.HighValueDiscard then

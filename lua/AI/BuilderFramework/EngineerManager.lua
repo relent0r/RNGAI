@@ -730,7 +730,6 @@ EngineerManager = Class(BuilderManager) {
         end
 
         local builder = self:GetHighestBuilder('Any', {unit})
-        --LOG('HighestBuilder is '..repr(builder))
 
         if builder and ((not unit.Combat) or (not unit.Upgrading) or (not unit.Active)) then
             -- Fork off the platoon here

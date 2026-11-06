@@ -305,7 +305,7 @@ BuilderGroup {
         Priority = 300,
         InstanceCount = 20,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * categories.TECH1 * (categories.SUBMERSIBLE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
+            { UCBC, 'FactoryManagerPoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.NAVAL * categories.TECH1 * (categories.SUBMERSIBLE + categories.DIRECTFIRE) - categories.ENGINEER - categories.EXPERIMENTAL } },
             --{ SeaAttackCondition, { 'LocationType', 14 } },
         },
         BuilderData = {
@@ -345,7 +345,7 @@ BuilderGroup {
         Priority = 310,
         InstanceCount = 20,
         BuilderConditions = {
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 1, categories.MOBILE * categories.NAVAL * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ENGINEER - categories.MOBILESONAR} },
+            { UCBC, 'FactoryManagerPoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.NAVAL * (categories.TECH1 + categories.TECH2 + categories.TECH3) - categories.ENGINEER - categories.MOBILESONAR} },
             --{ SeaAttackCondition, { 'LocationType', 14 } },
         },
         BuilderData = {
@@ -389,7 +389,7 @@ BuilderGroup {
         BuilderType = 'Any',
         BuilderConditions = {
             -- Change to NUKESUB once the Cybran BP is updated
-            { UCBC, 'PoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.NAVAL * categories.ANTINAVY - categories.ENGINEER - categories.EXPERIMENTAL - categories.NUKE } },
+            { UCBC, 'FactoryManagerPoolGreaterAtLocation', { 'LocationType', 2, categories.MOBILE * categories.NAVAL * categories.ANTINAVY - categories.ENGINEER - categories.EXPERIMENTAL - categories.NUKE } },
             --{ SeaAttackCondition, { 'LocationType', 20 } },
         },
         BuilderData = {
@@ -408,7 +408,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {  
             { MIBC, 'MassMarkersInWater', {} },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1 }},
+            { UCBC, 'FactoryManagerPoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.NAVAL * categories.SUBMERSIBLE * categories.TECH1 }},
             },
         BuilderData = {
             StateMachine = 'NavalZoneControl',
@@ -446,7 +446,7 @@ BuilderGroup {
         InstanceCount = 2,
         BuilderConditions = {  
             { MIBC, 'FrigateRaidTrue', {} },
-            { UCBC, 'HaveGreaterThanUnitsWithCategory', { 0, categories.MOBILE * categories.NAVAL * categories.FRIGATE * categories.TECH1 }},
+            { UCBC, 'FactoryManagerPoolGreaterAtLocation', { 'LocationType', 0, categories.MOBILE * categories.NAVAL * categories.FRIGATE * categories.TECH1 }},
             },
         BuilderData = {
             StateMachine = 'NavalZoneControl',

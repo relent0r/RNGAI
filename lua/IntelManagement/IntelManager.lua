@@ -101,6 +101,14 @@ IntelManager = Class {
         self.FactoryReclaimThresholdBuffer = 25.0       -- Buffer to prevent "fluttering" (building/reclaiming repeatedly)
         self.ScoutingCurveZones = {}
         self.CurrentFrontLineZones = {}
+        self.CurrentNavalFrontLineZones = {}
+        self.CurrentNavalControlledZones = {}
+        self.NavalZoneSecurityDepth = {}
+        self.NavalZonePathSecurity = {}
+        self.NavalContestedCount = 0
+        self.NavalBombardmentCount = 0
+        self.NavalCoastalThreatCount = 0
+        self.NavalContestedIncome = 0
         self.UnpathableExpansionZoneCount = 0
         self.InitialTransportRequested = false
         self.NavalFocusSafe = false
@@ -527,6 +535,7 @@ IntelManager = Class {
 
             }
         }
+        self.EnemyWallCount = 0
         self.ProductionZones = {}
     end,
 
@@ -806,7 +815,7 @@ IntelManager = Class {
                         local markersInGraph = graphLabel.MassMarkersInGraph or 1
                         if markersInGraph > 2 or zoneType == 'Naval' then
                             if zoneType == 'Naval' then
-                                skipDistance = 4225
+                                skipDistance = 625
                             end
                             local bx = mainBasePos[1] - v.pos[1]
                             local bz = mainBasePos[3] - v.pos[3]
@@ -916,7 +925,7 @@ IntelManager = Class {
             --LOG('Number of zoneprioritylist zones we can expand to '..table.getn(zonePriorityList))
             --LOG('ZonePriorityList '..tostring(repr(zonePriorityList)))
             for _, zone in ipairs(zonePriorityList) do
-                if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zone.Position, 30, 'Enemy') < 1 then
+                if GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zone.Position, 30, 'Enemy') < 1 then
                     if zone.BestArmy and zone.BestArmy ~= armyIndex and ArmyBrains[zone.BestArmy].Status ~= 'Defeat' then
                         continue
                     end
@@ -961,8 +970,8 @@ IntelManager = Class {
                                         end
 
                                         -- Check for unit threats
-                                        if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
-                                        and aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
+                                        if GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
+                                        and GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
                                             
                                             --LOG('HigherValueExists set to true due to factories being present for zone '..tostring(zone.ZoneID))
                                             higherValueExists = true
@@ -979,8 +988,8 @@ IntelManager = Class {
                                     break
                                 end
                                 if not resValue.StartPositionClose then
-                                    if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
-                                    and aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
+                                    if GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.FACTORY, zoneSet[resValue.ZoneID].pos, 30, 'Ally') < 1 
+                                    and GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE * (categories.FACTORY + categories.DIRECTFIRE), zoneSet[resValue.ZoneID].pos, 30, 'Enemy') < 1 then
                                         if resValue.DistanceToBase < zone.DistanceToBase and resValue.ResourceValue >= zone.ResourceValue then
                                             --LOG('Low value, skip it pos '..tostring(zoneSet[resValue.ZoneID].pos[1]).. ':'..tostring(zoneSet[resValue.ZoneID].pos[3]))
                                             higherValueExists = true
@@ -1014,8 +1023,8 @@ IntelManager = Class {
                     else
                         --LOG('Zone checked '..tostring(zone.ZoneID))
                         --LOG('Amphib Label '..tostring(zone.AmphibLabel)..' mainbaseAmphibLabel '..tostring(mainBaseAmphibLabel)..' zone type '..tostring(zone.ZoneType))
-                        --LOG('Ally factory count '..tostring(aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zone.Position, 30, 'Ally')))
-                        if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.FACTORY, zone.Position, 30, 'Ally') < 1 then
+                        --LOG('Ally factory count '..tostring(GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.FACTORY, zone.Position, 30, 'Ally')))
+                        if GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.FACTORY, zone.Position, 30, 'Ally') < 1 then
                             if zone.AmphibLabel ~= mainBaseAmphibLabel and zone.ZoneType == 'Land' then
                                 table.insert(filteredLandUnPathableList, zone)
                             elseif zone.ZoneType == 'Land' then
@@ -1094,8 +1103,8 @@ IntelManager = Class {
                         local zoneLabel = v.label
                         if zoneLabel ~= baseLabel then
                             local zoneDefense = v.friendlyantisurfacethreat or 0
-                            local dx = position[1] - zonePos[1]
-                            local dz = position[3] - zonePos[3]
+                            local dx = position[1] - v.pos[1]
+                            local dz = position[3] - v.pos[3]
                             if (dx*dx + dz*dz) > 14400 and zoneDefense < 20 then
                                 continue
                             end
@@ -1484,6 +1493,33 @@ IntelManager = Class {
                 directSurfaceAaWeight = 3.5,    -- Heavy penalty for AA inside the zone
                 adjacentSurfaceAaWeight = 1.2,  -- Light penalty for AA in neighboring zones
                 fighterRiskWeight = 4.0,        -- High penalty for mobile air superiority threat
+            },
+            naval = {
+                -- Control Weights
+                enemyDistanceWeight = 1.2,
+                homeDistanceWeight = 1.0,
+                incomeValueWeight = 0.8,         -- Water mass bonus (if custom map has it)
+                zoneStatusWeight = 1.4,          -- Contested/Hostile urgency
+                bombardWeight = 2.5,             -- Dominating enemy coastal land & frontlines
+                defenseWeight = 2.0,             -- Shielding friendly coast/base
+                frontlineWeight = 2.5,           -- Fleet gravity toward contested water frontline
+                startAccessWeight = 4.0,         -- Direct access to enemy start base
+                navalChokeWeight = 1.5,          -- Strategic corridor / bottleneck
+                enemyThreatOpportunity = 0.5,    -- Fleet target acquisition
+
+                -- Raid Weights
+                raidEnemyDistWeight = 1.2,       -- Deep penetration toward enemy side
+                raidHomeDistWeight = 0.8,        -- Bias away from friendly base
+                raidIncomeWeight = 1.0,          -- Water mass bonus (if custom map has it)
+                raidBombardWeight = 2.2,         -- Shelling coastal land mexes / radar
+                raidFlankWeight = 3.0,           -- Wide angular flanking around conflict axis
+                raidFrontlineBypassWeight = 2.5, -- Heavy penalty: avoid locked fleet clashes
+                raidThreatAvoidanceWeight = 1.5, -- Avoid heavy enemy naval combat groups
+
+                -- Defense Weights
+                defenseBaseWeight = 3.0,         -- Securing naval yards & home shoreline
+                defenseHomeDistWeight = 1.8,     -- Proximity to home base
+                defenseNavyThreatWeight = 0.3,   -- Friendly presence
             }
         }
         self:WaitForZoneInitialization()
@@ -1731,6 +1767,242 @@ IntelManager = Class {
                             end
                         end
                     end
+                elseif zoneType == 'Naval' then
+                    zones = aiBrain.Zones and aiBrain.Zones.Naval and aiBrain.Zones.Naval.zones
+                    if zones and not table.empty(zones) then
+                        local currentNavalFrontlines = self.CurrentNavalFrontLineZones or {}
+                        local totalContestedNaval = 0
+                        local totalBombardmentOpportunities = 0
+                        local totalCoastalThreats = 0
+                        local totalContestedWaterIncome = 0
+
+                        -- 1. BFS PHASE: Path-Distance Mapping for Naval
+                        local homeDepths = {}
+                        local queue = {}
+                        local head = 1
+
+                        -- Seed from active naval builder managers
+                        if self.ProductionZones and self.ProductionZones['Naval'] then
+                            for _, pZone in ipairs(self.ProductionZones['Naval']) do
+                                if pZone.id and zones[pZone.id] and not homeDepths[pZone.id] then
+                                    homeDepths[pZone.id] = 0
+                                    table.insert(queue, { id = pZone.id, depth = 0 })
+                                end
+                            end
+                        end
+
+                        for _, bManager in aiBrain.BuilderManagers do
+                            if bManager.FactoryManager and bManager.FactoryManager.LocationActive and bManager.Zone and bManager.Zone.pos and zones[bManager.ZoneID] then
+                                if not homeDepths[bManager.ZoneID] then
+                                    homeDepths[bManager.ZoneID] = 0
+                                    table.insert(queue, { id = bManager.ZoneID, depth = 0 })
+                                end
+                            end
+                        end
+
+                        -- Fallback to naval zone closest to MAIN base or flagged as protecting home
+                        if table.empty(queue) then
+                            local mainPos = aiBrain.BuilderManagers['MAIN'].Position
+                            local bestNavalID = false
+                            local bestDistSq = false
+                            for id, z in zones do
+                                local navalData = z.navaldata
+                                if navalData.protectsHome and navalData.homeWaterDistSq then
+                                    if not bestDistSq or navalData.homeWaterDistSq < bestDistSq then
+                                        bestDistSq = navalData.homeWaterDistSq
+                                        bestNavalID = id
+                                    end
+                                else
+                                    local dSq = VDist2Sq(mainPos[1], mainPos[3], z.pos[1], z.pos[3])
+                                    if not bestDistSq or dSq < bestDistSq then
+                                        bestDistSq = dSq
+                                        bestNavalID = id
+                                    end
+                                end
+                            end
+                            if bestNavalID then
+                                homeDepths[bestNavalID] = 0
+                                table.insert(queue, { id = bestNavalID, depth = 0 })
+                            end
+                        end
+
+                        while head <= table.getn(queue) do
+                            local current = queue[head]
+                            head = head + 1
+                            local z = zones[current.id]
+                            for _, edge in ipairs(z.edges or {}) do
+                                if edge.zone and not homeDepths[edge.zone.id] and current.depth < MaxBfsDepth then
+                                    homeDepths[edge.zone.id] = current.depth + 1
+                                    table.insert(queue, { id = edge.zone.id, depth = current.depth + 1 })
+                                end
+                            end
+                        end
+
+                        local maxMapIncome = self.MapMaximumValues.MaximumResourceValue
+                        if not maxMapIncome or maxMapIncome <= 0 then
+                            maxMapIncome = 1.0
+                        end
+                        local aggressionScale = self.Aggression or 1.0
+
+                        -- 2. SCORING PASS (One loop for performance)
+                        for id, v in zones do
+                            local navalData = v.navaldata
+                            -- NAVAL_ECO_SIGNAL: Scope economic metrics to naval zones reachable from this AI's own naval bases.
+                            local isNavalZoneReachable = homeDepths[id] ~= nil
+                            local enemyStartClose = RUtils.IsEnemyStartClose(v)
+                            local allyStartClose = RUtils.IsAllyStartClose(v)
+
+                            local homePathDist = (homeDepths[id] or MaxBfsDepth) / MaxBfsDepth
+                            local enemyDistValue = (v.enemystartdata and enemyArmyIndex and v.enemystartdata[enemyArmyIndex]) and (v.enemystartdata[enemyArmyIndex].startdistance / mapDiagonalSq) or 1.0
+                            local isFrontlineNode = currentNavalFrontlines[id] and 1.0 or 0.0
+
+                            local controlValue = RUtils.GetAdaptiveStatusValue(v, self) * aggressionScale
+                            local resourceValueControl = RUtils.GetZoneIncomeValue(v, 'control', enemyStartClose, allyStartClose) / maxMapIncome
+                            local resourceValueRaid = RUtils.GetZoneIncomeValue(v, 'raid', enemyStartClose, allyStartClose) / maxMapIncome
+                            local zoneFlankRaidBonus = RUtils.GetRaidFlankBonusValue(v, aiBrain, enemyArmyIndex, mapDiagonalSq)
+
+                            -- Precomputed Coastal Land Evaluation (O(k), k <= 4)
+                            local coastalBombardValue = 0
+                            local coastalRaidValue = 0
+                            local coastalDefenseValue = 0
+
+                            for landZoneID, coastalData in pairs(navalData.coastalLandZones or {}) do
+                                local lZone = coastalData.zone
+                                local lStatus = lZone.status
+                                local lZoneNavalData = lZone.navaldata
+                                local massCount = table.getn(lZoneNavalData.bombardableMassMarkers or {})
+                                local isFrigate = lZoneNavalData.isFrigateReachable
+
+                                if lStatus == 'Hostile' or lStatus == 'Contested' then
+                                    local enemyIncome = (lZone.zoneincome and lZone.zoneincome.enemyincome) or (lZone.resourcevalue or 0)
+                                    local isLandFrontline = (self.CurrentFrontLineZones and self.CurrentFrontLineZones[landZoneID]) and 2.0 or 1.0
+                                    local structThreat = lZone.enemystructurethreat or 0
+
+                                    -- Control Fleet Bombardment: Heavy ships (Destroyers, Cruisers, Battleships) can bombard deeper inland
+                                    local bombardScore = (massCount * 1.5 + enemyIncome * 1.0 + structThreat * 0.05) * isLandFrontline
+                                    coastalBombardValue = coastalBombardValue + bombardScore
+                                    if isNavalZoneReachable and bombardScore > 0.5 then
+                                        totalBombardmentOpportunities = totalBombardmentOpportunities + 1
+                                    end
+
+                                    -- Raid Value: Frigates directly shelling shoreline extractors and radar
+                                    if isFrigate and massCount > 0 then
+                                        coastalRaidValue = coastalRaidValue + (massCount * 1.5)
+                                    elseif enemyIncome > 0 then
+                                        coastalRaidValue = coastalRaidValue + (enemyIncome * 0.5)
+                                    end
+                                elseif lStatus == 'Allied' then
+                                    local selfIncome = (lZone.zoneincome and lZone.zoneincome.selfincome) or (lZone.resourcevalue or 0)
+                                    local isBase = lZone.BuilderManager and 2.5 or 1.0
+                                    local enemyNavyHere = v.enemynavalthreat or 0
+
+                                    local defenseScore = selfIncome * 1.2 * isBase
+                                    if enemyNavyHere > 0 then
+                                        coastalDefenseValue = coastalDefenseValue + (defenseScore * math.min(3.0, enemyNavyHere * 0.1))
+                                        if isNavalZoneReachable then
+                                            totalCoastalThreats = totalCoastalThreats + 1
+                                        end
+                                    end
+                                end
+                            end
+
+                            -- Start Location Access Evaluation
+                            if navalData.enemyStartAccess and not table.empty(navalData.enemyStartAccess) then
+                                for armyIdx, accessData in pairs(navalData.enemyStartAccess) do
+                                    if accessData.canBombard then
+                                        coastalBombardValue = coastalBombardValue + weightTable.naval.startAccessWeight
+                                        coastalRaidValue = coastalRaidValue + (weightTable.naval.startAccessWeight * 0.5)
+                                    else
+                                        coastalBombardValue = coastalBombardValue + (weightTable.naval.startAccessWeight * 0.5)
+                                        coastalRaidValue = coastalRaidValue + (weightTable.naval.startAccessWeight * 0.25)
+                                    end
+                                end
+                            end
+
+                            if navalData.allyStartAccess and not table.empty(navalData.allyStartAccess) then
+                                local enemyNavyHere = navalData.enemynavalthreat or 0
+                                if enemyNavyHere > 0 then
+                                    coastalDefenseValue = coastalDefenseValue + (weightTable.naval.defenseBaseWeight * 1.5)
+                                end
+                            end
+
+                            if navalData.protectsHome and (navalData.enemynavalthreat or 0) > 0 then
+                                coastalDefenseValue = coastalDefenseValue + weightTable.naval.defenseBaseWeight
+                            end
+
+                            -- Choke point & transit evaluation (graph topology)
+                            local edgeCount = table.getn(v.edges or {})
+                            local chokeBonus = (edgeCount == 2) and 1.0 or (edgeCount >= 4 and 0.5 or 0.0)
+
+                            -- Threat factors
+                            local enemyFleetPresence = math.min(3.0, (v.enemynavalthreat or 0) * 0.1)
+                            local enemyNavalStruct = math.min(3.0, (v.enemystructurethreat or 0) * 0.1)
+                            local raidThreatPenalty = math.min(2.5, (v.enemynavalthreat or 0) * 0.05)
+
+                            local rawWaterResource = v.resourcevalue or 0
+                            if isNavalZoneReachable and (v.status == 'Contested' or v.status == 'Hostile') then
+                                totalContestedNaval = totalContestedNaval + 1
+                                if rawWaterResource > 0 then
+                                    totalContestedWaterIncome = totalContestedWaterIncome + rawWaterResource
+                                end
+                            end
+
+                            navalData.coastalBombardValue = coastalBombardValue
+                            navalData.coastalRaidValue = coastalRaidValue
+                            navalData.coastalDefenseValue = coastalDefenseValue
+
+                            -- Calculate Static Scores
+                            -- Control Score: Driven by combat frontline, shore bombardment leverage, choke control, and shipyard blockade
+                            v.staticcontrolscore = (
+                                ((1.0 - enemyDistValue) * weightTable.naval.enemyDistanceWeight) +
+                                ((1.0 - homePathDist) * weightTable.naval.homeDistanceWeight) +
+                                (controlValue * weightTable.naval.zoneStatusWeight) +
+                                (coastalBombardValue * weightTable.naval.bombardWeight) +
+                                (coastalDefenseValue * weightTable.naval.defenseWeight) +
+                                (isFrontlineNode * weightTable.naval.frontlineWeight) +
+                                (chokeBonus * weightTable.naval.navalChokeWeight) +
+                                (enemyFleetPresence * weightTable.naval.enemyThreatOpportunity) +
+                                (enemyNavalStruct * 1.5) +
+                                (resourceValueControl * weightTable.naval.incomeValueWeight)
+                            )
+
+                            -- Raid Score: Driven by angular flanking, deep penetration, frigate coastal targets, and avoiding fleet clashes
+                            v.staticraidscore = (
+                                ((1.0 - enemyDistValue) * weightTable.naval.raidEnemyDistWeight) +
+                                (homePathDist * weightTable.naval.raidHomeDistWeight) +
+                                (zoneFlankRaidBonus * weightTable.naval.raidFlankWeight) +
+                                (coastalRaidValue * weightTable.naval.raidBombardWeight) +
+                                (resourceValueRaid * weightTable.naval.raidIncomeWeight) -
+                                (isFrontlineNode * weightTable.naval.raidFrontlineBypassWeight) -
+                                (raidThreatPenalty * weightTable.naval.raidThreatAvoidanceWeight)
+                            )
+
+                            -- Defense Score: Driven by defending friendly coast, bases, and naval yards
+                            v.staticdefensescore = (
+                                (coastalDefenseValue * weightTable.naval.defenseBaseWeight) +
+                                ((1.0 - homePathDist) * weightTable.naval.defenseHomeDistWeight) +
+                                ((v.friendlyantinavythreat or 0) * weightTable.naval.defenseNavyThreatWeight)
+                            )
+
+                            if debugFocusZoneID then
+                                self.VisualDebugData = self.VisualDebugData or {}
+                                if v.pos then
+                                    self.VisualDebugData[id] = {
+                                        pos = v.pos,
+                                        controlRadius = math.max(1, v.staticcontrolscore * 4),
+                                        raidRadius = math.max(1, v.staticraidscore * 4),
+                                        parentPos = nil
+                                    }
+                                end
+                            end
+                        end
+
+                        self.NavalContestedCount = totalContestedNaval
+                        self.NavalBombardmentCount = totalBombardmentOpportunities
+                        self.NavalCoastalThreatCount = totalCoastalThreats
+                        self.NavalContestedIncome = totalContestedWaterIncome
+                        --LOG('totalContestedNaval: ' .. totalContestedNaval .. ', totalBombardmentOpportunities: ' .. totalBombardmentOpportunities .. ', totalCoastalThreats: ' .. totalCoastalThreats .. ', totalContestedWaterIncome: ' .. totalContestedWaterIncome)
+                    end
                 elseif zoneType == 'Air' then
                     zones = aiBrain.Zones.Land.zones
                     -- 1. BFS PHASE: Path-Distance Mapping
@@ -1942,17 +2214,17 @@ IntelManager = Class {
 
 
             local zoneOwner = v.control or 'None'
-            --LOG(string.format("RNGLOG | Zone: %s | Owner: %s | DistWeight: %.2f | DistVal: %.4f", v.id, tostring(zoneOwner), weights.zoneDistanceWeight or 0, distanceValue))
+            --LOG(string.format("RNGLOG | Zone: %s | Owner: %s | DistWeight: %.2f | DistVal: %.4f | Position : %s", v.id, tostring(zoneOwner), weights.zoneDistanceWeight or 0, distanceValue, repr(v.pos)))
             -- 5. Final Calculation
             local finalScore = baseScore + 
                 (threatValue * weights.threatOpportunityWeight) -
                 (distanceValue * weights.zoneDistanceWeight) -
                 (zonePressureValue * weights.zonePressureWeight)
 
-            if not bestScore or finalScore > (bestScore - 0.5) then
-                --LOG(string.format("RNG_ZONE_DECISION: Plat=%s | Zone=%s | Final=%.2f | Base=%.2f | Opp=%.2f | DistP=%.4f | PressP=%.4f | Stab=%.1f | Status=%s", 
-                    --platoon.BuilderName or "Unk", v.id, finalScore, baseScore, (threatValue * weights.threatOpportunityWeight), (distanceValue * weights.zoneDistanceWeight), (zonePressureValue * weights.zonePressureWeight), currentStab, v.status or "None"))
-            end
+            --if not bestScore or finalScore > (bestScore - 0.5) then
+            --    LOG(string.format("RNG_ZONE_DECISION: Plat=%s | Zone=%s | Final=%.2f | Base=%.2f | Opp=%.2f | DistP=%.4f | PressP=%.4f | Stab=%.1f | Status=%s", 
+            --        platoon.BuilderName or "Unk", v.id, finalScore, baseScore, (threatValue * weights.threatOpportunityWeight), (distanceValue * weights.zoneDistanceWeight), (zonePressureValue * weights.zonePressureWeight), currentStab, v.status or "None"))
+            --end
 
             if zonetype == 'aadefense' then
                 local saturationPenalty = RUtils.GetAASaturationPenalty(v)
@@ -2011,7 +2283,6 @@ IntelManager = Class {
             end
             ]]
             
-    
             if not bestScore or finalScore > bestScore then
                 bestScore = finalScore
                 bestZone = v
@@ -2058,6 +2329,7 @@ IntelManager = Class {
         --    self.VisualDebugData[bestZone.id].lastSelectionType = zonetype
         --    self.VisualDebugData[bestZone.id].selectionExpiry = GetGameTimeSeconds() + 15.0
         --end
+        --LOG('BestZone id '..tostring(bestZone.id)..' pos '..repr(bestPos)..' score '..tostring(bestScore)..' minThreshold '..tostring(minThreshold))
         return bestZone.id, bestPos
     end,
 
@@ -3303,7 +3575,8 @@ IntelManager = Class {
             else
                 --LOG("Team is tightly packed; no real spread.")
             end
-            if not aiBrain.BrainIntel.PlayerRole.AirPlayer and not aiBrain.BrainIntel.PlayerRole.SpamPlayer and (aiBrain.MapSize > 10 and aiBrain.MapWaterRatio > 0.35 or aiBrain.MapSize <= 10 and aiBrain.MapWaterRatio > 0.60) then
+            if not aiBrain.BrainIntel.PlayerRole.AirPlayer and not aiBrain.BrainIntel.PlayerRole.SpamPlayer
+                and aiBrain.BrainIntel.NavalBaseLabels and aiBrain.BrainIntel.NavalBaseLabelCount > 0 then
                 local navalRestricted = false
                 if not table.empty(ScenarioInfo.Options.RestrictedCategories) then
                     for _, v in ScenarioInfo.Options.RestrictedCategories do
@@ -3314,34 +3587,57 @@ IntelManager = Class {
                     end
                 end
                 if not navalRestricted then
-                    local navalPlayer
                     local alreadySelected = false
                     for _, v in RNGAIGLOBALS.PlayerRoles[teamReference] do
                         if v == 'NavalPlayer' then
-                            --LOG('Naval Player already exist in team '..tostring(repr(RNGAIGLOBALS.PlayerRoles[teamReference])))
                             alreadySelected = true
                             break
                         end
                     end
                     if not alreadySelected then
-                        if aiBrain.BrainIntel.NavalBaseLabels and aiBrain.BrainIntel.NavalBaseLabelCount > 0 then
-                            -- Check if any enemy start location has a matching water label
-                            for _, b in aiBrain.EnemyIntel.EnemyStartLocations do
-                                for label, data in aiBrain.BrainIntel.NavalBaseLabels do
-                                    if b.WaterLabels[label] and data.State == "Confirmed" then
-                                        navalPlayer = true
-                                        break
-                                    end
+                        -- Determine the NavalValue floor threshold scaled by map size.
+                        -- Small maps have fewer mass points so use a lower bar.
+                        local navalValueThreshold
+                        if aiBrain.MapSize >= 20 then
+                            navalValueThreshold = 500
+                        elseif aiBrain.MapSize >= 10 then
+                            navalValueThreshold = 300
+                        else
+                            navalValueThreshold = 150
+                        end
+                        --LOG('*AI-RNG NavalPlayer ['..tostring(aiBrain.Nickname)..']: MapSize='..tostring(aiBrain.MapSize)..' MapWaterRatio='..tostring(aiBrain.MapWaterRatio)..' NavalBaseLabelCount='..tostring(aiBrain.BrainIntel.NavalBaseLabelCount)..' Threshold='..tostring(navalValueThreshold))
+
+                        -- Base score from map-wide naval marker coverage value.
+                        local navalBenefitScore = aiBrain.EnemyIntel.NavalValue or 0
+                        --LOG('*AI-RNG NavalPlayer ['..tostring(aiBrain.Nickname)..']: BaseNavalValue='..tostring(navalBenefitScore))
+
+                        -- Log the state of all known naval base labels for diagnosis.
+
+                        -- Bonus: for each confirmed shared water label, add weight per enemy
+                        -- player who can reach it. More enemies on water = higher urgency.
+                        local sharedLabelFound = false
+                        for _, b in aiBrain.EnemyIntel.EnemyStartLocations do
+                            for label, data in aiBrain.BrainIntel.NavalBaseLabels do
+                                if b.WaterLabels[label] and data.State == "Confirmed" then
+                                    sharedLabelFound = true
+                                    local enemyBonus = (data.EnemyPlayerCount or 0) * (navalValueThreshold * 0.25)
+                                    --LOG('*AI-RNG NavalPlayer ['..tostring(aiBrain.Nickname)..']: SharedLabel='..tostring(label)..' EnemyPlayerCount='..tostring(data.EnemyPlayerCount or 0)..' EnemyBonus='..tostring(enemyBonus))
+                                    -- Each enemy player on this label adds a bonus proportional
+                                    -- to the threshold so that multi-enemy naval routes
+                                    -- push past the threshold more easily.
+                                    navalBenefitScore = navalBenefitScore + enemyBonus
+                                    break
                                 end
-                                if navalPlayer then break end
                             end
-            
-                            if navalPlayer then
-                                aiBrain.BrainIntel.PlayerRole.NavalPlayer = true
-                                RNGAIGLOBALS.PlayerRoles[teamReference][selfIndex] = 'NavalPlayer'
-                                aiBrain:EvaluateDefaultProductionRatios()
-                                return
-                            end
+                            if sharedLabelFound then break end
+                        end
+
+                        --LOG('*AI-RNG NavalPlayer ['..tostring(aiBrain.Nickname)..']: FinalScore='..tostring(navalBenefitScore)..' Threshold='..tostring(navalValueThreshold)..' SharedLabelFound='..tostring(sharedLabelFound)..' -> '..(sharedLabelFound and navalBenefitScore >= navalValueThreshold and 'ASSIGNED' or 'NOT ASSIGNED'))
+                        if sharedLabelFound and navalBenefitScore >= navalValueThreshold then
+                            aiBrain.BrainIntel.PlayerRole.NavalPlayer = true
+                            RNGAIGLOBALS.PlayerRoles[teamReference][selfIndex] = 'NavalPlayer'
+                            aiBrain:EvaluateDefaultProductionRatios()
+                            return
                         end
                     end
                 end
@@ -5807,6 +6103,11 @@ IntelManager = Class {
             self.CurrentControlledZones = controlledZones
             self.ZoneSecurityDepth = zoneSecurityDepth
             self.ZonePathSecurity = zonePathSecurity
+        elseif layer == 'Naval' then
+            self.CurrentNavalFrontLineZones = frontlineZones
+            self.CurrentNavalControlledZones = controlledZones
+            self.NavalZoneSecurityDepth = zoneSecurityDepth
+            self.NavalZonePathSecurity = zonePathSecurity
         end
         return controlledZones, frontlineZones, zoneSecurityDepth, zonePathSecurity
     end,
@@ -6201,12 +6502,17 @@ function InitialNavalAttackCheck(aiBrain)
     -- center = the x,y values for the position of the mass extractor. e.g {x = 0, y = 0} 
     
     aiBrain.IntelManager:WaitForMarkerInfection()
+    aiBrain.IntelManager:WaitForZoneInitialization()
     while not aiBrain.IntelManager.MapIntelStats.ScoutLocationsBuilt do
         LOG('*AI:RNG NavalAttackCheck is waiting for ScoutLocations to be built')
         coroutine.yield(20)
     end
     if aiBrain.MapWaterRatio > 0.10 then
         local factionIndex = aiBrain:GetFactionIndex()
+        local navalZoneGroup = aiBrain.Zones and aiBrain.Zones.Naval
+        local navalZones = navalZoneGroup and navalZoneGroup.zones
+        local landZoneGroup = aiBrain.Zones and aiBrain.Zones.Land
+        local landZones = landZoneGroup and landZoneGroup.zones
         local navalMarkers = {}
         local frigateMarkers = {}
         local markers = GetMarkersRNG()
@@ -6244,6 +6550,23 @@ function InitialNavalAttackCheck(aiBrain)
                             EnemyPlayerCount = 0
                         }
                     end
+                    if navalZones then
+                        local nZoneID = MAP:GetZoneID({v[1], v[2], v[3]}, aiBrain.Zones.Naval.index)
+                        local nZone = nZoneID and navalZones[nZoneID]
+                        if nZone then
+                            local nNavalData = nZone.navaldata
+                            if nNavalData then 
+                                local dx = aiBrain.BrainIntel.StartPos[1] - v[1]
+                                local dz = aiBrain.BrainIntel.StartPos[3] - v[3]
+                                local posDist = dx * dx + dz * dz
+                                nNavalData.protectsHome = true
+                                if not nNavalData.homeWaterDistSq or posDist < nNavalData.homeWaterDistSq then
+                                    nNavalData.homeWaterDistSq = posDist
+                                    nNavalData.homeWaterPosition = {v[1], v[2], v[3]}
+                                end
+                            end
+                        end
+                    end
                 end
                 for _, b in aiBrain.EnemyIntel.EnemyStartLocations do
                     local enemyStartAdded = {}
@@ -6267,6 +6590,29 @@ function InitialNavalAttackCheck(aiBrain)
                                     local posDist = dx * dx + dz * dz
                                     if not maxNavalStartRange or posDist < maxNavalStartRange then
                                         maxNavalStartRange = posDist
+                                    end
+
+                                    if navalZones then
+                                        local nZoneID = MAP:GetZoneID({v[1], v[2], v[3]}, aiBrain.Zones.Naval.index)
+                                        local nZone = nZoneID and navalZones[nZoneID]
+                                        if nZone then
+                                            local nNavalData = nZone.navaldata
+                                            if nNavalData then 
+                                                nNavalData.enemyStartAccess = nNavalData.enemyStartAccess or {}
+                                                local enemyArmyIdx = b.ArmyIndex or b.Index or 0
+                                                local hasLOS = not aiBrain:CheckBlockingTerrain({v[1], (GetSurfaceHeight(v[1], v[3]) + 2.0), v[3]}, b.Position, 'low')
+                                                local canBombard = hasLOS and (posDist <= maxRadius * maxRadius)
+                                                if not nNavalData.enemyStartAccess[enemyArmyIdx] or posDist < nNavalData.enemyStartAccess[enemyArmyIdx].distSq then
+                                                    nNavalData.enemyStartAccess[enemyArmyIdx] = {
+                                                        position = b.Position,
+                                                        waterPosition = {v[1], v[2], v[3]},
+                                                        distSq = posDist,
+                                                        hasLineOfSight = hasLOS,
+                                                        canBombard = canBombard,
+                                                    }
+                                                end
+                                            end
+                                        end
                                     end
                                 end
                             end
@@ -6295,6 +6641,25 @@ function InitialNavalAttackCheck(aiBrain)
                                     local posDist = dx * dx + dz * dz
                                     if not maxNavalStartRange or posDist < maxNavalStartRange then
                                         maxNavalStartRange = posDist
+                                    end
+
+                                    if navalZones then
+                                        local nZoneID = MAP:GetZoneID({v[1], v[2], v[3]}, aiBrain.Zones.Naval.index)
+                                        local nZone = nZoneID and navalZones[nZoneID]
+                                        if nZone then
+                                            local nNavalData = nZone.navaldata
+                                            if nNavalData then 
+                                                nNavalData.allyStartAccess = nNavalData.allyStartAccess or {}
+                                                local allyArmyIdx = b.ArmyIndex or b.Index or 0
+                                                if not nNavalData.allyStartAccess[allyArmyIdx] or posDist < nNavalData.allyStartAccess[allyArmyIdx].distSq then
+                                                    nNavalData.allyStartAccess[allyArmyIdx] = {
+                                                        position = b.Position,
+                                                        waterPosition = {v[1], v[2], v[3]},
+                                                        distSq = posDist,
+                                                    }
+                                                end
+                                            end
+                                        end
                                     end
                                 end
                             end
@@ -6360,6 +6725,46 @@ function InitialNavalAttackCheck(aiBrain)
                                         table.insert( frigateMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], m[2], m[3]}, Distance = posDist, MarkerValue = markerValue, LastRaidTime = 0 } )
                                         valueValidated = true
                                         totalMarkerValue = totalMarkerValue + markerValue
+
+                                        if navalZones and landZones then
+                                            local nZoneID = MAP:GetZoneID({m[1], m[2], m[3]}, aiBrain.Zones.Naval.index)
+                                            local lZoneID = v.zoneid or MAP:GetZoneID(v.position, aiBrain.Zones.Land.index)
+                                            local nZone = nZoneID and navalZones[nZoneID]
+                                            local lZone = lZoneID and landZones[lZoneID]
+                                            if nZone and lZone then
+                                                local lNavalData = lZone.navaldata
+                                                local nNavalData = nZone.navaldata
+                                                if nNavalData and lNavalData then 
+                                                    nNavalData.coastalLandZones = nZone.coastalLandZones or {}
+                                                    if not nNavalData.coastalLandZones[lZoneID] then
+                                                        nNavalData.coastalLandZones[lZoneID] = {
+                                                            zone = lZone,
+                                                            bombardableMassMarkers = {},
+                                                            minDistSq = posDist,
+                                                            bestRaidPos = {m[1], m[2], m[3]},
+                                                            hasLineOfSight = true,
+                                                            isFrigateReachable = true,
+                                                        }
+                                                    else
+                                                        nNavalData.coastalLandZones[lZoneID].isFrigateReachable = true
+                                                        if posDist < nNavalData.coastalLandZones[lZoneID].minDistSq then
+                                                            nNavalData.coastalLandZones[lZoneID].minDistSq = posDist
+                                                            nNavalData.coastalLandZones[lZoneID].bestRaidPos = {m[1], m[2], m[3]}
+                                                        end
+                                                    end
+                                                    table.insert(nNavalData.coastalLandZones[lZoneID].bombardableMassMarkers, {
+                                                        position = v.position,
+                                                        name = v.name,
+                                                        raidPosition = {m[1], m[2], m[3]},
+                                                        distanceSq = posDist,
+                                                        isFrigate = true,
+                                                    })
+                                                    lNavalData.coastalNavalZones = lZone.coastalNavalZones or {}
+                                                    lNavalData.coastalNavalZones[nZoneID] = true
+                                                    lNavalData.isCoastal = true
+                                                end
+                                            end
+                                        end
                                     else
                                         markerCountBlocked = markerCountBlocked + 1
                                     end
@@ -6393,6 +6798,43 @@ function InitialNavalAttackCheck(aiBrain)
                                         markerCountNotBlocked = markerCountNotBlocked + 1
                                         table.insert( navalMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], m[2], m[3]}, Distance = posDist, MarkerValue = markerValue } )
                                         totalMarkerValue = totalMarkerValue + markerValue
+
+                                        if navalZones and landZones then
+                                            local nZoneID = MAP:GetZoneID({m[1], m[2], m[3]}, aiBrain.Zones.Naval.index)
+                                            local lZoneID = v.zoneid or MAP:GetZoneID(v.position, aiBrain.Zones.Land.index)
+                                            local nZone = nZoneID and navalZones[nZoneID]
+                                            local lZone = lZoneID and landZones[lZoneID]
+                                            if nZone and lZone then
+                                                local lNavalData = lZone.navaldata
+                                                local nNavalData = nZone.navaldata
+                                                if nNavalData and lNavalData then 
+                                                    nNavalData.coastalLandZones = nNavalData.coastalLandZones or {}
+                                                    if not nNavalData.coastalLandZones[lZoneID] then
+                                                        nNavalData.coastalLandZones[lZoneID] = {
+                                                            zone = lZone,
+                                                            bombardableMassMarkers = {},
+                                                            minDistSq = posDist,
+                                                            bestRaidPos = {m[1], m[2], m[3]},
+                                                            hasLineOfSight = true,
+                                                            isFrigateReachable = false,
+                                                        }
+                                                    elseif posDist < nNavalData.coastalLandZones[lZoneID].minDistSq then
+                                                        nNavalData.coastalLandZones[lZoneID].minDistSq = posDist
+                                                        nNavalData.coastalLandZones[lZoneID].bestRaidPos = {m[1], m[2], m[3]}
+                                                    end
+                                                    table.insert(nNavalData.coastalLandZones[lZoneID].bombardableMassMarkers, {
+                                                        position = v.position,
+                                                        name = v.name,
+                                                        raidPosition = {m[1], m[2], m[3]},
+                                                        distanceSq = posDist,
+                                                        isFrigate = false,
+                                                    })
+                                                    lNavalData.coastalNavalZones = lNavalData.coastalNavalZones or {}
+                                                    lNavalData.coastalNavalZones[nZoneID] = true
+                                                    lNavalData.isCoastal = true
+                                                end
+                                            end
+                                        end
                                     else
                                         markerCountBlocked = markerCountBlocked + 1
                                     end
@@ -6406,6 +6848,39 @@ function InitialNavalAttackCheck(aiBrain)
                 else
                     if not aiBrain.MassMarkersInWater then
                         aiBrain.MassMarkersInWater = true
+                    end
+                end
+            end
+            if navalZones and landZones then
+                local maxCoastalProximitySq = 160 * 160 -- 25600
+                for _, nZone in navalZones do
+                    local nNavalData = nZone.navaldata
+                    if nNavalData then
+                        nNavalData.coastalLandZones = nNavalData.coastalLandZones or {}
+                        --LOG('Naval Zone '..tostring(nZone.id)..' looks like '..tostring(repr(nNavalData.coastalLandZones))..' coastal land zones')
+                        for _, lZone in landZones do
+                            local lNavalData = lZone.navaldata
+                            if lNavalData then
+                                local dx = nZone.pos[1] - lZone.pos[1]
+                                local dz = nZone.pos[3] - lZone.pos[3]
+                                local dSq = dx * dx + dz * dz
+                                if dSq <= maxCoastalProximitySq then
+                                    if not nNavalData.coastalLandZones[lZone.id] then
+                                        nNavalData.coastalLandZones[lZone.id] = {
+                                            zone = lZone,
+                                            bombardableMassMarkers = {},
+                                            minDistSq = dSq,
+                                            isProximity = true,
+                                            bestRaidPos = nZone.pos,
+                                        }
+                                    end
+                                    lNavalData.coastalNavalZones = lNavalData.coastalNavalZones or {}
+                                    lNavalData.coastalNavalZones[nZone.id] = true
+                                    lNavalData.isCoastal = true
+                                    --LOG('Land Zone '..tostring(lZone.id)..' is coastal to Naval Zone '..tostring(nZone.id)..' with distance squared of '..tostring(dSq))
+                                end
+                            end
+                        end
                     end
                 end
             end
@@ -7106,6 +7581,7 @@ LastKnownThread = function(aiBrain)
             local enemyMexes = {}
             local enemyZoneThreats = {}
             local mexcount = 0
+            local currentWallCount = 0
             local eunits=aiBrain:GetUnitsAroundPoint((categories.NAVAL + categories.AIR + categories.LAND + categories.STRUCTURE) - categories.INSIGNIFICANTUNIT, {0,0,0}, math.max(ScenarioInfo.size[1],ScenarioInfo.size[2])*1.5, 'Enemy')
             for _,v in eunits do
                 if not v or v.Dead then continue end
@@ -7283,6 +7759,10 @@ LastKnownThread = function(aiBrain)
                                                 enemyBuildStrength[v.Army].NavalBuildPower = enemyBuildStrength[v.Army].NavalBuildPower + buildPower
                                             end
                                         end
+                                    elseif unitCat.WALL then
+                                        currentWallCount = currentWallCount + 1
+                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] = im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id] or {}
+                                        im.MapIntelGrid[gridXID][gridZID].EnemyUnits[id].type = 'wall'
                                     end
                                 end
                             end
@@ -7316,6 +7796,7 @@ LastKnownThread = function(aiBrain)
                 end
             end
             im.EnemyBuildStrength = enemyBuildStrength
+            im.EnemyWallCount = currentWallCount
             coroutine.yield(20)
             time=GetGameTimeSeconds()
         end

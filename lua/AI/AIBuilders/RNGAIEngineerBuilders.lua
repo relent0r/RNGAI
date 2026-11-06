@@ -210,7 +210,7 @@ BuilderGroup {
         Priority = 0,
         PriorityFunction = ReclaimBasedFactoryPriority,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, {'LAND', 'ANTISURFACEAIR'} }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 2, categories.LAND * categories.ENGINEER } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
             { UCBC, 'HaveLessThanUnitsWithCategory', { 30, categories.ENGINEER * categories.TECH1 - categories.COMMAND } },
@@ -237,7 +237,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1BuildEngineer',
         Priority = 879,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, {'LAND', 'ANTISURFACEAIR'} }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER - categories.COMMAND }},
             { MIBC, 'ReclaimablesAvailableAtBase', {'LocationType'}},
@@ -284,7 +284,7 @@ BuilderGroup {
         --FactoryBuilderType = 'Category',
         Priority = 775,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, {'LAND', 'ANTISURFACEAIR'} }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 2, categories.ENGINEER - categories.COMMAND }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.35}},
@@ -425,7 +425,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 840, -- low factory priority
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, {'LAND', 'ANTISURFACEAIR'} }},
             { UCBC, 'GreaterThanFactoryCountRNG', { 0, categories.FACTORY * categories.TECH2}},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.80, 0.35}},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 3, categories.ENGINEER * categories.TECH2 - categories.COMMAND }},
@@ -574,7 +574,7 @@ BuilderGroup {
         PriorityFunction = ActiveExpansion,
         Priority = 0,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, {'LAND', 'ANTISURFACEAIR'} }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 2, categories.ENGINEER - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -599,7 +599,6 @@ BuilderGroup {
         PriorityFunction = DynamicExpansionEngineerPriority,
         Priority = 850,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
             { UCBC, 'LocationDefenseCheck', { 'LocationType', 2, categories.ANTIAIR, 'AntiSurfaceAirUnits' } },
             { MABC, 'CanBuildOnMassDistanceRNG', { 'LocationType', 0, 60, false, -1000, 0, 'AntiSurface', 1 }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
@@ -613,7 +612,6 @@ BuilderGroup {
         Priority = 400, -- low factory priority
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.4, 0.6} },
-            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER - categories.COMMAND }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech1' } },
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -626,7 +624,7 @@ BuilderGroup {
         PriorityFunction = DynamicExpansionEngineerPriority,
         Priority = 900,
         BuilderConditions = {
-            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, {'LAND', 'ANTISURFACEAIR'} }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.LAND * categories.ENGINEER } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH1 - categories.COMMAND }},
             { MIBC, 'ReclaimablesAvailableAtBase', {'LocationType'}},
@@ -639,6 +637,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2BuildEngineer',
         Priority = 890, -- low factory priority
         BuilderConditions = {
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, {'ANTISURFACEAIR'} }},
             { UCBC, 'UnitsLessAtLocationRNG', { 'LocationType', 1, categories.ENGINEER * (categories.TECH2 + categories.TECH3) - categories.COMMAND } }, -- Build engies until we have 2 of them.
             { TBC, 'GreaterThanAlliedThreatInZone', { 'LocationType', 15 }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },
@@ -652,7 +651,7 @@ BuilderGroup {
         Priority = 450, -- low factory priority
         BuilderConditions = {
             { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 1.0, 0.9} },
-            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, 'LAND' }},
+            { UCBC, 'EnemyUnitsLessAtRestrictedRNG', { 'LocationType', 1, {'LAND', 'ANTISURFACEAIR'} }},
             { UCBC, 'LocationFactoriesBuildingLess', { 'LocationType', 1, categories.ENGINEER * categories.TECH2 } },
             { UCBC, 'PoolLessAtLocation', {'LocationType', 1, categories.ENGINEER * categories.TECH2 }},
             { UCBC, 'EngineerCapCheck', { 'LocationType', 'Tech2' } },

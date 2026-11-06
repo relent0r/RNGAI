@@ -370,18 +370,20 @@ function ScoutsRequiredForBase(aiBrain, locationType, baseRatio, scoutCategories
     return false
 end
 
-function DisableOnStrategy(aiBrain, strategyTable)
+function DisableOnStrategy(aiBrain, strategyTable, teamPlayerCount)
+    teamPlayerCount = teamPlayerCount or 1
     for _,strategy in strategyTable do
-        if aiBrain.BrainIntel.PlayerStrategy[strategy] then
+        if aiBrain.BrainIntel.PlayerStrategy[strategy] and aiBrain.BrainIntel.AllyCount > teamPlayerCount then
             return false
         end
     end
     return true
 end
 
-function DisableOnRole(aiBrain, roleTable)
+function DisableOnRole(aiBrain, roleTable, teamPlayerCount)
+    teamPlayerCount = teamPlayerCount or 1
     for _,role in roleTable do
-        if aiBrain.BrainIntel.PlayerRole[role] then
+        if aiBrain.BrainIntel.PlayerRole[role] and aiBrain.BrainIntel.AllyCount > teamPlayerCount then
             return false
         end
     end

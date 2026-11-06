@@ -1634,7 +1634,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                                             continue
                                         end
                                     end
-                                    local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
+                                    local numShields = GetNumUnitsAroundPoint(aiBrain, CategoriesShield, unitPos, 46, 'Enemy')
                                     if not retUnit or numShields < targetShields or (numShields == targetShields and distance < retDistance) then
                                         retUnit = unit
                                         retDistance = distance
@@ -1693,7 +1693,7 @@ function AIFindBrainTargetInRangeRNG(aiBrain, position, platoon, squad, maxRange
                                     continue
                                 end
                             end
-                            local numShields = aiBrain:GetNumUnitsAroundPoint(CategoriesShield, unitPos, 46, 'Enemy')
+                            local numShields = GetNumUnitsAroundPoint(aiBrain, CategoriesShield, unitPos, 46, 'Enemy')
                             local dx = unitPos[1] - position[1]
                             local dz = unitPos[3] - position[3]
                             local distance = dx * dx + dz * dz
@@ -1958,6 +1958,10 @@ function AIFindBrainTargetInCloseRangeRNG(aiBrain, platoon, position, squad, max
         end
         if not TargetSearchCategory then
             WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: TargetSearchCategory is empty '..repr(platoon.BuilderName)..' '..repr(platoon.PlanName))
+            return false
+        end
+        if IsDestroyed(platoon) then
+            WARN('* AI-RNG: AIFindNearestCategoryTargetInCloseRange: platoon is destroyed')
             return false
         end
         TargetsInRange = GetUnitsAroundPoint(aiBrain, targetQueryCategory, position, range, 'Enemy')
@@ -4432,7 +4436,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                 local pt = spokePoints[i]
                 if not pt.Enabled then continue end
 
-                local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
+                local enemyUnits = GetNumUnitsAroundPoint(aiBrain, categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
                 if enemyUnits == 0 then
                     defensivePoint = pt.Position
                     break
@@ -4514,7 +4518,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                     local pt = spokePoints[i]
                     if not pt.Enabled then continue end
 
-                    local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
+                    local enemyUnits = GetNumUnitsAroundPoint(aiBrain, categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
                     if enemyUnits == 0 then
                         defensivePoint = pt.Position
                         break
@@ -4595,7 +4599,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                 local pt = spokePoints[i]
                 if not pt.Enabled then continue end
 
-                local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
+                local enemyUnits = GetNumUnitsAroundPoint(aiBrain, categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
                 if enemyUnits == 0 then
                     defensivePoint = pt.Position
                     break
@@ -4654,7 +4658,7 @@ GetDefensiveSpokePointRNG = function(aiBrain, baseLocation, pointTier, pointType
                 local pt = spokePoints[i]
                 if not pt.Enabled then continue end
 
-                local enemyUnits = aiBrain:GetNumUnitsAroundPoint(categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
+                local enemyUnits = GetNumUnitsAroundPoint(aiBrain, categories.LAND + categories.MOBILE, pt.Position, dangerRadiusCheck, 'Enemy')
                 if enemyUnits == 0 then
                     defensivePoint = pt.Position
                     break
@@ -8451,7 +8455,7 @@ function GetMobileLandExperimentalBuildPosition(aiBrain, basePos, radius, engPos
             local distFromBase = VDist3Sq(offset, basePos)
             if distFromBase < 625 or distFromBase > 2025 then continue end
 
-            local energyNearby = aiBrain:GetNumUnitsAroundPoint(categories.ENERGYPRODUCTION, offset, 8, 'Ally')
+            local energyNearby = GetNumUnitsAroundPoint(aiBrain, categories.ENERGYPRODUCTION, offset, 8, 'Ally')
             if energyNearby > 0 then continue end
 
             -- Check enemy proximity bias
@@ -8515,7 +8519,7 @@ function GetGenericMobileExperimentalBuildPosition(aiBrain, basePos)
             end
         end
 
-        local energyNearby = aiBrain:GetNumUnitsAroundPoint(categories.ENERGYPRODUCTION, pos, safeMinDistFromEnergy, 'Ally')
+        local energyNearby = GetNumUnitsAroundPoint(aiBrain, categories.ENERGYPRODUCTION, pos, safeMinDistFromEnergy, 'Ally')
         if energyNearby > 0 then
             continue
         end
@@ -8660,7 +8664,7 @@ function GetZoneIncomeValue(zone, zoneSelectionType, enemyStartClose, allyStartC
         rawResource = math.max(0, rawResource - 5.5)
     end
 
-    local resourceValueBonus = rawResource * 0.7
+    local resourceValueBonus = rawResource * 0.8
     local incomeScore = zone.zoneincome.selfincome * selfWeight +
         zone.zoneincome.allyincome * allyWeight +
         zone.zoneincome.enemyincome * enemyWeight +

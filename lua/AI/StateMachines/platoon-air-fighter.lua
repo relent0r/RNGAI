@@ -117,13 +117,18 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
             if not target or target.Dead then
                 for _, v in aiBrain.EnemyIntel.Experimental do
                     if v.object and not v.object.Dead then
-                        local unitCats = v.object.Blueprint.CategoriesHash
+                        local unit = v.object
+                        local unitCats = unit.Blueprint.CategoriesHash
                         if unitCats.AIR and not unitCats.STRUCTURE then
-                            local expPos = v.object:GetPosition()
-                            if expPos and GetThreatAtPosition(aiBrain, expPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir') < self.CurrentPlatoonThreatAntiAir
+                            local expPos = unit:GetPosition()
+                            local shieldProtectingUnit = RUtils.ShieldProtectingTargetRNG(aiBrain, unit, nil)
+                            local threatAtPos = GetThreatAtPosition(aiBrain, expPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')
+                            if shieldProtectingUnit then
+                                threatAtPos = threatAtPos + 150
+                            end
+                            if expPos and threatAtPos < self.CurrentPlatoonThreatAntiAir
                             or VDist2(expPos[1], expPos[3], self.Home[1], self.Home[3]) < math.min(self.BaseMilitaryArea, 200) then
-                                --LOG('FighterBehavior found experimental, threat at location is '..tostring(GetThreatAtPosition(aiBrain, expPos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir'))..' platoon threat is '..tostring(self.CurrentPlatoonThreatAntiAir))
-                                target = v.object
+                                target = unit
                                 break
                             end
                         end
@@ -131,9 +136,6 @@ AIPlatoonFighterBehavior = Class(AIPlatoonRNG) {
                 end
                 if not target or target.Dead then
                     target = RUtils.CheckHighPriorityTarget(aiBrain, nil, self, true, false, false, false, false, true)
-                    if target then
-                        --LOG('High priority target returned, threat at position '..tostring(GetThreatAtPosition(aiBrain, target:GetPosition(), aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiAir')))
-                    end
                 end
                 if not target or target.Dead then
                     --LOG('FighterBehavior DecideWhatToDo Check targets at max radius '..tostring(self.MaxRadius))

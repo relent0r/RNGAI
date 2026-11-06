@@ -292,11 +292,9 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                         self:ChangeState(self.CombatLoop)
                         return
                     end
-                    if not self.BuilderData.Position then
-                        --LOG('No self.BuilderData.Position in DecideWhatToDo HiPriority')
-                    end
                     --self:LogDebug(string.format('DecideWhatToDo high priority distant navigate'))
                     self.dest = self.BuilderData.Position
+                    self.targetcandidates = {target}
                     self:ChangeState(self.Navigating)
                     return
                 end
@@ -1174,16 +1172,11 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
 
                     -- Check attachment status
                     local allAttached = true
-                    local anyUnitInDanger = false
                     
                     for _, unit in units do
                         if not unit.Dead then
                             if not unit:IsUnitState('Attached') then
                                 allAttached = false
-                            end
-                            -- OPTIONAL: If units are being shot while waiting, maybe cancel?
-                            if unit:GetHealthPercent() < 0.8 then
-                                anyUnitInDanger = true
                             end
                         end
                     end
@@ -1196,10 +1189,25 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                     -- Check if the transport manager still has our request active
                     -- If the transport was killed, the manager likely removed the request
                     local manager = brain:GetPlatoonUniquelyNamed('TransportPool')
-                    if manager and not manager:GetRequestById(requestId) and not allAttached then
-                        -- Request disappeared but we aren't attached? Transport probably died.
-                        break 
+                    if manager then
+                        if not manager:GetRequestById(requestId) and not allAttached then
+                            -- Request disappeared but we aren't attached? Transport probably died.
+                            break 
+                        end
+                        if self.targetcandidates then
+                            local candidateCount = 0
+                            for _, candidate in self.targetcandidates do
+                                if candidate and not candidate.Dead then
+                                    candidateCount = candidateCount + 1
+                                end
+                            end
+                            if candidateCount == 0 then
+                                manager:RemoveRequest(requestId)
+                                break
+                            end
+                        end
                     end
+
 
                     timeout = timeout + 1
                     coroutine.yield(20) 
@@ -1268,6 +1276,7 @@ AIPlatoonBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
+            self:ChangeState(self.DecideWhatToDo)
             return
         end,
     },

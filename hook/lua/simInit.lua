@@ -28,8 +28,8 @@ end
 function ValidateModFilesRNG()
     local ModName = '* '..'RNGAI'
     local ModDirectory = 'RNGAI'
-    local Files = 141
-    local Bytes = 6595268
+    local Files = 142
+    local Bytes = 6659730
     LOG(''..ModName..': ['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] - Running from: '..debug.getinfo(1).source..'.')
     LOG(''..ModName..': ['..string.gsub(debug.getinfo(1).source, ".*\\(.*.lua)", "%1")..', line:'..debug.getinfo(1).currentline..'] - Checking directory /mods/ for '..ModDirectory..'...')
     local FilesInFolder = DiskFindFiles('/mods/', '*.*')

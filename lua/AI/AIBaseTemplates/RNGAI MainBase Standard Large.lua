@@ -56,7 +56,6 @@ BaseBuilderTemplate {
         --'RNGAI Perimeter Defenses Large',
         'RNGAI T2 Defense FormBuilders',
         'RNGAI Shield Builder',
-        'RNGAI Shields Upgrader',
         'RNGAI SMD Builders',
 
         -- Land Unit Builders --

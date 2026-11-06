@@ -200,9 +200,8 @@ RNGNavalResourceSet = Class(ZoneSet){
                     selfincome = 0,
                     allyincome = 0,
                     enemyincome = 0
-                }, 
-                reclaimmass=0,
-                eclaimenergy=0,  
+                },
+                navaldata = {},
                 defensespokes = false,
                 status = 'Unoccupied',
             })

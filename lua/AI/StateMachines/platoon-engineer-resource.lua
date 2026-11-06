@@ -1029,15 +1029,60 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
         ---@param self AIPlatoonEngineerBehavior
         Main = function(self)
             local eng = self.eng
-            local marker = self.BuilderData.Marker
-            if not marker then
-                --LOG('self.BuilderData.Marker is currently empty')
+            local aiBrain = self:GetBrain()
+            local completedMarker = self.BuilderData and self.BuilderData.Marker
+            if completedMarker then
+                StateUtils.RemoveFromZoneMarkersCache(self.ZoneMarkers, self.CurrentZoneIndex, completedMarker)
             end
-            if marker then
-                StateUtils.RemoveFromZoneMarkersCache(self.ZoneMarkers, self.CurrentZoneIndex, marker)
+            self:LogDebug(string.format('Engineer Build Completed'))
+
+            local currentZone = self.CurrentZoneIndex and self.ZoneMarkers[self.CurrentZoneIndex]
+            if currentZone and currentZone.ResourceMarkers and (not eng.EngineerBuildQueue or table.empty(eng.EngineerBuildQueue)) then
+                self:LogDebug(string.format('Engineer has current zone'))
+                local engineerPosition = eng:GetPosition()
+                local maximumFollowUpDistanceSq = 100 * 100
+                local closestMarker
+                local closestDistanceSq
+                local extractorBlueprints = StateUtils.GetBuildableUnitId(aiBrain, eng, categories.MASSEXTRACTION * categories.STRUCTURE)
+                local extractorBuildId = extractorBlueprints and extractorBlueprints[1]
+
+                if extractorBuildId then
+                    self:LogDebug(string.format('Engineer has extractor build id'))
+                    for _, markerEntry in currentZone.ResourceMarkers do
+                        local candidateMarker = markerEntry.Marker
+                        if candidateMarker and candidateMarker ~= completedMarker
+                            and aiBrain:CanBuildStructureAt(extractorBuildId, candidateMarker.position)
+                            and NavUtils.CanPathTo(self.MovementLayer, engineerPosition, candidateMarker.position)
+                            and StateUtils.CanReallocateMarker(eng, candidateMarker) then
+                            local distanceSq = VDist2Sq(engineerPosition[1], engineerPosition[3], candidateMarker.position[1], candidateMarker.position[3])
+                            if distanceSq <= maximumFollowUpDistanceSq and (not closestDistanceSq or distanceSq < closestDistanceSq) then
+                                closestMarker = candidateMarker
+                                closestDistanceSq = distanceSq
+                            end
+                        end
+                    end
+                end
+
+                if closestMarker then
+                    local position = closestMarker.position
+                    local borderWarning = position[1] - playableArea[1] <= 8 or position[1] >= playableArea[3] - 8
+                        or position[3] - playableArea[2] <= 8 or position[3] >= playableArea[4] - 8
+                    eng.EngineerBuildQueue = eng.EngineerBuildQueue or {}
+                    RNGINSERT(eng.EngineerBuildQueue, {extractorBuildId, {position[1], position[3], 0}, false, position, borderWarning, false, closestMarker})
+                    StateUtils.ReserveMassMarker(eng, closestMarker)
+                    self.BuilderData = self.BuilderData or {}
+                    self.BuilderData.Marker = closestMarker
+                    if borderWarning then
+                        IssueBuildMobile({eng}, {position[1], 0, position[3]}, extractorBuildId, {})
+                    else
+                        aiBrain:BuildStructure(eng, extractorBuildId, {position[1], position[3], 0}, false)
+                    end
+                    self:LogDebug(string.format('Building nearby extractor %s after completing current marker', tostring(closestMarker.name)))
+                    self:ChangeState(self.Constructing)
+                    return
+                end
             end
             coroutine.yield(10)
-            local aiBrain = self:GetBrain()
             local radarRequestExists = aiBrain.IntelManager:IsExistingStructureRequestPresent(self:GetPlatoonPosition(), 45, 'RADAR')
             if radarRequestExists then
                 local radarRequestPos = aiBrain.IntelManager:AssignEngineerToStructureRequestNearPosition(eng, self:GetPlatoonPosition(), 45, 'RADAR')

@@ -7,6 +7,7 @@ local RNGMAX = math.max
 local RNGGETN = table.getn
 local GetUnitsAroundPoint = moho.aibrain_methods.GetUnitsAroundPoint
 local GetThreatAtPosition = moho.aibrain_methods.GetThreatAtPosition
+local GetNumUnitsAroundPoint = moho.aibrain_methods.GetNumUnitsAroundPoint
 
 ---@class AIPlatoonBehavior : AIPlatoon
 ---@field RetreatCount number 
@@ -378,7 +379,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                             if not platoonPosition then
                                 return
                             end
-                                if aiBrain:GetNumUnitsAroundPoint((categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND - categories.SCOUT, platoonPosition, 45, 'Enemy') > 0 then
+                                if GetNumUnitsAroundPoint(aiBrain, (categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND - categories.SCOUT, platoonPosition, 45, 'Enemy') > 0 then
                                     local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 45, (categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND - categories.SCOUT, {categories.ENGINEER - categories.COMMAND, categories.MASSEXTRACTION, categories.MOBILE * categories.LAND - categories.COMMAND - categories.SCOUT}, false, true)
                                     if target and not target.Dead then
                                         self.BuilderData = {
@@ -413,7 +414,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                 if not platoonPosition then
                                     return
                                 end
-                                    if aiBrain:GetNumUnitsAroundPoint((categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND - categories.SCOUT, platoonPosition, 45, 'Enemy') > 0 then
+                                    if GetNumUnitsAroundPoint(aiBrain, (categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND - categories.SCOUT, platoonPosition, 45, 'Enemy') > 0 then
                                         local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 45, (categories.MOBILE * categories.LAND + categories.MASSEXTRACTION) - categories.COMMAND - categories.SCOUT, {categories.ENGINEER - categories.COMMAND, categories.MASSEXTRACTION, categories.MOBILE * categories.LAND - categories.COMMAND - categories.SCOUT}, false, true)
                                         if target and not target.Dead then
                                             self.BuilderData = {
@@ -448,7 +449,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                         if self.UnitTarget == 'ENGINEER' then
-                            if aiBrain:GetNumUnitsAroundPoint(categories.ENGINEER - categories.COMMAND, platoonPosition, 45, 'Enemy') > 0 then
+                            if GetNumUnitsAroundPoint(aiBrain, categories.ENGINEER - categories.COMMAND, platoonPosition, 45, 'Enemy') > 0 then
                                 local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 45, categories.ENGINEER - categories.COMMAND, {categories.ENGINEER - categories.COMMAND}, false, true)
                                 if target and not target.Dead then
                                     self.BuilderData = {
@@ -482,7 +483,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                         if self.UnitTarget == 'ENGINEER' then
-                            if aiBrain:GetNumUnitsAroundPoint(categories.ENGINEER - categories.COMMAND, platoonPosition, 45, 'Enemy') > 0 then
+                            if GetNumUnitsAroundPoint(aiBrain, categories.ENGINEER - categories.COMMAND, platoonPosition, 45, 'Enemy') > 0 then
                                 local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 45, categories.ENGINEER - categories.COMMAND, {categories.ENGINEER - categories.COMMAND}, false, true)
                                 if target and not target.Dead then
                                     self.BuilderData = {
@@ -537,7 +538,7 @@ AIPlatoonBomberBehavior = Class(AIPlatoonRNG) {
                                     return
                                 end
                                 if self.UnitTarget == 'ENGINEER' then
-                                    if aiBrain:GetNumUnitsAroundPoint(categories.ENGINEER - categories.COMMAND, platoonPosition, 45, 'Enemy') > 0 then
+                                    if GetNumUnitsAroundPoint(aiBrain, categories.ENGINEER - categories.COMMAND, platoonPosition, 45, 'Enemy') > 0 then
                                         local target = RUtils.AIFindBrainTargetInCloseRangeRNG(aiBrain, self, platoonPosition, 'Attack', 45, categories.ENGINEER - categories.COMMAND, {categories.ENGINEER - categories.COMMAND}, false, true)
                                         if target and not target.Dead then
                                             self.BuilderData = {

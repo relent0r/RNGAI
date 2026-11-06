@@ -1645,7 +1645,7 @@ GetACUSafeZone = function(aiBrain, cdr, baseOnly)
                     end
                     if VDist2Sq(cdr.Position[1], cdr.Position[3], v.pos[1], v.pos[3]) < distSqAway and (cdr.CurrentEnemyThreat > 25 and cdr.CurrentFriendlyInnerCircle < 25 or cdr.CurrentEnemyInnerCircle > 40) 
                     and v.BuilderManager.BaseType ~= 'MAIN' then
-                        if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, v.pos, 15, 'Ally') < 1 then
+                        if GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, v.pos, 15, 'Ally') < 1 then
                             --LOG('Water Local threat too high for retreating to zone to move to')
                             continue
                         end
@@ -1660,7 +1660,7 @@ GetACUSafeZone = function(aiBrain, cdr, baseOnly)
             end
             if bestZone then
                 --LOG('ACU Found a water base to upgrade at')
-                if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, bestZonePos, 15, 'Ally') > 0 then
+                if GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, bestZonePos, 15, 'Ally') > 0 then
                     cutoff = 155
                     bestZonePos = RUtils.lerpy(aiBrain.BrainIntel.StartPos, bestZonePos, {math.sqrt(bestZoneDist), math.sqrt(bestZoneDist) - 10})
                 end
@@ -1677,8 +1677,8 @@ GetACUSafeZone = function(aiBrain, cdr, baseOnly)
                 end
                 if VDist2Sq(cdr.Position[1], cdr.Position[3], v.pos[1], v.pos[3]) < distSqAway and (cdr.CurrentEnemyThreat > 25 and cdr.CurrentFriendlyInnerCircle < 25 or cdr.CurrentEnemyInnerCircle > 40) 
                 and v.BuilderManager.BaseType ~= 'MAIN' then
-                    --LOG('Too dangerous at zone position even though it is close, the zone had this many point defense '..tostring(aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, v.pos, 15, 'Ally')))
-                    if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, v.pos, 15, 'Ally') < 1 then
+                    --LOG('Too dangerous at zone position even though it is close, the zone had this many point defense '..tostring(GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, v.pos, 15, 'Ally')))
+                    if GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, v.pos, 15, 'Ally') < 1 then
                         --LOG('Local threat too high for retreating to zone to move to')
                         continue
                     end
@@ -1692,7 +1692,7 @@ GetACUSafeZone = function(aiBrain, cdr, baseOnly)
         end
         if bestZone then
             --LOG('Selected a best zone with a team value of '..tostring(landZoneSet[bestZone].teamvalue))
-            if aiBrain:GetNumUnitsAroundPoint(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, bestZonePos, 15, 'Ally') > 0 then
+            if GetNumUnitsAroundPoint(aiBrain, categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE, bestZonePos, 15, 'Ally') > 0 then
                 cutoff = 155
                 local distSqrt = math.sqrt(bestZoneDist)
                 bestZonePos = RUtils.lerpy(aiBrain.BrainIntel.StartPos, bestZonePos, {distSqrt, distSqrt - 10})

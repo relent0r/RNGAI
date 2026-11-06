@@ -447,16 +447,11 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
 
                     -- Check attachment status
                     local allAttached = true
-                    local anyUnitInDanger = false
                     
                     for _, unit in units do
                         if not unit.Dead then
                             if not unit:IsUnitState('Attached') then
                                 allAttached = false
-                            end
-                            -- OPTIONAL: If units are being shot while waiting, maybe cancel?
-                            if unit:GetHealthPercent() < 0.8 then
-                                anyUnitInDanger = true
                             end
                         end
                     end
@@ -469,9 +464,23 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                     -- Check if the transport manager still has our request active
                     -- If the transport was killed, the manager likely removed the request
                     local manager = brain:GetPlatoonUniquelyNamed('TransportPool')
-                    if manager and not manager:GetRequestById(requestId) and not allAttached then
-                        -- Request disappeared but we aren't attached? Transport probably died.
-                        break 
+                    if manager then
+                        if not manager:GetRequestById(requestId) and not allAttached then
+                            -- Request disappeared but we aren't attached? Transport probably died.
+                            break 
+                        end
+                        if self.targetcandidates then
+                            local candidateCount = 0
+                            for _, candidate in self.targetcandidates do
+                                if candidate and not candidate.Dead then
+                                    candidateCount = candidateCount + 1
+                                end
+                            end
+                            if candidateCount == 0 then
+                                manager:RemoveRequest(requestId)
+                                break
+                            end
+                        end
                     end
 
                     timeout = timeout + 1
@@ -536,6 +545,7 @@ AIPlatoonLandAssaultBehavior = Class(AIPlatoonRNG) {
                 self:ChangeState(self.DecideWhatToDo)
                 return
             end
+            self:ChangeState(self.DecideWhatToDo)
             return
         end,
     },

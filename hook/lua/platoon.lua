@@ -248,6 +248,17 @@ Platoon = Class(RNGAIPlatoonClass) {
                     self:MoveToLocation(movePosition, false)
                     coroutine.yield(80)
                 end
+                local unitPool = self:GetPlatoonUnits()
+                for _, unit in unitPool do
+                    if unit and not unit.Dead then
+                        local unitCat = unit.Blueprint.CategoriesHash
+                        if unitCat.NAVAL then
+                            if bestBase.PlatoonFormManager and bestBase.PlatoonFormManager.OnNavalUnitCreated then
+                                bestBase.PlatoonFormManager:OnNavalUnitCreated(unit)
+                            end
+                        end
+                    end
+                end
             end
         end
         coroutine.yield(20)

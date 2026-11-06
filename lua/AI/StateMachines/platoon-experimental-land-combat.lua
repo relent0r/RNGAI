@@ -349,12 +349,16 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                         --self:LogDebug(string.format('Artillery Threat '..threatTable.ArtilleryThreat.TotalThreat))
                         --self:LogDebug(string.format('Ranged Threat '..threatTable.RangedUnitThreat.TotalThreat))
                         for _, enemyUnit in threatTable.ArtilleryThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored and enemyUnit.Object:GetFractionComplete() >= 1 then
-                                local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object) or 10
+                            local unitObject = enemyUnit.Object
+                            if not IsDestroyed(unitObject) and not unitObject.Tractored and unitObject:GetFractionComplete() >= 1 then
+                                local unitRange = StateUtils.GetUnitMaxWeaponRange(unitObject) or 10
                                 --LOG('Artillery Range is greater than Experimental')
                                 if unitRange > self['rngdata'].MaxPlatoonWeaponRange then
                                     overRangedCount = overRangedCount + 0.5
-                                    overRangedThreat = overRangedThreat + ((enemyUnit.Blueprint.Defense.SurfaceThreatLevel or 35) * 0.75)
+                                    local threatVal = enemyUnit.Blueprint.Defense.SurfaceThreatLevel 
+                                                    or enemyUnit.Blueprint.Defense.EconomyThreatLevel 
+                                                    or 35
+                                    overRangedThreat = overRangedThreat + (threatVal * 0.75)
                                 end
                                 if overRangedThreat > 450 then
                                     self.BuilderData = {
@@ -373,8 +377,9 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         for _, enemyUnit in threatTable.RangedUnitThreat.Units do
-                            if not IsDestroyed(enemyUnit.Object) and not enemyUnit.Object.Tractored then
-                                local unitRange = StateUtils.GetUnitMaxWeaponRange(enemyUnit.Object) or 10
+                            local unitObject = enemyUnit.Object
+                            if not IsDestroyed(unitObject) and not unitObject.Tractored then
+                                local unitRange = StateUtils.GetUnitMaxWeaponRange(unitObject) or 10
                                 if unitRange > self['rngdata'].MaxPlatoonWeaponRange then
                                     local unitCats = enemyUnit.Blueprint.CategoriesHash
                                     overRangedCount = overRangedCount + 1
@@ -387,7 +392,7 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                                         
                                     end
                                 end
-                                if overRangedCount > 6 and overRangedThreat > 200 and not self.SuicideModeActive then
+                                if overRangedCount > 7 and overRangedThreat > 200 and not self.SuicideModeActive then
                                     self.BuilderData = {
                                         Retreat = true,
                                         RetreatReason = 'RangedThreat',
@@ -626,10 +631,11 @@ AIExperimentalLandBehavior = Class(AIPlatoonRNG) {
                     end
                     if threatTable.ArtilleryThreat.TotalThreat > 0 then
                         local artilleryCount = 0
+                        local expHealth = experimental:GetHealthPercent()
                         for _, unit in threatTable.ArtilleryThreat.Units do
                             if unit.Distance < 16384 then
                                 artilleryCount = artilleryCount + 1
-                                if artilleryCount > 1 and experimental:GetHealthPercent() < 0.4 or artilleryCount > 4 then
+                                if (artilleryCount > 2 and expHealth < 0.4) or (artilleryCount > 5 and expHealth < 0.7) or artilleryCount > 7 then
                                     --LOG('Land is within range of Artillery and count is greater than one')
                                     self:ChangeState(self.DecideWhatToDo)
                                     return 
