@@ -507,6 +507,25 @@ function GetLastACUPosition(aiBrain, enemyIndex)
 end
 
 
+function GetDistanceToSegmentSq(point, startPosition, endPosition)
+    local segmentX = endPosition[1] - startPosition[1]
+    local segmentZ = endPosition[3] - startPosition[3]
+    local segmentLengthSq = segmentX * segmentX + segmentZ * segmentZ
+    if segmentLengthSq == 0 then
+        local dx = point[1] - startPosition[1]
+        local dz = point[3] - startPosition[3]
+        return dx * dx + dz * dz
+    end
+
+    local projection = ((point[1] - startPosition[1]) * segmentX + (point[3] - startPosition[3]) * segmentZ) / segmentLengthSq
+    projection = math.max(0, math.min(1, projection))
+    local closestX = startPosition[1] + projection * segmentX
+    local closestZ = startPosition[3] + projection * segmentZ
+    local dx = point[1] - closestX
+    local dz = point[3] - closestZ
+    return dx * dx + dz * dz
+end
+
 function lerpy(vec1, vec2, distance)
     -- Courtesy of chp2001
     -- note the distance param is {distance, distance - weapon range}
@@ -3384,8 +3403,10 @@ AIFindZoneExpansionPointRNG = function(aiBrain, locationType, radius, position, 
             if lastAttempt ~= 0 and currentTime < lastAttempt + 30 then
                 return false
             end
-            if requiredLabel and aiBrain:GetThreatAtPosition(zone.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') >= 5 then
-                return false
+            if requiredLabel then
+                if StateUtils.HasEnemyWeaponCoveringZone(aiBrain, zone.pos, 15) then
+                    return false
+                end
             end
 
             if (zone.resourcevalue or 0) < lowValueResourceThreshold then

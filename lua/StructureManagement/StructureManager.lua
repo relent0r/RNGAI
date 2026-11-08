@@ -473,7 +473,7 @@ StructureManager = Class {
             return 'RADAR'
         elseif cat.SONAR then
             return 'SONAR'
-        elseif cat.TACTICALMISSILEDEFENSE then
+        elseif cat.ANTIMISSILE and cat.TECH2 then
             return 'TACTICALMISSILEDEFENSE'
         elseif cat.SHIELD then
             return 'SHIELD'
@@ -2739,9 +2739,11 @@ StructureManager = Class {
         while self.Brain.Status ~= "Defeat" do
             coroutine.yield(60)
             local structures = self.Brain:GetListOfUnits(
-                ((categories.MASSEXTRACTION + categories.FACTORY) - categories.TECH1 + categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)) 
-                + (categories.STRUCTURE * categories.STRATEGIC * categories.TECH3),
-                true
+                (categories.MASSEXTRACTION  - categories.TECH1)
+                + (categories.STRUCTURE + categories.FACTORY)
+                + (categories.ENERGYPRODUCTION * (categories.TECH2 + categories.TECH3)) 
+                + (categories.STRUCTURE * categories.STRATEGIC * categories.TECH3)
+                + (categories.STRUCTURE * categories.DEFENSE * (categories.TECH3) - categories.ANTIMISSILE)
             )
             local tmdRequired = {}
             local shieldRequired = {}

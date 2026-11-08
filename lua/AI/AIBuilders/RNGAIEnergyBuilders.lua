@@ -353,6 +353,37 @@ BuilderGroup {
 }
 
 BuilderGroup {
+    BuilderGroupName = 'RNGAI Hydro Expansion Builder',
+    BuildersType = 'EngineerBuilder',
+    Builder {
+        BuilderName = 'RNGAI T1Engineer Hydro Expansion 60',
+        PlatoonTemplate = 'EngineerStateT123RNG',
+        Priority = 800,
+        DelayEqualBuildPlattons = {'Energy', 3},
+        InstanceCount = 1,
+        BuilderConditions = { 
+            { UCBC, 'CanBuildOnHydroLessThanDistanceRNG', { 'LocationType', 65, 1, 'AntiSurface'}},
+            { EBC, 'GreaterThanEconEfficiencyOverTimeRNG', { 0.9, 0.1 }},
+            { UCBC, 'UnitCapCheckLess', { .95 } },
+        },
+        BuilderType = 'Any',
+        BuilderData = {
+            StateMachine = 'EngineerBuilder',
+            JobType = 'BuildPower',
+            NeedGuard = false,
+            DesiresAssist = true,
+            Construction = {
+                EcoSelector = 'ENERGY',
+                BuildStructures = {
+                    { Unit = 'T1HydroCarbon', Categories = categories.ENERGYPRODUCTION * categories.TECH1 * categories.STRUCTURE * categories.HYDROCARBON },
+                },
+            }
+        }
+
+    },
+}
+
+BuilderGroup {
     BuilderGroupName = 'RNGAI Hydro Builder',
     BuildersType = 'EngineerBuilder',
     Builder {

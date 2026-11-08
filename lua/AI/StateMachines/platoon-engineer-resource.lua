@@ -517,8 +517,13 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
             local walkDistThreshold = minPlatoonSpeed * maxWalkTime
             local walkDistThresholdSq = walkDistThreshold * walkDistThreshold
             local needsTransport = false
+            local forceTransport = self.ForceTransportForResource
+            self.ForceTransportForResource = nil
             local canPath = NavUtils.CanPathTo(self.MovementLayer, pos, builderData.Position)
             if not canPath or navigateDist > (350 * 350) then
+                needsTransport = true
+            end
+            if forceTransport then
                 needsTransport = true
             end
             self:LogDebug('Starting navigation movement')
@@ -535,14 +540,14 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     local estWait = (requestData and requestData.EstimatedWait) or 30
                     local walkTime = (math.sqrt(navigateDist) / (eng.Blueprint.Physics.MaxSpeed or 2.5))
                     --LOG('estWait '..tostring(estWait)..' walk time '..tostring(walkTime))
-                    if not canPath or walkTime > estWait then
+                    if forceTransport or not canPath or walkTime > estWait then
                         self:LogDebug('Walk time is greater than wait, we will wait for a transport')
                         local timeout = 0
                         local maxWaitTime = math.max(estWait, 150)
                         local reclaimPerformed = false
                         local engineerReachedTimeout = false
                         while not eng.Dead and not eng:IsUnitState('Attached') and timeout < maxWaitTime do
-                            if not reclaimPerformed and estWait > 20 then
+                            if not forceTransport and not reclaimPerformed and estWait > 20 then
                                 reclaimPerformed = RUtils.PerformEngAreaReclaim(aiBrain, eng, 60)
                                 reclaimPerformed = true
                             end
@@ -565,11 +570,12 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                         if timeout >= maxWaitTime and requestId then
                             self:LogDebug('Engineer hit max wait time, cancel request and marker reservations')
                             local marker = builderData.Marker
-                            if marker then
+                            if marker and not forceTransport then
                                 self:LogDebug('Flushing mass marker build queue')
                                 StateUtils.ReleaseMassMarkersInBuildQueue(eng)
                             end
                             StateUtils.CancelTransportRequest(self, requestId)
+                            requestId = nil
                         end
 
                         -- If we successfully used a transport, transition to check if we have a build queue or return to decision
@@ -599,12 +605,29 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 return
                             end
                         else
-                            if eng:IsUnitState('Building') or eng:IsUnitState('Moving') then
+                            if not forceTransport and (eng:IsUnitState('Building') or eng:IsUnitState('Moving')) then
                                 self:ChangeState(self.Constructing)
                                 return
                             end
                         end
                     end
+                end
+
+                if forceTransport then
+                    eng['rngdata'].WaitingForTransport = false
+                    if requestId then
+                        StateUtils.CancelTransportRequest(self, requestId)
+                    end
+                    local marker = builderData.Marker
+                    if marker then
+                        StateUtils.ReleaseMassMarkersInBuildQueue(eng)
+                        StateUtils.RemoveFromZoneMarkersCache(self.ZoneMarkers, self.CurrentZoneIndex, marker)
+                    end
+                    IssueClearCommands({eng})
+                    self:LogDebug('No transport available for unsafe resource route; releasing marker and returning to decision')
+                    coroutine.yield(10)
+                    self:ChangeState(self.DecideWhatToDo)
+                    return
                 end
 
                 
@@ -632,6 +655,10 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                     local pathLength = RNGGETN(path)
                     local brokenPathMovement = false
                     local currentPathNode = 1
+                    local lastDefenseCheckNode = 0
+                    local bypassingDefense = false
+                    local bypassEnd
+                    local defenseBypassRoute
                     IssueClearCommands({eng})
                     for i=currentPathNode, pathLength do
                         if i>=3 then
@@ -696,23 +723,30 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             return
                         end
                         local reclaimed
-                        if brokenPathMovement and eng.EngineerBuildQueue and not table.empty(eng.EngineerBuildQueue) then
+                        if brokenPathMovement and ((eng.EngineerBuildQueue and not table.empty(eng.EngineerBuildQueue)) or defenseBypassRoute) then
                             pos = eng:GetPosition()
+                            if defenseBypassRoute then
+                                IssueMove({eng}, defenseBypassRoute[1])
+                                IssueMove({eng}, defenseBypassRoute[2])
+                                defenseBypassRoute = nil
+                            end
                             local queuePointTaken = {}
                             local skipPath = false
                             for i=currentPathNode, pathLength do
-                                for k, v in eng.EngineerBuildQueue do
-                                    if v.PathPoint and (v.PathPoint == i or i > v.PathPoint and not queuePointTaken[k]) then
-                                        if eng.EngineerBuildQueue[k][5] then
-                                            --RNGLOG('BorderWarning build')
-                                            --RNGLOG('Found build command at point '..repr(eng.EngineerBuildQueue[k][2]))
-                                            IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
-                                        else
-                                            --RNGLOG('Found build command at point '..repr(eng.EngineerBuildQueue[k][2]))
-                                            aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                                if eng.EngineerBuildQueue then
+                                    for k, v in eng.EngineerBuildQueue do
+                                        if v.PathPoint and (v.PathPoint == i or i > v.PathPoint and not queuePointTaken[k]) then
+                                            if eng.EngineerBuildQueue[k][5] then
+                                                --RNGLOG('BorderWarning build')
+                                                --RNGLOG('Found build command at point '..repr(eng.EngineerBuildQueue[k][2]))
+                                                IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
+                                            else
+                                                --RNGLOG('Found build command at point '..repr(eng.EngineerBuildQueue[k][2]))
+                                                aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                                            end
+                                            queuePointTaken[k] = true
+                                            skipPath = true
                                         end
-                                        queuePointTaken[k] = true
-                                        skipPath = true
                                     end
                                 end
                                 if not skipPath then
@@ -720,17 +754,19 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                                 end
                                 skipPath = false
                             end
-                            for k, v in eng.EngineerBuildQueue do
-                                if queuePointTaken[k] and eng.EngineerBuildQueue[k]  then
-                                    --RNGLOG('QueuePoint already taken, skipping for position '..repr(eng.EngineerBuildQueue[k][2]))
-                                    continue
-                                end
-                                if eng.EngineerBuildQueue[k][5] then
-                                    --RNGLOG('Found end build command at point '..repr(eng.EngineerBuildQueue[k][2]))
-                                    IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
-                                else
-                                    --RNGLOG('Found end build command at point '..repr(eng.EngineerBuildQueue[k][2]))
-                                    aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                            if eng.EngineerBuildQueue then
+                                for k, v in eng.EngineerBuildQueue do
+                                    if queuePointTaken[k] and eng.EngineerBuildQueue[k] then
+                                        --RNGLOG('QueuePoint already taken, skipping for position '..repr(eng.EngineerBuildQueue[k][2]))
+                                        continue
+                                    end
+                                    if eng.EngineerBuildQueue[k][5] then
+                                        --RNGLOG('Found end build command at point '..repr(eng.EngineerBuildQueue[k][2]))
+                                        IssueBuildMobile({eng}, {eng.EngineerBuildQueue[k][2][1], 0, eng.EngineerBuildQueue[k][2][2]}, eng.EngineerBuildQueue[k][1], {})
+                                    else
+                                        --RNGLOG('Found end build command at point '..repr(eng.EngineerBuildQueue[k][2]))
+                                        aiBrain:BuildStructure(eng, eng.EngineerBuildQueue[k][1], {eng.EngineerBuildQueue[k][2][1], eng.EngineerBuildQueue[k][2][2], 0}, eng.EngineerBuildQueue[k][3])
+                                    end
                                 end
                             end
                             if reclaimed then
@@ -771,49 +807,152 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                         if eng:IsUnitState("Moving") then
-                            if aiBrain:GetNumUnitsAroundPoint(categories.LAND * categories.MOBILE, pos, 45, 'Enemy') > 0 then
-                                self:LogDebug('Enemy unit detected')
-                                local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.MOBILE, pos, 45, 'Enemy')
-                                for _, eunit in enemyUnits do
-                                    local enemyUnitPos = eunit:GetPosition()
-                                    local enemyDistance = VDist3Sq(enemyUnitPos, pos)
-                                    if EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
-                                        if VDist3Sq(enemyUnitPos, pos) < 144 then
-                                            --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
-                                            if eunit and not eunit.Dead and eunit:GetFractionComplete() == 1 then
-                                                if VDist3Sq(pos, enemyUnitPos) < 100 then
-                                                    IssueClearCommands({eng})
-                                                    IssueReclaim({eng}, eunit)
-                                                    brokenPathMovement = true
+                            pos = eng:GetPosition()
+                            local currentPos = pos
+                            if bypassingDefense and VDist3Sq(currentPos, bypassEnd) < 64 then
+                                bypassingDefense = false
+                                lastDefenseCheckNode = 0
+                            end
+                            local nearbyEnemyUnits = aiBrain:GetUnitsAroundPoint(
+                                categories.LAND * categories.MOBILE
+                                + categories.MASSEXTRACTION
+                                + (categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE - categories.ANTIAIR),
+                                currentPos,
+                                90,
+                                'Enemy'
+                            )
+                            local defenseBypassIssued = false
+                            if not bypassingDefense and currentPathNode ~= lastDefenseCheckNode then
+                                lastDefenseCheckNode = currentPathNode
+                                local nextNode = path[currentPathNode] or builderData.Position
+                                local segmentX = nextNode[1] - currentPos[1]
+                                local segmentZ = nextNode[3] - currentPos[3]
+                                local segmentLengthSq = segmentX * segmentX + segmentZ * segmentZ
+
+                                if segmentLengthSq > 0 then
+                                    local segmentLength = math.sqrt(segmentLengthSq)
+                                    local directionX = segmentX / segmentLength
+                                    local directionZ = segmentZ / segmentLength
+                                    local normalX = -directionZ
+                                    local normalZ = directionX
+
+                                    for _, enemyDefense in nearbyEnemyUnits do
+                                        if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE - categories.ANTIAIR, enemyDefense)
+                                        and not enemyDefense.Dead and enemyDefense:GetFractionComplete() == 1 then
+                                            if not enemyDefense['rngdata'] then
+                                                enemyDefense['rngdata'] = {}
+                                            end
+                                            local weaponRange = StateUtils.GetUnitMaxWeaponRange(enemyDefense) or 0
+                                            if weaponRange > 0 then
+                                                local defensePos = enemyDefense:GetPosition()
+                                                local projection = ((defensePos[1] - currentPos[1]) * segmentX + (defensePos[3] - currentPos[3]) * segmentZ) / segmentLengthSq
+                                                projection = math.max(0, math.min(1, projection))
+                                                local closestX = currentPos[1] + projection * segmentX
+                                                local closestZ = currentPos[3] + projection * segmentZ
+                                                local closestXDelta = defensePos[1] - closestX
+                                                local closestZDelta = defensePos[3] - closestZ
+                                                local safeRange = weaponRange + 8
+                                                local safeRangeSq = safeRange * safeRange
+
+                                                if closestXDelta * closestXDelta + closestZDelta * closestZDelta <= safeRangeSq then
+                                                    --LOG('Resource path defense detected: engineer='..tostring(eng.EntityId)..' defense='..tostring(enemyDefense.EntityId)..' range='..tostring(weaponRange)..' segmentDistance='..tostring(math.sqrt(closestXDelta * closestXDelta + closestZDelta * closestZDelta))..' node='..tostring(currentPathNode)..' position='..repr(currentPos)..' nextNode='..repr(nextNode))
+                                                    local detourOffset = safeRange + 12
+                                                    local bypassFound = false
+
+                                                    for _, side in {-1, 1} do
+                                                        local entryX = closestX - directionX * detourOffset + normalX * detourOffset * side
+                                                        local entryZ = closestZ - directionZ * detourOffset + normalZ * detourOffset * side
+                                                        local exitX = closestX + directionX * detourOffset + normalX * detourOffset * side
+                                                        local exitZ = closestZ + directionZ * detourOffset + normalZ * detourOffset * side
+                                                        local bypassEntry = {entryX, GetTerrainHeight(entryX, entryZ), entryZ}
+                                                        local bypassExit = {exitX, GetTerrainHeight(exitX, exitZ), exitZ}
+                                                        local defenseEntryDistSq = RUtils.GetDistanceToSegmentSq(defensePos, currentPos, bypassEntry)
+                                                        local defenseDetourDistSq = RUtils.GetDistanceToSegmentSq(defensePos, bypassEntry, bypassExit)
+
+                                                        if defenseEntryDistSq > safeRangeSq and defenseDetourDistSq > safeRangeSq
+                                                        and NavUtils.CanPathTo(self.MovementLayer, currentPos, bypassEntry)
+                                                        and NavUtils.CanPathTo(self.MovementLayer, bypassEntry, bypassExit) then
+                                                            local rejoinPosition
+                                                            local rejoinIndex
+                                                            for nodeIndex = currentPathNode, pathLength do
+                                                                local candidatePosition = path[nodeIndex]
+                                                                local defenseRejoinDistSq = RUtils.GetDistanceToSegmentSq(defensePos, bypassExit, candidatePosition)
+                                                                if defenseRejoinDistSq > safeRangeSq
+                                                                and NavUtils.CanPathTo(self.MovementLayer, bypassExit, candidatePosition) then
+                                                                    rejoinPosition = candidatePosition
+                                                                    rejoinIndex = nodeIndex
+                                                                    break
+                                                                end
+                                                            end
+
+                                                            if rejoinPosition then
+                                                                IssueClearCommands({eng})
+                                                                defenseBypassRoute = {bypassEntry, bypassExit}
+                                                                currentPathNode = rejoinIndex
+                                                                bypassEnd = bypassExit
+                                                                bypassingDefense = true
+                                                                lastDefenseCheckNode = currentPathNode
+                                                                defenseBypassIssued = true
+                                                                brokenPathMovement = true
+                                                                bypassFound = true
+                                                                --LOG('Resource path defense bypass issued: engineer='..tostring(eng.EntityId)..' defense='..tostring(enemyDefense.EntityId)..' side='..tostring(side)..' entry='..repr(bypassEntry)..' exit='..repr(bypassExit)..' rejoin='..repr(rejoinPosition))
+                                                                break
+                                                            end
+                                                        end
+                                                    end
+
+                                                    if not bypassFound then
+                                                        --LOG('Resource path defense bypass failed: engineer='..tostring(eng.EntityId)..' defense='..tostring(enemyDefense.EntityId)..' range='..tostring(weaponRange)..' position='..repr(currentPos)..' nextNode='..repr(nextNode)..' requesting transport')
+                                                        self:LogDebug('No terrain-pathable bypass for enemy point defense; requesting transport')
+                                                        IssueClearCommands({eng})
+                                                        self.ForceTransportForResource = true
+                                                        self:ChangeState(self.NavigateToTaskLocation)
+                                                        return
+                                                    end
                                                     break
                                                 end
                                             end
                                         end
-                                    elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, eunit) then
-                                        -- enemy unit was 204 when the avoid decision was made
-                                        --LOG('MexBuild found enemy unit, try avoid it, distance is '..tostring(VDist3Sq(enemyUnitPos, pos)))
-                                        if VDist3Sq(enemyUnitPos, pos) < 81 then
-                                            --RNGLOG('MexBuild found enemy engineer or scout, try reclaiming')
-                                            if eunit and not eunit.Dead and eunit:GetFractionComplete() == 1 then
-                                                if VDist3Sq(pos, enemyUnitPos) < 100 then
+                                    end
+                                end
+                            end
+                            if not defenseBypassIssued and not bypassingDefense and not table.empty(nearbyEnemyUnits) then
+                                self:LogDebug('Enemy unit detected')
+                                for _, eunit in nearbyEnemyUnits do
+                                    local enemyUnitPos = eunit:GetPosition()
+                                    local enemyDistance = VDist3Sq(enemyUnitPos, currentPos)
+                                    if enemyDistance <= (45 * 45)
+                                    and EntityCategoryContains(categories.SCOUT + categories.ENGINEER * (categories.TECH1 + categories.TECH2) - categories.COMMAND, eunit) then
+                                        if enemyDistance < 144 and not eunit.Dead and eunit:GetFractionComplete() == 1 then
+                                            if enemyDistance < 100 then
+                                                IssueClearCommands({eng})
+                                                IssueReclaim({eng}, eunit)
+                                                brokenPathMovement = true
+                                                break
+                                            end
+                                        end
+                                    elseif enemyDistance <= (45 * 45)
+                                    and EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, eunit) then
+                                        if enemyDistance < 81 then
+                                            if not eunit.Dead and eunit:GetFractionComplete() == 1 and enemyDistance < 100 then
+                                                IssueClearCommands({eng})
+                                                IssueReclaim({eng}, eunit)
+                                                brokenPathMovement = true
+                                                coroutine.yield(20)
+                                                if not IsDestroyed(eunit) and VDist3Sq(eng:GetPosition(), eunit:GetPosition()) < 100 then
                                                     IssueClearCommands({eng})
                                                     IssueReclaim({eng}, eunit)
-                                                    brokenPathMovement = true
-                                                    coroutine.yield(20)
-                                                    if not IsDestroyed(eunit) and VDist3Sq(eng:GetPosition(), eunit:GetPosition()) < 100 then
-                                                        IssueClearCommands({eng})
-                                                        IssueReclaim({eng}, eunit)
-                                                        coroutine.yield(30)
-                                                    end
-                                                    coroutine.yield(40)
-                                                    break
+                                                    coroutine.yield(30)
                                                 end
+                                                coroutine.yield(40)
+                                                break
                                             end
                                         else
                                             IssueClearCommands({eng})
-                                            IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, pos, 50))
+                                            IssueMove({eng}, RUtils.AvoidLocation(enemyUnitPos, currentPos, 50))
                                             brokenPathMovement = true
                                             coroutine.yield(60)
+                                            break
                                         end
                                     end
                                 end

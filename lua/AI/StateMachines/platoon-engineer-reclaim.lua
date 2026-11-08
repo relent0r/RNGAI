@@ -968,9 +968,14 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
             local walkDistThreshold = minPlatoonSpeed * maxWalkTime
             local walkDistThresholdSq = walkDistThreshold * walkDistThreshold
             local needsTransport = false
+            local forceTransport = self.ForceTransportForReclaim
+            self.ForceTransportForReclaim = nil
 
             -- Transport trigger: Unpathable or distance > 300 (threshold from original function)
             if not canPath  or navigateDist > (350 * 350) then
+                needsTransport = true
+            end
+            if forceTransport then
                 needsTransport = true
             end
 
@@ -985,7 +990,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                     local estWait = (requestData and requestData.EstimatedWait) or 30
                     local walkTime = (math.sqrt(navigateDist) / (eng.Blueprint.Physics.MaxSpeed or 2.5))
                     --LOG('estWait '..tostring(estWait)..' walk time '..tostring(walkTime))
-                    if not canPath or walkTime > estWait then
+                    if forceTransport or not canPath or walkTime > estWait then
                         local timeout = 0
                         local maxWaitTime = math.max(estWait, 150)
                         local reclaimPerformed = false
@@ -1042,6 +1047,15 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                     end
                 end
                 eng['rngdata'].WaitingForTransport = false
+
+                if forceTransport then
+                    self:LogDebug('No transport arrived for unsafe reclaim route; exiting reclaim state machine')
+                    if requestId then
+                        StateUtils.CancelTransportRequest(self, requestId)
+                    end
+                    self:ExitStateMachine()
+                    return
+                end
                 
                 -- If transport failed and distance is extreme, abort
                 if navigateDist > 409600 then -- 640 * 640
@@ -1077,6 +1091,9 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                 local pathLength = path and table.getn(path) or 0
                 local movementTimeout = 0
                 local lastPos = eng:GetPosition()
+                local lastDefenseCheckNode = 0
+                local bypassingDefense = false
+                local bypassEnd
 
                 while not eng.Dead and aiBrain:PlatoonExists(self) do
                     local currentPos = eng:GetPosition()
@@ -1092,18 +1109,135 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                             currentPathNode = currentPathNode + 1
                         end
                     end
+                    if bypassingDefense and VDist3Sq(currentPos, bypassEnd) < 64 then
+                        bypassingDefense = false
+                        lastDefenseCheckNode = -1
+                    end
+
+                    local nearbyEnemyUnits = aiBrain:GetUnitsAroundPoint(
+                        categories.LAND * categories.MOBILE
+                        + categories.MASSEXTRACTION
+                        + (categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE - categories.ANTIAIR),
+                        currentPos,
+                        90,
+                        'Enemy'
+                    )
+                    local defenseBypassIssued = false
+                    if not bypassingDefense and currentPathNode ~= lastDefenseCheckNode then
+                        lastDefenseCheckNode = currentPathNode
+                        local nextNode = path and path[currentPathNode] or destination
+                        local segmentX = nextNode[1] - currentPos[1]
+                        local segmentZ = nextNode[3] - currentPos[3]
+                        local segmentLengthSq = segmentX * segmentX + segmentZ * segmentZ
+
+                        if segmentLengthSq > 0 then
+                            local segmentLength = math.sqrt(segmentLengthSq)
+                            local directionX = segmentX / segmentLength
+                            local directionZ = segmentZ / segmentLength
+                            local normalX = -directionZ
+                            local normalZ = directionX
+
+                            for _, enemyDefense in nearbyEnemyUnits do
+                                if EntityCategoryContains(categories.STRUCTURE * categories.DEFENSE * categories.DIRECTFIRE - categories.ANTIAIR, enemyDefense)
+                                and not enemyDefense.Dead and enemyDefense:GetFractionComplete() == 1 then
+                                    if not enemyDefense['rngdata'] then
+                                        enemyDefense['rngdata'] = {}
+                                    end
+                                    local weaponRange = StateUtils.GetUnitMaxWeaponRange(enemyDefense) or 0
+                                    if weaponRange > 0 then
+                                        local defensePos = enemyDefense:GetPosition()
+                                        local projection = ((defensePos[1] - currentPos[1]) * segmentX + (defensePos[3] - currentPos[3]) * segmentZ) / segmentLengthSq
+                                        projection = math.max(0, math.min(1, projection))
+                                        local closestX = currentPos[1] + projection * segmentX
+                                        local closestZ = currentPos[3] + projection * segmentZ
+                                        local closestXDelta = defensePos[1] - closestX
+                                        local closestZDelta = defensePos[3] - closestZ
+                                        local safeRange = weaponRange + 8
+                                        local safeRangeSq = safeRange * safeRange
+
+                                        if closestXDelta * closestXDelta + closestZDelta * closestZDelta <= safeRangeSq then
+                                            --LOG('Reclaim path defense detected: engineer='..tostring(eng.EntityId)..' defense='..tostring(enemyDefense.EntityId)..' range='..tostring(weaponRange)..' segmentDistance='..tostring(math.sqrt(closestXDelta * closestXDelta + closestZDelta * closestZDelta))..' node='..tostring(currentPathNode)..' position='..repr(currentPos)..' nextNode='..repr(nextNode))
+                                            local detourOffset = safeRange + 12
+                                            local bypassFound = false
+
+                                            for _, side in {-1, 1} do
+                                                local entryX = closestX - directionX * detourOffset + normalX * detourOffset * side
+                                                local entryZ = closestZ - directionZ * detourOffset + normalZ * detourOffset * side
+                                                local exitX = closestX + directionX * detourOffset + normalX * detourOffset * side
+                                                local exitZ = closestZ + directionZ * detourOffset + normalZ * detourOffset * side
+                                                local bypassEntry = {entryX, GetTerrainHeight(entryX, entryZ), entryZ}
+                                                local bypassExit = {exitX, GetTerrainHeight(exitX, exitZ), exitZ}
+                                                local defenseEntryDistSq = RUtils.GetDistanceToSegmentSq(defensePos, currentPos, bypassEntry)
+                                                local defenseDetourDistSq = RUtils.GetDistanceToSegmentSq(defensePos, bypassEntry, bypassExit)
+
+                                                if defenseEntryDistSq > safeRangeSq and defenseDetourDistSq > safeRangeSq
+                                                and NavUtils.CanPathTo(self.MovementLayer, currentPos, bypassEntry)
+                                                and NavUtils.CanPathTo(self.MovementLayer, bypassEntry, bypassExit) then
+                                                    local rejoinPosition
+                                                    local rejoinIndex
+                                                    local firstRejoinIndex = path and currentPathNode or pathLength + 1
+                                                    local lastRejoinIndex = path and pathLength or pathLength + 1
+
+                                                    for nodeIndex = firstRejoinIndex, lastRejoinIndex do
+                                                        local candidatePosition = path and path[nodeIndex] or destination
+                                                        local defenseRejoinDistSq = RUtils.GetDistanceToSegmentSq(defensePos, bypassExit, candidatePosition)
+                                                        if defenseRejoinDistSq > safeRangeSq
+                                                        and NavUtils.CanPathTo(self.MovementLayer, bypassExit, candidatePosition) then
+                                                            rejoinPosition = candidatePosition
+                                                            rejoinIndex = path and nodeIndex
+                                                            break
+                                                        end
+                                                    end
+
+                                                    if rejoinPosition then
+                                                        IssueClearCommands({eng})
+                                                        IssueMove({eng}, bypassEntry)
+                                                        IssueMove({eng}, bypassExit)
+                                                        IssueMove({eng}, rejoinPosition)
+                                                        if rejoinIndex then
+                                                            currentPathNode = rejoinIndex
+                                                            for nodeIndex = rejoinIndex + 1, pathLength do
+                                                                IssueMove({eng}, path[nodeIndex])
+                                                            end
+                                                        end
+                                                        IssueMove({eng}, destination)
+                                                        bypassEnd = bypassExit
+                                                        bypassingDefense = true
+                                                        lastDefenseCheckNode = currentPathNode
+                                                        defenseBypassIssued = true
+                                                        bypassFound = true
+                                                        --LOG('Reclaim path defense bypass issued: engineer='..tostring(eng.EntityId)..' defense='..tostring(enemyDefense.EntityId)..' side='..tostring(side)..' entry='..repr(bypassEntry)..' exit='..repr(bypassExit)..' rejoin='..repr(rejoinPosition))
+                                                        break
+                                                    end
+                                                end
+                                            end
+
+                                            if not bypassFound then
+                                                LOG('Reclaim path defense bypass failed: engineer='..tostring(eng.EntityId)..' defense='..tostring(enemyDefense.EntityId)..' range='..tostring(weaponRange)..' position='..repr(currentPos)..' nextNode='..repr(nextNode)..' requesting transport')
+                                                self:LogDebug('No terrain-pathable bypass for enemy point defense; requesting transport')
+                                                IssueClearCommands({eng})
+                                                self.ForceTransportForReclaim = true
+                                                self:ChangeState(self.NavigateToLocation)
+                                                return
+                                            end
+                                            break
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
                     local actionTaken = false
 
                     -- Opportunistic Threat/Reclaim Logic (from original function)
-                    local enemyUnits = aiBrain:GetUnitsAroundPoint(categories.LAND * categories.MOBILE + categories.MASSEXTRACTION, currentPos, 45, 'Enemy')
-                    if not table.empty(enemyUnits) then
-                        for _, enemy in enemyUnits do
+                    if not bypassingDefense and not defenseBypassIssued and not table.empty(nearbyEnemyUnits) then
+                        for _, enemy in nearbyEnemyUnits do
                             if not enemy.Dead and enemy:GetFractionComplete() == 1 then
                                 local enemyPos = enemy:GetPosition()
                                 local enemyDistSq = VDist3Sq(currentPos, enemyPos)
 
                                 -- Case A: Reclaimable weak units (Scouts/Engineers)
-                                if EntityCategoryContains(categories.SCOUT + categories.ENGINEER - categories.COMMAND, enemy) then
+                                if enemyDistSq <= (45 * 45) and EntityCategoryContains(categories.SCOUT + categories.ENGINEER - categories.COMMAND, enemy) then
                                     if enemyDistSq < 144 then
                                         IssueClearCommands({eng})
                                         IssueReclaim({eng}, enemy)
@@ -1115,7 +1249,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                                         break
                                     end
                                 -- Case B: Dangerous Mobile Land
-                                elseif EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, enemy) then
+                                elseif enemyDistSq <= (45 * 45) and EntityCategoryContains(categories.LAND * categories.MOBILE - categories.SCOUT, enemy) then
                                     if enemyDistSq < 100 then
                                         IssueClearCommands({eng})
                                         IssueReclaim({eng}, enemy) -- Last ditch effort
@@ -1131,7 +1265,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                                         break
                                     end
                                 -- Case C: Capture enemy Mexes
-                                elseif EntityCategoryContains(categories.MASSEXTRACTION, enemy) and enemyDistSq < 225 then
+                                elseif enemyDistSq <= (45 * 45) and EntityCategoryContains(categories.MASSEXTRACTION, enemy) and enemyDistSq < 225 then
                                     IssueClearCommands({eng})
                                     IssueCapture({eng}, enemy)
                                     actionTaken = true
@@ -1143,7 +1277,9 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                    actionTaken = RUtils.PerformEngReclaim(aiBrain, eng, 5)
+                    if not bypassingDefense and not defenseBypassIssued and RUtils.PerformEngReclaim(aiBrain, eng, 5) then
+                        actionTaken = true
+                    end
                     if actionTaken then
                         IssueClearCommands({eng})
                         if path then

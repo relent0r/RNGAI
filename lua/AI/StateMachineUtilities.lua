@@ -383,7 +383,11 @@ VariableKite = function(platoon, unit, target, maxPlatoonRangeOverride, checkLay
         dest = GetKitePosition(pos, tpos, platoon['rngdata'].MaxPlatoonWeaponRange + 5 - math.random(1, 3) - mod, strafeMod, healthMod)
     end
 
-    if VDist3Sq(pos, dest) > distanceCheck then
+    local weaponRange = unit['rngdata'].MaxWeaponRange or 0
+    local targetDistanceSq = VDist2Sq(pos[1], pos[3], tpos[1], tpos[3])
+    local outsideWeaponRange = targetDistanceSq > weaponRange * weaponRange
+
+    if VDist3Sq(pos, dest) > distanceCheck or outsideWeaponRange then
         if unit.GetNavigator then
             local navigator = unit:GetNavigator()
             if navigator then
@@ -3573,6 +3577,31 @@ function HasActiveLandBaseOnLabel(aiBrain, label)
     return false
 end
 
+function HasEnemyWeaponCoveringZone(aiBrain, zonePosition, safetyRadius)
+    local mapSearchRadius = 150
+    local weaponCategories = categories.DIRECTFIRE + categories.INDIRECTFIRE - categories.INSIGNIFICANTUNIT
+    local enemyWeapons = aiBrain:GetUnitsAroundPoint(weaponCategories, zonePosition, mapSearchRadius, 'Enemy')
+
+    for _, enemyUnit in enemyWeapons do
+        if not enemyUnit.Dead then
+            if not enemyUnit['rngdata'] then
+                enemyUnit['rngdata'] = {}
+            end
+            local weaponRange = GetUnitMaxWeaponRange(enemyUnit) or 0
+            if weaponRange > 0 then
+                local coverRange = weaponRange + safetyRadius
+                local unitPosition = enemyUnit:GetPosition()
+                local dx = unitPosition[1] - zonePosition[1]
+                local dz = unitPosition[3] - zonePosition[3]
+                if dx * dx + dz * dz <= coverRange * coverRange then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
 function HasExpansionCandidate(aiBrain, label)
     local intelManager = aiBrain.IntelManager
     local currentTime = GetGameTimeSeconds()
@@ -3587,10 +3616,14 @@ function HasExpansionCandidate(aiBrain, label)
             if candidate.Label == label then
                 local zone = aiBrain.Zones.Land.zones[candidate.ZoneID]
                 local lastAttempt = zone and zone.lastexpansionattempt or 0
-                if zone and not zone.BuilderManager.FactoryManager.LocationActive
-                and (not zone.engineerplatoonallocated or IsDestroyed(zone.engineerplatoonallocated))
-                and (lastAttempt == 0 or currentTime >= lastAttempt + 30)
-                and aiBrain:GetThreatAtPosition(zone.pos, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'AntiSurface') < 5 then
+                local factoryActive = zone and zone.BuilderManager.FactoryManager.LocationActive
+                local engineerAvailable = zone and (not zone.engineerplatoonallocated or IsDestroyed(zone.engineerplatoonallocated))
+                local cooldownReady = lastAttempt == 0 or currentTime >= lastAttempt + 30
+                local enemyWeaponCoverage
+                if zone and not factoryActive and engineerAvailable and cooldownReady then
+                    enemyWeaponCoverage = HasEnemyWeaponCoveringZone(aiBrain, zone.pos, 15)
+                end
+                if zone and not factoryActive and engineerAvailable and cooldownReady and not enemyWeaponCoverage then
                     return true
                 end
             end
