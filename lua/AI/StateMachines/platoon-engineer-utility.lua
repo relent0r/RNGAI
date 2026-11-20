@@ -1067,11 +1067,11 @@ AIPlatoonEngineerBehavior = Class(AIPlatoonRNG) {
                 local structureTable = StateUtils.GetShieldCandidatesFromBase(aiBrain, eng, self.LocationType)
                 if not table.empty(structureTable) then
                     reference = RUtils.GetShieldPosition(aiBrain, eng, self.LocationType, whatToBuild, structureTable)
-                    LOG('UseBaseTable: GetShieldPosition returned '..tostring(reference and repr(reference) or 'nil')..' for builder '..tostring(self.BuilderName))
+                    --LOG('UseBaseTable: GetShieldPosition returned '..tostring(reference and repr(reference) or 'nil')..' for builder '..tostring(self.BuilderName))
                     buildFunction = StateUtils.AIBuildBaseTemplateOrderedRNG
                     RNGINSERT(baseTmplList, RUtils.AIBuildBaseTemplateFromLocationRNG(baseTmpl, reference))
                 else
-                    LOG('UseBaseTable: no candidates from GetShieldCandidatesFromBase for '..tostring(self.BuilderName)..' at '..tostring(self.LocationType))
+                    --LOG('UseBaseTable: no candidates from GetShieldCandidatesFromBase for '..tostring(self.BuilderName)..' at '..tostring(self.LocationType))
                     coroutine.yield(30)
                 end
             elseif cons.CounterDefense then

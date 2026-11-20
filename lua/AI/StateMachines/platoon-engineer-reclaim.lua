@@ -1213,7 +1213,7 @@ AIPlatoonAdaptiveReclaimBehavior = Class(AIPlatoonRNG) {
                                             end
 
                                             if not bypassFound then
-                                                LOG('Reclaim path defense bypass failed: engineer='..tostring(eng.EntityId)..' defense='..tostring(enemyDefense.EntityId)..' range='..tostring(weaponRange)..' position='..repr(currentPos)..' nextNode='..repr(nextNode)..' requesting transport')
+                                                --LOG('Reclaim path defense bypass failed: engineer='..tostring(eng.EntityId)..' defense='..tostring(enemyDefense.EntityId)..' range='..tostring(weaponRange)..' position='..repr(currentPos)..' nextNode='..repr(nextNode)..' requesting transport')
                                                 self:LogDebug('No terrain-pathable bypass for enemy point defense; requesting transport')
                                                 IssueClearCommands({eng})
                                                 self.ForceTransportForReclaim = true

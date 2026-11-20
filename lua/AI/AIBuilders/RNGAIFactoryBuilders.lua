@@ -330,7 +330,7 @@ BuilderGroup {
         DelayEqualBuildPlattons = {'Factories', 3},
         BuilderConditions = {
             { UCBC, 'FactoryCapCheck', { 'LocationType', 'Air' } },
-            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.15 }},
+            { EBC, 'GreaterThanEconEfficiencyCombinedRNG', { 0.85, 1.05 }},
             { UCBC, 'MinimumFactoryCheckRNG', { 'LocationType', 'Air' }},
             { UCBC, 'PlayerRoleCheck', {'LocationType', 1, categories.FACTORY * categories.AIR, {'SPAM'} }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 3, categories.FACTORY * categories.AIR }},

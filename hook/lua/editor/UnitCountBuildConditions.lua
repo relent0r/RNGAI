@@ -2234,11 +2234,13 @@ function HighValueZone(aiBrain, locationType)
         if resourceValue > 2 then
             local basePos = aiBrain.BuilderManagers[locationType].Position
             local startPos = aiBrain.BrainIntel.StartPos
-            local dx = basePos[1] - startPos[1]
-            local dz = basePos[3] - startPos[3]
-            local distanceToMain = dx * dx + dz * dz
-            if distanceToMain > 12100 then
-                return true
+            if basePos and startPos then
+                local dx = basePos[1] - startPos[1]
+                local dz = basePos[3] - startPos[3]
+                local distanceToMain = dx * dx + dz * dz
+                if distanceToMain > 12100 then
+                    return true
+                end
             end
         end
     end

@@ -4,6 +4,7 @@ local NavUtils = import('/lua/sim/NavUtils.lua')
 
 local RNGINSERT = table.insert
 local RNGGETN = table.getn
+local ShieldRepairPerShieldBuildPowerCap = 168
 
 AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
     PlatoonName = 'EngineerAssistManagerBehavior',
@@ -35,6 +36,9 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             self.TechEngineers = { [1]={}, [2]={}, [3]={} }
             self.TotalTechBuildRate = { [1]=0, [2]=0, [3]=0 }
             self.TotalBuildRate = 0
+            aiBrain.EngineerAssistAssignments = aiBrain.EngineerAssistAssignments or {}
+            aiBrain.EngineerAssistManagedEngineers = aiBrain.EngineerAssistManagedEngineers or {}
+            self.AssistAssignments = aiBrain.EngineerAssistAssignments
             --LOG('Starting Engineer Assist Manager')
 
             self:ChangeState(self.UpdateRoster)
@@ -58,15 +62,67 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             self.TechEngineers[3] = {}
             self.TotalIncomeConsumption = 0
 
-            local platoonCount = 0
-
             aiBrain.EngineerAssistCurrentBPAllocated = { Energy = 0, Mass = 0, None = 0 }
+            local managedEngineers = aiBrain.EngineerAssistManagedEngineers or {}
+            aiBrain.EngineerAssistManagedEngineers = managedEngineers
+            for entityId, managedEngineer in managedEngineers do
+                local eng = managedEngineer.Engineer
+                if managedEngineer.Manager == self
+                    or not eng or eng.Dead or eng:BeenDestroyed()
+                    or eng.PlatoonHandle ~= managedEngineer.Manager then
+                    managedEngineers[entityId] = nil
+                end
+            end
+
+            local allocatedByRequest = {}
+            for entityId, assignment in self.AssistAssignments do
+                local eng = assignment.Engineer
+                if not eng or eng.Dead or eng:BeenDestroyed()
+                    or eng.PlatoonHandle ~= assignment.Manager
+                    or eng.UnitBeingAssist ~= assignment.Unit then
+                    self.AssistAssignments[entityId] = nil
+                elseif not assignment.Revoked then
+                    allocatedByRequest[assignment.Source] = (allocatedByRequest[assignment.Source] or 0) + assignment.BuildPower
+                    local activeRequestsBySource = aiBrain.EngineerAssistManagerActiveRequestsBySource or {}
+                    local request = activeRequestsBySource[assignment.Source]
+                    local priorityTable = request and request.PriorityTable or aiBrain.EngineerAssistManagerPriorityTable
+                    for _, rule in priorityTable or {} do
+                        if rule.bpKey and rule.cat and EntityCategoryContains(rule.cat, assignment.Unit) then
+                            aiBrain.EngineerAssistCurrentBPAllocated[rule.bpKey] =
+                                (aiBrain.EngineerAssistCurrentBPAllocated[rule.bpKey] or 0) + assignment.BuildPower
+                            break
+                        end
+                    end
+                end
+            end
+            aiBrain.EngineerAssistBPAllocatedByRequest = allocatedByRequest
 
             local platUnits = self:GetPlatoonUnits()
             for _, eng in platUnits do
                 if eng and (not eng.Dead) and (not eng:BeenDestroyed()) then
                     local bp = eng.Blueprint
                     local br = (bp.Economy.BuildRate * self.BuildMultiplier)
+                    local techLevel
+                    if bp.CategoriesHash.TECH1 then
+                        techLevel = 1
+                    elseif bp.CategoriesHash.TECH2 then
+                        techLevel = 2
+                    elseif bp.CategoriesHash.TECH3 then
+                        techLevel = 3
+                    end
+                    local consumption = 0
+                    if eng.UnitBeingAssist and eng.UnitBeingAssist.Blueprint.Economy then
+                        local assistBp = eng.UnitBeingAssist.Blueprint.Economy
+                        local buildTime = math.max(assistBp.BuildTime or 1, 1)
+                        consumption = br * (assistBp.BuildCostMass / buildTime)
+                    end
+                    managedEngineers[eng.EntityId] = {
+                        Engineer = eng,
+                        Manager = self,
+                        BuildPower = br,
+                        TechLevel = techLevel,
+                        Consumption = consumption,
+                    }
 
                     if bp.CategoriesHash.TECH1 then
                         if not self.SingleTechBuilderRate[1] then self.SingleTechBuilderRate[1] = br end
@@ -86,47 +142,38 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
 
                     self.TotalBuildRate = self.TotalBuildRate + br
 
-                    if eng.UnitBeingAssist and eng.UnitBeingAssist.Blueprint.Economy then
-                        local assistBp = eng.UnitBeingAssist.Blueprint.Economy
-                        local density = assistBp.BuildCostMass / assistBp.BuildTime
-                        self.TotalIncomeConsumption = self.TotalIncomeConsumption + (br * density)
-                    end
-
-                    if aiBrain.EngineerAssistManagerFocusCategory and eng.UnitBeingAssist and not eng.UnitBeingAssist.Dead then
-                        local matchingRuleKey = nil
-                        for _, rule in aiBrain.EngineerAssistManagerPriorityTable do
-                            local ruleCategory = rule.cat
-                            local ruleKey = rule.bpKey
-                            local unitBeingAssist = eng.UnitBeingAssist
-                            
-                            -- Use the only guaranteed engine check: Unit against Rule Category Mask
-                            if unitBeingAssist and ruleCategory and EntityCategoryContains(ruleCategory, unitBeingAssist) then
-                                
-                                -- Crucial: Use the ruleKey to associate the BP, 
-                                -- not the complex category mask.
-                                matchingRuleKey = ruleKey 
-                                break -- Stop on the first, most specific match (assuming the table is ordered)
-                            end
-                        end
-                        if matchingRuleKey then
-                            if not aiBrain.EngineerAssistCurrentBPAllocated[matchingRuleKey] then
-                                aiBrain.EngineerAssistCurrentBPAllocated[matchingRuleKey] = 0
-                            end
-                            aiBrain.EngineerAssistCurrentBPAllocated[matchingRuleKey] = aiBrain.EngineerAssistCurrentBPAllocated[matchingRuleKey] + (bp.Economy.BuildRate * self.BuildMultiplier)
-                        end
-                    end
+                    self.TotalIncomeConsumption = self.TotalIncomeConsumption + consumption
 
                     eng.Active = true
-                    platoonCount = platoonCount + 1
                 end
             end
 
-            aiBrain.EngineerAssistManagerEngineerCount = platoonCount
-            aiBrain.EngineerAssistManagerBuildPower = self.TotalBuildRate
-            aiBrain.EngineerAssistManagerBuildPowerTech1 = self.TotalTechBuildRate[1]
-            aiBrain.EngineerAssistManagerBuildPowerTech2 = self.TotalTechBuildRate[2]
-            aiBrain.EngineerAssistManagerBuildPowerTech3 = self.TotalTechBuildRate[3]
-            aiBrain.EngineerAssistManagerCurrentConsumption = self.TotalIncomeConsumption
+            local globalEngineerCount = 0
+            local globalBuildPower = 0
+            local globalBuildPowerByTech = { [1] = 0, [2] = 0, [3] = 0 }
+            local globalConsumption = 0
+            for entityId, managedEngineer in managedEngineers do
+                local eng = managedEngineer.Engineer
+                if eng and not eng.Dead and not eng:BeenDestroyed()
+                    and eng.PlatoonHandle == managedEngineer.Manager then
+                    globalEngineerCount = globalEngineerCount + 1
+                    globalBuildPower = globalBuildPower + managedEngineer.BuildPower
+                    globalConsumption = globalConsumption + managedEngineer.Consumption
+                    if managedEngineer.TechLevel then
+                        globalBuildPowerByTech[managedEngineer.TechLevel] =
+                            globalBuildPowerByTech[managedEngineer.TechLevel] + managedEngineer.BuildPower
+                    end
+                else
+                    managedEngineers[entityId] = nil
+                end
+            end
+
+            aiBrain.EngineerAssistManagerEngineerCount = globalEngineerCount
+            aiBrain.EngineerAssistManagerBuildPower = globalBuildPower
+            aiBrain.EngineerAssistManagerBuildPowerTech1 = globalBuildPowerByTech[1]
+            aiBrain.EngineerAssistManagerBuildPowerTech2 = globalBuildPowerByTech[2]
+            aiBrain.EngineerAssistManagerBuildPowerTech3 = globalBuildPowerByTech[3]
+            aiBrain.EngineerAssistManagerCurrentConsumption = globalConsumption
             --LOG('Updated roster')
             --LOG('TotalTechBuildRate[1] '..tostring(self.TotalTechBuildRate[1]))
             --LOG('TotalTechBuildRate[2] '..tostring(self.TotalTechBuildRate[2]))
@@ -134,7 +181,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             --LOG('TotalBuildRate '..tostring(self.TotalBuildRate))
             if self.TotalBuildRate == 0 then
                 --LOG('Move to wait')
-                self:ChangeState(self.Wait)
+                self:ChangeState(self.CheckDisband)
                 return
             end
             --LOG('AdjustRosterForEco')
@@ -226,7 +273,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             local aiBrain = self.AIBrain
             if not aiBrain or not aiBrain:PlatoonExists(self) then return end
 
-            if aiBrain.EngineerAssistManagerBuildPower <= 0 then
+            if self.TotalBuildRate <= 0 then
                 --LOG('EngineerAssistManagerBuilderPower is zero')
                 coroutine.yield(5)
                 for _, eng in self:GetPlatoonUnits() do
@@ -251,9 +298,11 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             local available = {}
             local availableCount = 0
             for _, eng in self:GetPlatoonUnits() do
-                if eng and not eng.Dead and not eng.UnitBeingAssist and not eng['rngdata'].IsAssistAssigned then
-                    availableCount = availableCount + 1
-                    RNGINSERT(available, eng)
+                if eng and not eng.Dead then
+                    if not eng.UnitBeingAssist and not eng['rngdata'].IsAssistAssigned then
+                        availableCount = availableCount + 1
+                        RNGINSERT(available, eng)
+                    end
                 end
             end
             --LOG('Number of available engineers for new jobs'..tostring(availableCount)..' Total units in platoon '..tostring(totalUnitsInPlatoon))
@@ -288,132 +337,189 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
             --LOG('Assigning assist')
 
             local available = self.AvailableEngineers
+            local allocatedByRequest = aiBrain.EngineerAssistBPAllocatedByRequest or {}
+            local totalManagedBuildPower = aiBrain.EngineerAssistManagerBuildPower or self.TotalBuildRate
             local assistFound = false
             local engineerRadius = self.EngineerRadius
             local engineerRadiusSq = self.EngineerRadius * self.EngineerRadius
             local managerPosition = self.ManagerPosition
-            --LOG('Focus Lookup category is '..tostring(aiBrain.EngineerAssistManagerFocusCategoryLookup))
-            local assistDesc = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE + categories.MOBILE - categories.INSIGNIFICANTUNIT, managerPosition, engineerRadius, 'Ally')
-            local priorityTableLoop = 0
+            local activeRequests = aiBrain.EngineerAssistManagerActiveRequests or {}
+            if RNGGETN(activeRequests) == 0 then
+                activeRequests = {
+                    {
+                        Source = 'Legacy',
+                        FocusKey = aiBrain.EngineerAssistManagerFocusCategoryLookup or 'General',
+                        Priority = 0,
+                        MaxAssistPower = false,
+                        MinAssistPower = 0,
+                        PriorityTable = aiBrain.EngineerAssistManagerPriorityTable,
+                    },
+                }
+            end
 
-            for _, assistData in aiBrain.EngineerAssistManagerPriorityTable do
-                if RNGGETN(available) == 0 then break end
-                priorityTableLoop = priorityTableLoop + 1
+            local needsAssistDesc = false
+            for _, request in activeRequests do
+                for _, assistData in request.PriorityTable or {} do
+                    if assistData.type ~= 'ShieldRepair' then
+                        needsAssistDesc = true
+                        break
+                    end
+                end
+                if needsAssistDesc then
+                    break
+                end
+            end
+            local assistDesc
+            if needsAssistDesc then
+                assistDesc = aiBrain:GetUnitsAroundPoint(categories.STRUCTURE + categories.MOBILE - categories.INSIGNIFICANTUNIT, managerPosition, engineerRadius, 'Ally')
+            end
+            local tasksByRequest = {}
 
-                local lookupKey = assistData.bpKey or 'None'
-                local maxBp = aiBrain.EngineerAssistRuleBP[lookupKey]
-                --LOG('Max bp for lookup key '..tostring(lookupKey)..' is '..tostring(maxBp))
-                local buildRateToCommit = maxBp * self.BuildMultiplier
-                local currentBuildRateCommited = 0
-                local bestUnit = false
-                --LOG('AssistData is '..tostring(repr(assistData)))
+            for _, request in activeRequests do
+                local priorityTableLoop = 0
+                local requestTasks = {}
+                tasksByRequest[request.Source] = requestTasks
+                for _, assistData in request.PriorityTable or {} do
+                    priorityTableLoop = priorityTableLoop + 1
 
-                if assistData.type == 'Upgrade' then
-                    if assistDesc then
-                        local low = false
-                        for _, unit in assistDesc do
-                            if EntityCategoryContains(assistData.cat, unit) then
-                                if not IsDestroyed(unit) and unit:IsUnitState('Upgrading') and unit:GetAIBrain():GetArmyIndex() == armyIndex then
-                                    local unitPos = unit:GetPosition()
-                                    local engAssist = unit:GetGuards()
-                                    local currentBuildPower = RUtils.GetBuilldRateOfEngineers(aiBrain, engAssist)
-                                    if currentBuildPower <= 0 then
-                                        currentBuildPower = 1
+                    local lookupKey = assistData.bpKey or 'None'
+                    local maxBuildPower = assistData.MaxBuildPower
+                    if maxBuildPower == nil and assistData.bpKey then
+                        maxBuildPower = aiBrain.EngineerAssistRuleBP[lookupKey]
+                        if maxBuildPower == nil then
+                            error('RNGAI: Missing EngineerAssistRuleBP entry for ' .. tostring(lookupKey))
+                        end
+                    end
+                    if maxBuildPower then
+                        maxBuildPower = maxBuildPower * self.BuildMultiplier
+                    end
+                    local unitFound = false
+                    --LOG('AssistData is '..tostring(repr(assistData)))
+
+                    if assistData.type == 'ShieldRepair' then
+                        local structureManager = aiBrain.StructureManager
+                        local shieldCandidates = structureManager and structureManager.ShieldAssistPriorityCandidates
+                        local candidateTargets = {}
+                        local seenOwners = {}
+                        local ownerByEntityId = {}
+                        local committedByOwner = {}
+                        local seenEngineers = {}
+                        local totalCommitted = 0
+                        local globalBuildPowerCap = maxBuildPower or 0
+                        local perShieldBuildPowerCap = ShieldRepairPerShieldBuildPowerCap * self.BuildMultiplier
+
+                        if shieldCandidates then
+                            for _, candidate in shieldCandidates do
+                                local shield = candidate and candidate.Shield
+                                local owner = candidate and candidate.Owner
+                                local valid = shield and not shield.Dead
+                                    and owner and not owner.Dead
+                                    and shield.Owner == owner
+                                    and owner:GetFractionComplete() == 1
+                                    and candidate.IsActive
+                                    and (candidate.LastQualifyingDamageSourceCategory == 'T3Artillery'
+                                        or candidate.LastQualifyingDamageSourceCategory == 'Novax')
+                                    and EntityCategoryContains(assistData.cat, owner)
+                                    and owner.EntityId
+                                    and not seenOwners[owner.EntityId]
+
+                                if valid then
+                                    seenOwners[owner.EntityId] = true
+                                    ownerByEntityId[owner.EntityId] = owner
+                                    local guards = owner:GetGuards() or {}
+                                    local currentBuildPower = RUtils.GetBuilldRateOfEngineers(aiBrain, guards)
+                                    committedByOwner[owner.EntityId] = currentBuildPower
+                                    totalCommitted = totalCommitted + currentBuildPower
+                                    for _, guard in guards do
+                                        if guard and guard.EntityId then
+                                            seenEngineers[guard.EntityId] = true
+                                        end
                                     end
-                                    local workProgress = unit:GetWorkProgress()
-                                    --LOG('workProgress of Upgrading unit '..tostring(unit.UnitId)..' : '..tostring(workProgress))
-                                    if workProgress > 0 then
-                                        local econBuildTime = unit.Blueprint.Economy.BuildTime or 0
-                                        local remainingTime = (econBuildTime * (1 - workProgress)) / currentBuildPower
-                                        local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
-                                        if (not low or dist < low) and remainingTime > 4 then
-                                            if NavUtils.CanPathTo('Amphibious', managerPosition, unitPos) then
-                                                low = dist
-                                                bestUnit = unit
-                                            end
+
+                                    local ownerPosition = owner:GetPosition()
+                                    local distanceSquared = VDist2Sq(
+                                        managerPosition[1],
+                                        managerPosition[3],
+                                        ownerPosition[1],
+                                        ownerPosition[3]
+                                    )
+                                    if distanceSquared <= engineerRadiusSq then
+                                        if NavUtils.CanPathTo('Amphibious', managerPosition, ownerPosition) then
+                                            RNGINSERT(candidateTargets, {
+                                                Unit = owner,
+                                                ShieldCandidate = candidate,
+                                                CurrentBuildPower = currentBuildPower,
+                                                MaxBuildPower = perShieldBuildPowerCap,
+                                            })
                                         end
                                     end
                                 end
                             end
                         end
-                    end
-                elseif assistData.type == 'AssistFactory' then
-                    if assistDesc then
-                        local low = false
-                        for _, unit in assistDesc do
-                            if EntityCategoryContains(assistData.cat, unit) then
-                                if not unit.Dead and not unit:BeenDestroyed() and unit:IsUnitState('Building') and unit:GetAIBrain():GetArmyIndex() == armyIndex then
-                                    local unitPos = unit:GetPosition()
-                                    local engAssist = unit:GetGuards()
-                                    local currentBuildPower = RUtils.GetBuilldRateOfEngineers(aiBrain, engAssist)
-                                    if currentBuildPower <= 0 then
-                                        currentBuildPower = 1
-                                    end
-                                    local workProgress = unit:GetWorkProgress()
-                                    --LOG('workProgress of factory unit '..tostring(unit.UnitId)..' : '..tostring(workProgress))
-                                    if workProgress > 0 then
-                                        local econBuildTime = unit.Blueprint.Economy.BuildTime or 0
-                                        local remainingTime = (econBuildTime * (1 - workProgress)) / currentBuildPower
-                                        local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
-                                        if (not low or dist < low) and remainingTime > 4 then
-                                            if NavUtils.CanPathTo('Amphibious', managerPosition, unitPos) then
-                                                low = dist
-                                                bestUnit = unit
-                                            end
-                                        end
-                                    end
-                                end
+
+                        local engineerUnits = aiBrain:GetListOfUnits(categories.ENGINEER, false) or {}
+                        for _, eng in engineerUnits do
+                            local owner = eng and eng.UnitBeingAssist
+                            local ownerEntityId = owner and owner.EntityId
+                            if eng and not eng.Dead and eng['rngdata'] and eng['rngdata'].IsAssistAssigned
+                                and ownerEntityId and ownerByEntityId[ownerEntityId]
+                                and not seenEngineers[eng.EntityId] then
+                                local engineerBuildPower = eng.Blueprint.Economy.BuildRate * self.BuildMultiplier
+                                committedByOwner[ownerEntityId] = (committedByOwner[ownerEntityId] or 0) + engineerBuildPower
+                                totalCommitted = totalCommitted + engineerBuildPower
+                                seenEngineers[eng.EntityId] = true
                             end
                         end
-                    end
-                elseif assistData.type == 'Completion' then
-                    --LOG('Completion data is '..tostring(assistData.debug))
-                    if assistDesc then
-                        --LOG('Number of units we can assist '..tostring(RNGGETN(assistDesc)))
-                        local bestWeight
-                        --LOG('Number of units in table '..tostring(table.getn(assistDesc)))
-                        for _, unit in assistDesc do
-                            if EntityCategoryContains(assistData.cat, unit) then
-                                if not unit.Dead and not unit.ReclaimInProgress and not unit:BeenDestroyed() and unit:GetAIBrain():GetArmyIndex() == armyIndex then
-                                    local unitCompletion = unit:GetFractionComplete()
-                                    if unitCompletion < 1 then
-                                        
+
+                        local sharedBuildPower = {
+                            Current = totalCommitted,
+                            Max = globalBuildPowerCap,
+                        }
+                        for _, candidateTarget in candidateTargets do
+                            candidateTarget.CurrentBuildPower = committedByOwner[candidateTarget.Unit.EntityId] or 0
+                        end
+                        table.sort(candidateTargets, function(a, b)
+                            if a.CurrentBuildPower == b.CurrentBuildPower then
+                                return a.ShieldCandidate.PriorityScore > b.ShieldCandidate.PriorityScore
+                            end
+                            return a.CurrentBuildPower < b.CurrentBuildPower
+                        end)
+                        for _, candidateTarget in candidateTargets do
+                            local task = {
+                                Type = assistData.type,
+                                BPKey = lookupKey,
+                                Unit = candidateTarget.Unit,
+                                ShieldCandidate = candidateTarget.ShieldCandidate,
+                                CurrentBuildPower = candidateTarget.CurrentBuildPower,
+                                MaxBuildPower = candidateTarget.MaxBuildPower,
+                                SharedBuildPower = sharedBuildPower,
+                                PriorityIndex = priorityTableLoop,
+                                RequestSource = request.Source,
+                            }
+                            RNGINSERT(requestTasks, task)
+                        end
+                    elseif assistData.type == 'Upgrade' then
+                        if assistDesc then
+                            local low = false
+                            for _, unit in assistDesc do
+                                if EntityCategoryContains(assistData.cat, unit) then
+                                    if not IsDestroyed(unit) and unit:IsUnitState('Upgrading') and unit:GetAIBrain():GetArmyIndex() == armyIndex then
                                         local unitPos = unit:GetPosition()
                                         local engAssist = unit:GetGuards()
                                         local currentBuildPower = RUtils.GetBuilldRateOfEngineers(aiBrain, engAssist)
-                                        --LOG('Checking unit '..tostring(unit.UnitId)..' current build power on unit being built is '..tostring(currentBuildPower))
-                                        --LOG('Assist platoon total build power is '..tostring(self.TotalBuildRate))
                                         if currentBuildPower <= 0 then
                                             currentBuildPower = 1
                                         end
-                                        
-                                        --LOG('unitCompletion of completion unit '..tostring(unit.UnitId)..' : '..tostring(unitCompletion))
-                                        local econBuildTime = unit.Blueprint.Economy.BuildTime or 0
-                                        --LOG('econBuildTime '..tostring(econBuildTime))
-                                        --LOG('currentBuildPower '..tostring(currentBuildPower))
-                                        local remainingTime = (econBuildTime * (1 - unitCompletion)) / currentBuildPower
-                                        local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
-                                        --LOG('Remaining build time '..tostring(remainingTime))
-
-                                        if remainingTime > 4 then
-                                            --LOG('remainingTime is greater than 4')
-                                            -- The weighting was added to try and help the scenario where a t4 structure was being built and ignored for cheaper experimentals.
-                                            local unitBp = unit.Blueprint
-                                            local massCost = unitBp.Economy.BuildCostMass or 1
-                                            local weight = massCost * unitCompletion
-
-                                            if unitCompletion > 0.75 then
-                                                weight = weight + 30000
-                                            elseif unitCompletion > 0.40 then
-                                                weight = weight + 10000
-                                            end
-                                            local linearDistFactor = dist / engineerRadiusSq
-                                            weight = weight - (linearDistFactor * 2500)
-                                            --LOG('Unit weight is '..tostring(weight)..' current bestWeight is '..tostring(bestWeight))
-                                            if not bestWeight or weight > bestWeight then
+                                        local workProgress = unit:GetWorkProgress()
+                                        --LOG('workProgress of Upgrading unit '..tostring(unit.UnitId)..' : '..tostring(workProgress))
+                                        if workProgress > 0 then
+                                            local econBuildTime = unit.Blueprint.Economy.BuildTime or 0
+                                            local remainingTime = (econBuildTime * (1 - workProgress)) / currentBuildPower
+                                            local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
+                                            if (not low or dist < low) and remainingTime > 4 then
                                                 if NavUtils.CanPathTo('Amphibious', managerPosition, unitPos) then
-                                                    bestWeight = weight
-                                                    bestUnit = unit
+                                                    low = dist
+                                                    unitFound = unit
                                                 end
                                             end
                                         end
@@ -421,20 +527,47 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                                 end
                             end
                         end
-                    end
-                elseif assistData.type == 'MissileAssist' then
-                    if assistDesc then
-                        --LOG('MissileAssist detection')
-                        --LOG('Number of units we can assist '..tostring(RNGGETN(assistDesc)))
-                        local bestWeight
-                        --LOG('Number of units in table '..tostring(table.getn(assistDesc)))
-                        for _, unit in assistDesc do
-                            if EntityCategoryContains(assistData.cat, unit) then
-                                if not unit.Dead and not unit.ReclaimInProgress and not unit:BeenDestroyed() and unit:GetAIBrain():GetArmyIndex() == armyIndex then
-                                    local ammoCount = unit:GetNukeSiloAmmoCount()
-                                    if ammoCount < 1 then
-                                        local currentProgress = unit:GetWorkProgress()
-                                        if currentProgress > 0 then
+                    elseif assistData.type == 'AssistFactory' then
+                        if assistDesc then
+                            local low = false
+                            for _, unit in assistDesc do
+                                if EntityCategoryContains(assistData.cat, unit) then
+                                    if not unit.Dead and not unit:BeenDestroyed() and unit:IsUnitState('Building') and unit:GetAIBrain():GetArmyIndex() == armyIndex then
+                                        local unitPos = unit:GetPosition()
+                                        local engAssist = unit:GetGuards()
+                                        local currentBuildPower = RUtils.GetBuilldRateOfEngineers(aiBrain, engAssist)
+                                        if currentBuildPower <= 0 then
+                                            currentBuildPower = 1
+                                        end
+                                        local workProgress = unit:GetWorkProgress()
+                                        --LOG('workProgress of factory unit '..tostring(unit.UnitId)..' : '..tostring(workProgress))
+                                        if workProgress > 0 then
+                                            local econBuildTime = unit.Blueprint.Economy.BuildTime or 0
+                                            local remainingTime = (econBuildTime * (1 - workProgress)) / currentBuildPower
+                                            local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
+                                            if (not low or dist < low) and remainingTime > 4 then
+                                                if NavUtils.CanPathTo('Amphibious', managerPosition, unitPos) then
+                                                    low = dist
+                                                    unitFound = unit
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    elseif assistData.type == 'Completion' then
+                        --LOG('Completion data is '..tostring(assistData.debug))
+                        if assistDesc then
+                            --LOG('Number of units we can assist '..tostring(RNGGETN(assistDesc)))
+                            local bestWeight
+                            --LOG('Number of units in table '..tostring(table.getn(assistDesc)))
+                            for _, unit in assistDesc do
+                                if EntityCategoryContains(assistData.cat, unit) then
+                                    if not unit.Dead and not unit.ReclaimInProgress and not unit:BeenDestroyed() and unit:GetAIBrain():GetArmyIndex() == armyIndex then
+                                        local unitCompletion = unit:GetFractionComplete()
+                                        if unitCompletion < 1 then
+
                                             local unitPos = unit:GetPosition()
                                             local engAssist = unit:GetGuards()
                                             local currentBuildPower = RUtils.GetBuilldRateOfEngineers(aiBrain, engAssist)
@@ -443,31 +576,25 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                                             if currentBuildPower <= 0 then
                                                 currentBuildPower = 1
                                             end
-                                            
+
                                             --LOG('unitCompletion of completion unit '..tostring(unit.UnitId)..' : '..tostring(unitCompletion))
                                             local econBuildTime = unit.Blueprint.Economy.BuildTime or 0
                                             --LOG('econBuildTime '..tostring(econBuildTime))
                                             --LOG('currentBuildPower '..tostring(currentBuildPower))
-                                            local remainingTime = (econBuildTime * (1 - currentProgress)) / currentBuildPower
+                                            local remainingTime = (econBuildTime * (1 - unitCompletion)) / currentBuildPower
                                             local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
                                             --LOG('Remaining build time '..tostring(remainingTime))
 
                                             if remainingTime > 4 then
                                                 --LOG('remainingTime is greater than 4')
                                                 -- The weighting was added to try and help the scenario where a t4 structure was being built and ignored for cheaper experimentals.
-                                                local ALLBPS = __blueprints
-                                                local unitId = unit.UnitId
-                                                local massCost
-                                                if ALLBPS[unitId].Weapon[1].ProjectileId then
-                                                    local projBp = ALLBPS[unitId].Weapon[1].ProjectileId
-                                                    --RNGLOG('EcoPowerPreemptive return consumption number is '..(ALLBPS[projBp].Economy.BuildCostEnergy / ALLBPS[projBp].Economy.BuildTime * (ALLBPS[unitId].Economy.BuildRate * buildMultiplier)))
-                                                    massCost = ALLBPS[projBp].Economy.BuildCostMass 
-                                                end
-                                                if massCost < 1 then massCost = 1 end
-                                                local weight = massCost * currentProgress
-                                                if currentProgress > 0.75 then
+                                                local unitBp = unit.Blueprint
+                                                local massCost = unitBp.Economy.BuildCostMass or 1
+                                                local weight = massCost * unitCompletion
+
+                                                if unitCompletion > 0.75 then
                                                     weight = weight + 30000
-                                                elseif currentProgress > 0.40 then
+                                                elseif unitCompletion > 0.40 then
                                                     weight = weight + 10000
                                                 end
                                                 local linearDistFactor = dist / engineerRadiusSq
@@ -476,7 +603,71 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                                                 if not bestWeight or weight > bestWeight then
                                                     if NavUtils.CanPathTo('Amphibious', managerPosition, unitPos) then
                                                         bestWeight = weight
-                                                        bestUnit = unit
+                                                        unitFound = unit
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    elseif assistData.type == 'MissileAssist' then
+                        if assistDesc then
+                            --LOG('MissileAssist detection')
+                            --LOG('Number of units we can assist '..tostring(RNGGETN(assistDesc)))
+                            local bestWeight
+                            --LOG('Number of units in table '..tostring(table.getn(assistDesc)))
+                            for _, unit in assistDesc do
+                                if EntityCategoryContains(assistData.cat, unit) then
+                                    if not unit.Dead and not unit.ReclaimInProgress and not unit:BeenDestroyed() and unit:GetAIBrain():GetArmyIndex() == armyIndex then
+                                        local ammoCount = unit:GetNukeSiloAmmoCount()
+                                        if ammoCount < 1 then
+                                            local currentProgress = unit:GetWorkProgress()
+                                            if currentProgress > 0 then
+                                                local unitPos = unit:GetPosition()
+                                                local engAssist = unit:GetGuards()
+                                                local currentBuildPower = RUtils.GetBuilldRateOfEngineers(aiBrain, engAssist)
+                                                --LOG('Checking unit '..tostring(unit.UnitId)..' current build power on unit being built is '..tostring(currentBuildPower))
+                                                --LOG('Assist platoon total build power is '..tostring(self.TotalBuildRate))
+                                                if currentBuildPower <= 0 then
+                                                    currentBuildPower = 1
+                                                end
+
+                                                --LOG('unitCompletion of completion unit '..tostring(unit.UnitId)..' : '..tostring(unitCompletion))
+                                                local econBuildTime = unit.Blueprint.Economy.BuildTime or 0
+                                                --LOG('econBuildTime '..tostring(econBuildTime))
+                                                --LOG('currentBuildPower '..tostring(currentBuildPower))
+                                                local remainingTime = (econBuildTime * (1 - currentProgress)) / currentBuildPower
+                                                local dist = VDist2Sq(managerPosition[1], managerPosition[3], unitPos[1], unitPos[3])
+                                                --LOG('Remaining build time '..tostring(remainingTime))
+
+                                                if remainingTime > 4 then
+                                                    --LOG('remainingTime is greater than 4')
+                                                    -- The weighting was added to try and help the scenario where a t4 structure was being built and ignored for cheaper experimentals.
+                                                    local ALLBPS = __blueprints
+                                                    local unitId = unit.UnitId
+                                                    local massCost
+                                                    if ALLBPS[unitId].Weapon[1].ProjectileId then
+                                                        local projBp = ALLBPS[unitId].Weapon[1].ProjectileId
+                                                        --RNGLOG('EcoPowerPreemptive return consumption number is '..(ALLBPS[projBp].Economy.BuildCostEnergy / ALLBPS[projBp].Economy.BuildTime * (ALLBPS[unitId].Economy.BuildRate * buildMultiplier)))
+                                                        massCost = ALLBPS[projBp].Economy.BuildCostMass
+                                                    end
+                                                    if massCost < 1 then massCost = 1 end
+                                                    local weight = massCost * currentProgress
+                                                    if currentProgress > 0.75 then
+                                                        weight = weight + 30000
+                                                    elseif currentProgress > 0.40 then
+                                                        weight = weight + 10000
+                                                    end
+                                                    local linearDistFactor = dist / engineerRadiusSq
+                                                    weight = weight - (linearDistFactor * 2500)
+                                                    --LOG('Unit weight is '..tostring(weight)..' current bestWeight is '..tostring(bestWeight))
+                                                    if not bestWeight or weight > bestWeight then
+                                                        if NavUtils.CanPathTo('Amphibious', managerPosition, unitPos) then
+                                                            bestWeight = weight
+                                                            unitFound = unit
+                                                        end
                                                     end
                                                 end
                                             end
@@ -486,49 +677,258 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                             end
                         end
                     end
-                end
-                if bestUnit and not IsDestroyed(bestUnit) then
-                    --LOG('Best unit found '..tostring(bestUnit.UnitId))
-                    assistFound = true
-
-                    local lookupKey = assistData.bpKey or 'None'
-                    local maxBp = aiBrain.EngineerAssistRuleBP[lookupKey]
-                    --LOG('Unit has a maxBp '..tostring(maxBp)..'lookup key was '..tostring(lookupKey))
-                    local currentCommitted = 0
-                    if maxBp then
-                        local buildRateToCommit = maxBp * self.BuildMultiplier
-                        --LOG('buildRateToCommit '..tostring(buildRateToCommit))
-                        local engAssist = bestUnit:GetGuards()
-                        local currentBuildPower = RUtils.GetBuilldRateOfEngineers(aiBrain, engAssist)
-                        --LOG('Unit has a max bp, current allocated is '..tostring(currentBuildPower))
-                        currentCommitted= currentCommitted + currentBuildPower
+                    if assistData.type ~= 'ShieldRepair' and unitFound and not IsDestroyed(unitFound) then
+                        local guards = unitFound:GetGuards()
+                        local task = {
+                            Type = assistData.type,
+                            BPKey = lookupKey,
+                            Unit = unitFound,
+                            CurrentBuildPower = RUtils.GetBuilldRateOfEngineers(aiBrain, guards),
+                            MaxBuildPower = maxBuildPower,
+                            PriorityIndex = priorityTableLoop,
+                            ReallocateAfterSelection = priorityTableLoop > 4,
+                            RequestSource = request.Source,
+                        }
+                        RNGINSERT(requestTasks, task)
                     end
-                    --LOG('Available engineer count is '..tostring(RNGGETN(available)))
+                end
+            end
 
-                    for i = RNGGETN(available), 1, -1 do
-                        local eng = available[i]
-                        if eng and not eng.Dead then
-                            local engRate = (eng.Blueprint.Economy.BuildRate * self.BuildMultiplier)
-                            --LOG('Allocating engineer, engRate is '..tostring(engRate)..' current commited is '..tostring(currentCommitted)..' to assist unit '..tostring(bestUnit.UnitId))
-                            if (currentCommitted + engRate) <= buildRateToCommit then
-                                eng.UnitBeingAssist = bestUnit
-                                eng['rngdata'].IsAssistAssigned = true
-                                self:ForkThread(EngineerAssistThreadRNG, aiBrain, eng, bestUnit, assistData.type, assistData.bpKey or 'None')
-                                currentCommitted = currentCommitted + engRate
-                                table.remove(available, i)
-                            else
-                                --LOG('(currentCommitted + engRate) <= buildRateToCommit is false break')
+            local requestIndexBySource = {}
+            for requestIndex, request in activeRequests do
+                requestIndexBySource[request.Source] = requestIndex
+            end
+
+            local function getRequestMinimum(request)
+                local minimum = math.max(0, (request.MinAssistPower or 0) * self.BuildMultiplier)
+                if type(request.MaxAssistPower) == 'number' then
+                    minimum = math.min(minimum, math.max(0, request.MaxAssistPower * self.BuildMultiplier))
+                end
+                return minimum
+            end
+
+            local function getRequestLimit(request, requestIndex)
+                local reservedForLowerRequests = 0
+                local allocatedByHigherRequests = 0
+                for higherIndex = 1, requestIndex - 1 do
+                    local higherRequest = activeRequests[higherIndex]
+                    allocatedByHigherRequests = allocatedByHigherRequests
+                        + (allocatedByRequest[higherRequest.Source] or 0)
+                end
+                for lowerIndex = requestIndex + 1, RNGGETN(activeRequests) do
+                    local lowerRequest = activeRequests[lowerIndex]
+                    reservedForLowerRequests = reservedForLowerRequests + getRequestMinimum(lowerRequest)
+                end
+
+                local requestLimit = totalManagedBuildPower
+                if type(request.MaxAssistPower) == 'number' then
+                    requestLimit = math.min(requestLimit, request.MaxAssistPower * self.BuildMultiplier)
+                end
+                local remainingBuildPower = totalManagedBuildPower
+                    - allocatedByHigherRequests - reservedForLowerRequests
+                return math.max(0, math.min(requestLimit, remainingBuildPower))
+            end
+
+            local function canFitEngineer(assist, engineerBuildPower, requestBuildPower, requestLimit, releasingAssignment)
+                if requestBuildPower + engineerBuildPower > requestLimit then
+                    return false
+                end
+
+                local taskBuildPower = assist.CurrentBuildPower
+                local sharedBuildPower = assist.SharedBuildPower and assist.SharedBuildPower.Current
+                if releasingAssignment then
+                    if releasingAssignment.Unit == assist.Unit then
+                        taskBuildPower = taskBuildPower - releasingAssignment.BuildPower
+                    end
+                    if assist.SharedBuildPower and releasingAssignment.Type == 'ShieldRepair' then
+                        sharedBuildPower = sharedBuildPower - releasingAssignment.BuildPower
+                    end
+                end
+
+                if assist.MaxBuildPower and taskBuildPower + engineerBuildPower > assist.MaxBuildPower then
+                    return false
+                end
+                if assist.SharedBuildPower and sharedBuildPower + engineerBuildPower > assist.SharedBuildPower.Max then
+                    return false
+                end
+                return true
+            end
+
+            local function revokeLowerPriorityEngineer(requestIndex, assist, requestBuildPower, requestLimit)
+                local selectedAssignment
+                local selectedDistance
+                local targetPosition = assist.Unit:GetPosition()
+                for _, assignment in self.AssistAssignments do
+                    local lowerIndex = requestIndexBySource[assignment.Source]
+                    local isLowerPriority = not lowerIndex or lowerIndex > requestIndex
+                    if isLowerPriority and not assignment.Revoked then
+                        local lowerRequest = lowerIndex and activeRequests[lowerIndex]
+                        local lowerMinimum = lowerRequest and getRequestMinimum(lowerRequest) or 0
+                        local lowerAllocated = allocatedByRequest[assignment.Source] or 0
+                        local remainingLowerAllocation = lowerAllocated - assignment.BuildPower
+                        local buildPower = assignment.BuildPower
+                        if remainingLowerAllocation >= lowerMinimum
+                            and canFitEngineer(assist, buildPower, requestBuildPower, requestLimit, assignment) then
+                            local engineer = assignment.Engineer
+                            if engineer and not engineer.Dead then
+                                local engineerPosition = engineer:GetPosition()
+                                local distanceSquared = VDist2Sq(
+                                    engineerPosition[1],
+                                    engineerPosition[3],
+                                    targetPosition[1],
+                                    targetPosition[3]
+                                )
+                                if not selectedDistance or distanceSquared < selectedDistance then
+                                    selectedAssignment = assignment
+                                    selectedDistance = distanceSquared
+                                end
+                            end
+                        end
+                    end
+                end
+
+                if selectedAssignment then
+                    selectedAssignment.Revoked = true
+                    selectedAssignment.RevocationReason = 'higher-priority-request'
+                    allocatedByRequest[selectedAssignment.Source] = math.max(
+                        0,
+                        (allocatedByRequest[selectedAssignment.Source] or 0) - selectedAssignment.BuildPower
+                    )
+                    return true
+                end
+                return false
+            end
+
+            local reallocationRequested = false
+            local assignmentRevoked = false
+            local activeRequestsBySource = aiBrain.EngineerAssistManagerActiveRequestsBySource or {}
+            for _, assignment in self.AssistAssignments do
+                local requestWasWithdrawn = assignment.Source ~= 'Legacy'
+                    and not activeRequestsBySource[assignment.Source]
+                local legacyRequestSuperseded = assignment.Source == 'Legacy'
+                    and RNGGETN(activeRequests) > 0
+                if not assignment.Revoked and (requestWasWithdrawn or legacyRequestSuperseded) then
+                    assignment.Revoked = true
+                    assignment.RevocationReason = requestWasWithdrawn
+                        and 'request-withdrawn' or 'legacy-request-superseded'
+                    assignmentRevoked = true
+                end
+            end
+
+            if not assignmentRevoked then
+                for requestIndex, request in activeRequests do
+                    local requestTasks = tasksByRequest[request.Source] or {}
+                    local requestLimit = getRequestLimit(request, requestIndex)
+                    local requestBuildPower = allocatedByRequest[request.Source] or 0
+
+                    if requestBuildPower > requestLimit then
+                        for _, assignment in self.AssistAssignments do
+                            if not assignment.Revoked and assignment.Source == request.Source then
+                                assignment.Revoked = true
+                                assignment.RevocationReason = 'request-cap-reduced'
+                                requestBuildPower = requestBuildPower - assignment.BuildPower
+                                allocatedByRequest[request.Source] = requestBuildPower
+                                assignmentRevoked = true
                                 break
                             end
                         end
                     end
-                    if priorityTableLoop > 4 then
-                        self:ChangeState(self.CheckForEngineerReallocation)
-                        return
+
+                    for _, assist in requestTasks do
+                        while not assignmentRevoked do
+                            requestBuildPower = allocatedByRequest[request.Source] or 0
+                            local selectedIndex
+                            local selectedBuildPower
+                            local selectedDistance
+                            local targetPosition = assist.Unit:GetPosition()
+
+                            for index, engineer in available do
+                                if engineer and not engineer.Dead then
+                                    local engineerBuildPower = engineer.Blueprint.Economy.BuildRate * self.BuildMultiplier
+                                    if canFitEngineer(assist, engineerBuildPower, requestBuildPower, requestLimit) then
+                                        local engineerPosition = engineer:GetPosition()
+                                        local distanceSquared = VDist2Sq(
+                                            engineerPosition[1],
+                                            engineerPosition[3],
+                                            targetPosition[1],
+                                            targetPosition[3]
+                                        )
+                                        if not selectedDistance or distanceSquared < selectedDistance then
+                                            selectedIndex = index
+                                            selectedBuildPower = engineerBuildPower
+                                            selectedDistance = distanceSquared
+                                        end
+                                    end
+                                end
+                            end
+
+                            if selectedIndex then
+                                local engineer = available[selectedIndex]
+                                engineer.UnitBeingAssist = assist.Unit
+                                engineer['rngdata'].IsAssistAssigned = true
+                                local assignment = {
+                                    Engineer = engineer,
+                                    Manager = self,
+                                    Unit = assist.Unit,
+                                    Source = request.Source,
+                                    FocusKey = request.FocusKey,
+                                    Priority = request.Priority,
+                                    RequestOrder = requestIndex,
+                                    Type = assist.Type,
+                                    BuildPower = selectedBuildPower,
+                                    Revoked = false,
+                                }
+                                self.AssistAssignments[engineer.EntityId] = assignment
+                                self:ForkThread(
+                                    EngineerAssistThreadRNG,
+                                    aiBrain,
+                                    engineer,
+                                    assist.Unit,
+                                    assist.Type,
+                                    assist.BPKey,
+                                    assist.ShieldCandidate,
+                                    assignment
+                                )
+                                allocatedByRequest[request.Source] = requestBuildPower + selectedBuildPower
+                                aiBrain.EngineerAssistBPAllocatedByRequest[request.Source] = allocatedByRequest[request.Source]
+                                assist.CurrentBuildPower = assist.CurrentBuildPower + selectedBuildPower
+                                if assist.SharedBuildPower then
+                                    assist.SharedBuildPower.Current = assist.SharedBuildPower.Current + selectedBuildPower
+                                end
+                                table.remove(available, selectedIndex)
+                                assistFound = true
+                                if assist.ReallocateAfterSelection then
+                                    reallocationRequested = true
+                                end
+                            elseif revokeLowerPriorityEngineer(
+                                requestIndex,
+                                assist,
+                                requestBuildPower,
+                                requestLimit
+                            ) then
+                                assignmentRevoked = true
+                            else
+                                break
+                            end
+                        end
+                        if assignmentRevoked then
+                            break
+                        end
                     end
-                else
-                    --LOG('No best unit found for assist manager, we will loop back again')
+                    if assignmentRevoked then
+                        break
+                    end
                 end
+            end
+
+            if assignmentRevoked then
+                self:ChangeState(self.Wait)
+                return
+            end
+
+            if reallocationRequested then
+                self:ChangeState(self.CheckForEngineerReallocation)
+                return
             end
 
             self.AssistFoundLastTick = assistFound
@@ -615,6 +1015,8 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
                                         eng.CaptureInProgress = nil
                                         eng.UnitBeingAssist = nil
                                         eng['rngdata'].IsAssistAssigned = nil
+                                        aiBrain.EngineerAssistAssignments[eng.EntityId] = nil
+                                        aiBrain.EngineerAssistManagedEngineers[eng.EntityId] = nil
                                         eng.Active = nil
                                         eng.CustomState = nil
                                         if aiBrain.RNGDEBUG then
@@ -741,8 +1143,7 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
         StateName = 'Wait',
 
         Main = function(self)
-            -- central pacing point (replaces coroutine.yield(40) at bottom of loop)
-            coroutine.yield(40)
+            coroutine.yield(10)
 
             if IsDestroyed(self) then return end
             local aiBrain = self.AIBrain
@@ -755,11 +1156,16 @@ AIPlatoonEngineerAssistManagerBehavior = Class(AIPlatoonRNG) {
 }
 
 -- Keep your existing threads/utilities as methods on the class:
-EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
+EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType, bpKey, shieldCandidate, assignment)
+    local function ownsAssignment()
+        return self.AssistAssignments[eng.EntityId] == assignment
+    end
     --LOG('EngineerAssistThreat has been forked for '..tostring(eng.UnitId))
     --LOG('Assist Platoon Focus Category at the time was '..tostring(aiBrain.EngineerAssistManagerFocusCategoryLookup))
-    IssueClearCommands({eng})
-    IssueGuard({eng}, unitToAssist)
+    if ownsAssignment() then
+        IssueClearCommands({eng})
+        IssueGuard({eng}, unitToAssist)
+    end
     local assistTimeout = 0
     coroutine.yield(math.random(1, 20))
     while eng and not eng.Dead and aiBrain:PlatoonExists(self) and unitToAssist do
@@ -767,7 +1173,23 @@ EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
         if not unitToAssist or IsDestroyed(unitToAssist) then
             --eng:SetCustomName('assist function break due to no UnitBeingAssist')
             --LOG('not unitToAssist or unitToAssist has been destroyed, exiting EngineerAssistThreadRNG')
-            eng.UnitBeingAssist = nil
+            if ownsAssignment() then
+                eng.UnitBeingAssist = nil
+            end
+            break
+        end
+        local activeRequestsBySource = aiBrain.EngineerAssistManagerActiveRequestsBySource or {}
+        local activeRequest = assignment and activeRequestsBySource[assignment.Source]
+        local currentAssignment = assignment and self.AssistAssignments[eng.EntityId]
+        local assignmentInvalid = assignment and (assignment.Revoked
+            or currentAssignment ~= assignment
+            or eng.PlatoonHandle ~= self
+            or (assignment.Source ~= 'Legacy' and (not activeRequest or activeRequest.FocusKey ~= assignment.FocusKey))
+            or (assignment.Source == 'Legacy' and RNGGETN(aiBrain.EngineerAssistManagerActiveRequests or {}) > 0))
+        if assignmentInvalid then
+            if ownsAssignment() then
+                eng.UnitBeingAssist = nil
+            end
             break
         end
         if eng:IsIdleState() then
@@ -783,67 +1205,57 @@ EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
         if not aiBrain.EngineerAssistManagerActive then
             --eng:SetCustomName('Got asked to remove myself due to assist manager being false')
             --LOG('EngineerAssistManagerActive is no longer active, exiting EngineerAssistThreadRNG')
-            EngineerAssistRemoveRNG(self, aiBrain, eng)
+            if ownsAssignment() then
+                EngineerAssistRemoveRNG(self, aiBrain, eng)
+            end
             return
+        end
+        if jobType == 'ShieldRepair' then
+            local shield = shieldCandidate and shieldCandidate.Shield
+            local structureManager = aiBrain.StructureManager
+            local shieldRegistry = structureManager and structureManager.ShieldAssistCandidateRegistry
+            local candidateIsCurrent = shield and not shield.Dead
+                and shieldRegistry
+                and shieldRegistry[shield.EntityId] == shieldCandidate
+                and shield.Owner == unitToAssist
+                and shield.Enabled ~= false
+                and shieldCandidate.IsActive
+                and (shieldCandidate.LastQualifyingDamageSourceCategory == 'T3Artillery'
+                    or shieldCandidate.LastQualifyingDamageSourceCategory == 'Novax')
+            if not candidateIsCurrent then
+                if ownsAssignment() then
+                    eng.UnitBeingAssist = nil
+                end
+                break
+            end
         end
         if jobType == 'Completion' and not IsDestroyed(unitToAssist) and unitToAssist:GetFractionComplete() == 1  then
             --LOG('Engineer assist is completed, exiting EngineerAssistThreadRNG')
-            eng.UnitBeingAssist = nil
+            if ownsAssignment() then
+                eng.UnitBeingAssist = nil
+            end
             break
         end
         if jobType =='Upgrade' and IsDestroyed(unitToAssist) then
             --LOG('Upgrading unit is destroyed, break from assist thread')
-            eng.UnitBeingAssist = nil
+            if ownsAssignment() then
+                eng.UnitBeingAssist = nil
+            end
             break
         end
         if jobType == 'MissileAssist' then
             -- Exit if a missile is finished
             if unitToAssist:GetTacticalSiloAmmoCount() > 0 then
-                eng.UnitBeingAssist = nil
+                if ownsAssignment() then
+                    eng.UnitBeingAssist = nil
+                end
                 break
             end
             -- Exit if the silo is no longer working on a missile (canceled/paused)
             if unitToAssist:GetWorkProgress() == 0 then
-                eng.UnitBeingAssist = nil
-                break
-            end
-        end
-        if aiBrain.EngineerAssistManagerFocusCategory and not EntityCategoryContains(aiBrain.EngineerAssistManagerFocusCategory, unitToAssist) 
-        and not unitToAssist.Blueprint.CategoriesHash.ENERGYPRODUCTION then
-            local removeEngineer = true
-            local focusLookupValue = aiBrain.EngineerAssistManagerFocusCategoryLookup or 'None'
-            local ruleMaxBP = aiBrain.EngineerAssistRuleBP[focusLookupValue] or 0
-            local engManager = eng.BuilderManagerData.EngineerManager
-            if engManager and engManager.NumStructuresBeingBuilt then
-                local beingBuiltCount = engManager:NumStructuresBeingBuilt(aiBrain.EngineerAssistManagerFocusCategory)
-                if beingBuiltCount < 1 then
-                    --LOG('Focus category has changed but no structures are being build of that category')
-                    removeEngineer = false
+                if ownsAssignment() then
+                    eng.UnitBeingAssist = nil
                 end
-            end
-            if removeEngineer then
-                if unitToAssist.Blueprint.CategoriesHash.ENGINEER and EntityCategoryContains(aiBrain.EngineerAssistManagerFocusCategory, unitToAssist.UnitBeingAssist) then
-                    --LOG('Focus category has changed but the engineer is assisting another engineer that is the correct category')
-                    removeEngineer = false
-                end
-            end
-
-            if removeEngineer then
-                local currentAllocatedBP = aiBrain.EngineerAssistCurrentBPAllocated[focusLookupValue] or 0
-                if focusLookupValue ~= 'None' and ruleMaxBP > 0 and currentAllocatedBP >= ruleMaxBP then
-                    --LOG('Focus category has changed but the unit it could assist already has a high build power assigned')
-                    removeEngineer = false 
-                end
-            end
-            if not removeEngineer then
-                if eng.PlatoonHandle ~= self then
-                    --LOG('Engineers platoon handle is no longer the assist manager, what is it '..tostring(eng.PlatoonHandle.BuilderName))
-                    removeEngineer = true
-                end
-            end
-            if removeEngineer then
-                --LOG('AssistThread_ABORT_FOCUS: Eng '..eng.EntityId..' aborting '..unitToAssist.UnitId..' because Brain Focus is now '..tostring(focusLookupValue))
-                eng.UnitBeingAssist = nil
                 break
             end
         end
@@ -851,7 +1263,9 @@ EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
             if not eng.Dead and not eng:IsPaused() then
                 eng:SetPaused( true )
             end
-            while aiBrain:GetEconomyTrend('ENERGY') > ( 10 * aiBrain.EnemyIntel.HighestPhase ) and aiBrain:GetEconomyStored('MASS') < 20 do
+            while aiBrain:GetEconomyTrend('ENERGY') > ( 10 * aiBrain.EnemyIntel.HighestPhase )
+                and aiBrain:GetEconomyStored('MASS') < 20
+                and not (assignment and assignment.Revoked) do
                 coroutine.yield(15)
             end
             if not eng.Dead then
@@ -860,9 +1274,13 @@ EngineerAssistThreadRNG = function(self, aiBrain, eng, unitToAssist, jobType)
         end
         coroutine.yield(30)
     end
-    IssueClearCommands({eng})
-    eng.UnitBeingAssist = nil
-    eng['rngdata'].IsAssistAssigned = nil
+
+    if ownsAssignment() then
+        IssueClearCommands({eng})
+        eng.UnitBeingAssist = nil
+        eng['rngdata'].IsAssistAssigned = nil
+        self.AssistAssignments[eng.EntityId] = nil
+    end
 end
 
 EngineerAssistRemoveRNG = function(self, aiBrain, eng)
@@ -876,6 +1294,12 @@ EngineerAssistRemoveRNG = function(self, aiBrain, eng)
         eng.CaptureInProgress = nil
         eng.UnitBeingAssist = nil
         eng['rngdata'].IsAssistAssigned = nil
+        if self.AssistAssignments then
+            self.AssistAssignments[eng.EntityId] = nil
+        end
+        if aiBrain.EngineerAssistManagedEngineers then
+            aiBrain.EngineerAssistManagedEngineers[eng.EntityId] = nil
+        end
         eng.Active = nil
         eng.CustomState = nil
         if aiBrain.RNGDEBUG then

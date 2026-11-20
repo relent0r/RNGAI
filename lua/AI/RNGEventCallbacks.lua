@@ -7,6 +7,17 @@ local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMa
 
 local WeakValueTable = { __mode = 'v' }
 
+function OnShieldDamaged(shield, instigator)
+    if not RNGAIGLOBALS.RNGAIPresent or not shield or shield.Dead then
+        return
+    end
+
+    local aiBrain = shield.Brain
+    if aiBrain and aiBrain.RNG and aiBrain.StructureManager then
+        aiBrain.StructureManager:RegisterShieldDamage(shield, instigator)
+    end
+end
+
 function OnCreate(unit)
     if RNGAIGLOBALS.RNGAIPresent then
         if not unit['rngdata'] then

@@ -13,17 +13,17 @@ local RNGLOG = import('/mods/RNGAI/lua/AI/RNGDebug.lua').RNGLOG
 -- ##############################################################################################################
 function ReclaimablesAvailableAtBase(aiBrain, locType)
     if aiBrain:GetEconomyStoredRatio('MASS') < .80 then
-        for k, v in aiBrain.BuilderManagers do
-            if locType == k then
-                if v.ReclaimData.ReclaimAvailable then
-                    local engineersRequired = v.ReclaimData.EngineersRequired or 4
-                    if locType == 'MAIN' then
-                        engineersRequired = engineersRequired * 3
-                    end
-                    if v.EngineerManager.ConsumptionUnits.Engineers.Count and v.EngineerManager.ConsumptionUnits.Engineers.Count < engineersRequired + 2 then
-                        return true
-                    end
-                end
+        local builderManager = aiBrain.BuilderManagers[locType]
+        local engineerManager = builderManager and builderManager.EngineerManager
+        local reclaimData = builderManager and builderManager.ReclaimData
+
+        if engineerManager and reclaimData and reclaimData.ReclaimAvailable then
+            local reclaimCount = engineerManager:GetEngineerStateMachineCount('Engineers', 'ReclaimEngineer')
+            local desiredReclaimCount = reclaimData.EngineersRequired
+            if reclaimCount and desiredReclaimCount and reclaimCount < desiredReclaimCount then
+                --LOG('*AI DEBUG: ReclaimablesAvailableAtBase return true')
+                --LOG('Reclaim count is '..tostring(reclaimCount)..' and desired reclaim count is '..tostring(desiredReclaimCount))
+                return true
             end
         end
     end

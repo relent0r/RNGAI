@@ -803,6 +803,11 @@ AIBrain = Class(RNGAIBrainClass) {
         self.EngineerAssistManagerFocusCategory = false
         self.EngineerAssistManagerMinAssistPower = 0
         self.EngineerAssistManagerRequests = {}
+        self.EngineerAssistManagerActiveRequests = {}
+        self.EngineerAssistManagerActiveRequestsBySource = {}
+        self.EngineerAssistAssignments = {}
+        self.EngineerAssistManagedEngineers = {}
+        self.EngineerAssistBPAllocatedByRequest = {}
         self.EngineerAssistManagerPriorityTable = {}
         self.EngineerAssistRuleBP = {
             Energy = 320,
@@ -810,6 +815,7 @@ AIBrain = Class(RNGAIBrainClass) {
             SMD= 320,
             None = 999999999,
             Shield = 320,
+            ShieldRepair = 440,
             MassStorage = 320,
         }
         self.EngineerAssistCurrentBPAllocated = {
@@ -853,6 +859,9 @@ AIBrain = Class(RNGAIBrainClass) {
                 {cat = categories.STRUCTURE * categories.ENERGYPRODUCTION, type = 'Completion', debug = 'HighValue structure * energyproduction', bpKey = 'Energy'}, 
                 {cat = categories.STRUCTURE * categories.FACTORY, type = 'Completion', debug = 'HighValue factory'},
                 {cat = categories.STRUCTURE * categories.MASSSTORAGE, type = 'Completion', debug = 'HighValue mass storage', bpKey = 'MassStorage'}
+            },
+            ['ShieldRepair'] = {
+                {cat = categories.STRUCTURE, type = 'ShieldRepair', debug = 'Damaged shield owner', bpKey = 'ShieldRepair'},
             },
             ['AirUpgrade'] = {
                 {cat = categories.FACTORY * categories.AIR - categories.SUPPORTFACTORY, type = 'Upgrade', debug = 'AirUpgrade air hsq upgrade'}, 
@@ -1715,6 +1724,7 @@ AIBrain = Class(RNGAIBrainClass) {
         self.BrainIntel.SuicideModeActive = false
         self.BrainIntel.SuicideModeTarget = false
         self.BrainIntel.TeamCount = 0
+        self.BrainIntel.HighestPhase = 1
         self.BrainIntel.ClosestAllyBase = 0
         self.BrainIntel.SMLReady = false
         self.BrainIntel.SMLTargetPositions = {}
@@ -6444,7 +6454,7 @@ AIBrain = Class(RNGAIBrainClass) {
         end
     end,
 
-    RequestEngineerAssistFocus = function(self, source, focusKey, priority, ttl, maxAssist)
+    RequestEngineerAssistFocus = function(self, source, focusKey, priority, ttl, maxAssist, minAssist)
         self.EngineerAssistManagerRequests = self.EngineerAssistManagerRequests or {}
         local expiry = GetGameTimeSeconds() + (ttl or 60)
         --LOG('RequestEngineerAssistFocus for focusKey'..tostring(source))
@@ -6453,6 +6463,7 @@ AIBrain = Class(RNGAIBrainClass) {
             FocusKey = focusKey,
             Priority = priority,
             MaxAssistPower = maxAssist,
+            MinAssistPower = minAssist or 0,
             Expiry = expiry,
         }
     end,
@@ -6464,8 +6475,9 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EngineerAssistManagerRequests['EarlyEco'] = {
                 FocusKey = 'EnergyEarly',
                 Priority = 90,
-                MaxAssistPower = false,
-                Expiry = gameTime + 2
+                MaxAssistPower = 120,
+                MinAssistPower = 0,
+                Expiry = gameTime + 12
             }
         end
         -- 2. Energy Required / Survival Check
@@ -6473,8 +6485,9 @@ AIBrain = Class(RNGAIBrainClass) {
             self.EngineerAssistManagerRequests['PowerEco'] = {
                 FocusKey = 'EnergyRequired',
                 Priority = 1000,
-                MaxAssistPower = false,
-                Expiry = gameTime + 2
+                MaxAssistPower = 420,
+                MinAssistPower = 0,
+                Expiry = gameTime + 12
             }
         end
         -- 3. T3 Air Rush Strategy Check
@@ -6483,7 +6496,8 @@ AIBrain = Class(RNGAIBrainClass) {
                 FocusKey = 'T3AirRush',
                 Priority = 80,
                 MaxAssistPower = false,
-                Expiry = gameTime + 2
+                MinAssistPower = 0,
+                Expiry = gameTime + 12
             }
         end
         -- 4. Default Fallback (Mass/General)
@@ -6492,7 +6506,8 @@ AIBrain = Class(RNGAIBrainClass) {
             FocusKey = 'General',
             Priority = 0,
             MaxAssistPower = false,
-            Expiry = gameTime + 2
+            MinAssistPower = 0,
+            Expiry = gameTime + 12
         }
     end,
 
@@ -6549,6 +6564,7 @@ AIBrain = Class(RNGAIBrainClass) {
             ['HighValue'] = categories.MOBILE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.EXPERIMENTAL + categories.STRUCTURE * categories.TECH3 * (categories.STRATEGIC + categories.ANTIMISSILE),
             ['General'] = categories.STRUCTURE + categories.EXPERIMENTAL + categories.MOBILE,
             ['SMDLoading'] = categories.STRUCTURE * categories.DEFENSE * categories.ANTIMISSILE * categories.TECH3,
+            ['ShieldRepair'] = categories.STRUCTURE,
         }
 
         local buildPowerTable = {
@@ -6557,9 +6573,11 @@ AIBrain = Class(RNGAIBrainClass) {
             TECH3 = 32.5
         }
 
-        coroutine.yield(900)
+        coroutine.yield(10)
         local lastBP = 0
         local assistGapThreshold = 0.05
+        local lastRequestLogTime = 0
+        local lastRequestLogSignature = ''
         
         while true do
             self.EngineerAssistManagerActive = true
@@ -6595,13 +6613,19 @@ AIBrain = Class(RNGAIBrainClass) {
             local currentTime = GetGameTimeSeconds()
             self:GetBrainAssistPriorities(currentTime)
 
+            local activeRequests = {}
+            local activeRequestsBySource = {}
             if self.EngineerAssistManagerRequests then
                 for source, data in self.EngineerAssistManagerRequests do
                     if currentTime < data.Expiry then
-                        if data.Priority > bestPriority then
-                            bestPriority = data.Priority
-                            bestFocus = data.FocusKey
-                        end
+                        local request = {
+                            Source = source,
+                            FocusKey = data.FocusKey,
+                            Priority = data.Priority,
+                            MaxAssistPower = data.MaxAssistPower,
+                            MinAssistPower = data.MinAssistPower or 0,
+                        }
+                        table.insert(activeRequests, request)
                     else
                         -- Prune expired entry
                         self.EngineerAssistManagerRequests[source] = nil
@@ -6609,7 +6633,45 @@ AIBrain = Class(RNGAIBrainClass) {
                 end
             end
 
+            table.sort(activeRequests, function(a, b)
+                if a.Priority == b.Priority then
+                    return tostring(a.Source) < tostring(b.Source)
+                end
+                return a.Priority > b.Priority
+            end)
+
+            for _, request in activeRequests do
+                request.PriorityTable = GetPriorityAssistTable(request.FocusKey)
+                activeRequestsBySource[request.Source] = request
+            end
+
+            if activeRequests[1] then
+                bestFocus = activeRequests[1].FocusKey
+                bestPriority = activeRequests[1].Priority
+            end
+
+            self.EngineerAssistManagerActiveRequests = activeRequests
+            self.EngineerAssistManagerActiveRequestsBySource = activeRequestsBySource
             self.EngineerAssistManagerPriorityTable = GetPriorityAssistTable(bestFocus)
+            local requestSignature = ''
+            local requestSummary = ''
+            local allocatedRuleSummary = ''
+            local allocatedByRequest = self.EngineerAssistBPAllocatedByRequest or {}
+            local allocatedByRule = self.EngineerAssistCurrentBPAllocated or {}
+            for _, request in activeRequests do
+                local requestFields = tostring(request.Source) .. ':' .. tostring(request.FocusKey)
+                    .. ':' .. tostring(request.Priority)
+                    .. ':' .. tostring(request.MinAssistPower or 0)
+                    .. ':' .. tostring(request.MaxAssistPower)
+                requestSignature = requestSignature .. (requestSignature ~= '' and ',' or '') .. requestFields
+                requestSummary = requestSummary .. (requestSummary ~= '' and ',' or '')
+                    .. requestFields .. ':allocated=' .. tostring(allocatedByRequest[request.Source] or 0)
+            end
+            for ruleKey, buildPower in allocatedByRule do
+                allocatedRuleSummary = allocatedRuleSummary
+                    .. (allocatedRuleSummary ~= '' and ',' or '')
+                    .. tostring(ruleKey) .. '=' .. tostring(buildPower)
+            end
             self.EngineerAssistManagerFocusCategoryLookup = bestFocus
             self.EngineerAssistManagerFocusCategory = FocusCategoryMap[bestFocus] or FocusCategoryMap['General']
             self.EngineerAssistManagerMinAssistPower = targetBp
@@ -6617,6 +6679,10 @@ AIBrain = Class(RNGAIBrainClass) {
             if math.abs(targetBp - lastBP) > (lastBP * assistGapThreshold) then
                 self.EngineerAssistManagerBuildPowerRequired = targetBp
                 lastBP = targetBp
+            end
+            if requestSignature ~= lastRequestLogSignature or currentTime - lastRequestLogTime >= 30 then
+                lastRequestLogSignature = requestSignature
+                lastRequestLogTime = currentTime
             end
             --LOG('Current build power required '..tostring(self.EngineerAssistManagerBuildPowerRequired))
             --LOG('Current Build Power '..tostring(self.EngineerAssistManagerBuildPower))

@@ -8125,17 +8125,7 @@ UpdateShieldsProtectingUnit = function(aiBrain, finishedUnit)
         if unit['rngdata'].ShieldsInRange then
             for _, v in pairs(unit['rngdata'].ShieldsInRange) do
                 if v and not v.Dead and v['rngdata'].UnitsDefended then
-                    local keyToDelete
-                    for l, c in pairs(v['rngdata'].UnitsDefended) do
-                        if unit.EntityId == c.EntityId then
-                            --LOG('Removing Unit from shield unitsdefended table')
-                            keyToDelete = l
-                            break
-                        end
-                    end
-                    if keyToDelete then
-                        table.remove(v['rngdata'].UnitsDefended, keyToDelete)
-                    end
+                    v['rngdata'].UnitsDefended[unit.EntityId] = nil
                 end
             end
 
@@ -8192,7 +8182,7 @@ UpdateUnitsProtectedByShield = function(aiBrain, finishedUnit)
     import("/lua/scenariotriggers.lua").CreateUnitDestroyedTrigger(deathFunction, finishedUnit)
 
     if not finishedUnit['rngdata']['UnitsDefended'] then
-        finishedUnit['rngdata']['UnitsDefended'] = {}
+        finishedUnit['rngdata']['UnitsDefended'] = setmetatable({}, WeakValueTable)
     end
 
     local function GetShieldRadiusAboveGroundSquaredRNG(shield)

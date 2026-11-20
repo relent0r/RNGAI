@@ -16,6 +16,14 @@ local RNGREMOVE = table.remove
 local RNGSORT = table.sort
 
 local WeakValueTable = { __mode = 'v' }
+local ShieldAssistCandidateUpdateInterval = 5
+local ShieldAssistStartHealthRatio = 0.98
+local ShieldAssistStopHealthRatio = 0.995
+local ShieldAssistRecoveryDelay = 20
+local ShieldAssistCandidateQuietPeriod = 20
+local ShieldAssistThreatWindow = 30
+local ShieldAssistRequestPriority = 70
+local ShieldAssistRequestTTL = 12
 
 StructureManager = Class {
     Create = function(self, brain)
@@ -23,6 +31,8 @@ StructureManager = Class {
         self.Initialized = false
         self.Debug = false
         self.LabelMassDrain = {}
+        self.ShieldAssistCandidateRegistry = {}
+        self.ShieldAssistPriorityCandidates = {}
         self.Factories = {
             -- Reminder about the keys being tech level
             LAND = {
@@ -228,6 +238,7 @@ StructureManager = Class {
         self:ForkThread(self.EcoTacticalThread, self.Brain) -- tbd
         self:ForkThread(self.CheckDefensiveCoverage)
         self:ForkThread(self.StructureUpgradeThreadRNG)
+        self:ForkThread(self.UpdateShieldAssistCandidates)
         if self.Debug then
             self:ForkThread(self.StructureDebugThread)
         end
@@ -1341,16 +1352,18 @@ StructureManager = Class {
                     if not t2AirPass then
                         if (not aiBrain.RNGEXP) and totalAirT2HQCount < 1 and totalAirT3HQCount < 1 and self.Factories.AIR[1].UpgradingCount < 1 and self.Factories.AIR[1].Total > 0 then
                             --RNGLOG('Factory T1 Air Upgrade HQ Check passed')
-                            if massEfficiencyOverTime >= 1.025 and energyEfficiencyOverTime >= 1.05 then
-                                local EnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
-                                local MassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
-                                if MassEfficiency >= 1.025 and EnergyEfficiency >= 1.0 then
-                                    local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
-                                    if factoryToUpgrade and not factoryToUpgrade.Dead then
-                                        --RNGLOG('Structure Manager Triggering T2 Air HQ Upgrade')
-                                        self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
-                                        t2AirPass = true
-                                        coroutine.yield(20)
+                            if actualMexIncome > (18 * multiplier) and aiBrain.EconomyOverTimeCurrent.EnergyIncome > 26.0 then
+                                if massEfficiencyOverTime >= 1.025 and energyEfficiencyOverTime >= 1.10 then
+                                    local EnergyEfficiency = math.min(GetEconomyIncome(aiBrain,'ENERGY') / GetEconomyRequested(aiBrain,'ENERGY'), 2)
+                                    local MassEfficiency = math.min(GetEconomyIncome(aiBrain,'MASS') / GetEconomyRequested(aiBrain,'MASS'), 2)
+                                    if MassEfficiency >= 1.025 and EnergyEfficiency >= 1.10 then
+                                        local factoryToUpgrade = self:GetClosestFactory('MAIN', 'AIR', 'TECH1')
+                                        if factoryToUpgrade and not factoryToUpgrade.Dead then
+                                            --RNGLOG('Structure Manager Triggering T2 Air HQ Upgrade')
+                                            self:ForkThread(self.UpgradeFactoryRNG, factoryToUpgrade, 'AIR')
+                                            t2AirPass = true
+                                            coroutine.yield(20)
+                                        end
                                     end
                                 end
                             end
@@ -2186,9 +2199,6 @@ StructureManager = Class {
             if brainIntel.AverageSaturation and brainIntel.AverageSaturation < 0.5 then
                 massBuffer = 800
             end
-            if aiBrain.Nickname == 'Stackhouse (AI: RNG Standard)' then
-                LOG('EXTRACTOR-DECISION '..tostring(aiBrain.Nickname)..' T1='..extractorsDetail.TECH1..' T2='..extractorsDetail.TECH2..' T1Up='..extractorsDetail.TECH1Upgrading..' T2Up='..extractorsDetail.TECH2Upgrading..' spend='..tostring(totalSpend)..' allowed='..tostring(upgradeSpend)..' coreT2='..tostring(coreExtractorT2Count)..' coreT3='..tostring(aiBrain.EcoManager.CoreExtractorT3Count)..' mass='..tostring(massStorage)..' energy='..tostring(energyStorage)..' massEff='..tostring(massEfficiencyOverTime)..' energyEff='..tostring(energyEfficiencyOverTime))
-            end
 
             if extractorsDetail.TECH1 > 0 and extractorsDetail.TECH2 > 0
             and extractorsDetail.TECH1Upgrading < 1 and extractorsDetail.TECH2Upgrading > 0
@@ -2392,6 +2402,207 @@ StructureManager = Class {
         return defended
     end,
 
+    RegisterShieldDamage = function(self, shield, instigator)
+        if not shield or shield.Dead or shield.Brain ~= self.Brain then
+            return
+        end
+
+        local owner = shield.Owner
+        if not owner or owner.Dead or not owner.GetFractionComplete
+            or owner:GetFractionComplete() < 1 then
+            return
+        end
+
+        local entityId = shield.EntityId
+        if not entityId then
+            return
+        end
+
+        local damageSource = instigator
+        if damageSource and not damageSource.Dead
+            and (not damageSource.BeenDestroyed or not damageSource:BeenDestroyed()) then
+            local launcher = damageSource.GetLauncher and damageSource:GetLauncher()
+            if launcher then
+                damageSource = launcher
+            elseif not damageSource.UnitId or not damageSource.Blueprint then
+                damageSource = damageSource.unit
+            end
+        end
+
+        local damageSourceCategory = 'Unknown'
+        local damageSourceUnitId
+        local damageSourceEntityId
+        if damageSource and not damageSource.Dead and damageSource.Blueprint then
+            local sourceCategories = damageSource.Blueprint.CategoriesHash
+            damageSourceUnitId = damageSource.UnitId
+            damageSourceEntityId = damageSource.EntityId
+            if sourceCategories and sourceCategories.STRUCTURE
+                and sourceCategories.TECH3 and sourceCategories.ARTILLERY then
+                damageSourceCategory = 'T3Artillery'
+            elseif sourceCategories and sourceCategories.SATELLITE then
+                damageSourceCategory = 'Novax'
+            else
+                damageSourceCategory = 'Other'
+            end
+        end
+
+        local now = GetGameTimeSeconds()
+        local candidate = self.ShieldAssistCandidateRegistry[entityId]
+        if candidate then
+            candidate.LastDamagedTime = now
+            candidate.RecoverySince = nil
+        else
+            candidate = {
+                Shield = shield,
+                Owner = owner,
+                RecoverySince = nil,
+                IsActive = false,
+                HealthRatio = 1,
+                Urgency = 0,
+                ProtectedValueScore = 0,
+                CurrentBuildPower = 0,
+                PriorityScore = 0,
+            }
+            self.ShieldAssistCandidateRegistry[entityId] = candidate
+        end
+
+        candidate.LastDamagedTime = now
+        candidate.LastDamageSourceCategory = damageSourceCategory
+        candidate.LastDamageSourceUnitId = damageSourceUnitId
+        candidate.LastDamageSourceEntityId = damageSourceEntityId
+        if damageSourceCategory == 'T3Artillery' or damageSourceCategory == 'Novax' then
+            candidate.LastQualifyingDamageTime = now
+            candidate.LastQualifyingDamageSourceCategory = damageSourceCategory
+            candidate.LastQualifyingDamageSourceUnitId = damageSourceUnitId
+            candidate.LastQualifyingDamageSourceEntityId = damageSourceEntityId
+        end
+        local previousDamageSourceCategory = candidate.LastLoggedDamageSourceCategory
+        candidate.LastLoggedDamageSourceCategory = damageSourceCategory
+    end,
+
+    UpdateShieldAssistCandidates = function(self)
+        while self.Brain.Status ~= 'Defeat' do
+            local now = GetGameTimeSeconds()
+            local activeCandidates = {}
+
+            for entityId, candidate in pairs(self.ShieldAssistCandidateRegistry) do
+                local shield = candidate.Shield
+                local owner = candidate.Owner
+                local valid = shield and not shield.Dead
+                    and owner and not owner.Dead
+                    and shield.Brain == self.Brain
+                    and shield.Owner == owner
+                    and owner.GetFractionComplete
+                    and owner:GetFractionComplete() >= 1
+                    and shield.Enabled ~= false
+                    and shield.GetHealth
+                    and shield.GetMaxHealth
+
+                if valid then
+                    local maxHealth = shield:GetMaxHealth()
+                    local health = shield:GetHealth()
+                    if maxHealth and maxHealth > 0 and health then
+                        local healthRatio = math.max(0, math.min(1, health / maxHealth))
+                        candidate.HealthRatio = healthRatio
+                        candidate.Urgency = 1 - healthRatio
+
+                        local hasRecentQualifyingDamage = candidate.LastQualifyingDamageTime
+                            and now - candidate.LastQualifyingDamageTime <= ShieldAssistThreatWindow
+                            and (candidate.LastQualifyingDamageSourceCategory == 'T3Artillery'
+                                or candidate.LastQualifyingDamageSourceCategory == 'Novax')
+                        if not candidate.IsActive and healthRatio <= ShieldAssistStartHealthRatio
+                            and hasRecentQualifyingDamage then
+                            candidate.IsActive = true
+                        end
+
+                        if candidate.IsActive then
+                            if healthRatio >= ShieldAssistStopHealthRatio then
+                                candidate.RecoverySince = candidate.RecoverySince or now
+                            else
+                                candidate.RecoverySince = nil
+                            end
+                        end
+
+                        local recovered = candidate.RecoverySince
+                            and now - candidate.RecoverySince >= ShieldAssistRecoveryDelay
+                            and now - candidate.LastDamagedTime >= ShieldAssistCandidateQuietPeriod
+                        local expired = not candidate.IsActive
+                            and now - candidate.LastDamagedTime >= ShieldAssistCandidateQuietPeriod
+
+                        if now - (candidate.LastEvaluationLogTime or 0) >= 30 then
+                            candidate.LastEvaluationLogTime = now
+                        end
+
+                        if recovered or expired then
+                            self.ShieldAssistCandidateRegistry[entityId] = nil
+                        elseif candidate.IsActive then
+                            RNGINSERT(activeCandidates, candidate)
+                        end
+                    else
+                        self.ShieldAssistCandidateRegistry[entityId] = nil
+                    end
+                else
+                    self.ShieldAssistCandidateRegistry[entityId] = nil
+                end
+            end
+
+            RNGSORT(activeCandidates, function(a, b)
+                return a.Urgency > b.Urgency
+            end)
+
+            local priorityCandidates = {}
+            local protectedAssetIds = {}
+            for _, candidate in activeCandidates do
+                local protectedValueScore = 0
+                local shieldData = candidate.Owner['rngdata']
+                local unitsDefended = shieldData and shieldData.UnitsDefended
+                if unitsDefended then
+                    for _, protectedUnit in pairs(unitsDefended) do
+                        local entityId = protectedUnit and protectedUnit.EntityId
+                        if entityId and not protectedAssetIds[entityId] and not protectedUnit.Dead then
+                            local blueprint = protectedUnit.Blueprint
+                            local economy = blueprint and blueprint.Economy
+                            local buildCostMass = economy and economy.BuildCostMass
+                            if buildCostMass and buildCostMass > 0 then
+                                protectedAssetIds[entityId] = true
+                                protectedValueScore = protectedValueScore + buildCostMass
+                            end
+                        end
+                    end
+                end
+
+                candidate.ProtectedValueScore = protectedValueScore
+                candidate.PriorityScore = candidate.Urgency * protectedValueScore
+                if protectedValueScore > 0 then
+                    if not candidate.PriorityLogged then
+                        candidate.PriorityLogged = true
+                    end
+                    RNGINSERT(priorityCandidates, candidate)
+                else
+                    self.ShieldAssistCandidateRegistry[candidate.Shield.EntityId] = nil
+                end
+            end
+
+            RNGSORT(priorityCandidates, function(a, b)
+                return a.PriorityScore > b.PriorityScore
+            end)
+            self.ShieldAssistPriorityCandidates = priorityCandidates
+            if RNGGETN(priorityCandidates) > 0 then
+                self.Brain:RequestEngineerAssistFocus(
+                    'ShieldRepair',
+                    'ShieldRepair',
+                    ShieldAssistRequestPriority,
+                    ShieldAssistRequestTTL,
+                    120,
+                    32.5
+                )
+            elseif self.Brain.EngineerAssistManagerRequests then
+                self.Brain.EngineerAssistManagerRequests.ShieldRepair = nil
+            end
+            coroutine.yield(ShieldAssistCandidateUpdateInterval)
+        end
+    end,
+
     ValidateExtractorUpgradeRNG = function(self, aiBrain, extractorTable, allTiers)
         local bestZone, bestExtractor
         local highestScore
@@ -2518,9 +2729,6 @@ StructureManager = Class {
                     end
                 end
             end
-        end
-        if aiBrain.Nickname == 'Stackhouse (AI: RNG Standard)' then
-            LOG('EXTRACTOR-CANDIDATE '..tostring(aiBrain.Nickname)..' allTiers='..tostring(allTiers)..' tier='..(bestExtractor.Blueprint.CategoriesHash.TECH1 and 'T1' or 'T2')..' zone='..tostring(bestZone)..' home='..tostring(homeZone)..' score='..tostring(highestScore))
         end
     
         -- Upgrade the selected extractor if one was found
