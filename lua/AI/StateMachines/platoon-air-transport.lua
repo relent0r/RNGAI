@@ -627,6 +627,7 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
                         table.remove(remainingCargo, i)
                     end
                 end
+                LOG(string.format('RNG_TRANSPORT_PICKUP: Platoon=%s UnitsTotal=%d LoadBatch=%d RemainingCargo=%d TransportId=%s', tostring(pickupPlatoon.BuilderName or pickupPlatoon.PlatoonName), table.getn(cargoUnits), table.getn(loadBatch), table.getn(remainingCargo), tostring(transport.EntityId)))
 
                 if not table.empty(loadBatch) then
                     self:LogDebug(string.format('Issue Transport load for loadBatch for '..tostring(pickupPlatoon.BuilderName)..' batch size '..tostring(table.getn(loadBatch))))
@@ -666,6 +667,7 @@ AITransportPlatoonRNG = Class(AIPlatoonRNG) {
                     return
                 end
                 
+                LOG(string.format('RNG_TRANSPORT_WAIT: Platoon=%s Attached=%s EngStateMoving=%s EngStateAttached=%s Timeout=%d', tostring(pickupPlatoon.BuilderName or pickupPlatoon.PlatoonName), tostring(self:AllUnitsAttached()), tostring(cargoUnits[1] and cargoUnits[1]:IsUnitState('Moving')), tostring(cargoUnits[1] and cargoUnits[1]:IsUnitState('Attached')), loadingTimeout))
                 -- Verify the transport hasn't been sniped while waiting
                 if not self:GetPlatoonUnits()[1] then
                     self:LogDebug(string.format('First transport no longer alive'))

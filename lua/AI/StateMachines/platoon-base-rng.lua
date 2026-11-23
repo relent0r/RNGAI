@@ -17,7 +17,7 @@ AIPlatoonRNG = Class(AIBasePlatoon) {
     ---@param self AIPlatoon
     OnDestroy = function(self)
         self:DeregisterPlatoon(self:GetBrain())
-        --import('/mods/RNGAI/lua/AI/RNGDebug.lua').DeregisterPlatoonForVisualization(self)
+        import('/mods/RNGAI/lua/AI/RNGDebug.lua').DeregisterPlatoonForVisualization(self)
         if self.BuilderHandle then
             self.BuilderHandle:RemoveHandle(self)
         end

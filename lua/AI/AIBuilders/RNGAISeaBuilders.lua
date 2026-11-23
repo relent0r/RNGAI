@@ -84,7 +84,7 @@ BuilderGroup {
         PlatoonTemplate = 'T1SeaFrigate',
         Priority = 747,
         BuilderConditions = {
-            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL, true }},
+            { UCBC, 'NavalLabelBuildOpportunityRNG', { 'LocationType', 'Frigate', true }},
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Naval', 'NavalUpgrading', true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T1', 'frigate'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -112,7 +112,7 @@ BuilderGroup {
         Priority = 0,
         PriorityFunction = SeaDefenseMode,
         BuilderConditions = { 
-            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { UCBC, 'NavalLabelBuildOpportunityRNG', { 'LocationType', 'Subhunter' }},
             { UCBC, 'FactoryLessAtLocationRNG', { 'LocationType', 2, categories.FACTORY * categories.NAVAL * categories.TECH2 }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.20}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 0.9 }},
@@ -130,7 +130,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2SeaDestroyer',
         Priority = 750,
         BuilderConditions = {
-            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { UCBC, 'NavalLabelBuildOpportunityRNG', { 'LocationType', 'Destroyer' }},
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'destroyer'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -145,7 +145,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2SeaCruiser',
         Priority = 749,
         BuilderConditions = {
-            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { UCBC, 'NavalLabelBuildOpportunityRNG', { 'LocationType', 'Cruiser' }},
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'cruiser'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -174,7 +174,7 @@ BuilderGroup {
         PlatoonTemplate = 'T2SubKiller',
         Priority = 748,
         BuilderConditions = {
-            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { UCBC, 'NavalLabelBuildOpportunityRNG', { 'LocationType', 'Subhunter' }},
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T2', 'subhunter'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -216,7 +216,7 @@ BuilderGroup {
         Priority = 0,
         PriorityFunction = SeaDefenseMode,
         BuilderConditions = { 
-            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { UCBC, 'NavalLabelBuildOpportunityRNG', { 'LocationType', 'Destroyer' }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.02, 0.6}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -229,7 +229,7 @@ BuilderGroup {
         PlatoonTemplate = 'T3SeaBattleship',
         Priority = 751,
         BuilderConditions = {
-            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { UCBC, 'NavalLabelBuildOpportunityRNG', { 'LocationType', 'Subhunter' }},
             { EBC, 'FactorySpendRatioRNG', {'LocationType', 'Naval','NavalUpgrading',  true}},
             { UCBC, 'ArmyManagerBuild', { 'Naval', 'T3', 'battleship'} },
             { UCBC, 'UnitCapCheckLess', { .85 } },
@@ -245,7 +245,7 @@ BuilderGroup {
         Priority = 0,
         PriorityFunction = SeaDefenseMode,
         BuilderConditions = { 
-            { UCBC, 'CanPathNavalBaseToNavalTargetsRNG', {  'LocationType', categories.STRUCTURE * categories.FACTORY * categories.NAVAL }},
+            { UCBC, 'NavalLabelBuildOpportunityRNG', { 'LocationType', 'BattleShip' }},
             { EBC, 'GreaterThanEconStorageRatioRNG', { 0.05, 0.80}},
             { EBC, 'GreaterThanEconEfficiencyRNG', { 0.8, 1.0 }},
             { UCBC, 'UnitCapCheckLess', { .85 } },

@@ -944,22 +944,34 @@ function BuildOnlyOnLocationRNG(aiBrain, LocationType, AllowedLocationType)
     return false
 end
 
-function CanPathNavalBaseToNavalTargetsRNG(aiBrain, locationType, unitCategory, raid)
-    if raid then
-        if aiBrain.EnemyIntel.FrigateRaid then
-            return true
-        end
+function NavalLabelBuildOpportunityRNG(aiBrain, locationType, navalUnitType, raid)
+    local builderManager = aiBrain.BuilderManagers[locationType]
+    local label = builderManager and builderManager.Label
+    if not label or label <= 0 then
+        return false
     end
-    local baseposition = aiBrain.BuilderManagers[locationType].FactoryManager.Location
-    --RNGLOG('Searching water path from base ['..locationType..'] position '..repr(baseposition))
-    local EnemyNavalUnits = aiBrain:GetUnitsAroundPoint(unitCategory, Vector(mapSizeX/2,0,mapSizeZ/2), mapSizeX+mapSizeZ, 'Enemy')
-    for _, EnemyUnit in EnemyNavalUnits do
-        if not EnemyUnit.Dead then
-            if NavUtils.CanPathTo('Water', baseposition, EnemyUnit:GetPosition()) then
-                return true
-            end
-        end
+
+    local intelManager = aiBrain.IntelManager
+    local labelNavalThreat = intelManager and intelManager.LabelIMAPThreat
+        and intelManager.LabelIMAPThreat.Naval and intelManager.LabelIMAPThreat.Naval[label]
+    local enemyNavalThreat = labelNavalThreat and labelNavalThreat.enemynavalthreat or 0
+    local friendlyNavalThreat = intelManager and intelManager.LabelFriendlyThreat
+        and intelManager.LabelFriendlyThreat.Naval and intelManager.LabelFriendlyThreat.Naval[label] or 0
+    if enemyNavalThreat > friendlyNavalThreat * 1.1 then
+        return true
     end
+
+    local structureOpportunities = aiBrain.EnemyIntel.NavalStructureOpportunityByLabel
+    if structureOpportunities and structureOpportunities[label]
+        and structureOpportunities[label][navalUnitType] then
+        return true
+    end
+
+    if raid and aiBrain.EnemyIntel.FrigateRaid then
+        local raidOpportunities = aiBrain.EnemyIntel.FrigateRaidOpportunityByLabel
+        return raidOpportunities and raidOpportunities[label] or false
+    end
+
     return false
 end
 

@@ -381,6 +381,7 @@ AITransportManagerRNG = Class(AIPlatoonRNG) {
                 break
             end
         end
+        LOG(string.format('RNG_TRANSPORT_MGR: Req=%s Needs=[L:%d M:%d S:%d] TransportsAssigned=%d RemainingNeeded=[L:%d M:%d S:%d]', tostring(request.RequestType), request.Slots.Large, request.Slots.Medium, request.Slots.Small, table.getn(assignedUnits), needed.Large, needed.Medium, needed.Small))
 
         -- 3. Validation: Can we actually carry the whole platoon?
         if needed.Large > 0 or needed.Medium > 0 or needed.Small > 0 then

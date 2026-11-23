@@ -3,6 +3,7 @@ local AIAttackUtils = import('/lua/AI/aiattackutilities.lua')
 local RUtils = import('/mods/RNGAI/lua/AI/RNGUtilities.lua')
 local NavUtils = import('/lua/sim/NavUtils.lua')
 local StateUtils = import('/mods/RNGAI/lua/AI/StateMachineUtilities.lua')
+local MAP = import('/mods/RNGAI/lua/FlowAI/framework/mapping/Mapping.lua').GetMap()
 
 local Random = Random
 local IsDestroyed = IsDestroyed
@@ -84,6 +85,16 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             --self:LogDebug(string.format('DecideWhatToDo for Naval Zone Control'))
             local aiBrain = self:GetBrain()
             local threat
+            local unsafeTargetFound = false
+            local navalZones = aiBrain.Zones and aiBrain.Zones.Naval
+            local currentZoneId = navalZones and navalZones.index and MAP:GetZoneID(self.Pos, navalZones.index)
+            local currentZone = navalZones and navalZones.zones and currentZoneId and navalZones.zones[currentZoneId]
+            if navalZones and navalZones.zones and not currentZone and self.ZoneID then
+                currentZone = navalZones.zones[self.ZoneID]
+            end
+            local currentBuilderManager = currentZone and currentZone.BuilderManager
+            local currentFactoryManager = currentBuilderManager and currentBuilderManager.FactoryManager
+            local currentActiveNavalBase = currentFactoryManager and currentFactoryManager.LocationActive
             local currentStatus = aiBrain.GridPresence:GetInferredStatus(self.Pos)
             if self.CurrentPlatoonThreatAntiSurface > 0 then
                 threat=RUtils.GrabPosDangerRNG(aiBrain,self.Pos,self.EnemyRadius * 0.7,self.EnemyRadius, true, true, false)
@@ -108,7 +119,17 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                 local bx = self.Pos[1] - basePos[1]
                 local bz = self.Pos[3] - basePos[3]
                 local baseDistance = bx * bx + bz * bz
-                if baseDistance > 900 then
+                LOG(string.format(
+                    'RNGAI: [NavalLocalThreat] status=%s base=%s baseDistanceSq=%.0f currentZone=%s currentManager=%s active=%s enemy(AS=%.1f,Sub=%.1f,range=%.1f) ally(AS=%.1f,Sub=%.1f,range=%.1f) platoonRange=%.1f',
+                    tostring(currentStatus), tostring(closestBase or 'MAIN'), baseDistance,
+                    tostring(currentZoneId or self.ZoneID),
+                    tostring(currentBuilderManager and (currentBuilderManager.LocationType or currentBuilderManager.BaseType) or 'none'),
+                    tostring(currentActiveNavalBase),
+                    threat.enemySurface or 0, threat.enemySub or 0, threat.enemyrange or 0,
+                    threat.allySurface or 0, threat.allySub or 0, threat.allyrange or 0,
+                    self['rngdata'].MaxPlatoonWeaponRange or 0
+                ))
+                if baseDistance > 900 and not currentActiveNavalBase then
                     self:ChangeState(self.Retreating)
                     return
                 end
@@ -116,13 +137,21 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
             local target
             if not target then
                 --self:LogDebug(string.format('Checking for simple target'))
-                --LOG('Checking SimpleNavalTarget with search radius of '..tostring(math.max(self['rngdata'].MaxPlatoonWeaponRange,self.EnemyRadius)))
-                if StateUtils.SimpleNavalTarget(self,aiBrain) then
-                    --self:LogDebug(string.format('DecideWhatToDo found simple target'))
-                    self:ChangeState(self.CombatLoop)
-                    return
+                if StateUtils.SimpleNavalTarget(self, aiBrain) then
+                    local primaryTarget = self.targetcandidates[1]
+                    local targetHandled, targetSafe = StateUtils.HandleUnsafeNavalTargetRNG(self, aiBrain, primaryTarget)
+                    if targetHandled then
+                        return
+                    end
+                    if targetSafe then
+                        self:ChangeState(self.CombatLoop)
+                        return
+                    end
+                    unsafeTargetFound = true
                 end
-                self:LogDebug(string.format('No Simple target found'))
+                if not unsafeTargetFound then
+                    self:LogDebug(string.format('No Simple target found'))
+                end
             end
             local attackTable = AIAttackUtils.GetBestNavalTargetRNG(aiBrain, self)
             if not table.empty(attackTable) then
@@ -131,7 +160,13 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                     
                     --self:LogDebug(string.format('Attack Position is '..tostring(attackPosition[1])..':'..tostring(attackPosition[3])))
                     --self:LogDebug(string.format('Threat amount is '..tostring(v[3])))
-                    if NavUtils.CanPathTo(self.MovementLayer, self.Pos, attackPosition) then
+                    local targetHandled, targetSafe = StateUtils.HandleUnsafeNavalTargetRNG(self, aiBrain, false, attackPosition, 225)
+                    if targetHandled then
+                        return
+                    end
+                    if not targetSafe then
+                        unsafeTargetFound = true
+                    elseif NavUtils.CanPathTo(self.MovementLayer, self.Pos, attackPosition) then
                         local rx = self.Pos[1] - attackPosition[1]
                         local rz = self.Pos[3] - attackPosition[3]
                         local posDistance = rx * rx + rz * rz
@@ -143,11 +178,9 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                             self.dest = self.BuilderData.Position
                             local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', self.Pos, attackPosition, 1000, 160)
                             if path and RNGGETN(path) > 0 then
-                                --LOG('We are going to navigate to attack position '..tostring(attackPosition[1])..':'..tostring(attackPosition[3]))
-                                --LOG('Naval Threat at position is '..aiBrain:GetThreatAtPosition({attackPosition[1], 0, attackPosition[3]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Naval'))
-                                --LOG('Air Threat at position is '..aiBrain:GetThreatAtPosition({attackPosition[1], 0, attackPosition[3]}, aiBrain.BrainIntel.IMAPConfig.Rings, true, 'Air'))
-                                --LOG('Threat table amount was '..tostring(v[3]))
-                                --LOG('GetBestNavalTarget found, navigating to position '..tostring(repr(attackPosition)))
+                                local targetZoneId = MAP:GetZoneID(attackPosition, aiBrain.Zones.Naval.index)
+                                local targetZone = targetZoneId and aiBrain.Zones.Naval.zones[targetZoneId]
+                                LOG(string.format('RNGAI: [NavalTarget:BestNaval] PlatThreat(AS:%d, Sub:%d) | Zone %s Status:%s | ZoneThreat(AS:%d, Sub:%d, Def:%d)', self.CurrentPlatoonThreatAntiSurface or 0, self.CurrentPlatoonThreatAntiNavy or 0, tostring(targetZoneId), tostring(targetZone and targetZone.status or 'nil'), targetZone and targetZone.enemyantisurfacethreat or 0, targetZone and targetZone.enemynavalthreat or 0, targetZone and targetZone.enemydefensestructurethreat or 0))
                                 self.path = path
                                 self:LogDebug(string.format('Navigating to attack position'..tostring(attackPosition[1])..':'..tostring(attackPosition[3])))
                                 self:ChangeState(self.Navigating)
@@ -193,32 +226,43 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                         end
                     end
                     if target and closestTargetPos and NavUtils.CanPathTo(self.MovementLayer, self.Pos, closestTargetPos) then
-                        local rx = self.Pos[1] - closestTargetPos[1]
-                        local rz = self.Pos[3] - closestTargetPos[3]
-                        local posDistance = rx * rx + rz * rz
-                        if posDistance > 6400 then
-                            self:LogDebug(string.format('Moving to target'))
-                            self.BuilderData = {
-                                AttackTarget = target,
-                                Position = closestTargetPos,
-                                CutOff = 400
-                            }
-                            self.dest = self.BuilderData.Position
-                            local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', self.Pos, self.BuilderData.Position, 1000, 160)
-                            if path and RNGGETN(path) > 0 then
-                                --LOG('GetClosestTargetByIMAP found, position at '..tostring(repr(closestTargetPos)))
-                                self.path = path
-                                self:ChangeState(self.Navigating)
-                                return
-                            else
-                                self:LogDebug(string.format('No path or no entries in path returned'..tostring(self.Pos)))
-                            end
-                        else
-                            --self:LogDebug(string.format('target is close, combat loop'))
-                            --LOG('GetClosestTargetByIMAP found, position is closer than 6400')
-                            self.targetcandidates = {target}
-                            self:ChangeState(self.CombatLoop)
+                        local targetHandled, targetSafe = StateUtils.HandleUnsafeNavalTargetRNG(self, aiBrain, target, closestTargetPos, 400)
+                        if targetHandled then
                             return
+                        end
+                        if not targetSafe then
+                            unsafeTargetFound = true
+                            target = nil
+                        else
+                            local rx = self.Pos[1] - closestTargetPos[1]
+                            local rz = self.Pos[3] - closestTargetPos[3]
+                            local posDistance = rx * rx + rz * rz
+                            if posDistance > 6400 then
+                                self:LogDebug(string.format('Moving to target'))
+                                self.BuilderData = {
+                                    AttackTarget = target,
+                                    Position = closestTargetPos,
+                                    CutOff = 400
+                                }
+                                self.dest = self.BuilderData.Position
+                                local path, reason = AIAttackUtils.PlatoonGenerateSafePathToRNG(aiBrain, 'Water', self.Pos, self.BuilderData.Position, 1000, 160)
+                                if path and RNGGETN(path) > 0 then
+                                    local targetZoneId = MAP:GetZoneID(closestTargetPos, aiBrain.Zones.Naval.index)
+                                    local targetZone = targetZoneId and aiBrain.Zones.Naval.zones[targetZoneId]
+                                    LOG(string.format('RNGAI: [NavalTarget:IMAP] PlatThreat(AS:%d, Sub:%d) | Zone %s Status:%s | ZoneThreat(AS:%d, Sub:%d, Def:%d)', self.CurrentPlatoonThreatAntiSurface or 0, self.CurrentPlatoonThreatAntiNavy or 0, tostring(targetZoneId), tostring(targetZone and targetZone.status or 'nil'), targetZone and targetZone.enemyantisurfacethreat or 0, targetZone and targetZone.enemynavalthreat or 0, targetZone and targetZone.enemydefensestructurethreat or 0))
+                                    self.path = path
+                                    self:ChangeState(self.Navigating)
+                                    return
+                                else
+                                    self:LogDebug(string.format('No path or no entries in path returned'..tostring(self.Pos)))
+                                end
+                            else
+                                --self:LogDebug(string.format('target is close, combat loop'))
+                                --LOG('GetClosestTargetByIMAP found, position is closer than 6400')
+                                self.targetcandidates = {target}
+                                self:ChangeState(self.CombatLoop)
+                                return
+                            end
                         end
                     else
                         self:LogDebug(string.format('Have attack position but cant path to it, position is '..tostring(closestTargetPos[1])..':'..tostring(closestTargetPos[3])))
@@ -296,13 +340,16 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
                     basePos = aiBrain.BuilderManagers[closestBase].Position
                 end
             end
-            if basePos then
+            if basePos and not unsafeTargetFound and not currentActiveNavalBase then
                 self:LogDebug(string.format('No positions or targets found, retreating back to base'))
                 coroutine.yield(25)
                 self:ChangeState(self.Retreating)
                 return
             end
-            self:LogDebug(string.format('DecideWhatToDo nohing to do, loop again'))
+            self:LogDebug(string.format(
+                'DecideWhatToDo found no safe target%s; reevaluating in place',
+                unsafeTargetFound and ' and will not retreat for target threat' or ''
+            ))
             coroutine.yield(15)
             self:ChangeState(self.DecideWhatToDo)
             return
@@ -913,6 +960,60 @@ AIPlatoonNavalZoneControlBehavior = Class(AIPlatoonRNG) {
         end,
     },
 
+    Visualize = function(self)
+        local safetyDebug = self.NavalSafetyDebug
+        if not safetyDebug then
+            return
+        end
+
+        local position = self.Pos or self:GetPlatoonPosition()
+        local targetPos = safetyDebug.targetPos
+        local bufferPos = safetyDebug.bufferPos
+        local decision = safetyDebug.decision
+        local action = safetyDebug.action
+
+        if position then
+            local decisionColor = 'FFFF00'
+            if decision == 'safe' then
+                decisionColor = 'FF00FF00'
+            elseif decision == 'hold-base' then
+                decisionColor = 'FF00FFFF'
+            elseif decision == 'buffer' then
+                decisionColor = 'FFFF9900'
+            elseif decision == 'no-buffer' or action == 'no-path' then
+                decisionColor = 'FFFF0000'
+            end
+
+            DrawCircle(position, 4, decisionColor)
+            if targetPos then
+                DrawLinePop(position, targetPos, decisionColor)
+                local targetColor = decision == 'safe' and 'FF00FF00' or
+                    (decision == 'hold-base' and 'FF00FFFF' or 'FFFF0000')
+                DrawCircle(targetPos, 8, targetColor)
+            end
+            if bufferPos then
+                DrawCircle(bufferPos, 10, 'FFFF9900')
+                DrawLinePop(position, bufferPos, 'FFFF9900')
+            end
+        end
+
+        for _, candidate in safetyDebug.candidates or {} do
+            if candidate.pos then
+                DrawCircle(candidate.pos, 5, candidate.rejected and 'FFAA0000' or 'FF00AA00')
+            end
+        end
+
+        if safetyDebug.path then
+            local previous = position
+            for _, pathPos in safetyDebug.path do
+                if previous and pathPos then
+                    DrawLinePop(previous, pathPos, 'FFFF9900')
+                end
+                previous = pathPos
+            end
+        end
+    end,
+
 }
 
 ---@param data { Behavior: 'AIBehavior' }
@@ -937,6 +1038,11 @@ AssignToUnitsMachine = function(data, platoon, units)
         end
         -- start the behavior
         platoon:OnUnitsAddedToPlatoon()
+        local aiBrain = platoon:GetBrain()
+        if aiBrain.RNGDEBUG then
+            platoon.VisualizeEnabled = true
+            import('/mods/RNGAI/lua/AI/RNGDebug.lua').RegisterPlatoonForVisualization(platoon)
+        end
         ChangeState(platoon, platoon.Start)
     end
 end

@@ -68,6 +68,32 @@ RNGNavalResourceSet = Class(ZoneSet){
 
         local markers = {}
         local navalMarkers = MarkerUtils.GetMarkersByType('Naval Area')
+        local mapSizeX = ScenarioInfo.size[1]
+        local mapSizeZ = ScenarioInfo.size[2]
+
+        local function FindNearbyWater(x, z, layer, maxRadius)
+            local y = GetSurfaceHeight(x, z)
+            if MAP:GetComponent({x, y, z}, layer) > 0 then
+                return {x, y, z}
+            end
+            local step = 16
+            for r = step, maxRadius, step do
+                local checks = {
+                    {x + r, z}, {x - r, z}, {x, z + r}, {x, z - r},
+                    {x + r, z + r}, {x - r, z + r}, {x + r, z - r}, {x - r, z - r}
+                }
+                for _, pos in checks do
+                    if pos[1] > 0 and pos[1] < mapSizeX and pos[2] > 0 and pos[2] < mapSizeZ then
+                        local checkY = GetSurfaceHeight(pos[1], pos[2])
+                        if MAP:GetComponent({pos[1], checkY, pos[2]}, layer) > 0 then
+                            return {pos[1], checkY, pos[2]}
+                        end
+                    end
+                end
+            end
+            return nil
+        end
+
         for _, marker in GetMarkers() do
             if marker.type == 'Mass' then
                 if MAP:GetComponent(marker.position,self.layer) > 0 then
@@ -87,7 +113,8 @@ RNGNavalResourceSet = Class(ZoneSet){
         
         for i = 1, 16 do
             local army = ScenarioInfo.ArmySetup['ARMY_' .. i]
-            local startPos = ScenarioUtils.GetMarker('ARMY_' .. i).position
+            local startMarker = ScenarioUtils.GetMarker('ARMY_' .. i)
+            local startPos = startMarker and startMarker.position
             if army and startPos then
                 local closestMarker = false
                 local closestDistance = false
@@ -100,18 +127,126 @@ RNGNavalResourceSet = Class(ZoneSet){
                         end
                     end
                 end
+                -- Fallback to water mass markers if no Naval Area markers exist
+                if not closestMarker then
+                    for _, n in markers do
+                        local distance = VDist2Sq(startPos[1], startPos[3], n.position[1], n.position[3])
+                        if not closestDistance or distance < closestDistance then
+                            closestMarker = n
+                            closestDistance = distance
+                        end
+                    end
+                end
                 if closestMarker then
-                    RNGINSERT(navalStartPositions, { index = i, marker = closestMarker, armyindex = i, distance = closestDistance })
+                    RNGINSERT(navalStartPositions, { index = i, marker = closestMarker, armyindex = i, distance = closestDistance, position = closestMarker.position })
                 end
             end
         end
+
+        -- Midpoint Buffer Zone Seeding
+        local bufferSeeds = {}
+        local minDistanceBetweenBuffersSq = 80 * 80
+        local minDistanceFromMarkersSq = 70 * 70
+
+        -- 1. Midpoints from Naval Start Positions
+        local numNavalStarts = RNGGETN(navalStartPositions)
+        if numNavalStarts > 1 then
+            for i = 1, numNavalStarts - 1 do
+                for j = i + 1, numNavalStarts do
+                    local startA = navalStartPositions[i]
+                    local startB = navalStartPositions[j]
+                    local posA = startA.position
+                    local posB = startB.position
+                    local distSq = VDist2Sq(posA[1], posA[3], posB[1], posB[3])
+                    if distSq > (140 * 140) then
+                        local midX = (posA[1] + posB[1]) / 2
+                        local midZ = (posA[3] + posB[3]) / 2
+                        local waterPos = FindNearbyWater(midX, midZ, self.layer, 64)
+                        if waterPos then
+                            local tooClose = false
+                            for _, m in markers do
+                                if VDist2Sq(waterPos[1], waterPos[3], m.position[1], m.position[3]) < minDistanceFromMarkersSq then
+                                    tooClose = true
+                                    break
+                                end
+                            end
+                            if not tooClose then
+                                for _, b in bufferSeeds do
+                                    if VDist2Sq(waterPos[1], waterPos[3], b.position[1], b.position[3]) < minDistanceBetweenBuffersSq then
+                                        tooClose = true
+                                        break
+                                    end
+                                end
+                            end
+                            if not tooClose then
+                                RNGINSERT(bufferSeeds, {
+                                    name = 'Naval Buffer Midpoint',
+                                    position = waterPos,
+                                    type = 'Naval Buffer',
+                                    isMidpoint = true,
+                                })
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        -- 2. Seeding midpoints from Start Locations (similar to RNGAirResourceSet)
+        local startLocations = MarkerUtils.GetMarkersByType('Start Location')
+        local numStarts = RNGGETN(startLocations)
+        if numStarts > 1 then
+            for i = 1, numStarts - 1 do
+                for j = i + 1, numStarts do
+                    local startA = startLocations[i]
+                    local startB = startLocations[j]
+                    local posA = startA.position
+                    local posB = startB.position
+                    local distSq = VDist2Sq(posA[1], posA[3], posB[1], posB[3])
+                    if distSq > (140 * 140) then
+                        local midX = (posA[1] + posB[1]) / 2
+                        local midZ = (posA[3] + posB[3]) / 2
+                        local waterPos = FindNearbyWater(midX, midZ, self.layer, 64)
+                        if waterPos then
+                            local tooClose = false
+                            for _, m in markers do
+                                if VDist2Sq(waterPos[1], waterPos[3], m.position[1], m.position[3]) < minDistanceFromMarkersSq then
+                                    tooClose = true
+                                    break
+                                end
+                            end
+                            if not tooClose then
+                                for _, b in bufferSeeds do
+                                    if VDist2Sq(waterPos[1], waterPos[3], b.position[1], b.position[3]) < minDistanceBetweenBuffersSq then
+                                        tooClose = true
+                                        break
+                                    end
+                                end
+                            end
+                            if not tooClose then
+                                RNGINSERT(bufferSeeds, {
+                                    name = 'Naval Buffer Midpoint',
+                                    position = waterPos,
+                                    type = 'Naval Buffer',
+                                    isMidpoint = true,
+                                })
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        for _, bSeed in bufferSeeds do
+            RNGINSERT(markers, bSeed)
+        end
+
         local complete = (RNGGETN(markers) == 0)
        --RNGLOG('Starting GenerateZoneList Loop')
         local count = 0
         while not complete do
             complete = true
             -- Update weights
-            local startPos = false
             for _, v in markers do
                 v.weight = 1
                 v.aggX = v.position[1]
@@ -136,7 +271,10 @@ RNGNavalResourceSet = Class(ZoneSet){
                 end
             end
             -- Add next point
-            local resourceGroup = {best}
+            local resourceGroup = {}
+            if best.type == 'Mass' then
+                RNGINSERT(resourceGroup, best)
+            end
             best.claimed = true
             local x = best.aggX/best.weight
             local z = best.aggZ/best.weight
@@ -146,7 +284,7 @@ RNGNavalResourceSet = Class(ZoneSet){
             for _, v in markers do
                 if (not v.claimed) and VDist2Sq(v.position[1], v.position[3], best.position[1], best.position[3]) < zoneRadius then
                     if v.type == 'Mass' then
-                        table.insert(resourceGroup, v)
+                        RNGINSERT(resourceGroup, v)
                     end
                     v.claimed = true
                 elseif not v.claimed then
@@ -156,11 +294,20 @@ RNGNavalResourceSet = Class(ZoneSet){
             local posX = math.floor(x)
             local posZ = math.floor(z)
             local posY = GetSurfaceHeight(posX, posZ)
+
+            local startPosClose = false
+            for _, s in navalStartPositions do
+                if VDist2Sq(posX, posZ, s.position[1], s.position[3]) < (100 * 100) then
+                    startPosClose = true
+                    break
+                end
+            end
+
             self:AddZone({
                 pos={posX, posY, posZ}, 
                 component=MAP:GetComponent({posX, posY, posZ},self.layer), 
                 weight=best.weight, 
-                startpositionclose=startPos, 
+                startpositionclose=startPosClose, 
                 enemystructurethreat=0, 
                 gridenemylandthreat=0, 
                 enemylandthreat=0, 
@@ -177,7 +324,7 @@ RNGNavalResourceSet = Class(ZoneSet){
                 friendlyindirectfireantisurfacethreat=0,
                 friendlydefenseantisurfacethreat=0,
                 friendlydefenseantiairthreat=0,
-                resourcevalue=table.getn(resourceGroup), 
+                resourcevalue=RNGGETN(resourceGroup), 
                 resourcemarkers=resourceGroup, 
                 zonealert=false, 
                 control=1, 

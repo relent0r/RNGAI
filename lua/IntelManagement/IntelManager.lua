@@ -71,6 +71,9 @@ IntelManager = Class {
             Air = {},
             Naval = {}
         }
+        self.LabelFriendlyThreat = {
+            Naval = {}
+        }
         self.ZoneToGridMap = {}
         self.ZoneWeightTable = {
             control = {
@@ -1103,9 +1106,7 @@ IntelManager = Class {
                         local zoneLabel = v.label
                         if zoneLabel ~= baseLabel then
                             local zoneDefense = v.friendlyantisurfacethreat or 0
-                            local dx = position[1] - v.pos[1]
-                            local dz = position[3] - v.pos[3]
-                            if (dx*dx + dz*dz) > 14400 and zoneDefense < 20 then
+                            if zoneDist > 14400 and zoneDefense < 20 then
                                 continue
                             end
                         end
@@ -2441,6 +2442,7 @@ IntelManager = Class {
                     end
                 end
                 cell.LastThreatUpdate = timeNow
+                cell['LastUpdate_' .. threatType] = timeNow
             end
         end
     end,
@@ -2486,7 +2488,6 @@ IntelManager = Class {
         local labelTable = {}
         local zoneToGridMap = self.ZoneToGridMap[zoneType]
         local currentTime = GetGameTimeSeconds()
-        local STALE_TIME = 5
     
         for _, zone in zoneTable do
             local cells = zoneToGridMap[zone.id]
@@ -2671,6 +2672,7 @@ IntelManager = Class {
                     end
                 end
             end
+            local friendlyNavalThreatByLabel = {}
             for k, v in Zones do
                 for zId, zData in aiBrain.Zones[v].zones do
                     zData.friendlylandantiairthreat = 0
@@ -2702,6 +2704,9 @@ IntelManager = Class {
                     local zone = aiBrain.Zones[v].zones[zoneId]
                     if zone then
                         zone.friendlyantisurfacethreat = threatValue
+                        if v == 'Naval' and zone.label and zone.label > 0 then
+                            friendlyNavalThreatByLabel[zone.label] = (friendlyNavalThreatByLabel[zone.label] or 0) + threatValue
+                        end
                     end
                 end
                 for zoneId, threatValue in threatLayers[v].friendlyThreatAntiNavy do
@@ -2791,6 +2796,7 @@ IntelManager = Class {
                 end
                 ]]
             end
+            self.LabelFriendlyThreat.Naval = friendlyNavalThreatByLabel
 
 
             -- Note right now this is only for land labels, we'll figure out the naval stuff later.
@@ -6507,6 +6513,8 @@ function InitialNavalAttackCheck(aiBrain)
         LOG('*AI:RNG NavalAttackCheck is waiting for ScoutLocations to be built')
         coroutine.yield(20)
     end
+    local navalStructureOpportunityByLabel = {}
+    local frigateRaidOpportunityByLabel = {}
     if aiBrain.MapWaterRatio > 0.10 then
         local factionIndex = aiBrain:GetFactionIndex()
         local navalZoneGroup = aiBrain.Zones and aiBrain.Zones.Naval
@@ -6602,6 +6610,18 @@ function InitialNavalAttackCheck(aiBrain)
                                                 local enemyArmyIdx = b.ArmyIndex or b.Index or 0
                                                 local hasLOS = not aiBrain:CheckBlockingTerrain({v[1], (GetSurfaceHeight(v[1], v[3]) + 2.0), v[3]}, b.Position, 'low')
                                                 local canBombard = hasLOS and (posDist <= maxRadius * maxRadius)
+                                                if label and hasLOS then
+                                                    local labelOpportunities = navalStructureOpportunityByLabel[label]
+                                                    if not labelOpportunities then
+                                                        labelOpportunities = {}
+                                                        navalStructureOpportunityByLabel[label] = labelOpportunities
+                                                    end
+                                                    for unitType, unitData in unitTable do
+                                                        if unitData.Range > 0 and posDist <= unitData.Range * unitData.Range then
+                                                            labelOpportunities[unitType] = true
+                                                        end
+                                                    end
+                                                end
                                                 if not nNavalData.enemyStartAccess[enemyArmyIdx] or posDist < nNavalData.enemyStartAccess[enemyArmyIdx].distSq then
                                                     nNavalData.enemyStartAccess[enemyArmyIdx] = {
                                                         position = b.Position,
@@ -6722,6 +6742,9 @@ function InitialNavalAttackCheck(aiBrain)
                                     if not aiBrain:CheckBlockingTerrain({m[1], (GetSurfaceHeight(m[1], m[3]) + 1.1), m[3]}, v.position, 'low') then
                                         markerCountNotBlocked = markerCountNotBlocked + 1
                                         frigateRaidMarkers = frigateRaidMarkers + 1
+                                        if label then
+                                            frigateRaidOpportunityByLabel[label] = true
+                                        end
                                         table.insert( frigateMarkers, { Position=v.position, Name=v.name, RaidPosition={m[1], m[2], m[3]}, Distance = posDist, MarkerValue = markerValue, LastRaidTime = 0 } )
                                         valueValidated = true
                                         totalMarkerValue = totalMarkerValue + markerValue
@@ -6899,6 +6922,7 @@ function InitialNavalAttackCheck(aiBrain)
             end
             if frigateRaidMarkers > 6 then
                 aiBrain.EnemyIntel.FrigateRaid = true
+                aiBrain.EnemyIntel.FrigateRaidOpportunityByLabel = frigateRaidOpportunityByLabel
             end
             if markerCountNotBlocked > 0 then
                 aiBrain.EnemyIntel.NavalMarkers = navalMarkers
@@ -6914,6 +6938,7 @@ function InitialNavalAttackCheck(aiBrain)
             --LOG('Lowest Enemy Start Position Range is '..tostring(aiBrain.EnemyIntel.MaxNavalStartRange))
         end
     end
+    aiBrain.EnemyIntel.NavalStructureOpportunityByLabel = navalStructureOpportunityByLabel
 end
 
 function QueryExpansionTable(aiBrain, location, radius, movementLayer, threat, type)

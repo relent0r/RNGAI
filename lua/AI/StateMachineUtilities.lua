@@ -280,6 +280,243 @@ SimpleNavalTarget = function(platoon, aiBrain)
     return false
 end
 
+FindSafeNavalTargetPosition = function(platoon, aiBrain, target, targetPosition)
+    if not platoon.Pos then
+        return false, false
+    end
+
+    if target and target.Dead then
+        return false, false
+    end
+
+    local targetPos = targetPosition or (target and target:GetPosition())
+    if not targetPos then
+        return false, false
+    end
+
+    platoon.NavalSafetyDebug = {
+        targetPos = targetPos,
+        candidates = {},
+        decision = 'unknown',
+    }
+
+    local navalZones = aiBrain.Zones and aiBrain.Zones.Naval
+    local zoneSet = navalZones and navalZones.zones
+    local zoneIndex = navalZones and navalZones.index
+    local platoonThreatAntiSurface = platoon.CurrentPlatoonThreatAntiSurface or 0
+    local platoonThreatAntiNavy = platoon.CurrentPlatoonThreatAntiNavy or 0
+    local platoonRange = platoon['rngdata'].MaxPlatoonWeaponRange or 30
+    local platoonSubmersibleCount = 0
+    local platoonSurfaceCount = 0
+    for _, unit in platoon:GetPlatoonUnits() do
+        if unit and not unit.Dead then
+            local unitCats = unit.Blueprint.CategoriesHash
+            if unitCats.SUBMERSIBLE then
+                platoonSubmersibleCount = platoonSubmersibleCount + 1
+            elseif unitCats.NAVAL or unitCats.AMPHIBIOUS or unitCats.HOVER then
+                platoonSurfaceCount = platoonSurfaceCount + 1
+            end
+        end
+    end
+    local submersibleOnly = platoonSubmersibleCount > 0 and platoonSurfaceCount == 0
+    local safetyConfig = platoon.NavalSafetyConfig or {}
+    local subHeavyThreatRatio = safetyConfig.SubHeavyThreatRatio or 1.25
+    local subHeavyUnitRatio = safetyConfig.SubHeavyUnitRatio or 1.5
+    local subHeavyAntiNavyOutmatchedRatio = safetyConfig.SubHeavyAntiNavyOutmatchedRatio or 1.5
+    local subHeavy = not submersibleOnly and platoonSubmersibleCount > 0 and platoonSurfaceCount > 0 and (
+        platoonThreatAntiNavy >= platoonThreatAntiSurface * subHeavyThreatRatio or
+        (platoonSubmersibleCount >= platoonSurfaceCount * subHeavyUnitRatio and
+            platoonThreatAntiNavy >= platoonThreatAntiSurface)
+    )
+
+    local function IsZoneOutmatched(zone)
+        if not zone then
+            return false
+        end
+
+        if submersibleOnly then
+            return false
+        end
+        if subHeavy then
+            local enemyAntiNavy = zone.enemynavalthreat or 0
+            return enemyAntiNavy > platoonThreatAntiNavy * subHeavyAntiNavyOutmatchedRatio
+        end
+
+        return (zone.enemyantisurfacethreat or 0) > platoonThreatAntiSurface * 1.5 or
+            (zone.enemynavalthreat or 0) > platoonThreatAntiNavy * 2.0
+    end
+
+    local function IsLocallyOutmatched(danger)
+        if submersibleOnly then
+            return (danger.enemySub or 0) > (danger.allySub or 0) * 1.3 and
+                platoonThreatAntiNavy < (danger.enemySub or 0)
+        end
+        if subHeavy then
+            local enemySubThreat = danger.enemySub or 0
+            local allySubThreat = danger.allySub or 0
+            return enemySubThreat > allySubThreat * 1.3 and
+                platoonThreatAntiNavy < enemySubThreat
+        end
+
+        return (danger.enemyrange > platoonRange and danger.enemyTotal > (danger.allyTotal or 0) * 1.1) or
+            (danger.enemySub > (danger.allySub or 0) * 1.3 and platoonThreatAntiNavy < danger.enemySub)
+    end
+
+    local targetZoneId = zoneIndex and MAP:GetZoneID(targetPos, zoneIndex)
+    local targetZone = zoneSet and targetZoneId and zoneSet[targetZoneId]
+    local targetDanger = RUtils.GrabPosDangerRNG(
+        aiBrain, targetPos, platoon.EnemyRadius * 0.7, platoon.EnemyRadius, true, true, false, true
+    )
+    local zoneOutmatched = IsZoneOutmatched(targetZone)
+    local locallyOutmatched = IsLocallyOutmatched(targetDanger)
+    local builderManager = targetZone and targetZone.BuilderManager
+    local factoryManager = builderManager and builderManager.FactoryManager
+    local activeBaseZone = factoryManager and factoryManager.LocationActive
+    local targetUnitId = target and target.UnitId or 'position'
+    local baseManagerName = builderManager and (builderManager.LocationType or builderManager.BaseType) or 'none'
+    platoon.NavalSafetyDebug.submersibleOnly = submersibleOnly
+    platoon.NavalSafetyDebug.subHeavy = subHeavy
+    platoon.NavalSafetyDebug.submersibleCount = platoonSubmersibleCount
+    platoon.NavalSafetyDebug.surfaceCount = platoonSurfaceCount
+
+    LOG(string.format(
+        'RNGAI:[NavalStrength] target=%s subsOnly=%s subHeavy=%s subCount=%d surfaceCount=%d AS=%s/%s N=%s/%s range=%s',
+        tostring(targetUnitId), tostring(submersibleOnly), tostring(subHeavy),
+        platoonSubmersibleCount, platoonSurfaceCount,
+        tostring(platoonThreatAntiSurface), tostring(targetZone and targetZone.enemyantisurfacethreat or 0),
+        tostring(platoonThreatAntiNavy), tostring(targetZone and targetZone.enemynavalthreat or 0),
+        tostring(platoonRange)
+    ))
+    LOG(string.format(
+        'RNGAI:[NavalLocalStrength] enemyTotal=%.1f allyTotal=%.1f enemySub=%.1f allySub=%.1f enemyRange=%.1f',
+        targetDanger.enemyTotal or 0, targetDanger.allyTotal or 0,
+        targetDanger.enemySub or 0, targetDanger.allySub or 0, targetDanger.enemyrange or 0
+    ))
+
+    if not zoneOutmatched and not locallyOutmatched then
+        platoon.NavalSafetyDebug.decision = 'safe'
+        platoon.NavalSafetyDebug.zoneId = targetZoneId
+        platoon.NavalSafetyDebug.zoneOutmatched = zoneOutmatched
+        platoon.NavalSafetyDebug.localOutmatched = locallyOutmatched
+        platoon:LogDebug(string.format(
+            'Naval safety: target %s safe to engage; zone=%s baseManager=%s activeBase=%s zoneThreat(AS=%.1f,N=%.1f) localThreat(enemy=%.1f,sub=%.1f,range=%.1f)',
+            tostring(targetUnitId), tostring(targetZoneId), tostring(baseManagerName), tostring(activeBaseZone),
+            targetZone and targetZone.enemyantisurfacethreat or 0,
+            targetZone and targetZone.enemynavalthreat or 0, targetDanger.enemyTotal or 0,
+            targetDanger.enemySub or 0, targetDanger.enemyrange or 0
+        ))
+        return true, false
+    end
+
+    if activeBaseZone then
+        platoon.NavalSafetyDebug.decision = 'hold-base'
+        platoon.NavalSafetyDebug.zoneId = targetZoneId
+        platoon.NavalSafetyDebug.zoneOutmatched = zoneOutmatched
+        platoon.NavalSafetyDebug.localOutmatched = locallyOutmatched
+        platoon:LogDebug(string.format(
+            'Naval safety: target %s is unsafe but zone=%s has active naval base %s; holding to defend base (zoneOutmatched=%s, localOutmatched=%s)',
+            tostring(targetUnitId), tostring(targetZoneId),
+            tostring(baseManagerName),
+            tostring(zoneOutmatched), tostring(locallyOutmatched)
+        ))
+        return true, false
+    end
+
+    LOG(string.format(
+        'RNGAI: [NavalSafety] rejected target=%s target=(%.0f,%.0f) current=(%.0f,%.0f) zone=%s status=%s base=%s active=%s outmatched=%s/%s threat(AS=%.1f,N=%.1f,enemy=%.1f,sub=%.1f,range=%.1f) platoon(AS=%.1f,N=%.1f,range=%.1f)',
+        tostring(targetUnitId), targetPos[1], targetPos[3], platoon.Pos[1], platoon.Pos[3],
+        tostring(targetZoneId), tostring(targetZone and targetZone.status or 'unknown'),
+        tostring(baseManagerName), tostring(activeBaseZone), tostring(zoneOutmatched), tostring(locallyOutmatched),
+        targetZone and targetZone.enemyantisurfacethreat or 0,
+        targetZone and targetZone.enemynavalthreat or 0, targetDanger.enemyTotal or 0,
+        targetDanger.enemySub or 0, targetDanger.enemyrange or 0,
+        platoonThreatAntiSurface, platoonThreatAntiNavy, platoonRange
+    ))
+
+    platoon:LogDebug(string.format(
+        'Naval safety: target %s rejected; zone=%s status=%s zoneOutmatched=%s localOutmatched=%s threat(AS=%.1f,N=%.1f,enemy=%.1f,sub=%.1f,range=%.1f), platoon(AS=%.1f,N=%.1f,range=%.1f)',
+        tostring(targetUnitId), tostring(targetZoneId), tostring(targetZone and targetZone.status or 'unknown'),
+        tostring(zoneOutmatched), tostring(locallyOutmatched),
+        targetZone and targetZone.enemyantisurfacethreat or 0,
+        targetZone and targetZone.enemynavalthreat or 0, targetDanger.enemyTotal or 0,
+        targetDanger.enemySub or 0, targetDanger.enemyrange or 0,
+        platoonThreatAntiSurface, platoonThreatAntiNavy, platoonRange
+    ))
+
+    local currentZoneId = zoneIndex and MAP:GetZoneID(platoon.Pos, zoneIndex)
+    local currentZone = zoneSet and currentZoneId and zoneSet[currentZoneId]
+    if zoneSet and not currentZone and platoon.ZoneID then
+        currentZone = zoneSet[platoon.ZoneID]
+    end
+    if not currentZone or not currentZone.edges then
+        platoon.NavalSafetyDebug.decision = 'no-buffer'
+        platoon.NavalSafetyDebug.zoneId = currentZoneId or platoon.ZoneID
+        platoon:LogDebug(string.format(
+            'Naval safety: cannot search for buffer from zone=%s; zone or adjacent edges unavailable',
+            tostring(currentZoneId or platoon.ZoneID)
+        ))
+        return false, false
+    end
+
+    local enemyRange = targetDanger.enemyrange or 0
+    local safeDistance = math.max(enemyRange + 25, platoonRange + 15)
+    local safeDistanceSq = safeDistance * safeDistance
+    local bestPosition
+    local bestDistanceSq
+
+    for _, edge in currentZone.edges do
+        local adjacentZone = edge.zone
+        local candidatePos = adjacentZone and adjacentZone.pos
+        if candidatePos and adjacentZone.status ~= 'Hostile' and not IsZoneOutmatched(adjacentZone) then
+            local dxToTarget = candidatePos[1] - targetPos[1]
+            local dzToTarget = candidatePos[3] - targetPos[3]
+            local targetDistanceSq = dxToTarget * dxToTarget + dzToTarget * dzToTarget
+            if targetDistanceSq >= safeDistanceSq then
+                local candidateDanger = RUtils.GrabPosDangerRNG(
+                    aiBrain, candidatePos, platoon.EnemyRadius * 0.7, platoon.EnemyRadius, true, true, false, true
+                )
+                table.insert(platoon.NavalSafetyDebug.candidates, {
+                    pos = candidatePos,
+                    rejected = IsLocallyOutmatched(candidateDanger),
+                    zoneId = edge.zone.id,
+                })
+                if not IsLocallyOutmatched(candidateDanger) then
+                    local dxFromPlatoon = candidatePos[1] - platoon.Pos[1]
+                    local dzFromPlatoon = candidatePos[3] - platoon.Pos[3]
+                    local distanceSq = dxFromPlatoon * dxFromPlatoon + dzFromPlatoon * dzFromPlatoon
+                    if (not bestDistanceSq or distanceSq < bestDistanceSq) and
+                        NavUtils.CanPathTo(platoon.MovementLayer, platoon.Pos, candidatePos) then
+                        bestPosition = candidatePos
+                        bestDistanceSq = distanceSq
+                    end
+                end
+            end
+        end
+    end
+
+    if bestPosition then
+        local dxToTarget = bestPosition[1] - targetPos[1]
+        local dzToTarget = bestPosition[3] - targetPos[3]
+        platoon.NavalSafetyDebug.decision = 'buffer'
+        platoon.NavalSafetyDebug.bufferPos = bestPosition
+        platoon.NavalSafetyDebug.requiredDistance = safeDistance
+        platoon.NavalSafetyDebug.zoneId = currentZoneId
+        platoon:LogDebug(string.format(
+            'Naval safety: selected buffer position (%.1f, %.1f), targetDistance=%.1f, requiredDistance=%.1f, enemyRange=%.1f',
+            bestPosition[1], bestPosition[3], math.sqrt(dxToTarget * dxToTarget + dzToTarget * dzToTarget),
+            safeDistance, enemyRange
+        ))
+    else
+        platoon.NavalSafetyDebug.decision = 'no-buffer'
+        platoon.NavalSafetyDebug.zoneId = currentZoneId
+        platoon:LogDebug(string.format(
+            'Naval safety: no safe reachable adjacent zone found from zone=%s; caller should retreat',
+            tostring(currentZoneId)
+        ))
+    end
+    return false, bestPosition or false
+end
+
 VariableKite = function(platoon, unit, target, maxPlatoonRangeOverride, checkLayer)
     local function GetKitePosition(pos, tpos, targetRange, strafeMod, healthMod)
         local dx = pos[1] - tpos[1]
@@ -1165,7 +1402,7 @@ MergeIntoTargetPlatoonRNG = function(self, targetPlatoon)
     return false
 end
 
-MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNumber, ignoreBase, mergeInto, ignoreRaid)
+MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNumber, ignoreBase, mergeInto, ignoreRaid, findOnly, targetPlatoon)
     -- check to see we're not near an ally base
     -- ignoreBase is not worded well, if false then ignore if too close to base
     if IsDestroyed(self) then
@@ -1213,7 +1450,13 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNu
 
     local AlliedPlatoons = aiBrain:GetPlatoonsList()
     local bMergedPlatoons = false
+    local closestPlatoon = false
+    local closestPlatoonPosition = false
+    local closestPlatoonDistanceSq = radiusSq
     for _,aPlat in AlliedPlatoons do
+        if targetPlatoon and aPlat ~= targetPlatoon then
+            continue
+        end
         if aPlat.MergeType ~= stateMachineType then
             continue
         end
@@ -1255,7 +1498,14 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNu
             continue
         end
 
-        if  VDist2Sq(platPos[1], platPos[3], allyPlatPos[1], allyPlatPos[3]) <= radiusSq then
+        local allyPlatDistanceSq = VDist2Sq(platPos[1], platPos[3], allyPlatPos[1], allyPlatPos[3])
+        if findOnly then
+            if allyPlatDistanceSq <= closestPlatoonDistanceSq then
+                closestPlatoon = aPlat
+                closestPlatoonPosition = allyPlatPos
+                closestPlatoonDistanceSq = allyPlatDistanceSq
+            end
+        elseif allyPlatDistanceSq <= radiusSq then
             if mergeInto then
                 local validUnits = {}
                 local bValidUnits = false
@@ -1290,10 +1540,134 @@ MergeWithNearbyPlatoonsRNG = function(self, stateMachineType, radius, maxMergeNu
             end
         end
     end
+    if findOnly then
+        return closestPlatoon, closestPlatoonPosition, closestPlatoonDistanceSq
+    end
     if bMergedPlatoons then
         IssueClearCommands(GetPlatoonUnits(self))
     end
     return bMergedPlatoons
+end
+
+CenterAndMergeNearbyPlatoonsRNG = function(platoon, stateMachineType, radius, maxMergeNumber, ignoreBase, ignoreRaid)
+    if IsDestroyed(platoon) or not platoon.Pos then
+        return false
+    end
+
+    local aiBrain = platoon:GetBrain()
+    if not aiBrain then
+        return false
+    end
+
+    local mergePlatoon, mergePosition, mergeDistanceSq = MergeWithNearbyPlatoonsRNG(
+        platoon, stateMachineType, radius, maxMergeNumber, ignoreBase, nil, ignoreRaid, true
+    )
+    if not mergePlatoon then
+        platoon:LogDebug(string.format('Naval merge: no eligible nearby platoon found'))
+        return false
+    end
+
+    platoon:LogDebug(string.format(
+        'Naval merge: found platoon at (%.1f, %.1f), distance=%.1f; centering before merge',
+        mergePosition[1], mergePosition[3], math.sqrt(mergeDistanceSq)
+    ))
+    local unitsCentered = false
+    for _ = 1, 6 do
+        local formationPosition = platoon.Pos
+
+        RUtils.CenterPlatoonUnitsRNG(platoon, formationPosition)
+        unitsCentered = true
+        for _, unit in GetPlatoonUnits(platoon) do
+            if not unit.Dead then
+                local unitPosition = unit:GetPosition()
+                if not unitPosition or VDist2Sq(
+                    unitPosition[1], unitPosition[3],
+                    formationPosition[1], formationPosition[3]
+                ) > 625 then
+                    unitsCentered = false
+                    break
+                end
+            end
+        end
+        if unitsCentered then
+            break
+        end
+        coroutine.yield(10)
+        if IsDestroyed(platoon) then
+            return false
+        end
+    end
+
+    if unitsCentered and aiBrain:PlatoonExists(mergePlatoon) then
+        local merged = MergeWithNearbyPlatoonsRNG(
+            platoon, stateMachineType, radius, maxMergeNumber, ignoreBase, nil, ignoreRaid, false, mergePlatoon
+        )
+        platoon:LogDebug(string.format('Naval merge: centered formation merge %s', tostring(merged)))
+        return merged
+    end
+
+    platoon:LogDebug(string.format('Naval merge: formation did not close within 60 ticks; delaying merge'))
+    return false
+end
+
+HandleUnsafeNavalTargetRNG = function(platoon, aiBrain, target, targetPosition, cutOff)
+    local safeToEngage, bufferPosition = FindSafeNavalTargetPosition(
+        platoon, aiBrain, target, targetPosition
+    )
+    if safeToEngage then
+        if platoon.NavalSafetyDebug then
+            platoon.NavalSafetyDebug.action = 'engage'
+        end
+        return false, true
+    end
+
+    if bufferPosition then
+        local distX = platoon.Pos[1] - bufferPosition[1]
+        local distZ = platoon.Pos[3] - bufferPosition[3]
+        if distX * distX + distZ * distZ > 400 then
+            platoon.BuilderData = {
+                Position = bufferPosition,
+                CutOff = cutOff or 225
+            }
+            platoon.dest = bufferPosition
+            local path = AIAttackUtils.PlatoonGenerateSafePathToRNG(
+                aiBrain, 'Water', platoon.Pos, bufferPosition, 1000, 160
+            )
+            if path and RNGGETN(path) > 0 then
+                platoon.path = path
+                if platoon.NavalSafetyDebug then
+                    platoon.NavalSafetyDebug.action = 'navigate-buffer'
+                    platoon.NavalSafetyDebug.path = path
+                end
+                platoon:LogDebug(string.format('Unsafe naval target: moving to safe adjacent zone'))
+                platoon:ChangeState(platoon.Navigating)
+                return true, false
+            end
+            if platoon.NavalSafetyDebug then
+                platoon.NavalSafetyDebug.action = 'no-path'
+            end
+            platoon:LogDebug(string.format('Naval safety: safe buffer selected but no path; skipping target'))
+        else
+            if platoon.NavalSafetyDebug then
+                platoon.NavalSafetyDebug.action = 'merge-at-buffer'
+            end
+            CenterAndMergeNearbyPlatoonsRNG(
+                platoon, platoon.MergeType, 65, 25, false
+            )
+            coroutine.yield(30)
+            return true, false
+        end
+    else
+        platoon:LogDebug(string.format('Naval safety: no safe buffer available; skipping target'))
+    end
+
+    LOG(string.format(
+        'RNGAI: [NavalSafety] action=skip reason=%s current=(%.0f,%.0f) target=%s buffer=%s',
+        tostring(bufferPosition and 'path-failed' or 'no-buffer'),
+        platoon.Pos[1], platoon.Pos[3], tostring(target and target.UnitId or 'position'),
+        tostring(bufferPosition and string.format('(%.0f,%.0f)', bufferPosition[1], bufferPosition[3]) or 'none')
+    ))
+    return false, false
 end
 
 function ExperimentalTargetLocalCheckRNG(aiBrain, position, platoon, maxRange, ignoreNotCompleted, experimentalRange)

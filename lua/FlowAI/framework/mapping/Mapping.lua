@@ -222,7 +222,7 @@ GameMap = Class({
             LAYER_AMPH = 4]]
             ForkThread(
                 function()
-                    local zoneSetCopy = self:GetZoneSet('RNGAirResourceSet',0)
+                    local zoneSetCopy = self:GetZoneSet('RNGNavalResourceSet',2)
                     coroutine.yield(100)
                     while true do
                         --self:DrawLayer(2)
